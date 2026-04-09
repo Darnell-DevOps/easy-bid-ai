@@ -75,7 +75,6 @@ export default function Index() {
           <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight leading-tight mb-6">
             Turn lead details into a professional proposal and invoice in under <span className="bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent">2 minutes</span>.
           </h1>
-          </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
             Stop losing clients because of slow proposals. Generate a professional proposal and invoice in minutes.
           </p>
