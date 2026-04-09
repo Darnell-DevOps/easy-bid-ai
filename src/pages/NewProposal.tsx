@@ -74,7 +74,7 @@ export default function NewProposal() {
         .select()
         .single();
 
-      if (saveError) throw saveError;
+      if (saveError || !proposal) throw saveError || new Error("Failed to save proposal");
 
       toast({ title: "Proposal generated!", description: "Your proposal is ready to review." });
       navigate(`/dashboard/proposal/${proposal.id}`);
