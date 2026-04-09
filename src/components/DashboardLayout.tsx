@@ -31,7 +31,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <>
       <div className="p-6">
         <Link to="/" className="text-lg font-semibold text-sidebar-foreground tracking-tight">
-          Close<span className="text-purple">Sync</span> <span className="text-sidebar-primary">AI</span>
+          Close<span className="text-gradient-sync">Sync</span> <span className="text-sidebar-foreground">AI</span>
         </Link>
       </div>
       <nav className="flex-1 px-3 space-y-1">
@@ -76,7 +76,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Mobile header */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-sidebar border-b border-sidebar-border flex items-center justify-between px-4 z-50">
         <span className="text-lg font-semibold text-sidebar-foreground tracking-tight">
-          Close<span className="text-purple">Sync</span> <span className="text-sidebar-primary">AI</span>
+          Close<span className="text-gradient-sync">Sync</span> <span className="text-sidebar-foreground">AI</span>
         </span>
         <Button variant="ghost" size="sm" onClick={() => setMobileOpen(!mobileOpen)} className="text-sidebar-foreground">
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
