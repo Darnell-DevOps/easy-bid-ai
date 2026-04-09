@@ -187,7 +187,7 @@ export default function NewProposal() {
             <Button
               type="submit"
               disabled={loading || !form.service_type}
-              className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2 w-full md:w-auto"
+              className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-90 gap-2 w-full md:w-auto"
               size="lg"
             >
               {loading ? (

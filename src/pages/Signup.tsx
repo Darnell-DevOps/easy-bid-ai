@@ -36,7 +36,7 @@ export default function Signup() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <Link to="/" className="text-xl font-semibold text-foreground tracking-tight">
-            CloseSync <span className="text-accent">AI</span>
+            Close<span className="text-purple">Sync</span> <span className="text-accent">AI</span>
           </Link>
           <p className="text-muted-foreground text-sm mt-2">Create your account</p>
         </div>
