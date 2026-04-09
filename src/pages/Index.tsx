@@ -51,7 +51,7 @@ export default function Index() {
       <nav className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container flex items-center justify-between h-16 px-4 md:px-8">
           <span className="text-xl font-semibold text-foreground tracking-tight">
-            CloseSync <span className="text-accent">AI</span>
+            Close<span className="text-purple">Sync</span> <span className="text-accent">AI</span>
           </span>
           <span className="text-xs text-muted-foreground ml-2">by StriveSync</span>
           <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
@@ -73,14 +73,14 @@ export default function Index() {
       <section className="py-20 md:py-32 px-4">
         <div className="container max-w-3xl text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight leading-tight mb-6">
-            Turn lead details into a professional proposal and invoice in under 2 minutes.
+            Turn lead details into a professional proposal and invoice in under <span className="bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent">2 minutes</span>.
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
             Stop losing clients because of slow proposals. Generate a professional proposal and invoice in minutes.
           </p>
           <div className="flex flex-col items-center gap-3">
             <Link to="/signup">
-              <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 px-8 h-12 text-base gap-2">
+              <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-90 px-8 h-12 text-base gap-2">
                 Create Your First Proposal Now
                 <ArrowRight className="w-4 h-4" />
               </Button>
@@ -219,7 +219,7 @@ export default function Index() {
       <footer className="border-t border-border py-12 px-4">
         <div className="container flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <span className="font-medium text-foreground">
-            CloseSync <span className="text-accent">AI</span>
+            Close<span className="text-purple">Sync</span> <span className="text-accent">AI</span>
           </span>
           <p>© 2026 StriveSync. All rights reserved.</p>
         </div>
