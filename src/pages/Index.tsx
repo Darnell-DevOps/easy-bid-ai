@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText, Zap, Download, AlertTriangle, Clock, XCircle, UserX, ArrowRight } from "lucide-react";
+import { FileText, Zap, Download, AlertTriangle, Clock, XCircle, UserX, ArrowRight, CheckCircle, Briefcase } from "lucide-react";
 
 const steps = [
   { number: "1", title: "Enter your client details", description: "Fill in a simple form with the client name, service type, budget, and timeline." },
@@ -14,6 +14,13 @@ const painPoints = [
   { icon: AlertTriangle, text: "Slows down your response time" },
   { icon: XCircle, text: "Makes you look less professional" },
   { icon: UserX, text: "Can cost you clients" },
+];
+
+const deliverables = [
+  "A polished, client-ready proposal",
+  "A clear pricing breakdown",
+  "A professional invoice",
+  "Ready to send in minutes",
 ];
 
 const plans = [
@@ -70,13 +77,14 @@ export default function Index() {
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
             Stop losing clients because of slow proposals. Generate a professional proposal and invoice in minutes.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="flex flex-col items-center gap-3">
             <Link to="/signup">
               <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 px-8 h-12 text-base gap-2">
                 Create Your First Proposal Now
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
+            <p className="text-sm text-muted-foreground">Start creating proposals in under 60 seconds</p>
           </div>
         </div>
       </section>
@@ -123,7 +131,35 @@ export default function Index() {
               </div>
             ))}
           </div>
-          <div className="text-center mt-12">
+        </div>
+      </section>
+
+      {/* What you get */}
+      <section className="py-20 px-4 bg-card border-y border-border">
+        <div className="container max-w-3xl text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-12">What you get</h2>
+          <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
+            {deliverables.map((item) => (
+              <div key={item} className="flex items-center gap-3 p-4 rounded-lg bg-background border border-border text-left">
+                <CheckCircle className="w-5 h-5 text-accent flex-shrink-0" />
+                <span className="text-sm font-medium text-foreground">{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Credibility */}
+      <section className="py-20 px-4">
+        <div className="container max-w-2xl text-center">
+          <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-6">
+            <Briefcase className="w-6 h-6 text-accent" />
+          </div>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Built for agencies and consultants</h2>
+          <p className="text-muted-foreground text-lg leading-relaxed max-w-xl mx-auto">
+            Designed for professionals who need to respond to leads quickly and close more deals.
+          </p>
+          <div className="mt-10">
             <Link to="/signup">
               <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 px-8 h-12 text-base">
                 Get Started Free
@@ -172,6 +208,9 @@ export default function Index() {
               </Card>
             ))}
           </div>
+          <p className="text-center text-sm text-muted-foreground mt-8">
+            If this helps you close just one extra client, it pays for itself.
+          </p>
         </div>
       </section>
 
