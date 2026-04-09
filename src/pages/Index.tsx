@@ -51,8 +51,9 @@ export default function Index() {
       <nav className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container flex items-center justify-between h-16 px-4 md:px-8">
           <span className="text-xl font-semibold text-foreground tracking-tight">
-            ProposalFlow <span className="text-accent">AI</span>
+            CloseSync <span className="text-accent">AI</span>
           </span>
+          <span className="text-xs text-muted-foreground ml-2">by StriveSync</span>
           <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
             <a href="#how-it-works" className="hover:text-foreground transition-colors">How it works</a>
             <a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a>
@@ -218,9 +219,9 @@ export default function Index() {
       <footer className="border-t border-border py-12 px-4">
         <div className="container flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <span className="font-medium text-foreground">
-            ProposalFlow <span className="text-accent">AI</span>
+            CloseSync <span className="text-accent">AI</span>
           </span>
-          <p>© {new Date().getFullYear()} ProposalFlow AI. All rights reserved.</p>
+          <p>© 2026 StriveSync. All rights reserved.</p>
         </div>
       </footer>
     </div>

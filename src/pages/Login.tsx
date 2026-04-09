@@ -31,7 +31,7 @@ export default function Login() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <Link to="/" className="text-xl font-semibold text-foreground tracking-tight">
-            ProposalFlow <span className="text-accent">AI</span>
+            CloseSync <span className="text-accent">AI</span>
           </Link>
           <p className="text-muted-foreground text-sm mt-2">Sign in to your account</p>
         </div>
