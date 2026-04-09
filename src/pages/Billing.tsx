@@ -1,0 +1,60 @@
+import DashboardLayout from "@/components/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+
+const plans = [
+  {
+    name: "Basic",
+    price: "£19",
+    period: "/month",
+    features: ["5 proposals per month", "AI proposal generation", "PDF export", "Email support"],
+    current: true,
+  },
+  {
+    name: "Pro",
+    price: "£39",
+    period: "/month",
+    features: ["Unlimited proposals", "AI proposal generation", "PDF export", "Saved history", "Custom branding", "Priority support"],
+    current: false,
+  },
+];
+
+export default function Billing() {
+  return (
+    <DashboardLayout>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-foreground">Billing</h1>
+        <p className="text-sm text-muted-foreground mt-1">Manage your subscription plan</p>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6 max-w-3xl">
+        {plans.map((plan) => (
+          <Card key={plan.name} className={plan.current ? "border-accent" : ""}>
+            <CardContent className="p-6">
+              <h3 className="font-semibold text-foreground text-lg">{plan.name}</h3>
+              <div className="mt-2 mb-4">
+                <span className="text-3xl font-bold text-foreground">{plan.price}</span>
+                <span className="text-muted-foreground">{plan.period}</span>
+              </div>
+              <ul className="space-y-2 mb-6">
+                {plan.features.map((f) => (
+                  <li key={f} className="text-sm text-muted-foreground flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-accent flex-shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Button
+                variant={plan.current ? "outline" : "default"}
+                className={!plan.current ? "bg-accent text-accent-foreground hover:bg-accent/90 w-full" : "w-full"}
+                disabled={plan.current}
+              >
+                {plan.current ? "Current Plan" : "Upgrade"}
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </DashboardLayout>
+  );
+}
