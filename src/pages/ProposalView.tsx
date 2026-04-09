@@ -7,7 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Save, Loader2 } from "lucide-react";
+import { Download, Save, Loader2, Pencil, Eye } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 interface ProposalData {
   id: string;
@@ -20,19 +21,37 @@ interface ProposalData {
   created_at: string;
 }
 
+function MarkdownPreview({ content }: { content: string }) {
+  return (
+    <div className="prose prose-invert prose-sm max-w-none 
+      prose-headings:text-foreground prose-headings:font-semibold prose-headings:tracking-tight
+      prose-h2:text-lg prose-h2:mt-6 prose-h2:mb-3 prose-h2:pb-2 prose-h2:border-b prose-h2:border-border
+      prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:mb-3
+      prose-li:text-muted-foreground prose-li:leading-relaxed
+      prose-strong:text-foreground
+      prose-table:text-sm
+      prose-th:text-foreground prose-th:font-medium prose-th:px-4 prose-th:py-2 prose-th:text-left prose-th:border-b prose-th:border-border prose-th:bg-secondary/50
+      prose-td:text-muted-foreground prose-td:px-4 prose-td:py-2 prose-td:border-b prose-td:border-border
+    ">
+      <ReactMarkdown>{content}</ReactMarkdown>
+    </div>
+  );
+}
+
 export default function ProposalView() {
   const { id } = useParams();
   const { toast } = useToast();
   const [proposal, setProposal] = useState<ProposalData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [editMode, setEditMode] = useState<Record<string, boolean>>({});
 
   const [editedProposal, setEditedProposal] = useState("");
   const [editedPricing, setEditedPricing] = useState("");
   const [editedInvoice, setEditedInvoice] = useState("");
 
   useEffect(() => {
-    const fetch = async () => {
+    const fetchProposal = async () => {
       const { data } = await supabase
         .from("proposals")
         .select("*")
@@ -47,7 +66,7 @@ export default function ProposalView() {
       }
       setLoading(false);
     };
-    fetch();
+    fetchProposal();
   }, [id]);
 
   const handleSave = async () => {
@@ -69,15 +88,35 @@ export default function ProposalView() {
     }
   };
 
-  const handleExportPDF = async (type: "proposal" | "invoice") => {
-    const content = type === "proposal" ? editedProposal + "\n\n" + editedPricing : editedInvoice;
+  const toggleEdit = (tab: string) => {
+    setEditMode((prev) => ({ ...prev, [tab]: !prev[tab] }));
+  };
+
+  const handleExportPDF = (type: "proposal" | "invoice") => {
+    const content = type === "proposal" ? editedProposal + "\n\n---\n\n" + editedPricing : editedInvoice;
     const title = type === "proposal"
       ? `Proposal - ${proposal?.client_name}`
       : `Invoice - ${proposal?.client_name}`;
 
-    // Simple browser print-to-PDF approach
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
+
+    // Convert markdown to simple HTML for print
+    const htmlContent = content
+      .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+      .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+      .replace(/^\*\*(.+?)\*\*/gm, '<strong>$1</strong>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/^- (.+)$/gm, '<li>$1</li>')
+      .replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>')
+      .replace(/\|(.+)\|/g, (match) => {
+        const cells = match.split('|').filter(Boolean).map(c => c.trim());
+        return '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
+      })
+      .replace(/(<tr>.*<\/tr>\n?)+/g, '<table>$&</table>')
+      .replace(/\n{2,}/g, '</p><p>')
+      .replace(/^(?!<[hultop])(.+)$/gm, '<p>$1</p>')
+      .replace(/---/g, '<hr />');
 
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -85,16 +124,21 @@ export default function ProposalView() {
       <head>
         <title>${title}</title>
         <style>
-          body { font-family: 'Inter', system-ui, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; color: #1a1a2e; line-height: 1.6; }
-          h1, h2, h3 { color: #1a1a2e; }
-          pre { white-space: pre-wrap; font-family: inherit; }
+          body { font-family: 'Inter', system-ui, sans-serif; max-width: 750px; margin: 40px auto; padding: 0 32px; color: #1a1a2e; line-height: 1.7; font-size: 14px; }
+          h2 { color: #1a1a2e; font-size: 18px; margin-top: 28px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #e5e5e5; }
+          h3 { color: #1a1a2e; font-size: 15px; margin-top: 20px; }
+          p { margin: 8px 0; }
+          ul { padding-left: 24px; margin: 8px 0; }
+          li { margin: 4px 0; }
+          table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+          th, td { padding: 8px 12px; border: 1px solid #e5e5e5; text-align: left; }
+          th { background: #f5f5f5; font-weight: 600; }
+          hr { border: none; border-top: 1px solid #e5e5e5; margin: 24px 0; }
+          strong { color: #1a1a2e; }
         </style>
       </head>
       <body>
-        <h1>${title}</h1>
-        <p style="color:#666; font-size:14px;">${proposal?.company_name} · ${proposal?.service_type} · ${new Date(proposal?.created_at || "").toLocaleDateString()}</p>
-        <hr style="border:none;border-top:1px solid #e5e5e5;margin:20px 0;" />
-        <pre>${content}</pre>
+        ${htmlContent}
       </body>
       </html>
     `);
@@ -120,6 +164,12 @@ export default function ProposalView() {
     );
   }
 
+  const tabs = [
+    { key: "proposal", label: "Proposal", content: editedProposal, setter: setEditedProposal, rows: 24 },
+    { key: "pricing", label: "Pricing", content: editedPricing, setter: setEditedPricing, rows: 16 },
+    { key: "invoice", label: "Invoice", content: editedInvoice, setter: setEditedInvoice, rows: 16 },
+  ];
+
   return (
     <DashboardLayout>
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
@@ -129,7 +179,7 @@ export default function ProposalView() {
             {proposal.company_name} · {proposal.service_type} · {new Date(proposal.created_at).toLocaleDateString()}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button variant="outline" onClick={handleSave} disabled={saving} className="gap-2">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             Save
@@ -147,35 +197,35 @@ export default function ProposalView() {
         <CardContent className="p-0">
           <Tabs defaultValue="proposal">
             <TabsList className="w-full justify-start border-b border-border rounded-none bg-transparent px-6 pt-4">
-              <TabsTrigger value="proposal">Proposal</TabsTrigger>
-              <TabsTrigger value="pricing">Pricing</TabsTrigger>
-              <TabsTrigger value="invoice">Invoice</TabsTrigger>
+              {tabs.map((t) => (
+                <TabsTrigger key={t.key} value={t.key}>{t.label}</TabsTrigger>
+              ))}
             </TabsList>
             <div className="p-6">
-              <TabsContent value="proposal" className="mt-0">
-                <Textarea
-                  value={editedProposal}
-                  onChange={(e) => setEditedProposal(e.target.value)}
-                  rows={20}
-                  className="font-mono text-sm"
-                />
-              </TabsContent>
-              <TabsContent value="pricing" className="mt-0">
-                <Textarea
-                  value={editedPricing}
-                  onChange={(e) => setEditedPricing(e.target.value)}
-                  rows={15}
-                  className="font-mono text-sm"
-                />
-              </TabsContent>
-              <TabsContent value="invoice" className="mt-0">
-                <Textarea
-                  value={editedInvoice}
-                  onChange={(e) => setEditedInvoice(e.target.value)}
-                  rows={15}
-                  className="font-mono text-sm"
-                />
-              </TabsContent>
+              {tabs.map((t) => (
+                <TabsContent key={t.key} value={t.key} className="mt-0">
+                  <div className="flex justify-end mb-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleEdit(t.key)}
+                      className="gap-2 text-muted-foreground"
+                    >
+                      {editMode[t.key] ? <><Eye className="w-4 h-4" /> Preview</> : <><Pencil className="w-4 h-4" /> Edit</>}
+                    </Button>
+                  </div>
+                  {editMode[t.key] ? (
+                    <Textarea
+                      value={t.content}
+                      onChange={(e) => t.setter(e.target.value)}
+                      rows={t.rows}
+                      className="font-mono text-sm"
+                    />
+                  ) : (
+                    <MarkdownPreview content={t.content} />
+                  )}
+                </TabsContent>
+              ))}
             </div>
           </Tabs>
         </CardContent>
