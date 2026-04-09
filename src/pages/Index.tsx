@@ -91,16 +91,10 @@ export default function Index() {
       {/* Hero */}
       <section className="py-20 md:py-32 px-4">
         <div className="container max-w-3xl text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-sm font-medium mb-6">
-            <Zap className="w-3.5 h-3.5" />
-            AI-powered proposal generation
-          </div>
-          <h1 className="text-4xl md:text-6xl font-bold text-foreground tracking-tight leading-tight mb-6">
-            Turn leads into proposals
-            <br className="hidden md:block" />
-            <span className="text-accent"> in under 2 minutes</span>
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight leading-tight mb-6">
+            Turn lead details into a professional proposal and invoice in under 2 minutes.
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
             ProposalFlow AI helps small agencies, consultants, and freelancers create professional proposals and invoices instantly. No templates. No formatting. Just results.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
