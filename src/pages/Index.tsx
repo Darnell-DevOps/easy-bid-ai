@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText, Download, Shield, Clock, Star } from "lucide-react";
+import { FileText, Zap, Download, Shield, Clock, Star } from "lucide-react";
 
 const features = [
   {
