@@ -1,39 +1,19 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText, Zap, Download, Shield, Clock, Star } from "lucide-react";
+import { FileText, Zap, Download, AlertTriangle, Clock, XCircle, UserX, ArrowRight } from "lucide-react";
 
-const features = [
-  {
-    icon: Zap,
-    title: "AI-Powered Proposals",
-    description: "Enter your lead details and get a polished, professional proposal generated in seconds.",
-  },
-  {
-    icon: FileText,
-    title: "Instant Invoices",
-    description: "Automatically generate itemised invoices alongside your proposals. No double entry.",
-  },
-  {
-    icon: Download,
-    title: "PDF Export",
-    description: "Download beautifully formatted proposals and invoices as PDF, ready to send.",
-  },
-  {
-    icon: Clock,
-    title: "Under 2 Minutes",
-    description: "From lead info to a ready-to-send proposal in under two minutes. Focus on closing, not formatting.",
-  },
-  {
-    icon: Shield,
-    title: "Professional & Trustworthy",
-    description: "Clean, modern templates that make your agency look established and reliable.",
-  },
-  {
-    icon: Star,
-    title: "Saved History",
-    description: "Access all your past proposals anytime. Track what you've sent and to whom.",
-  },
+const steps = [
+  { number: "1", title: "Enter your client details", description: "Fill in a simple form with the client name, service type, budget, and timeline." },
+  { number: "2", title: "AI generates your proposal and invoice instantly", description: "Our AI creates a polished proposal, pricing breakdown, and invoice in seconds." },
+  { number: "3", title: "Download and send to your client", description: "Export as PDF, review, and send. Done in under two minutes." },
+];
+
+const painPoints = [
+  { icon: Clock, text: "Takes too long" },
+  { icon: AlertTriangle, text: "Slows down your response time" },
+  { icon: XCircle, text: "Makes you look less professional" },
+  { icon: UserX, text: "Can cost you clients" },
 ];
 
 const plans = [
@@ -51,14 +31,7 @@ const plans = [
     price: "£39",
     period: "/month",
     description: "For agencies and busy consultants",
-    features: [
-      "Unlimited proposals",
-      "AI proposal generation",
-      "PDF export",
-      "Saved proposal history",
-      "Custom branding",
-      "Priority support",
-    ],
+    features: ["Unlimited proposals", "AI proposal generation", "PDF export", "Saved proposal history", "Custom branding", "Priority support"],
     cta: "Start Free Trial",
     popular: true,
   },
@@ -74,7 +47,7 @@ export default function Index() {
             ProposalFlow <span className="text-accent">AI</span>
           </span>
           <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
-            <a href="#features" className="hover:text-foreground transition-colors">Features</a>
+            <a href="#how-it-works" className="hover:text-foreground transition-colors">How it works</a>
             <a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a>
           </div>
           <div className="flex items-center gap-3">
@@ -95,50 +68,73 @@ export default function Index() {
             Turn lead details into a professional proposal and invoice in under 2 minutes.
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-            ProposalFlow AI helps small agencies, consultants, and freelancers create professional proposals and invoices instantly. No templates. No formatting. Just results.
+            Stop losing clients because of slow proposals. Generate a professional proposal and invoice in minutes.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link to="/signup">
-              <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 px-8 h-12 text-base">
-                Start for free
+              <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 px-8 h-12 text-base gap-2">
+                Create Your First Proposal Now
+                <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
-            <a href="#features">
-              <Button variant="outline" size="lg" className="px-8 h-12 text-base">
-                See how it works
-              </Button>
-            </a>
           </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section id="features" className="py-20 px-4 bg-card border-y border-border">
-        <div className="container max-w-5xl">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Everything you need to close faster</h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Stop spending hours on proposals. Let AI handle the heavy lifting while you focus on your clients.
-            </p>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((f) => (
-              <Card key={f.title} className="border border-border bg-background shadow-none hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center mb-4">
-                    <f.icon className="w-5 h-5 text-accent" />
-                  </div>
-                  <h3 className="font-semibold text-foreground mb-2">{f.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{f.description}</p>
-                </CardContent>
-              </Card>
+      {/* Pain Section */}
+      <section className="py-20 px-4 bg-card border-y border-border">
+        <div className="container max-w-3xl text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Still writing proposals manually?</h2>
+          <p className="text-muted-foreground text-lg mb-12 max-w-xl mx-auto">
+            Manual proposals are holding your business back.
+          </p>
+          <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
+            {painPoints.map((p) => (
+              <div key={p.text} className="flex items-center gap-3 p-4 rounded-lg bg-background border border-border text-left">
+                <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center flex-shrink-0">
+                  <p.icon className="w-4 h-4 text-destructive" />
+                </div>
+                <span className="text-sm font-medium text-foreground">{p.text}</span>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
+      {/* How it works */}
+      <section id="how-it-works" className="py-20 px-4">
+        <div className="container max-w-3xl">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">How it works</h2>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+              Three simple steps from lead info to a ready-to-send proposal.
+            </p>
+          </div>
+          <div className="space-y-6">
+            {steps.map((s) => (
+              <div key={s.number} className="flex gap-5 items-start">
+                <div className="w-10 h-10 rounded-full bg-accent text-accent-foreground flex items-center justify-center text-lg font-bold flex-shrink-0">
+                  {s.number}
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground mb-1">{s.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{s.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="text-center mt-12">
+            <Link to="/signup">
+              <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 px-8 h-12 text-base">
+                Get Started Free
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing */}
-      <section id="pricing" className="py-20 px-4">
+      <section id="pricing" className="py-20 px-4 bg-card border-y border-border">
         <div className="container max-w-4xl">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Simple, transparent pricing</h2>
@@ -146,14 +142,7 @@ export default function Index() {
           </div>
           <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             {plans.map((plan) => (
-              <Card
-                key={plan.name}
-                className={`border relative ${
-                  plan.popular
-                    ? "border-accent shadow-lg shadow-accent/10"
-                    : "border-border shadow-none"
-                }`}
-              >
+              <Card key={plan.name} className={`border relative ${plan.popular ? "border-accent shadow-lg shadow-accent/10" : "border-border shadow-none"}`}>
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-accent text-accent-foreground text-xs font-medium">
                     Most popular
@@ -175,14 +164,7 @@ export default function Index() {
                     ))}
                   </ul>
                   <Link to="/signup">
-                    <Button
-                      className={`w-full ${
-                        plan.popular
-                          ? "bg-accent text-accent-foreground hover:bg-accent/90"
-                          : ""
-                      }`}
-                      variant={plan.popular ? "default" : "outline"}
-                    >
+                    <Button className={`w-full ${plan.popular ? "bg-accent text-accent-foreground hover:bg-accent/90" : ""}`} variant={plan.popular ? "default" : "outline"}>
                       {plan.cta}
                     </Button>
                   </Link>
