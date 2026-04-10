@@ -12,6 +12,7 @@ import NewProposal from "./pages/NewProposal";
 import ProposalView from "./pages/ProposalView";
 import Billing from "./pages/Billing";
 import SettingsPage from "./pages/SettingsPage";
+import SampleProposal from "./pages/SampleProposal";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/sample" element={<SampleProposal />} />
           <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
           <Route path="/dashboard/new" element={<AuthGuard><NewProposal /></AuthGuard>} />
           <Route path="/dashboard/proposal/:id" element={<AuthGuard><ProposalView /></AuthGuard>} />
