@@ -301,7 +301,10 @@ export default function ProposalView() {
       </head>
       <body>
         <div class="doc-header">
-          <div class="brand">CloseSync <span>AI</span></div>
+          <div class="brand-group">
+            <img src="${LOGO_BASE64}" alt="CloseSync AI" class="logo" />
+            <div class="brand">CloseSync <span>AI</span></div>
+          </div>
           <div class="meta">
             Prepared for: ${proposal?.client_name}<br>
             ${proposal?.company_name}<br>
