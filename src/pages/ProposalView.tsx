@@ -49,6 +49,15 @@ export default function ProposalView() {
   const [editedProposal, setEditedProposal] = useState("");
   const [editedPricing, setEditedPricing] = useState("");
   const [editedInvoice, setEditedInvoice] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyProposal = async () => {
+    const fullText = [editedProposal, editedPricing, editedInvoice].filter(Boolean).join("\n\n---\n\n");
+    await navigator.clipboard.writeText(fullText);
+    setCopied(true);
+    toast({ title: "Copied to clipboard" });
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   useEffect(() => {
     const fetchProposal = async () => {
