@@ -11,26 +11,12 @@ const plans = [
     period: "/month",
     features: [
       { text: "3 proposals per month", locked: false },
-      { text: "Basic AI proposal generation", locked: false },
-      { text: 'Watermark on exports', locked: false },
+      { text: "Watermark on exports", locked: false },
       { text: "Invoice export", locked: true },
       { text: "Custom branding", locked: true },
       { text: "Unlimited proposals", locked: true },
     ],
     current: true,
-    popular: false,
-  },
-  {
-    name: "Basic",
-    price: "£19",
-    period: "/month",
-    features: [
-      { text: "5 proposals per month", locked: false },
-      { text: "AI proposal generation", locked: false },
-      { text: "PDF export", locked: false },
-      { text: "Email support", locked: false },
-    ],
-    current: false,
     popular: false,
   },
   {
