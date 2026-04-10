@@ -145,4 +145,13 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius);
   }
-}
+
+  .btn-gradient {
+    background: linear-gradient(to right, #3b82f6, #6366f1);
+    color: white;
+    border: none;
+  }
+
+  .btn-gradient:hover {
+    background: linear-gradient(to right, #60a5fa, #818cf8);
+  }
