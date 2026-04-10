@@ -48,13 +48,13 @@ export default function Billing() {
         {plans.map((plan) => (
           <Card
             key={plan.name}
-            className={
+            className={`glass-card ${
               plan.popular
                 ? "border-accent shadow-[0_0_20px_hsl(var(--accent)/0.3)] ring-1 ring-accent relative"
                 : plan.current
                 ? "border-accent relative"
                 : "relative"
-            }
+            }`}
           >
             {plan.popular && (
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
