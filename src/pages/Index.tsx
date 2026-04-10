@@ -92,6 +92,11 @@ export default function Index() {
               </Button>
             </Link>
           </div>
+          <p className="text-xs text-muted-foreground mt-6">No signup required to try • Generate your first proposal in seconds</p>
+          <div className="flex items-center justify-center gap-5 mt-3">
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><Zap className="w-3 h-3 text-accent" />Fast</span>
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><FileText className="w-3 h-3 text-accent" />Professional</span>
+          </div>
         </div>
       </section>
 
