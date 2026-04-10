@@ -23,15 +23,21 @@ interface ProposalData {
 
 function MarkdownPreview({ content }: { content: string }) {
   return (
-    <div className="prose prose-invert prose-sm max-w-none 
-      prose-headings:text-foreground prose-headings:font-semibold prose-headings:tracking-tight
-      prose-h2:text-lg prose-h2:mt-6 prose-h2:mb-3 prose-h2:pb-2 prose-h2:border-b prose-h2:border-border
-      prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:mb-3
-      prose-li:text-muted-foreground prose-li:leading-relaxed
-      prose-strong:text-foreground
-      prose-table:text-sm
-      prose-th:text-foreground prose-th:font-medium prose-th:px-4 prose-th:py-2 prose-th:text-left prose-th:border-b prose-th:border-border prose-th:bg-secondary/50
-      prose-td:text-muted-foreground prose-td:px-4 prose-td:py-2 prose-td:border-b prose-td:border-border
+    <div className="prose prose-invert prose-base max-w-none
+      prose-headings:text-foreground prose-headings:font-bold prose-headings:tracking-tight prose-headings:leading-snug
+      prose-h1:text-2xl prose-h1:mt-10 prose-h1:mb-4
+      prose-h2:text-xl prose-h2:mt-10 prose-h2:mb-4 prose-h2:pb-3 prose-h2:border-b prose-h2:border-border/60
+      prose-h3:text-lg prose-h3:mt-8 prose-h3:mb-3
+      prose-p:text-muted-foreground prose-p:leading-[1.85] prose-p:mb-4 prose-p:max-w-[65ch]
+      prose-li:text-muted-foreground prose-li:leading-[1.85] prose-li:mb-1
+      prose-ul:my-4 prose-ol:my-4
+      prose-strong:text-foreground prose-strong:font-semibold
+      prose-hr:border-border/40 prose-hr:my-8
+      prose-table:text-sm prose-table:my-6
+      prose-th:text-foreground prose-th:font-semibold prose-th:px-5 prose-th:py-3 prose-th:text-left prose-th:border-b prose-th:border-border prose-th:bg-secondary/50
+      prose-td:text-muted-foreground prose-td:px-5 prose-td:py-3 prose-td:border-b prose-td:border-border/60
+      prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+      prose-blockquote:border-l-accent/50 prose-blockquote:text-muted-foreground prose-blockquote:italic
     ">
       <ReactMarkdown>{content}</ReactMarkdown>
     </div>
