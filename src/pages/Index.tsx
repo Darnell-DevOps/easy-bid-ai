@@ -206,19 +206,19 @@ export default function Index() {
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Simple, transparent pricing</h2>
             <p className="text-muted-foreground text-lg">No hidden fees. Cancel anytime.</p>
           </div>
-          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto items-start">
             {plans.map((plan) => (
-              <Card key={plan.name} className={`border relative ${plan.popular ? "border-accent shadow-lg shadow-accent/10" : "border-border shadow-none"}`}>
+              <Card key={plan.name} className={`border relative transition-all ${plan.popular ? "border-accent border-2 shadow-xl shadow-accent/20 ring-1 ring-accent/30 md:scale-105 md:-my-4 z-10" : "border-border shadow-none"}`}>
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-accent text-accent-foreground text-xs font-medium">
                     Most popular
                   </div>
                 )}
-                <CardContent className="p-8">
-                  <h3 className="text-lg font-semibold text-foreground mb-1">{plan.name}</h3>
+                <CardContent className={plan.popular ? "p-10" : "p-8"}>
+                  <h3 className={`font-semibold text-foreground mb-1 ${plan.popular ? "text-xl" : "text-lg"}`}>{plan.name}</h3>
                   <p className="text-sm text-muted-foreground mb-6">{plan.description}</p>
                   <div className="mb-6">
-                    <span className="text-4xl font-bold text-foreground">{plan.price}</span>
+                    <span className={`font-bold text-foreground ${plan.popular ? "text-5xl" : "text-4xl"}`}>{plan.price}</span>
                     <span className="text-muted-foreground">{plan.period}</span>
                   </div>
                   <ul className="space-y-3 mb-8">
@@ -230,7 +230,7 @@ export default function Index() {
                     ))}
                   </ul>
                   <Link to="/signup">
-                    <Button className={`w-full ${plan.popular ? "bg-accent text-accent-foreground hover:bg-accent/90" : ""}`} variant={plan.popular ? "default" : "outline"}>
+                    <Button className={`w-full ${plan.popular ? "bg-accent text-accent-foreground hover:bg-accent/90 shadow-[0_0_16px_hsl(var(--accent)/0.4)] h-12 text-base" : ""}`} variant={plan.popular ? "default" : "outline"}>
                       {plan.cta}
                     </Button>
                   </Link>
