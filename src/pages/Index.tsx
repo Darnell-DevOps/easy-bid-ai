@@ -121,110 +121,18 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Product Preview */}
-      <section className="py-16 px-4">
-        <div className="container max-w-4xl text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">See how it works</h2>
-          <p className="text-muted-foreground text-lg mb-10 max-w-xl mx-auto">
-            From client details to a ready-to-send proposal in seconds.
-          </p>
-          <div className="relative">
-            <div className="absolute -inset-4 bg-purple/20 rounded-3xl blur-2xl pointer-events-none" />
-            <div className="relative rounded-2xl border-2 border-accent/30 bg-card shadow-2xl shadow-accent/10 overflow-hidden">
-              <div className="px-4 py-2 border-b border-border flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="flex gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-destructive/60" />
-                    <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
-                    <div className="w-3 h-3 rounded-full bg-green-500/60" />
-                  </div>
-                  <span className="text-xs text-accent font-medium ml-2 uppercase tracking-wider">Live preview</span>
-                </div>
-                <span className="text-[10px] text-accent/80 bg-accent/10 px-2 py-0.5 rounded-full font-medium animate-pulse">● Generated just now</span>
-              </div>
-              <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border">
-                <div className="p-6 text-left space-y-4">
-                  <h3 className="text-sm font-semibold text-foreground mb-4">Client Details</h3>
-                  {[
-                    { label: "Client Name", value: "ABC Company" },
-                    { label: "Service Type", value: "Website Redesign" },
-                    { label: "Budget", value: "£1,200" },
-                  ].map((field) => (
-                    <div key={field.label} className="space-y-1.5">
-                      <span className="text-xs text-muted-foreground">{field.label}</span>
-                      <div className="h-9 rounded-md bg-muted/50 border border-border flex items-center px-3">
-                        <span className="text-xs text-foreground/70">{field.value}</span>
-                      </div>
-                    </div>
-                  ))}
-                  <div className="pt-2">
-                    <div className="h-10 rounded-lg bg-accent/20 border border-accent/30 flex items-center justify-center">
-                      <span className="text-xs font-medium text-accent">Generate Proposal →</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-6 text-left space-y-3 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-accent/5 to-transparent animate-shimmer pointer-events-none" />
-                  <h3 className="text-sm font-semibold text-foreground mb-3">Generated Proposal</h3>
-                  <p className="text-sm font-medium text-foreground/90">Website redesign proposal for ABC Company</p>
-                  <div className="space-y-1.5 text-xs text-foreground/70">
-                    <p>Scope: Landing page + 3 subpages</p>
-                    <p>Timeline: 2 weeks</p>
-                  </div>
-                  <div className="mt-4 pt-3 border-t border-border space-y-1.5">
-                    <p className="text-xs text-muted-foreground">Pricing Breakdown</p>
-                    <div className="flex justify-between text-xs text-foreground/70">
-                      <span>Design & Development</span><span>£900</span>
-                    </div>
-                    <div className="flex justify-between text-xs text-foreground/70">
-                      <span>Content & QA</span><span>£300</span>
-                    </div>
-                    <div className="flex justify-between text-xs font-semibold text-accent pt-1 border-t border-border/50">
-                      <span>Total</span><span>£1,200</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <p className="text-sm text-muted-foreground mt-6">Generated in under 2 minutes</p>
-        </div>
-      </section>
-
-      <section className="py-16 px-4">
-        <div className="container max-w-3xl text-center">
-          <p className="text-muted-foreground text-lg mb-8">Used by freelancers and agencies to close more clients</p>
-          <div className="flex flex-col sm:flex-row justify-center gap-6 mb-12">
-            {[
-              { icon: Clock, text: "Save hours on every proposal" },
-              { icon: Zap, text: "Look more professional instantly" },
-              { icon: ArrowRight, text: "Close deals faster" },
-            ].map((item) => (
-              <div key={item.text} className="flex items-center gap-2 text-sm text-foreground">
-                <item.icon className="w-4 h-4 text-accent flex-shrink-0" />
-                <span>{item.text}</span>
-              </div>
-            ))}
-          </div>
-          <blockquote className="max-w-lg mx-auto border-l-2 border-accent pl-4 text-left">
-            <p className="text-sm text-foreground/80 italic leading-relaxed">
-              "This tool saved me hours every week and helped me land more clients"
-            </p>
-            <footer className="mt-2 text-xs text-muted-foreground">— Freelance Consultant</footer>
-          </blockquote>
-        </div>
-      </section>
-
-      {/* How it works */}
+      {/* How it works — unified section */}
       <section id="how-it-works" className="py-16 px-4">
-        <div className="container max-w-3xl">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">How it works</h2>
+        <div className="container max-w-4xl">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">See how it works</h2>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Three simple steps from lead info to a ready-to-send proposal.
+              From client details to a ready-to-send proposal in seconds.
             </p>
           </div>
-          <div className="space-y-6">
+
+          {/* 3-step process */}
+          <div className="max-w-3xl mx-auto space-y-6 mb-16">
             {steps.map((s) => (
               <div key={s.number} className="flex gap-5 items-start">
                 <div className="w-10 h-10 rounded-full bg-accent text-accent-foreground flex items-center justify-center text-lg font-bold flex-shrink-0">
@@ -237,20 +145,82 @@ export default function Index() {
               </div>
             ))}
           </div>
-        </div>
-      </section>
 
-      {/* What you get */}
-      <section className="py-16 px-4 bg-card border-y border-border">
-        <div className="container max-w-3xl text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-10">What you get</h2>
-          <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
-            {deliverables.map((item) => (
-              <div key={item} className="flex items-center gap-3 p-4 rounded-lg bg-background border border-border text-left">
-                <CheckCircle className="w-5 h-5 text-accent flex-shrink-0" />
-                <span className="text-sm font-medium text-foreground">{item}</span>
+          {/* Live preview demo */}
+          <div className="text-center mb-16">
+            <div className="relative">
+              <div className="absolute -inset-4 bg-purple/20 rounded-3xl blur-2xl pointer-events-none" />
+              <div className="relative rounded-2xl border-2 border-accent/30 bg-card shadow-2xl shadow-accent/10 overflow-hidden">
+                <div className="px-4 py-2 border-b border-border flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-1.5">
+                      <div className="w-3 h-3 rounded-full bg-destructive/60" />
+                      <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
+                      <div className="w-3 h-3 rounded-full bg-green-500/60" />
+                    </div>
+                    <span className="text-xs text-accent font-medium ml-2 uppercase tracking-wider">Live preview</span>
+                  </div>
+                  <span className="text-[10px] text-accent/80 bg-accent/10 px-2 py-0.5 rounded-full font-medium animate-pulse">● Generated just now</span>
+                </div>
+                <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border">
+                  <div className="p-6 text-left space-y-4">
+                    <h3 className="text-sm font-semibold text-foreground mb-4">Client Details</h3>
+                    {[
+                      { label: "Client Name", value: "ABC Company" },
+                      { label: "Service Type", value: "Website Redesign" },
+                      { label: "Budget", value: "£1,200" },
+                    ].map((field) => (
+                      <div key={field.label} className="space-y-1.5">
+                        <span className="text-xs text-muted-foreground">{field.label}</span>
+                        <div className="h-9 rounded-md bg-muted/50 border border-border flex items-center px-3">
+                          <span className="text-xs text-foreground/70">{field.value}</span>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="pt-2">
+                      <div className="h-10 rounded-lg bg-accent/20 border border-accent/30 flex items-center justify-center">
+                        <span className="text-xs font-medium text-accent">Generate Proposal →</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-6 text-left space-y-3 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-accent/5 to-transparent animate-shimmer pointer-events-none" />
+                    <h3 className="text-sm font-semibold text-foreground mb-3">Generated Proposal</h3>
+                    <p className="text-sm font-medium text-foreground/90">Website redesign proposal for ABC Company</p>
+                    <div className="space-y-1.5 text-xs text-foreground/70">
+                      <p>Scope: Landing page + 3 subpages</p>
+                      <p>Timeline: 2 weeks</p>
+                    </div>
+                    <div className="mt-4 pt-3 border-t border-border space-y-1.5">
+                      <p className="text-xs text-muted-foreground">Pricing Breakdown</p>
+                      <div className="flex justify-between text-xs text-foreground/70">
+                        <span>Design & Development</span><span>£900</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-foreground/70">
+                        <span>Content & QA</span><span>£300</span>
+                      </div>
+                      <div className="flex justify-between text-xs font-semibold text-accent pt-1 border-t border-border/50">
+                        <span>Total</span><span>£1,200</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-            ))}
+            </div>
+            <p className="text-sm text-muted-foreground mt-6">Generated in under 2 minutes</p>
+          </div>
+
+          {/* What you get */}
+          <div className="max-w-3xl mx-auto text-center">
+            <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-8">What you get</h3>
+            <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
+              {deliverables.map((item) => (
+                <div key={item} className="flex items-center gap-3 p-4 rounded-lg bg-card border border-border text-left">
+                  <CheckCircle className="w-5 h-5 text-accent flex-shrink-0" />
+                  <span className="text-sm font-medium text-foreground">{item}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
