@@ -90,9 +90,11 @@ export default function Index() {
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="px-10 h-14 text-base" onClick={() => setSampleOpen(true)}>
-              View Sample Proposal
-            </Button>
+            <Link to="/sample">
+              <Button size="lg" variant="outline" className="px-10 h-14 text-base">
+                View Sample Proposal
+              </Button>
+            </Link>
           </div>
           <p className="text-xs text-muted-foreground mt-6">No signup required to try • Generate your first proposal in seconds</p>
           <div className="flex items-center justify-center gap-5 mt-3">
