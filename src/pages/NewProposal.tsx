@@ -92,7 +92,7 @@ export default function NewProposal() {
         <p className="text-sm text-muted-foreground mt-1">Fill in the lead details and let AI generate your proposal</p>
       </div>
 
-      <Card>
+      <Card className="glass-card">
         <CardContent className="p-6 md:p-8">
           <form onSubmit={handleGenerate} className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
