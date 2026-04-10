@@ -268,7 +268,7 @@ export default function Index() {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="py-20 pb-24 px-4 bg-card border-y border-border">
+      <section id="pricing" className="py-20 pb-24 px-4">
         <div className="container max-w-4xl">
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Simple, transparent pricing</h2>
