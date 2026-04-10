@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, User, Building2, Briefcase, PoundSterling, FileText, Clock, StickyNote } from "lucide-react";
 
 const serviceTypes = [
   "Marketing Strategy",
@@ -124,94 +124,115 @@ export default function NewProposal() {
 
       <Card className="glass-card">
         <CardContent className="p-6 md:p-8">
-          <form onSubmit={handleGenerate} className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
+          <form onSubmit={handleGenerate} className="space-y-8">
+            <div className="grid md:grid-cols-2 gap-8">
               <div>
                 <Label htmlFor="client_name">Client Name</Label>
-                <Input
-                  id="client_name"
-                  value={form.client_name}
-                  onChange={(e) => update("client_name", e.target.value)}
-                  placeholder="John Smith"
-                  required
-                  className="mt-1.5"
-                />
+                <div className="relative mt-2">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="client_name"
+                    value={form.client_name}
+                    onChange={(e) => update("client_name", e.target.value)}
+                    placeholder="Who is your client?"
+                    required
+                    className="pl-10"
+                  />
+                </div>
               </div>
               <div>
                 <Label htmlFor="company_name">Company Name</Label>
-                <Input
-                  id="company_name"
-                  value={form.company_name}
-                  onChange={(e) => update("company_name", e.target.value)}
-                  placeholder="Acme Ltd"
-                  required
-                  className="mt-1.5"
-                />
+                <div className="relative mt-2">
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="company_name"
+                    value={form.company_name}
+                    onChange={(e) => update("company_name", e.target.value)}
+                    placeholder="Their company or organisation"
+                    required
+                    className="pl-10"
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 gap-8">
               <div>
                 <Label htmlFor="service_type">Service Type</Label>
-                <Select value={form.service_type} onValueChange={(v) => update("service_type", v)}>
-                  <SelectTrigger className="mt-1.5">
-                    <SelectValue placeholder="Select a service" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {serviceTypes.map((s) => (
-                      <SelectItem key={s} value={s}>{s}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="relative mt-2">
+                  <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
+                  <Select value={form.service_type} onValueChange={(v) => update("service_type", v)}>
+                    <SelectTrigger className="pl-10">
+                      <SelectValue placeholder="What service are you offering?" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {serviceTypes.map((s) => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div>
                 <Label htmlFor="budget">Budget</Label>
-                <Input
-                  id="budget"
-                  value={form.budget}
-                  onChange={(e) => update("budget", e.target.value)}
-                  placeholder="£5,000"
-                  required
-                  className="mt-1.5"
-                />
+                <div className="relative mt-2">
+                  <PoundSterling className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="budget"
+                    value={form.budget}
+                    onChange={(e) => update("budget", e.target.value)}
+                    placeholder="e.g. £5,000"
+                    required
+                    className="pl-10"
+                  />
+                </div>
               </div>
             </div>
 
             <div>
               <Label htmlFor="project_scope">Project Scope</Label>
-              <Textarea
-                id="project_scope"
-                value={form.project_scope}
-                onChange={(e) => update("project_scope", e.target.value)}
-                placeholder="Describe what the client needs…"
-                required
-                rows={3}
-                className="mt-1.5"
-              />
+              <div className="relative mt-2">
+                <FileText className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                <Textarea
+                  id="project_scope"
+                  value={form.project_scope}
+                  onChange={(e) => update("project_scope", e.target.value)}
+                  placeholder="What problem are you solving?"
+                  required
+                  rows={3}
+                  className="pl-10"
+                />
+              </div>
             </div>
 
             <div>
               <Label htmlFor="timeline">Timeline</Label>
-              <Input
-                id="timeline"
-                value={form.timeline}
-                onChange={(e) => update("timeline", e.target.value)}
-                placeholder="e.g., 4 weeks"
-                required
-                className="mt-1.5"
-              />
+              <div className="relative mt-2">
+                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="timeline"
+                  value={form.timeline}
+                  onChange={(e) => update("timeline", e.target.value)}
+                  placeholder="e.g. 4 weeks"
+                  required
+                  className="pl-10"
+                />
+              </div>
             </div>
 
             <div>
               <Label htmlFor="notes">Extra Notes (optional)</Label>
-              <Textarea
-                id="notes"
-                value={form.notes}
-                onChange={(e) => update("notes", e.target.value)}
-                placeholder="Any additional context…"
-                rows={2}
-                className="mt-1.5"
-              />
+              <div className="relative mt-2">
+                <StickyNote className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                <Textarea
+                  id="notes"
+                  value={form.notes}
+                  onChange={(e) => update("notes", e.target.value)}
+                  placeholder="Any additional context…"
+                  rows={2}
+                  className="pl-10"
+                />
+              </div>
             </div>
 
             {loading ? (
