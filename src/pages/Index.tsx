@@ -71,7 +71,7 @@ export default function Index() {
       </nav>
 
       {/* Hero */}
-      <section className="py-24 md:py-36 px-4">
+      <section className="py-16 md:py-24 px-4">
         <div className="container max-w-3xl text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight leading-tight mb-6">
             Create proposals that win clients — in <span className="bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent font-extrabold">minutes</span>
@@ -102,7 +102,7 @@ export default function Index() {
       </section>
 
       {/* Pain Section */}
-      <section className="py-28 px-4">
+      <section className="py-16 px-4">
         <div className="container max-w-3xl text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Still writing proposals manually?</h2>
           <p className="text-muted-foreground text-lg mb-12 max-w-xl mx-auto">
@@ -122,7 +122,7 @@ export default function Index() {
       </section>
 
       {/* Product Preview */}
-      <section className="py-20 px-4">
+      <section className="py-16 px-4">
         <div className="container max-w-4xl text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">See how it works</h2>
           <p className="text-muted-foreground text-lg mb-10 max-w-xl mx-auto">
@@ -216,7 +216,7 @@ export default function Index() {
       </section>
 
       {/* How it works */}
-      <section id="how-it-works" className="py-28 px-4">
+      <section id="how-it-works" className="py-16 px-4">
         <div className="container max-w-3xl">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">How it works</h2>
@@ -241,9 +241,9 @@ export default function Index() {
       </section>
 
       {/* What you get */}
-      <section className="py-28 px-4 bg-card border-y border-border">
+      <section className="py-16 px-4 bg-card border-y border-border">
         <div className="container max-w-3xl text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-12">What you get</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-10">What you get</h2>
           <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {deliverables.map((item) => (
               <div key={item} className="flex items-center gap-3 p-4 rounded-lg bg-background border border-border text-left">
@@ -256,7 +256,7 @@ export default function Index() {
       </section>
 
       {/* Credibility */}
-      <section className="py-20 px-4">
+      <section className="py-16 px-4">
         <div className="container max-w-2xl text-center">
           <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-6">
             <Briefcase className="w-6 h-6 text-accent" />
@@ -277,7 +277,7 @@ export default function Index() {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="py-28 px-4 bg-card border-y border-border">
+      <section id="pricing" className="py-16 px-4 bg-card border-y border-border">
         <div className="container max-w-4xl">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Simple, transparent pricing</h2>
