@@ -44,7 +44,7 @@ export default function Billing() {
         <p className="text-sm text-muted-foreground mt-1">Manage your subscription plan</p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6 max-w-4xl">
+      <div className="grid md:grid-cols-2 gap-6 max-w-3xl">
         {plans.map((plan) => (
           <Card
             key={plan.name}
