@@ -1,6 +1,7 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 const plans = [
   {
@@ -15,6 +16,7 @@ const plans = [
       "No custom branding",
     ],
     current: true,
+    popular: false,
   },
   {
     name: "Basic",
@@ -22,6 +24,7 @@ const plans = [
     period: "/month",
     features: ["5 proposals per month", "AI proposal generation", "PDF export", "Email support"],
     current: false,
+    popular: false,
   },
   {
     name: "Pro",
@@ -29,6 +32,7 @@ const plans = [
     period: "/month",
     features: ["Unlimited proposals", "No watermark", "PDF export", "Invoice export", "Custom branding", "Proposal history"],
     current: false,
+    popular: true,
   },
 ];
 
@@ -40,9 +44,23 @@ export default function Billing() {
         <p className="text-sm text-muted-foreground mt-1">Manage your subscription plan</p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6 max-w-3xl">
+      <div className="grid md:grid-cols-3 gap-6 max-w-4xl">
         {plans.map((plan) => (
-          <Card key={plan.name} className={plan.current ? "border-accent" : ""}>
+          <Card
+            key={plan.name}
+            className={
+              plan.popular
+                ? "border-accent shadow-[0_0_20px_hsl(var(--accent)/0.3)] ring-1 ring-accent relative"
+                : plan.current
+                ? "border-accent relative"
+                : "relative"
+            }
+          >
+            {plan.popular && (
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <Badge className="bg-accent text-accent-foreground shadow-md">Most Popular</Badge>
+              </div>
+            )}
             <CardContent className="p-6">
               <h3 className="font-semibold text-foreground text-lg">{plan.name}</h3>
               <div className="mt-2 mb-4">
@@ -59,7 +77,13 @@ export default function Billing() {
               </ul>
               <Button
                 variant={plan.current ? "outline" : "default"}
-                className={!plan.current ? "bg-accent text-accent-foreground hover:bg-accent/90 w-full" : "w-full"}
+                className={
+                  plan.popular
+                    ? "bg-accent text-accent-foreground hover:bg-accent/90 w-full shadow-[0_0_12px_hsl(var(--accent)/0.4)]"
+                    : !plan.current
+                    ? "bg-accent/80 text-accent-foreground hover:bg-accent/70 w-full"
+                    : "w-full"
+                }
                 disabled={plan.current}
               >
                 {plan.current ? "Current Plan" : "Upgrade"}
