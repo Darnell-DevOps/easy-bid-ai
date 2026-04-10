@@ -71,13 +71,13 @@ export default function Index() {
       </nav>
 
       {/* Hero */}
-      <section className="py-24 md:py-36 px-4">
+      <section className="py-16 md:py-24 px-4">
         <div className="container max-w-3xl text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight leading-tight mb-6">
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight leading-tight mb-4">
             Create proposals that win clients — in <span className="bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent font-extrabold">minutes</span>
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed">
-            Stop losing clients because of slow proposals. Generate a professional proposal and invoice in under <span className="text-foreground font-semibold">2 minutes</span>.
+          <p className="text-xl md:text-2xl text-foreground/80 font-medium max-w-2xl mx-auto mb-10 leading-relaxed">
+            Stop losing clients because of slow proposals. Generate a professional proposal and invoice in under <span className="text-accent font-semibold">2 minutes</span>.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link to="/signup">
@@ -97,26 +97,6 @@ export default function Index() {
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><Zap className="w-3 h-3 text-accent" />Fast</span>
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><ShieldCheck className="w-3 h-3 text-accent" />Secure</span>
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><FileText className="w-3 h-3 text-accent" />Professional</span>
-          </div>
-        </div>
-      </section>
-
-      {/* Pain Section */}
-      <section className="py-28 px-4">
-        <div className="container max-w-3xl text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Still writing proposals manually?</h2>
-          <p className="text-muted-foreground text-lg mb-12 max-w-xl mx-auto">
-            Manual proposals are holding your business back.
-          </p>
-          <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
-            {painPoints.map((p) => (
-              <div key={p.text} className="flex items-center gap-3 p-4 rounded-lg bg-card border border-border text-left">
-                <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center flex-shrink-0">
-                  <p.icon className="w-4 h-4 text-destructive" />
-                </div>
-                <span className="text-sm font-medium text-foreground">{p.text}</span>
-              </div>
-            ))}
           </div>
         </div>
       </section>
