@@ -52,7 +52,7 @@ Return your response as valid JSON with exactly these three keys:
    ## Next Steps
    2-3 sentences on how to proceed (e.g. sign-off, kick-off call).
 
-2. "pricing" — A clear pricing breakdown in Markdown. Use a table with columns: Item, Description, Cost. Include a subtotal, VAT (20%), and total. Keep it clean and professional.
+2. "pricing" — Start with a short paragraph (2-3 sentences) before the pricing table that frames the investment. Position the cost as an investment in long-term growth and ROI — not just an expense. Emphasise the lasting value and return the client will see. Then include a clear pricing table with columns: Item, Description, Cost. Include a subtotal, VAT (20%), and total. Keep it clean and professional.
 
 3. "invoice" — A professional invoice in Markdown. Include:
    - Invoice number (format: INV-2026-001)
