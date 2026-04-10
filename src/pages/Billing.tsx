@@ -2,6 +2,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Lock } from "lucide-react";
 
 const plans = [
   {
@@ -82,9 +83,18 @@ export default function Billing() {
               </div>
               <ul className="space-y-2 mb-6">
                 {plan.features.map((f) => (
-                  <li key={f} className="text-sm text-muted-foreground flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-accent flex-shrink-0" />
-                    {f}
+                  <li
+                    key={f.text}
+                    className={`text-sm flex items-center gap-2 ${
+                      f.locked ? "text-muted-foreground/40" : "text-muted-foreground"
+                    }`}
+                  >
+                    {f.locked ? (
+                      <Lock className="w-3.5 h-3.5 flex-shrink-0" />
+                    ) : (
+                      <div className="w-1.5 h-1.5 rounded-full bg-accent flex-shrink-0" />
+                    )}
+                    {f.text}
                   </li>
                 ))}
               </ul>
