@@ -25,9 +25,9 @@ const plans = [
   },
   {
     name: "Pro",
-    price: "£39",
+    price: "£9",
     period: "/month",
-    features: ["Unlimited proposals", "AI proposal generation", "PDF export", "Saved history", "Custom branding", "Priority support"],
+    features: ["Unlimited proposals", "No watermark", "PDF export", "Invoice export", "Custom branding", "Proposal history"],
     current: false,
   },
 ];
