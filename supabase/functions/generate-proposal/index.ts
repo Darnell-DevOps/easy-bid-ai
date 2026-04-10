@@ -32,7 +32,7 @@ Return your response as valid JSON with exactly these three keys:
    A one-line subtitle with client name and company.
 
    ## Introduction
-   A brief, warm opening (2-3 sentences) introducing who you are and the purpose of this proposal.
+   Start with a strong, outcome-focused opening statement. Do NOT use generic phrases like "It is a pleasure to submit" or "We are delighted to present". Instead, lead with the result the client will achieve. Example tone: "This proposal outlines a strategy to transform your Instagram presence into a consistent lead generation channel." Keep it to 2-3 sentences max.
 
    ## Understanding of Your Needs
    Show you understand the client's situation and goals (2-3 short paragraphs max).
