@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Save, Loader2, Pencil, Eye } from "lucide-react";
+import { Download, Save, Loader2, Pencil, Eye, Copy, Check } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 interface ProposalData {
