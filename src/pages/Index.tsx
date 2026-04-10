@@ -94,6 +94,31 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Trust Section */}
+      <section className="py-16 px-4">
+        <div className="container max-w-3xl text-center">
+          <p className="text-muted-foreground text-lg mb-8">Used by freelancers and agencies to close more clients</p>
+          <div className="flex flex-col sm:flex-row justify-center gap-6 mb-12">
+            {[
+              { icon: Clock, text: "Save hours on every proposal" },
+              { icon: Zap, text: "Look more professional instantly" },
+              { icon: ArrowRight, text: "Close deals faster" },
+            ].map((item) => (
+              <div key={item.text} className="flex items-center gap-2 text-sm text-foreground">
+                <item.icon className="w-4 h-4 text-accent flex-shrink-0" />
+                <span>{item.text}</span>
+              </div>
+            ))}
+          </div>
+          <blockquote className="max-w-lg mx-auto border-l-2 border-accent pl-4 text-left">
+            <p className="text-sm text-muted-foreground italic leading-relaxed">
+              "This tool saved me hours every week and helped me land more clients"
+            </p>
+            <footer className="mt-2 text-xs text-muted-foreground/60">— Freelance Consultant</footer>
+          </blockquote>
+        </div>
+      </section>
+
       {/* Pain Section */}
       <section className="py-20 px-4 bg-card border-y border-border">
         <div className="container max-w-3xl text-center">
