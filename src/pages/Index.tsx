@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { FileText, Zap, Download, AlertTriangle, Clock, XCircle, UserX, ArrowRight, CheckCircle, Briefcase, ShieldCheck } from "lucide-react";
 
 const steps = [
@@ -46,6 +48,8 @@ const plans = [
 ];
 
 export default function Index() {
+  const [sampleOpen, setSampleOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Nav */}
@@ -86,11 +90,9 @@ export default function Index() {
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
-            <Link to="/proposal/example">
-              <Button size="lg" variant="outline" className="px-10 h-14 text-base">
-                View Sample Proposal
-              </Button>
-            </Link>
+            <Button size="lg" variant="outline" className="px-10 h-14 text-base" onClick={() => setSampleOpen(true)}>
+              View Sample Proposal
+            </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-6">No signup required to try • Generate your first proposal in seconds</p>
           <div className="flex items-center justify-center gap-5 mt-3">
