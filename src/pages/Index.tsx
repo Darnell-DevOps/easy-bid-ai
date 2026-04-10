@@ -210,7 +210,28 @@ export default function Index() {
             <p className="text-sm text-muted-foreground mt-6">Generated in under 2 minutes</p>
           </div>
 
-          {/* What you get */}
+          {/* Social proof */}
+          <div className="max-w-3xl mx-auto text-center mb-16">
+            <p className="text-muted-foreground text-lg mb-8">Used by freelancers and agencies to close more clients</p>
+            <div className="flex flex-col sm:flex-row justify-center gap-6 mb-12">
+              {[
+                { icon: Clock, text: "Save hours on every proposal" },
+                { icon: Zap, text: "Look more professional instantly" },
+                { icon: ArrowRight, text: "Close deals faster" },
+              ].map((item) => (
+                <div key={item.text} className="flex items-center gap-2 text-sm text-foreground">
+                  <item.icon className="w-4 h-4 text-accent flex-shrink-0" />
+                  <span>{item.text}</span>
+                </div>
+              ))}
+            </div>
+            <blockquote className="max-w-lg mx-auto border-l-2 border-accent pl-4 text-left">
+              <p className="text-sm text-foreground/80 italic leading-relaxed">
+                "This tool saved me hours every week and helped me land more clients"
+              </p>
+              <footer className="mt-2 text-xs text-muted-foreground">— Freelance Consultant</footer>
+            </blockquote>
+          </div>
           <div className="max-w-3xl mx-auto text-center">
             <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-8">What you get</h3>
             <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
