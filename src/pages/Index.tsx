@@ -78,14 +78,18 @@ export default function Index() {
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
             Stop losing clients because of slow proposals. Generate a professional proposal and invoice in minutes.
           </p>
-          <div className="flex flex-col items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-center gap-3">
             <Link to="/signup">
               <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-90 px-8 h-12 text-base gap-2">
-                Create Your First Proposal Now
+                Start Free – No Credit Card
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
-            <p className="text-sm text-muted-foreground">Start creating proposals in under 60 seconds</p>
+            <Link to="/proposal/example">
+              <Button size="lg" variant="outline" className="px-8 h-12 text-base">
+                See Example Proposal
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
