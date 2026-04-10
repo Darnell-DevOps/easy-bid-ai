@@ -95,7 +95,60 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Trust Section */}
+      {/* Product Preview */}
+      <section className="py-20 px-4">
+        <div className="container max-w-4xl text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">See how it works</h2>
+          <p className="text-muted-foreground text-lg mb-10 max-w-xl mx-auto">
+            From client details to a ready-to-send proposal in seconds.
+          </p>
+          <div className="relative">
+            <div className="absolute -inset-4 bg-purple/20 rounded-3xl blur-2xl pointer-events-none" />
+            <div className="relative rounded-2xl border-2 border-accent/30 bg-card shadow-2xl shadow-accent/10 overflow-hidden">
+              <div className="px-4 py-2 border-b border-border flex items-center gap-2">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-destructive/60" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
+                  <div className="w-3 h-3 rounded-full bg-green-500/60" />
+                </div>
+                <span className="text-xs text-accent font-medium ml-2 uppercase tracking-wider">Live preview</span>
+              </div>
+              <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border">
+                {/* Form side */}
+                <div className="p-6 text-left space-y-4">
+                  <h3 className="text-sm font-semibold text-foreground mb-4">Client Details</h3>
+                  {["Client Name", "Service Type", "Budget"].map((label) => (
+                    <div key={label} className="space-y-1.5">
+                      <span className="text-xs text-muted-foreground">{label}</span>
+                      <div className="h-9 rounded-md bg-muted/50 border border-border" />
+                    </div>
+                  ))}
+                  <div className="pt-2">
+                    <div className="h-10 rounded-lg bg-accent/20 border border-accent/30 flex items-center justify-center">
+                      <span className="text-xs font-medium text-accent">Generate Proposal →</span>
+                    </div>
+                  </div>
+                </div>
+                {/* Preview side */}
+                <div className="p-6 text-left space-y-3">
+                  <h3 className="text-sm font-semibold text-foreground mb-4">Generated Proposal</h3>
+                  <div className="h-3 rounded bg-foreground/15 w-3/4" />
+                  <div className="h-3 rounded bg-foreground/10 w-full" />
+                  <div className="h-3 rounded bg-foreground/10 w-5/6" />
+                  <div className="h-3 rounded bg-foreground/10 w-full" />
+                  <div className="mt-4 pt-4 border-t border-border space-y-2">
+                    <div className="h-3 rounded bg-accent/20 w-1/2" />
+                    <div className="h-3 rounded bg-accent/15 w-2/3" />
+                    <div className="h-3 rounded bg-accent/15 w-1/3" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground mt-6">Generated in under 2 minutes</p>
+        </div>
+      </section>
+
       <section className="py-16 px-4">
         <div className="container max-w-3xl text-center">
           <p className="text-muted-foreground text-lg mb-8">Used by freelancers and agencies to close more clients</p>
