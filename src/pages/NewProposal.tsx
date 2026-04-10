@@ -214,18 +214,24 @@ export default function NewProposal() {
               />
             </div>
 
-            <Button
-              type="submit"
-              disabled={loading || !form.service_type}
-              className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-90 gap-2 w-full md:w-auto"
-              size="lg"
-            >
-              {loading ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Generating…</>
-              ) : (
-                <><Sparkles className="w-4 h-4" /> Generate Proposal</>
-              )}
-            </Button>
+            {loading ? (
+              <div className="flex flex-col items-center gap-4 py-6">
+                <Loader2 className="w-8 h-8 animate-spin text-accent" />
+                <p className="text-sm font-medium text-foreground animate-pulse">
+                  {loadingSteps[loadingStep]}
+                </p>
+                <Progress value={progress} className="w-full max-w-xs h-2" />
+              </div>
+            ) : (
+              <Button
+                type="submit"
+                disabled={!form.service_type}
+                className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-90 gap-2 w-full md:w-auto"
+                size="lg"
+              >
+                <Sparkles className="w-4 h-4" /> Generate Proposal
+              </Button>
+            )}
           </form>
         </CardContent>
       </Card>
