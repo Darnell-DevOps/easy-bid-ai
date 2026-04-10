@@ -74,7 +74,7 @@ export default function Index() {
       <section className="py-24 md:py-36 px-4">
         <div className="container max-w-3xl text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight leading-tight mb-6">
-            Create proposals that win clients — in <span className="bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent font-extrabold">minutes</span>.
+            Create proposals that win clients — in <span className="bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent font-extrabold">minutes</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed">
             Stop losing clients because of slow proposals. Generate a professional proposal and invoice in under <span className="text-foreground font-semibold">2 minutes</span>.
@@ -101,6 +101,26 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Pain Section */}
+      <section className="py-28 px-4">
+        <div className="container max-w-3xl text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Still writing proposals manually?</h2>
+          <p className="text-muted-foreground text-lg mb-12 max-w-xl mx-auto">
+            Manual proposals are holding your business back.
+          </p>
+          <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
+            {painPoints.map((p) => (
+              <div key={p.text} className="flex items-center gap-3 p-4 rounded-lg bg-card border border-border text-left">
+                <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center flex-shrink-0">
+                  <p.icon className="w-4 h-4 text-destructive" />
+                </div>
+                <span className="text-sm font-medium text-foreground">{p.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Product Preview */}
       <section className="py-20 px-4">
         <div className="container max-w-4xl text-center">
@@ -123,7 +143,6 @@ export default function Index() {
                 <span className="text-[10px] text-accent/80 bg-accent/10 px-2 py-0.5 rounded-full font-medium animate-pulse">● Generated just now</span>
               </div>
               <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border">
-                {/* Form side */}
                 <div className="p-6 text-left space-y-4">
                   <h3 className="text-sm font-semibold text-foreground mb-4">Client Details</h3>
                   {[
@@ -144,7 +163,6 @@ export default function Index() {
                     </div>
                   </div>
                 </div>
-                {/* Preview side */}
                 <div className="p-6 text-left space-y-3 relative overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-accent/5 to-transparent animate-shimmer pointer-events-none" />
                   <h3 className="text-sm font-semibold text-foreground mb-3">Generated Proposal</h3>
@@ -194,26 +212,6 @@ export default function Index() {
             </p>
             <footer className="mt-2 text-xs text-muted-foreground">— Freelance Consultant</footer>
           </blockquote>
-        </div>
-      </section>
-
-      {/* Pain Section */}
-      <section className="py-28 px-4 bg-card border-y border-border">
-        <div className="container max-w-3xl text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Still writing proposals manually?</h2>
-          <p className="text-muted-foreground text-lg mb-12 max-w-xl mx-auto">
-            Manual proposals are holding your business back.
-          </p>
-          <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
-            {painPoints.map((p) => (
-              <div key={p.text} className="flex items-center gap-3 p-4 rounded-lg bg-background border border-border text-left">
-                <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center flex-shrink-0">
-                  <p.icon className="w-4 h-4 text-destructive" />
-                </div>
-                <span className="text-sm font-medium text-foreground">{p.text}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
