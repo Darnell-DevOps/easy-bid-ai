@@ -109,6 +109,7 @@ export default function ProposalView() {
 
   const handleExportPDF = (type: "proposal" | "invoice") => {
     const content = type === "proposal" ? editedProposal + "\n\n---\n\n" + editedPricing : editedInvoice;
+    const docTitle = type === "proposal" ? "Project Proposal" : "Invoice";
     const title = type === "proposal"
       ? `Proposal - ${proposal?.client_name}`
       : `Invoice - ${proposal?.client_name}`;
@@ -116,8 +117,8 @@ export default function ProposalView() {
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
 
-    // Convert markdown to simple HTML for print
-    const htmlContent = content
+    // Convert markdown to HTML
+    let htmlContent = content
       .replace(/^## (.+)$/gm, '<h2>$1</h2>')
       .replace(/^### (.+)$/gm, '<h3>$1</h3>')
       .replace(/^\*\*(.+?)\*\*/gm, '<strong>$1</strong>')
@@ -126,34 +127,185 @@ export default function ProposalView() {
       .replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>')
       .replace(/\|(.+)\|/g, (match) => {
         const cells = match.split('|').filter(Boolean).map(c => c.trim());
+        if (cells.every(c => /^[-:]+$/.test(c))) return '';
+        const isHeader = cells.some(c => /^[-:]+$/.test(c));
+        if (isHeader) return '';
         return '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
       })
-      .replace(/(<tr>.*<\/tr>\n?)+/g, '<table>$&</table>')
+      .replace(/(<tr>.*<\/tr>\n?)+/g, '<table><tbody>$&</tbody></table>')
       .replace(/\n{2,}/g, '</p><p>')
       .replace(/^(?!<[hultop])(.+)$/gm, '<p>$1</p>')
       .replace(/---/g, '<hr />');
+
+    // Bold the last row of each table (total row)
+    htmlContent = htmlContent.replace(
+      /<tbody>([\s\S]*?)<\/tbody>/g,
+      (match) => {
+        const rows = match.match(/<tr>[\s\S]*?<\/tr>/g);
+        if (!rows || rows.length < 2) return match;
+        const lastRow = rows[rows.length - 1];
+        const boldedRow = lastRow.replace(/<td>/g, '<td class="total-row">');
+        return match.replace(lastRow, boldedRow);
+      }
+    );
 
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
       <head>
         <title>${title}</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
         <style>
-          body { font-family: 'Inter', system-ui, sans-serif; max-width: 750px; margin: 40px auto; padding: 0 32px; color: #1a1a2e; line-height: 1.7; font-size: 14px; }
-          h2 { color: #1a1a2e; font-size: 18px; margin-top: 28px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #e5e5e5; }
-          h3 { color: #1a1a2e; font-size: 15px; margin-top: 20px; }
-          p { margin: 8px 0; }
-          ul { padding-left: 24px; margin: 8px 0; }
-          li { margin: 4px 0; }
-          table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
-          th, td { padding: 8px 12px; border: 1px solid #e5e5e5; text-align: left; }
-          th { background: #f5f5f5; font-weight: 600; }
-          hr { border: none; border-top: 1px solid #e5e5e5; margin: 24px 0; }
-          strong { color: #1a1a2e; }
+          @page { margin: 48px 56px; }
+          * { box-sizing: border-box; }
+          body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            max-width: 100%;
+            margin: 0;
+            padding: 0;
+            color: #2d2d3a;
+            line-height: 1.8;
+            font-size: 13.5px;
+            -webkit-font-smoothing: antialiased;
+          }
+
+          /* Header */
+          .doc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #6c5ce7;
+            margin-bottom: 8px;
+          }
+          .doc-header .brand {
+            font-size: 18px;
+            font-weight: 700;
+            color: #6c5ce7;
+            letter-spacing: -0.3px;
+          }
+          .doc-header .brand span {
+            font-weight: 400;
+            color: #8b8ba3;
+          }
+          .doc-header .meta {
+            text-align: right;
+            font-size: 11px;
+            color: #8b8ba3;
+            line-height: 1.6;
+          }
+
+          /* Title */
+          .doc-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin: 32px 0 4px 0;
+            letter-spacing: -0.5px;
+          }
+          .doc-subtitle {
+            font-size: 14px;
+            color: #8b8ba3;
+            margin: 0 0 32px 0;
+            font-weight: 400;
+          }
+
+          /* Section headings */
+          h2 {
+            font-size: 17px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin: 36px 0 12px 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e8e8f0;
+            letter-spacing: -0.2px;
+          }
+          h3 {
+            font-size: 14.5px;
+            font-weight: 600;
+            color: #2d2d3a;
+            margin: 28px 0 10px 0;
+          }
+
+          /* Body */
+          p { margin: 10px 0; color: #4a4a5a; }
+          ul { padding-left: 20px; margin: 12px 0; }
+          li { margin: 6px 0; color: #4a4a5a; }
+          li::marker { color: #6c5ce7; }
+          strong { color: #1a1a2e; font-weight: 600; }
+
+          /* Table */
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 13px;
+          }
+          tr:first-child td {
+            background: #f8f8fc;
+            font-weight: 600;
+            color: #1a1a2e;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+          }
+          td {
+            padding: 11px 16px;
+            border-bottom: 1px solid #ececf4;
+            color: #4a4a5a;
+            vertical-align: top;
+          }
+          td.total-row {
+            font-weight: 700;
+            color: #1a1a2e;
+            border-top: 2px solid #6c5ce7;
+            background: #f8f7ff;
+            font-size: 14px;
+          }
+
+          /* Dividers */
+          hr {
+            border: none;
+            border-top: 1px solid #ececf4;
+            margin: 32px 0;
+          }
+
+          /* Footer */
+          .doc-footer {
+            margin-top: 48px;
+            padding-top: 16px;
+            border-top: 1px solid #ececf4;
+            font-size: 11px;
+            color: #a0a0b8;
+            text-align: center;
+          }
+
+          @media print {
+            body { padding: 0; }
+            .doc-header { break-inside: avoid; }
+            h2, h3 { break-after: avoid; }
+            table { break-inside: avoid; }
+          }
         </style>
       </head>
       <body>
+        <div class="doc-header">
+          <div class="brand">CloseSync <span>AI</span></div>
+          <div class="meta">
+            Prepared for: ${proposal?.client_name}<br>
+            ${proposal?.company_name}<br>
+            ${new Date(proposal?.created_at || '').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+          </div>
+        </div>
+
+        <div class="doc-title">${docTitle}</div>
+        <div class="doc-subtitle">${proposal?.service_type} · ${proposal?.company_name}</div>
+
         ${htmlContent}
+
+        <div class="doc-footer">
+          Generated by CloseSync AI · Confidential
+        </div>
       </body>
       </html>
     `);
