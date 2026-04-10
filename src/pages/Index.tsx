@@ -289,7 +289,7 @@ export default function Index() {
                     ))}
                   </ul>
                   <Link to="/signup">
-                    <Button className={`w-full ${plan.popular ? "bg-accent text-accent-foreground hover:bg-accent/90 shadow-[0_0_16px_hsl(var(--accent)/0.4)] h-12 text-base" : ""}`} variant={plan.popular ? "default" : "outline"}>
+                    <Button className={`w-full ${plan.popular ? "bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-90 shadow-[0_0_24px_hsl(var(--accent)/0.5)] h-13 text-base font-semibold" : ""}`} variant={plan.popular ? "default" : "outline"}>
                       {plan.cta}
                     </Button>
                   </Link>
