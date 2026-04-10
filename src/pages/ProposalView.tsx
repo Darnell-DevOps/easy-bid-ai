@@ -176,8 +176,9 @@ export default function ProposalView() {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding-bottom: 20px;
+            padding-bottom: 24px;
             border-bottom: 2px solid #6c5ce7;
+            margin-bottom: 24px;
             margin-bottom: 8px;
           }
           .doc-header .brand-group {
