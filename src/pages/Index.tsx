@@ -25,21 +25,21 @@ const deliverables = [
 
 const plans = [
   {
-    name: "Basic",
-    price: "£19",
+    name: "Free",
+    price: "£0",
     period: "/month",
-    description: "Perfect for freelancers getting started",
-    features: ["5 proposals per month", "AI proposal generation", "PDF export", "Email support"],
-    cta: "Get Started",
+    description: "Get started with no commitment",
+    features: ["3 proposals per month", "AI proposal generation", "Watermark on exports"],
+    cta: "Get Started Free",
     popular: false,
   },
   {
     name: "Pro",
-    price: "£39",
+    price: "£9",
     period: "/month",
-    description: "For agencies and busy consultants",
-    features: ["Unlimited proposals", "AI proposal generation", "PDF export", "Saved proposal history", "Custom branding", "Priority support"],
-    cta: "Start Free Trial",
+    description: "For freelancers and agencies closing more deals",
+    features: ["Unlimited proposals", "No watermark", "PDF export", "Invoice export", "Custom branding", "Proposal history"],
+    cta: "Upgrade to Pro",
     popular: true,
   },
 ];
