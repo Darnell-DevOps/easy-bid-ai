@@ -88,6 +88,11 @@ export default function Billing() {
               >
                 {plan.current ? "Current Plan" : "Upgrade"}
               </Button>
+              {plan.popular && (
+                <p className="text-xs text-muted-foreground text-center mt-3">
+                  Used by freelancers closing more deals
+                </p>
+              )}
             </CardContent>
           </Card>
         ))}
