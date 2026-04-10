@@ -39,7 +39,7 @@ const plans = [
     period: "/month",
     description: "For freelancers and agencies closing more deals",
     features: ["Unlimited proposals", "No watermark", "Invoice export", "Custom branding", "Proposal history"],
-    cta: "Upgrade to Pro",
+    cta: "Create Unlimited Proposals",
     popular: true,
     valueLine: "Less than the cost of 1 client lost",
   },
