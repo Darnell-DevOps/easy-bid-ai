@@ -105,6 +105,8 @@ export default function NewProposal() {
       if (saveError || !proposal) throw saveError || new Error("Failed to save proposal");
 
       toast({ title: "Proposal generated!", description: "Your proposal is ready to review." });
+      setProgress(100);
+      await new Promise(r => setTimeout(r, 500));
       navigate(`/dashboard/proposal/${proposal.id}`);
     } catch (err: any) {
       toast({ title: "Generation failed", description: err.message || "Please try again.", variant: "destructive" });
