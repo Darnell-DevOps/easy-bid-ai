@@ -30,7 +30,7 @@ const plans = [
     period: "/month",
     description: "Get started with no commitment",
     features: ["3 proposals per month", "AI proposal generation", "Watermark on exports"],
-    cta: "Get Started Free",
+    cta: "Create Your First Proposal Free",
     popular: false,
   },
   {
@@ -64,7 +64,7 @@ export default function Index() {
               <Button variant="ghost" size="sm">Log in</Button>
             </Link>
             <Link to="/signup">
-              <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">Start Free</Button>
+              <Button size="sm" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 h-9">Create Your First Proposal Free</Button>
             </Link>
           </div>
         </div>
@@ -81,8 +81,8 @@ export default function Index() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link to="/signup">
-              <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-90 px-10 h-14 text-base gap-2">
-                Start Free – No Credit Card
+              <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_20px_hsl(var(--accent)/0.4)] px-10 h-14 text-base gap-2 transition-all">
+                Create Your First Proposal Free
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
@@ -269,8 +269,8 @@ export default function Index() {
           </p>
           <div className="mt-10">
             <Link to="/signup">
-              <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-90 px-10 h-14 text-base gap-2">
-                Start Free – No Credit Card
+              <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_20px_hsl(var(--accent)/0.4)] px-10 h-14 text-base gap-2 transition-all">
+                Create Your First Proposal Free
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
@@ -313,7 +313,7 @@ export default function Index() {
                     ))}
                   </ul>
                   <Link to="/signup">
-                    <Button className={`w-full ${plan.popular ? "bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-90 shadow-[0_0_24px_hsl(var(--accent)/0.5)] h-13 text-base font-semibold" : ""}`} variant={plan.popular ? "default" : "outline"}>
+                    <Button className={`w-full h-12 text-base transition-all ${plan.popular ? "bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_24px_hsl(var(--accent)/0.5)] font-semibold" : "hover:brightness-110"}`} variant={plan.popular ? "default" : "outline"}>
                       {plan.cta}
                     </Button>
                   </Link>
