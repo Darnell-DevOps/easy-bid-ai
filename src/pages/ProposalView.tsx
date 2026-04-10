@@ -196,7 +196,9 @@ export default function ProposalView() {
 
       <Card>
         <CardContent className="p-0">
-          <div className="flex items-center gap-3 flex-wrap px-6 py-4 border-b border-border bg-secondary/30">
+          <div className="px-6 pt-4 pb-3 border-b border-border bg-secondary/30">
+            <p className="text-xs text-muted-foreground mb-3">Your proposal is ready</p>
+            <div className="flex items-center gap-3 flex-wrap">
             <Button
               onClick={() => handleExportPDF("proposal")}
               size="lg"
