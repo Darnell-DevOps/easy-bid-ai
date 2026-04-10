@@ -188,16 +188,24 @@ export default function ProposalView() {
             {proposal.company_name} · {proposal.service_type} · {new Date(proposal.created_at).toLocaleDateString()}
           </p>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" onClick={handleSave} disabled={saving} className="gap-2">
+        <div className="flex gap-3 flex-wrap">
+          <Button
+            onClick={() => handleExportPDF("proposal")}
+            size="lg"
+            className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 hover:shadow-purple/30 transition-all"
+          >
+            <Download className="w-4 h-4" /> Export Proposal
+          </Button>
+          <Button variant="outline" onClick={handleSave} disabled={saving} className="gap-2 hover:brightness-125 transition-all">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             Save
           </Button>
-          <Button variant="outline" onClick={() => handleExportPDF("proposal")} className="gap-2">
-            <Download className="w-4 h-4" /> Export Proposal
-          </Button>
-          <Button variant="outline" onClick={() => handleExportPDF("invoice")} className="gap-2">
+          <Button variant="outline" onClick={() => handleExportPDF("invoice")} className="gap-2 hover:brightness-125 transition-all">
             <Download className="w-4 h-4" /> Export Invoice
+          </Button>
+          <Button variant="outline" onClick={handleCopyProposal} className="gap-2 hover:brightness-125 transition-all">
+            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            {copied ? "Copied!" : "Copy Proposal"}
           </Button>
         </div>
       </div>
