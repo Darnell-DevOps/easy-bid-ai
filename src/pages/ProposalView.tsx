@@ -187,37 +187,35 @@ export default function ProposalView() {
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">{proposal.client_name}</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {proposal.company_name} · {proposal.service_type} · {new Date(proposal.created_at).toLocaleDateString()}
-          </p>
-        </div>
-        <div className="flex gap-3 flex-wrap">
-          <Button
-            onClick={() => handleExportPDF("proposal")}
-            size="lg"
-            className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 hover:shadow-purple/30 transition-all"
-          >
-            <Download className="w-4 h-4" /> Export Proposal
-          </Button>
-          <Button variant="outline" onClick={handleSave} disabled={saving} className="gap-2 hover:brightness-125 transition-all">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            Save
-          </Button>
-          <Button variant="outline" onClick={() => handleExportPDF("invoice")} className="gap-2 hover:brightness-125 transition-all">
-            <Download className="w-4 h-4" /> Export Invoice
-          </Button>
-          <Button variant="outline" onClick={handleCopyProposal} className="gap-2 hover:brightness-125 transition-all">
-            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-            {copied ? "Copied!" : "Copy Proposal"}
-          </Button>
-        </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-foreground">{proposal.client_name}</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          {proposal.company_name} · {proposal.service_type} · {new Date(proposal.created_at).toLocaleDateString()}
+        </p>
       </div>
 
       <Card>
         <CardContent className="p-0">
+          <div className="flex items-center gap-3 flex-wrap px-6 py-4 border-b border-border bg-secondary/30">
+            <Button
+              onClick={() => handleExportPDF("proposal")}
+              size="lg"
+              className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 hover:shadow-purple/30 transition-all"
+            >
+              <Download className="w-4 h-4" /> Export Proposal
+            </Button>
+            <Button variant="outline" onClick={handleSave} disabled={saving} className="gap-2 hover:brightness-125 transition-all">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              Save
+            </Button>
+            <Button variant="outline" onClick={() => handleExportPDF("invoice")} className="gap-2 hover:brightness-125 transition-all">
+              <Download className="w-4 h-4" /> Export Invoice
+            </Button>
+            <Button variant="outline" onClick={handleCopyProposal} className="gap-2 hover:brightness-125 transition-all">
+              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              {copied ? "Copied!" : "Copy Proposal"}
+            </Button>
+          </div>
           <Tabs defaultValue="proposal">
             <TabsList className="w-full justify-start border-b border-border rounded-none bg-transparent px-6 pt-4">
               {tabs.map((t) => (
