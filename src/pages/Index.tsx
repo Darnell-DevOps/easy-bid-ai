@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText, Zap, Download, AlertTriangle, Clock, XCircle, UserX, ArrowRight, CheckCircle, Briefcase } from "lucide-react";
+import { FileText, Zap, Download, AlertTriangle, Clock, XCircle, UserX, ArrowRight, CheckCircle, Briefcase, ShieldCheck } from "lucide-react";
 
 const steps = [
   { number: "1", title: "Enter your client details", description: "Fill in a simple form with the client name, service type, budget, and timeline." },
@@ -95,6 +95,7 @@ export default function Index() {
           <p className="text-xs text-muted-foreground mt-6">No signup required to try • Generate your first proposal in seconds</p>
           <div className="flex items-center justify-center gap-5 mt-3">
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><Zap className="w-3 h-3 text-accent" />Fast</span>
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><ShieldCheck className="w-3 h-3 text-accent" />Secure</span>
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><FileText className="w-3 h-3 text-accent" />Professional</span>
           </div>
         </div>
