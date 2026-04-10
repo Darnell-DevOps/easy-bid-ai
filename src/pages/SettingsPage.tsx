@@ -34,7 +34,7 @@ export default function SettingsPage() {
             variant="outline"
             onClick={async () => {
               const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: `${window.location.origin}/reset-password`,
+                redirectTo: `${window.location.origin}/login`,
               });
               if (error) {
                 toast({ title: "Error", description: error.message, variant: "destructive" });
