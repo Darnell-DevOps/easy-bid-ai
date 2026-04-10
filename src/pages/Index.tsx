@@ -140,7 +140,7 @@ export default function Index() {
                 </div>
                 {/* Preview side */}
                 <div className="p-6 text-left space-y-3 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-accent/5 to-transparent animate-[shimmer_2s_infinite] pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-accent/5 to-transparent animate-shimmer pointer-events-none" />
                   <h3 className="text-sm font-semibold text-foreground mb-3">Generated Proposal</h3>
                   <p className="text-sm font-medium text-foreground/90">Website redesign proposal for ABC Company</p>
                   <div className="space-y-1.5 text-xs text-foreground/70">
