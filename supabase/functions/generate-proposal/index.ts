@@ -49,6 +49,9 @@ Return your response as valid JSON with exactly these three keys:
    ## Expected Outcomes
    List 4-6 specific, benefit-driven outcomes the client can expect as bullet points. Tailor these to the service type and project scope. Examples include increased brand visibility, more consistent content output, higher engagement rates, clear brand positioning, improved conversion from followers to clients. Make each outcome specific to the client's project — avoid generic filler.
 
+   ## Why Choose Us
+   A short, persuasive section (3-4 bullet points) highlighting why the client should work with you. Cover: relevant experience and expertise, focus on measurable results, professional and efficient delivery, and clear communication throughout. Keep it confident but not arrogant. No more than one sentence per bullet.
+
    ## Next Steps
    2-3 sentences on how to proceed (e.g. sign-off, kick-off call).
 
