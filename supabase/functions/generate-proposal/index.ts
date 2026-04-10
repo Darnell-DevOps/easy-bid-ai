@@ -46,6 +46,9 @@ Return your response as valid JSON with exactly these three keys:
    ## Timeline
    A clear breakdown of phases or milestones.
 
+   ## Expected Outcomes
+   List 4-6 specific, benefit-driven outcomes the client can expect as bullet points. Tailor these to the service type and project scope. Examples include increased brand visibility, more consistent content output, higher engagement rates, clear brand positioning, improved conversion from followers to clients. Make each outcome specific to the client's project — avoid generic filler.
+
    ## Next Steps
    2-3 sentences on how to proceed (e.g. sign-off, kick-off call).
 
