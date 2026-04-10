@@ -100,7 +100,26 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply text-foreground font-sans antialiased;
+    background: linear-gradient(to bottom right, #0f172a, #020617);
+    min-height: 100vh;
+  }
+
+  .content-glow {
+    position: relative;
+  }
+
+  .content-glow::before {
+    content: '';
+    position: absolute;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 40%;
+    background: radial-gradient(ellipse, hsl(215 80% 55% / 0.08), transparent 70%);
+    pointer-events: none;
+    z-index: 0;
   }
 
   .text-gradient-sync {
