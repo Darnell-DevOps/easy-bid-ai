@@ -175,10 +175,19 @@ export default function ProposalView() {
           .doc-header {
             display: flex;
             justify-content: space-between;
-            align-items: flex-end;
+            align-items: center;
             padding-bottom: 20px;
             border-bottom: 2px solid #6c5ce7;
             margin-bottom: 8px;
+          }
+          .doc-header .brand-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+          }
+          .doc-header .logo {
+            width: 36px;
+            height: 36px;
           }
           .doc-header .brand {
             font-size: 18px;
