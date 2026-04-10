@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { FileText, Zap, Download, AlertTriangle, Clock, XCircle, UserX, ArrowRight, CheckCircle, Briefcase, ShieldCheck } from "lucide-react";
 
 const steps = [
@@ -46,6 +48,8 @@ const plans = [
 ];
 
 export default function Index() {
+  const [sampleOpen, setSampleOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Nav */}
@@ -86,11 +90,9 @@ export default function Index() {
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
-            <Link to="/proposal/example">
-              <Button size="lg" variant="outline" className="px-10 h-14 text-base">
-                View Sample Proposal
-              </Button>
-            </Link>
+            <Button size="lg" variant="outline" className="px-10 h-14 text-base" onClick={() => setSampleOpen(true)}>
+              View Sample Proposal
+            </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-6">No signup required to try • Generate your first proposal in seconds</p>
           <div className="flex items-center justify-center gap-5 mt-3">
@@ -336,6 +338,55 @@ export default function Index() {
           <p>© 2026 StriveSync. All rights reserved.</p>
         </div>
       </footer>
+
+      {/* Sample Proposal Modal */}
+      <Dialog open={sampleOpen} onOpenChange={setSampleOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Sample Proposal — Website Redesign</DialogTitle>
+            <DialogDescription>This is an example of what CloseSync AI generates for you.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6 text-sm">
+            <div>
+              <h3 className="font-semibold text-foreground mb-2">Project Overview</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                We propose a complete website redesign for ABC Company, including a modern landing page and three subpages optimised for conversions and mobile responsiveness.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground mb-2">Scope of Work</h3>
+              <ul className="space-y-1 text-muted-foreground list-disc pl-5">
+                <li>UX audit of the existing website</li>
+                <li>Custom landing page design</li>
+                <li>3 subpages (About, Services, Contact)</li>
+                <li>Mobile-responsive development</li>
+                <li>SEO optimisation &amp; performance tuning</li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground mb-2">Timeline</h3>
+              <p className="text-muted-foreground">Estimated delivery: <span className="text-foreground font-medium">2 weeks</span> from project kick-off.</p>
+            </div>
+            <div className="border-t border-border pt-4">
+              <h3 className="font-semibold text-foreground mb-3">Pricing Breakdown</h3>
+              <div className="space-y-2 text-muted-foreground">
+                <div className="flex justify-between"><span>Design &amp; Development</span><span className="text-foreground">£900</span></div>
+                <div className="flex justify-between"><span>Content &amp; QA</span><span className="text-foreground">£300</span></div>
+                <div className="flex justify-between font-semibold text-foreground border-t border-border pt-2 mt-2">
+                  <span>Total</span><span>£1,200</span>
+                </div>
+              </div>
+            </div>
+            <div className="pt-2">
+              <Link to="/signup">
+                <Button className="w-full bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 h-12 text-base gap-2">
+                  Create Your First Proposal Free <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Lock } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const plans = [
   {
@@ -37,6 +38,7 @@ const plans = [
 ];
 
 export default function Billing() {
+  const { toast } = useToast();
   return (
     <DashboardLayout>
       <div className="mb-8">
@@ -94,6 +96,11 @@ export default function Billing() {
                     : "w-full"
                 }
                 disabled={plan.current}
+                onClick={() => {
+                  if (!plan.current) {
+                    toast({ title: "Coming soon", description: "Pro plan payments will be available shortly." });
+                  }
+                }}
               >
                 {plan.current ? "Current Plan" : "Upgrade"}
               </Button>
