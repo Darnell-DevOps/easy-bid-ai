@@ -165,16 +165,16 @@ export default function Index() {
             ))}
           </div>
           <blockquote className="max-w-lg mx-auto border-l-2 border-accent pl-4 text-left">
-            <p className="text-sm text-muted-foreground italic leading-relaxed">
+            <p className="text-sm text-foreground/80 italic leading-relaxed">
               "This tool saved me hours every week and helped me land more clients"
             </p>
-            <footer className="mt-2 text-xs text-muted-foreground/60">— Freelance Consultant</footer>
+            <footer className="mt-2 text-xs text-muted-foreground">— Freelance Consultant</footer>
           </blockquote>
         </div>
       </section>
 
       {/* Pain Section */}
-      <section className="py-20 px-4 bg-card border-y border-border">
+      <section className="py-28 px-4 bg-card border-y border-border">
         <div className="container max-w-3xl text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Still writing proposals manually?</h2>
           <p className="text-muted-foreground text-lg mb-12 max-w-xl mx-auto">
@@ -263,7 +263,7 @@ export default function Index() {
           </div>
           <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto items-start">
             {plans.map((plan) => (
-              <Card key={plan.name} className={`border relative transition-all ${plan.popular ? "border-accent border-2 shadow-xl shadow-accent/20 ring-1 ring-accent/30 md:scale-105 md:-my-4 z-10" : "border-border shadow-none"}`}>
+              <Card key={plan.name} className={`border relative transition-all ${plan.popular ? "border-accent border-2 shadow-2xl shadow-accent/30 ring-2 ring-accent/40 md:scale-110 md:-my-6 z-10" : "border-border shadow-none"}`}>
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-accent text-accent-foreground text-xs font-medium">
                     Most popular
