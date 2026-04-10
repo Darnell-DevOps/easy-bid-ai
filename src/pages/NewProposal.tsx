@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Sparkles } from "lucide-react";
@@ -26,6 +27,33 @@ export default function NewProposal() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const stepTimers = useRef<NodeJS.Timeout[]>([]);
+
+  const loadingSteps = [
+    "Generating your proposal...",
+    "Optimising for conversion...",
+    "Finalising...",
+  ];
+
+  useEffect(() => {
+    if (loading) {
+      setLoadingStep(0);
+      setProgress(10);
+      stepTimers.current = [];
+
+      const t1 = setTimeout(() => { setLoadingStep(1); setProgress(45); }, 3000);
+      const t2 = setTimeout(() => { setLoadingStep(2); setProgress(75); }, 6000);
+      stepTimers.current = [t1, t2];
+    } else {
+      stepTimers.current.forEach(clearTimeout);
+      stepTimers.current = [];
+      setProgress(0);
+      setLoadingStep(0);
+    }
+    return () => stepTimers.current.forEach(clearTimeout);
+  }, [loading]);
 
   const [form, setForm] = useState({
     client_name: "",
