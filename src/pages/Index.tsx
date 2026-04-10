@@ -10,9 +10,9 @@ const steps = [
 ];
 
 const painPoints = [
-  { icon: Clock, text: "Takes too long" },
-  { icon: AlertTriangle, text: "Slows down your response time" },
-  { icon: XCircle, text: "Makes you look less professional" },
+  { icon: Clock, text: "Losing clients because you reply too late" },
+  { icon: AlertTriangle, text: "Spending hours writing proposals manually" },
+  { icon: XCircle, text: "Looking unprofessional compared to competitors" },
   { icon: UserX, text: "Can cost you clients" },
 ];
 
@@ -38,9 +38,10 @@ const plans = [
     price: "£9",
     period: "/month",
     description: "For freelancers and agencies closing more deals",
-    features: ["Unlimited proposals", "No watermark", "PDF export", "Invoice export", "Custom branding", "Proposal history"],
+    features: ["Unlimited proposals", "No watermark", "Invoice export", "Custom branding", "Proposal history"],
     cta: "Upgrade to Pro",
     popular: true,
+    valueLine: "Less than the cost of 1 client lost",
   },
 ];
 
@@ -63,31 +64,31 @@ export default function Index() {
               <Button variant="ghost" size="sm">Log in</Button>
             </Link>
             <Link to="/signup">
-              <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">Sign up</Button>
+              <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">Start Free</Button>
             </Link>
           </div>
         </div>
       </nav>
 
       {/* Hero */}
-      <section className="py-20 md:py-32 px-4">
+      <section className="py-24 md:py-36 px-4">
         <div className="container max-w-3xl text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight leading-tight mb-6">
-            Turn lead details into a professional proposal and invoice in under <span className="bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent">2 minutes</span>.
+            Create client-ready proposals in <span className="bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent font-extrabold">minutes</span>.
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-            Stop losing clients because of slow proposals. Generate a professional proposal and invoice in minutes.
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed">
+            Stop losing clients because of slow proposals. Generate a professional proposal and invoice in under <span className="text-foreground font-semibold">2 minutes</span>.
           </p>
-          <div className="flex flex-col sm:flex-row items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link to="/signup">
-              <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-90 px-8 h-12 text-base gap-2">
+              <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-90 px-10 h-14 text-base gap-2">
                 Start Free – No Credit Card
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
             <Link to="/proposal/example">
-              <Button size="lg" variant="outline" className="px-8 h-12 text-base">
-                See Example Proposal
+              <Button size="lg" variant="outline" className="px-10 h-14 text-base">
+                View Sample Proposal
               </Button>
             </Link>
           </div>
@@ -191,8 +192,9 @@ export default function Index() {
           </p>
           <div className="mt-10">
             <Link to="/signup">
-              <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 px-8 h-12 text-base">
-                Get Started Free
+              <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-90 px-10 h-14 text-base gap-2">
+                Start Free – No Credit Card
+                <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
           </div>
@@ -217,10 +219,14 @@ export default function Index() {
                 <CardContent className={plan.popular ? "p-10" : "p-8"}>
                   <h3 className={`font-semibold text-foreground mb-1 ${plan.popular ? "text-xl" : "text-lg"}`}>{plan.name}</h3>
                   <p className="text-sm text-muted-foreground mb-6">{plan.description}</p>
-                  <div className="mb-6">
+                  <div className="mb-2">
                     <span className={`font-bold text-foreground ${plan.popular ? "text-5xl" : "text-4xl"}`}>{plan.price}</span>
                     <span className="text-muted-foreground">{plan.period}</span>
                   </div>
+                  {plan.valueLine && (
+                    <p className="text-xs text-accent mb-6 font-medium">{plan.valueLine}</p>
+                  )}
+                  {!plan.valueLine && <div className="mb-6" />}
                   <ul className="space-y-3 mb-8">
                     {plan.features.map((f) => (
                       <li key={f} className="flex items-center gap-2 text-sm text-foreground">
