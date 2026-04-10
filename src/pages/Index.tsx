@@ -30,7 +30,7 @@ const plans = [
     period: "/month",
     description: "Get started with no commitment",
     features: ["3 proposals per month", "AI proposal generation", "Watermark on exports"],
-    cta: "Create Your First Proposal Free",
+    cta: "Get Started Free",
     popular: false,
   },
   {
@@ -39,7 +39,7 @@ const plans = [
     period: "/month",
     description: "For freelancers and agencies closing more deals",
     features: ["Unlimited proposals", "No watermark", "Invoice export", "Custom branding", "Proposal history"],
-    cta: "Create Unlimited Proposals",
+    cta: "Upgrade to Pro",
     popular: true,
     valueLine: "Less than the cost of 1 client lost",
   },
@@ -268,40 +268,41 @@ export default function Index() {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="py-16 px-4 bg-card border-y border-border">
+      <section id="pricing" className="py-20 pb-24 px-4 bg-card border-y border-border">
         <div className="container max-w-4xl">
-          <div className="text-center mb-16">
+          <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Simple, transparent pricing</h2>
             <p className="text-muted-foreground text-lg">No hidden fees. Cancel anytime.</p>
           </div>
-          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto items-start">
+          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto items-stretch">
             {plans.map((plan) => (
-              <Card key={plan.name} className={`border relative transition-all ${plan.popular ? "border-accent border-2 shadow-2xl shadow-accent/30 ring-2 ring-accent/40 md:scale-110 md:-my-6 z-10" : "border-border shadow-none"}`}>
+              <Card key={plan.name} className={`border relative transition-all flex flex-col ${plan.popular ? "border-accent border-2 shadow-2xl shadow-accent/30 ring-2 ring-accent/40 z-10" : "border-border shadow-none"}`}>
                 {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-accent text-accent-foreground text-xs font-medium">
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-accent text-accent-foreground text-xs font-semibold tracking-wide shadow-lg shadow-accent/30">
                     Most popular
                   </div>
                 )}
-                <CardContent className={plan.popular ? "p-10" : "p-8"}>
-                  <h3 className={`font-semibold text-foreground mb-1 ${plan.popular ? "text-xl" : "text-lg"}`}>{plan.name}</h3>
+                <CardContent className="p-8 flex flex-col flex-1">
+                  <h3 className="text-lg font-semibold text-foreground mb-1">{plan.name}</h3>
                   <p className="text-sm text-muted-foreground mb-6">{plan.description}</p>
                   <div className="mb-2">
-                    <span className={`font-bold text-foreground ${plan.popular ? "text-5xl" : "text-4xl"}`}>{plan.price}</span>
+                    <span className="text-4xl font-bold text-foreground">{plan.price}</span>
                     <span className="text-muted-foreground">{plan.period}</span>
                   </div>
-                  {plan.valueLine && (
+                  {plan.valueLine ? (
                     <p className="text-xs text-accent mb-6 font-medium">{plan.valueLine}</p>
+                  ) : (
+                    <div className="mb-6" />
                   )}
-                  {!plan.valueLine && <div className="mb-6" />}
-                  <ul className="space-y-3 mb-8">
+                  <ul className="space-y-3 mb-8 flex-1">
                     {plan.features.map((f) => (
                       <li key={f} className="flex items-center gap-2 text-sm text-foreground">
-                        <div className="w-1.5 h-1.5 rounded-full bg-accent flex-shrink-0" />
+                        <CheckCircle className="w-4 h-4 text-accent flex-shrink-0" />
                         {f}
                       </li>
                     ))}
                   </ul>
-                  <Link to="/signup">
+                  <Link to="/signup" className="mt-auto">
                     <Button className={`w-full h-12 text-base transition-all ${plan.popular ? "bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_24px_hsl(var(--accent)/0.5)] font-semibold" : "hover:brightness-110"}`} variant={plan.popular ? "default" : "outline"}>
                       {plan.cta}
                     </Button>
@@ -310,7 +311,7 @@ export default function Index() {
               </Card>
             ))}
           </div>
-          <p className="text-center text-sm text-muted-foreground mt-8">
+          <p className="text-center text-sm text-muted-foreground mt-12">
             If this helps you close just one extra client, it pays for itself.
           </p>
         </div>
