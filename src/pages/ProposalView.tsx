@@ -217,6 +217,7 @@ export default function ProposalView() {
               {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               {copied ? "Copied!" : "Copy Proposal"}
             </Button>
+            </div>
           </div>
           <Tabs defaultValue="proposal">
             <TabsList className="w-full justify-start border-b border-border rounded-none bg-transparent px-6 pt-4">
