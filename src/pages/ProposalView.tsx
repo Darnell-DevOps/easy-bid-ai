@@ -362,27 +362,29 @@ export default function ProposalView() {
 
       <Card>
         <CardContent className="p-0">
-          <div className="px-6 pt-4 pb-3 border-b border-border bg-secondary/30">
-            <p className="text-xs text-muted-foreground mb-3">Your proposal is ready</p>
-            <div className="flex items-center gap-3 flex-wrap">
-            <Button
-              onClick={() => handleExportPDF("proposal")}
-              size="lg"
-              className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 hover:shadow-purple/30 transition-all"
-            >
-              <Download className="w-4 h-4" /> Export Proposal
-            </Button>
-            <Button variant="outline" onClick={handleSave} disabled={saving} className="gap-2 hover:brightness-125 transition-all">
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              Save
-            </Button>
-            <Button variant="outline" onClick={() => handleExportPDF("invoice")} className="gap-2 hover:brightness-125 transition-all">
-              <Download className="w-4 h-4" /> Export Invoice
-            </Button>
-            <Button variant="outline" onClick={handleCopyProposal} className="gap-2 hover:brightness-125 transition-all">
-              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              {copied ? "Copied!" : "Copy Proposal"}
-            </Button>
+          <div className="px-6 py-5 border-b border-border bg-secondary/30">
+            <p className="text-xs text-muted-foreground mb-4">Your proposal is ready</p>
+            <div className="flex flex-col gap-3">
+              <Button
+                onClick={() => handleExportPDF("proposal")}
+                size="lg"
+                className="w-full gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 hover:shadow-purple/30 transition-all h-11"
+              >
+                <Download className="w-4 h-4" /> Export Proposal
+              </Button>
+              <div className="grid grid-cols-2 gap-3">
+                <Button variant="outline" onClick={handleSave} disabled={saving} className="gap-2 hover:brightness-125 transition-all h-10">
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  Save
+                </Button>
+                <Button variant="outline" onClick={() => handleExportPDF("invoice")} className="gap-2 hover:brightness-125 transition-all h-10">
+                  <Download className="w-4 h-4" /> Export Invoice
+                </Button>
+              </div>
+              <Button variant="outline" onClick={handleCopyProposal} className="w-full gap-2 hover:brightness-125 transition-all h-10">
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {copied ? "Copied!" : "Copy Proposal"}
+              </Button>
             </div>
           </div>
           <Tabs defaultValue="proposal">
