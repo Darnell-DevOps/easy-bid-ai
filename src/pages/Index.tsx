@@ -165,16 +165,16 @@ export default function Index() {
             ))}
           </div>
           <blockquote className="max-w-lg mx-auto border-l-2 border-accent pl-4 text-left">
-            <p className="text-sm text-muted-foreground italic leading-relaxed">
+            <p className="text-sm text-foreground/80 italic leading-relaxed">
               "This tool saved me hours every week and helped me land more clients"
             </p>
-            <footer className="mt-2 text-xs text-muted-foreground/60">— Freelance Consultant</footer>
+            <footer className="mt-2 text-xs text-muted-foreground">— Freelance Consultant</footer>
           </blockquote>
         </div>
       </section>
 
       {/* Pain Section */}
-      <section className="py-20 px-4 bg-card border-y border-border">
+      <section className="py-28 px-4 bg-card border-y border-border">
         <div className="container max-w-3xl text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Still writing proposals manually?</h2>
           <p className="text-muted-foreground text-lg mb-12 max-w-xl mx-auto">
@@ -194,7 +194,7 @@ export default function Index() {
       </section>
 
       {/* How it works */}
-      <section id="how-it-works" className="py-20 px-4">
+      <section id="how-it-works" className="py-28 px-4">
         <div className="container max-w-3xl">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">How it works</h2>
@@ -219,7 +219,7 @@ export default function Index() {
       </section>
 
       {/* What you get */}
-      <section className="py-20 px-4 bg-card border-y border-border">
+      <section className="py-28 px-4 bg-card border-y border-border">
         <div className="container max-w-3xl text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-12">What you get</h2>
           <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
@@ -255,7 +255,7 @@ export default function Index() {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="py-20 px-4 bg-card border-y border-border">
+      <section id="pricing" className="py-28 px-4 bg-card border-y border-border">
         <div className="container max-w-4xl">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Simple, transparent pricing</h2>
@@ -263,7 +263,7 @@ export default function Index() {
           </div>
           <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto items-start">
             {plans.map((plan) => (
-              <Card key={plan.name} className={`border relative transition-all ${plan.popular ? "border-accent border-2 shadow-xl shadow-accent/20 ring-1 ring-accent/30 md:scale-105 md:-my-4 z-10" : "border-border shadow-none"}`}>
+              <Card key={plan.name} className={`border relative transition-all ${plan.popular ? "border-accent border-2 shadow-2xl shadow-accent/30 ring-2 ring-accent/40 md:scale-110 md:-my-6 z-10" : "border-border shadow-none"}`}>
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-accent text-accent-foreground text-xs font-medium">
                     Most popular
@@ -289,7 +289,7 @@ export default function Index() {
                     ))}
                   </ul>
                   <Link to="/signup">
-                    <Button className={`w-full ${plan.popular ? "bg-accent text-accent-foreground hover:bg-accent/90 shadow-[0_0_16px_hsl(var(--accent)/0.4)] h-12 text-base" : ""}`} variant={plan.popular ? "default" : "outline"}>
+                    <Button className={`w-full ${plan.popular ? "bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-90 shadow-[0_0_24px_hsl(var(--accent)/0.5)] h-13 text-base font-semibold" : ""}`} variant={plan.popular ? "default" : "outline"}>
                       {plan.cta}
                     </Button>
                   </Link>
