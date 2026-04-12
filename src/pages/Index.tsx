@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileText, Zap, Download, AlertTriangle, Clock, XCircle, UserX, ArrowRight, CheckCircle, Briefcase, ShieldCheck } from "lucide-react";
-import RevealSection from "@/components/RevealSection";
 
 const steps = [
   { number: "1", title: "Enter your client details", description: "Fill in a simple form with the client name, service type, budget, and timeline." },
@@ -48,7 +47,7 @@ const plans = [
 
 export default function Index() {
   return (
-    <div className="min-h-screen bg-background page-enter bg-glow">
+    <div className="min-h-screen bg-background">
       {/* Nav */}
       <nav className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container flex items-center justify-between h-16 px-4 md:px-8">
@@ -72,8 +71,8 @@ export default function Index() {
       </nav>
 
       {/* Hero */}
-      <section className="py-16 md:py-24 px-4 relative z-10">
-        <RevealSection className="container max-w-3xl text-center">
+      <section className="py-16 md:py-24 px-4">
+        <div className="container max-w-3xl text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight leading-tight mb-6">
             Create proposals that win clients — in <span className="bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent font-extrabold">minutes</span>
           </h1>
@@ -99,43 +98,43 @@ export default function Index() {
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><ShieldCheck className="w-3 h-3 text-accent" />Secure</span>
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><FileText className="w-3 h-3 text-accent" />Professional</span>
           </div>
-        </RevealSection>
+        </div>
       </section>
 
       {/* Pain Section */}
-      <section className="py-16 px-4 relative z-10">
-        <RevealSection className="container max-w-3xl text-center">
+      <section className="py-16 px-4">
+        <div className="container max-w-3xl text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Still writing proposals manually?</h2>
           <p className="text-muted-foreground text-lg mb-12 max-w-xl mx-auto">
             Manual proposals are holding your business back.
           </p>
           <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
-            {painPoints.map((p, i) => (
-              <RevealSection key={p.text} delay={i + 1} className="flex items-center gap-3 p-4 rounded-lg bg-card border border-border text-left card-hover">
+            {painPoints.map((p) => (
+              <div key={p.text} className="flex items-center gap-3 p-4 rounded-lg bg-card border border-border text-left">
                 <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center flex-shrink-0">
                   <p.icon className="w-4 h-4 text-destructive" />
                 </div>
                 <span className="text-sm font-medium text-foreground">{p.text}</span>
-              </RevealSection>
+              </div>
             ))}
           </div>
-        </RevealSection>
+        </div>
       </section>
 
       {/* How it works — unified section */}
-      <section id="how-it-works" className="py-16 px-4 relative z-10">
+      <section id="how-it-works" className="py-16 px-4">
         <div className="container max-w-4xl">
-          <RevealSection className="text-center mb-12">
+          <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">See how it works</h2>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto">
               From client details to a ready-to-send proposal in seconds.
             </p>
-          </RevealSection>
+          </div>
 
           {/* 3-step process */}
           <div className="max-w-3xl mx-auto space-y-6 mb-16">
-            {steps.map((s, i) => (
-              <RevealSection key={s.number} delay={i + 1} className="flex gap-5 items-start">
+            {steps.map((s) => (
+              <div key={s.number} className="flex gap-5 items-start">
                 <div className="w-10 h-10 rounded-full bg-accent text-accent-foreground flex items-center justify-center text-lg font-bold flex-shrink-0">
                   {s.number}
                 </div>
@@ -143,12 +142,12 @@ export default function Index() {
                   <h3 className="font-semibold text-foreground mb-1">{s.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">{s.description}</p>
                 </div>
-              </RevealSection>
+              </div>
             ))}
           </div>
 
           {/* Live preview demo */}
-          <RevealSection className="text-center mb-16">
+          <div className="text-center mb-16">
             <div className="relative">
               <div className="absolute -inset-4 bg-purple/20 rounded-3xl blur-2xl pointer-events-none" />
               <div className="relative rounded-2xl border-2 border-accent/30 bg-card shadow-2xl shadow-accent/10 overflow-hidden">
@@ -209,21 +208,21 @@ export default function Index() {
               </div>
             </div>
             <p className="text-sm text-muted-foreground mt-6">Generated in under 2 minutes</p>
-          </RevealSection>
+          </div>
 
           {/* Social proof */}
-          <RevealSection className="max-w-3xl mx-auto text-center mb-16">
+          <div className="max-w-3xl mx-auto text-center mb-16">
             <p className="text-muted-foreground text-lg mb-8">Used by freelancers and agencies to close more clients</p>
             <div className="flex flex-col sm:flex-row justify-center gap-6 mb-12">
               {[
                 { icon: Clock, text: "Save hours on every proposal" },
                 { icon: Zap, text: "Look more professional instantly" },
                 { icon: ArrowRight, text: "Close deals faster" },
-              ].map((item, i) => (
-                <RevealSection key={item.text} delay={i + 1} className="flex items-center gap-2 text-sm text-foreground">
+              ].map((item) => (
+                <div key={item.text} className="flex items-center gap-2 text-sm text-foreground">
                   <item.icon className="w-4 h-4 text-accent flex-shrink-0" />
                   <span>{item.text}</span>
-                </RevealSection>
+                </div>
               ))}
             </div>
             <blockquote className="max-w-lg mx-auto border-l-2 border-accent pl-4 text-left">
@@ -232,25 +231,24 @@ export default function Index() {
               </p>
               <footer className="mt-2 text-xs text-muted-foreground">— Freelance Consultant</footer>
             </blockquote>
-          </RevealSection>
-
-          <RevealSection className="max-w-3xl mx-auto text-center">
+          </div>
+          <div className="max-w-3xl mx-auto text-center">
             <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-8">What you get</h3>
             <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
-              {deliverables.map((item, i) => (
-                <RevealSection key={item} delay={i + 1} className="flex items-center gap-3 p-4 rounded-lg bg-card border border-border text-left card-hover">
+              {deliverables.map((item) => (
+                <div key={item} className="flex items-center gap-3 p-4 rounded-lg bg-card border border-border text-left">
                   <CheckCircle className="w-5 h-5 text-accent flex-shrink-0" />
                   <span className="text-sm font-medium text-foreground">{item}</span>
-                </RevealSection>
+                </div>
               ))}
             </div>
-          </RevealSection>
+          </div>
         </div>
       </section>
 
       {/* Credibility */}
-      <section className="py-16 px-4 relative z-10">
-        <RevealSection className="container max-w-2xl text-center">
+      <section className="py-16 px-4">
+        <div className="container max-w-2xl text-center">
           <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-6">
             <Briefcase className="w-6 h-6 text-accent" />
           </div>
@@ -266,65 +264,61 @@ export default function Index() {
               </Button>
             </Link>
           </div>
-        </RevealSection>
+        </div>
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="py-20 pb-24 px-4 relative z-10">
+      <section id="pricing" className="py-20 pb-24 px-4">
         <div className="container max-w-4xl">
-          <RevealSection className="text-center mb-14">
+          <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Simple, transparent pricing</h2>
             <p className="text-muted-foreground text-lg">No hidden fees. Cancel anytime.</p>
-          </RevealSection>
+          </div>
           <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto items-stretch">
-            {plans.map((plan, i) => (
-              <RevealSection key={plan.name} delay={i + 1}>
-                <Card className={`border relative transition-all flex flex-col h-full card-hover ${plan.popular ? "border-accent border-2 shadow-2xl shadow-accent/30 ring-2 ring-accent/40 z-10" : "border-border shadow-none"}`}>
-                  {plan.popular && (
-                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-accent text-accent-foreground text-xs font-semibold tracking-wide shadow-lg shadow-accent/30">
-                      Most popular
-                    </div>
+            {plans.map((plan) => (
+              <Card key={plan.name} className={`border relative transition-all flex flex-col ${plan.popular ? "border-accent border-2 shadow-2xl shadow-accent/30 ring-2 ring-accent/40 z-10" : "border-border shadow-none"}`}>
+                {plan.popular && (
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-accent text-accent-foreground text-xs font-semibold tracking-wide shadow-lg shadow-accent/30">
+                    Most popular
+                  </div>
+                )}
+                <CardContent className="p-8 flex flex-col flex-1">
+                  <h3 className="text-lg font-semibold text-foreground mb-1">{plan.name}</h3>
+                  <p className="text-sm text-muted-foreground mb-6">{plan.description}</p>
+                  <div className="mb-2">
+                    <span className="text-4xl font-bold text-foreground">{plan.price}</span>
+                    <span className="text-muted-foreground">{plan.period}</span>
+                  </div>
+                  {plan.valueLine ? (
+                    <p className="text-xs text-accent mb-6 font-medium">{plan.valueLine}</p>
+                  ) : (
+                    <div className="mb-6" />
                   )}
-                  <CardContent className="p-8 flex flex-col flex-1">
-                    <h3 className="text-lg font-semibold text-foreground mb-1">{plan.name}</h3>
-                    <p className="text-sm text-muted-foreground mb-6">{plan.description}</p>
-                    <div className="mb-2">
-                      <span className="text-4xl font-bold text-foreground">{plan.price}</span>
-                      <span className="text-muted-foreground">{plan.period}</span>
-                    </div>
-                    {plan.valueLine ? (
-                      <p className="text-xs text-accent mb-6 font-medium">{plan.valueLine}</p>
-                    ) : (
-                      <div className="mb-6" />
-                    )}
-                    <ul className="space-y-3 mb-8 flex-1">
-                      {plan.features.map((f) => (
-                        <li key={f} className="flex items-center gap-2 text-sm text-foreground">
-                          <CheckCircle className="w-4 h-4 text-accent flex-shrink-0" />
-                          {f}
-                        </li>
-                      ))}
-                    </ul>
-                    <Link to="/signup" className="mt-auto">
-                      <Button className={`w-full h-12 text-base transition-all ${plan.popular ? "bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_24px_hsl(var(--accent)/0.5)] font-semibold" : "hover:brightness-110"}`} variant={plan.popular ? "default" : "outline"}>
-                        {plan.cta}
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              </RevealSection>
+                  <ul className="space-y-3 mb-8 flex-1">
+                    {plan.features.map((f) => (
+                      <li key={f} className="flex items-center gap-2 text-sm text-foreground">
+                        <CheckCircle className="w-4 h-4 text-accent flex-shrink-0" />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link to="/signup" className="mt-auto">
+                    <Button className={`w-full h-12 text-base transition-all ${plan.popular ? "bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_24px_hsl(var(--accent)/0.5)] font-semibold" : "hover:brightness-110"}`} variant={plan.popular ? "default" : "outline"}>
+                      {plan.cta}
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
             ))}
           </div>
-          <RevealSection className="text-center mt-12">
-            <p className="text-sm text-muted-foreground">
-              If this helps you close just one extra client, it pays for itself.
-            </p>
-          </RevealSection>
+          <p className="text-center text-sm text-muted-foreground mt-12">
+            If this helps you close just one extra client, it pays for itself.
+          </p>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border py-12 px-4 relative z-10">
+      <footer className="border-t border-border py-12 px-4">
         <div className="container flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <span className="font-medium text-foreground">
             Close<span className="text-gradient-sync">Sync</span> <span className="text-foreground">AI</span>

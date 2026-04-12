@@ -162,7 +162,6 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
-      <div className="page-enter">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
@@ -255,11 +254,10 @@ export default function Dashboard() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {filtered.map((p, i) => (
+          {filtered.map((p) => (
             <Card
               key={p.id}
-              className="hover:shadow-md hover:border-accent/20 transition-all cursor-pointer group card-hover reveal visible"
-              style={{ animationDelay: `${i * 0.05}s` }}
+              className="hover:shadow-md hover:border-accent/20 transition-all cursor-pointer group"
               onClick={() => navigate(`/dashboard/proposal/${p.id}`)}
             >
               <CardContent className="flex items-center justify-between p-4 sm:p-5">
@@ -342,7 +340,6 @@ export default function Dashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      </div>
     </DashboardLayout>
   );
 }
