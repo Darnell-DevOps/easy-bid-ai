@@ -255,10 +255,11 @@ export default function Dashboard() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {filtered.map((p) => (
+          {filtered.map((p, i) => (
             <Card
               key={p.id}
-              className="hover:shadow-md hover:border-accent/20 transition-all cursor-pointer group"
+              className="hover:shadow-md hover:border-accent/20 transition-all cursor-pointer group card-hover reveal visible"
+              style={{ animationDelay: `${i * 0.05}s` }}
               onClick={() => navigate(`/dashboard/proposal/${p.id}`)}
             >
               <CardContent className="flex items-center justify-between p-4 sm:p-5">
