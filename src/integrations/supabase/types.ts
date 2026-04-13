@@ -14,9 +14,40 @@ export type Database = {
   }
   public: {
     Tables: {
+      clients: {
+        Row: {
+          company: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       proposals: {
         Row: {
           budget: string
+          client_id: string | null
           client_name: string
           client_paid: boolean
           company_name: string
@@ -35,6 +66,7 @@ export type Database = {
         }
         Insert: {
           budget?: string
+          client_id?: string | null
           client_name: string
           client_paid?: boolean
           company_name: string
@@ -53,6 +85,7 @@ export type Database = {
         }
         Update: {
           budget?: string
+          client_id?: string | null
           client_name?: string
           client_paid?: boolean
           company_name?: string
@@ -69,7 +102,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "proposals_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

@@ -16,6 +16,8 @@ import SampleProposal from "./pages/SampleProposal";
 import Templates from "./pages/Templates";
 import RevenueDashboard from "./pages/RevenueDashboard";
 import ProposalsDashboard from "./pages/ProposalsDashboard";
+import Clients from "./pages/Clients";
+import ClientDetail from "./pages/ClientDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +41,8 @@ const App = () => (
           <Route path="/dashboard/templates" element={<AuthGuard><Templates /></AuthGuard>} />
           <Route path="/dashboard/revenue" element={<AuthGuard><RevenueDashboard /></AuthGuard>} />
           <Route path="/dashboard/proposals" element={<AuthGuard><ProposalsDashboard /></AuthGuard>} />
+          <Route path="/dashboard/clients" element={<AuthGuard><Clients /></AuthGuard>} />
+          <Route path="/dashboard/clients/:id" element={<AuthGuard><ClientDetail /></AuthGuard>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
