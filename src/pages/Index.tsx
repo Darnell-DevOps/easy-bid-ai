@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileText, Zap, Download, AlertTriangle, Clock, XCircle, UserX, ArrowRight, CheckCircle, Briefcase, ShieldCheck } from "lucide-react";
+import { AnimateIn } from "@/hooks/use-scroll-animation";
 
 const steps = [
   { number: "1", title: "Enter your client details", description: "Fill in a simple form with the client name, service type, budget, and timeline." },
@@ -70,30 +71,30 @@ export default function Index() {
         </div>
       </nav>
 
-      {/* Hero */}
+      {/* Hero — loads immediately with CSS animation */}
       <section className="py-16 md:py-24 px-4">
-        <div className="container max-w-3xl text-center">
+        <div className="container max-w-3xl text-center" style={{ animation: "hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both" }}>
           <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight leading-tight mb-6">
             Create proposals that win clients — in <span className="bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent font-extrabold">minutes</span>
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed" style={{ animation: "hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both" }}>
             Stop losing clients because of slow proposals. Generate a professional proposal and invoice in under <span className="text-foreground font-semibold">2 minutes</span>.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4" style={{ animation: "hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both" }}>
             <Link to="/signup">
-              <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_20px_hsl(var(--accent)/0.4)] px-10 h-14 text-base gap-2 transition-all">
+              <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_20px_hsl(var(--accent)/0.4)] px-10 h-14 text-base gap-2 transition-all hover:scale-105">
                 Create Your First Proposal Free
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
             <Link to="/sample">
-              <Button size="lg" variant="outline" className="px-10 h-14 text-base">
+              <Button size="lg" variant="outline" className="px-10 h-14 text-base hover:scale-105 transition-transform">
                 View Sample Proposal
               </Button>
             </Link>
           </div>
-          <p className="text-xs text-muted-foreground mt-6">No signup required to try • Generate your first proposal in seconds</p>
-          <div className="flex items-center justify-center gap-5 mt-3">
+          <p className="text-xs text-muted-foreground mt-6" style={{ animation: "hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both" }}>No signup required to try • Generate your first proposal in seconds</p>
+          <div className="flex items-center justify-center gap-5 mt-3" style={{ animation: "hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both" }}>
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><Zap className="w-3 h-3 text-accent" />Fast</span>
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><ShieldCheck className="w-3 h-3 text-accent" />Secure</span>
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><FileText className="w-3 h-3 text-accent" />Professional</span>
@@ -103,54 +104,58 @@ export default function Index() {
 
       {/* Pain Section */}
       <section className="py-16 px-4">
-        <div className="container max-w-3xl text-center">
+        <AnimateIn className="container max-w-3xl text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Still writing proposals manually?</h2>
           <p className="text-muted-foreground text-lg mb-12 max-w-xl mx-auto">
             Manual proposals are holding your business back.
           </p>
           <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
-            {painPoints.map((p) => (
-              <div key={p.text} className="flex items-center gap-3 p-4 rounded-lg bg-card border border-border text-left">
-                <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center flex-shrink-0">
-                  <p.icon className="w-4 h-4 text-destructive" />
+            {painPoints.map((p, i) => (
+              <AnimateIn key={p.text} delay={i * 100} direction="up">
+                <div className="flex items-center gap-3 p-4 rounded-lg bg-card border border-border text-left hover:border-destructive/40 hover:bg-card/80 transition-all duration-300 group">
+                  <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center flex-shrink-0 group-hover:bg-destructive/20 transition-colors">
+                    <p.icon className="w-4 h-4 text-destructive" />
+                  </div>
+                  <span className="text-sm font-medium text-foreground">{p.text}</span>
                 </div>
-                <span className="text-sm font-medium text-foreground">{p.text}</span>
-              </div>
+              </AnimateIn>
             ))}
           </div>
-        </div>
+        </AnimateIn>
       </section>
 
       {/* How it works — unified section */}
       <section id="how-it-works" className="py-16 px-4">
         <div className="container max-w-4xl">
-          <div className="text-center mb-12">
+          <AnimateIn className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">See how it works</h2>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto">
               From client details to a ready-to-send proposal in seconds.
             </p>
-          </div>
+          </AnimateIn>
 
           {/* 3-step process */}
           <div className="max-w-3xl mx-auto space-y-6 mb-16">
-            {steps.map((s) => (
-              <div key={s.number} className="flex gap-5 items-start">
-                <div className="w-10 h-10 rounded-full bg-accent text-accent-foreground flex items-center justify-center text-lg font-bold flex-shrink-0">
-                  {s.number}
+            {steps.map((s, i) => (
+              <AnimateIn key={s.number} delay={i * 150} direction="left">
+                <div className="flex gap-5 items-start group">
+                  <div className="w-10 h-10 rounded-full bg-accent text-accent-foreground flex items-center justify-center text-lg font-bold flex-shrink-0 group-hover:scale-110 group-hover:shadow-[0_0_16px_hsl(var(--accent)/0.4)] transition-all duration-300">
+                    {s.number}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground mb-1">{s.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{s.description}</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-foreground mb-1">{s.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{s.description}</p>
-                </div>
-              </div>
+              </AnimateIn>
             ))}
           </div>
 
           {/* Live preview demo */}
-          <div className="text-center mb-16">
+          <AnimateIn className="text-center mb-16" direction="scale">
             <div className="relative">
               <div className="absolute -inset-4 bg-purple/20 rounded-3xl blur-2xl pointer-events-none" />
-              <div className="relative rounded-2xl border-2 border-accent/30 bg-card shadow-2xl shadow-accent/10 overflow-hidden">
+              <div className="relative rounded-2xl border-2 border-accent/30 bg-card shadow-2xl shadow-accent/10 overflow-hidden hover:shadow-accent/20 transition-shadow duration-500">
                 <div className="px-4 py-2 border-b border-border flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="flex gap-1.5">
@@ -208,21 +213,23 @@ export default function Index() {
               </div>
             </div>
             <p className="text-sm text-muted-foreground mt-6">Generated in under 2 minutes</p>
-          </div>
+          </AnimateIn>
 
           {/* Social proof */}
-          <div className="max-w-3xl mx-auto text-center mb-16">
+          <AnimateIn className="max-w-3xl mx-auto text-center mb-16">
             <p className="text-muted-foreground text-lg mb-8">Used by freelancers and agencies to close more clients</p>
             <div className="flex flex-col sm:flex-row justify-center gap-6 mb-12">
               {[
                 { icon: Clock, text: "Save hours on every proposal" },
                 { icon: Zap, text: "Look more professional instantly" },
                 { icon: ArrowRight, text: "Close deals faster" },
-              ].map((item) => (
-                <div key={item.text} className="flex items-center gap-2 text-sm text-foreground">
-                  <item.icon className="w-4 h-4 text-accent flex-shrink-0" />
-                  <span>{item.text}</span>
-                </div>
+              ].map((item, i) => (
+                <AnimateIn key={item.text} delay={i * 100} direction="up">
+                  <div className="flex items-center gap-2 text-sm text-foreground">
+                    <item.icon className="w-4 h-4 text-accent flex-shrink-0" />
+                    <span>{item.text}</span>
+                  </div>
+                </AnimateIn>
               ))}
             </div>
             <blockquote className="max-w-lg mx-auto border-l-2 border-accent pl-4 text-left">
@@ -231,24 +238,28 @@ export default function Index() {
               </p>
               <footer className="mt-2 text-xs text-muted-foreground">— Freelance Consultant</footer>
             </blockquote>
-          </div>
-          <div className="max-w-3xl mx-auto text-center">
+          </AnimateIn>
+
+          {/* What you get */}
+          <AnimateIn className="max-w-3xl mx-auto text-center">
             <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-8">What you get</h3>
             <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
-              {deliverables.map((item) => (
-                <div key={item} className="flex items-center gap-3 p-4 rounded-lg bg-card border border-border text-left">
-                  <CheckCircle className="w-5 h-5 text-accent flex-shrink-0" />
-                  <span className="text-sm font-medium text-foreground">{item}</span>
-                </div>
+              {deliverables.map((item, i) => (
+                <AnimateIn key={item} delay={i * 100} direction="up">
+                  <div className="flex items-center gap-3 p-4 rounded-lg bg-card border border-border text-left hover:border-accent/30 hover:bg-card/80 transition-all duration-300 group">
+                    <CheckCircle className="w-5 h-5 text-accent flex-shrink-0 group-hover:scale-110 transition-transform" />
+                    <span className="text-sm font-medium text-foreground">{item}</span>
+                  </div>
+                </AnimateIn>
               ))}
             </div>
-          </div>
+          </AnimateIn>
         </div>
       </section>
 
       {/* Credibility */}
       <section className="py-16 px-4">
-        <div className="container max-w-2xl text-center">
+        <AnimateIn className="container max-w-2xl text-center">
           <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-6">
             <Briefcase className="w-6 h-6 text-accent" />
           </div>
@@ -258,62 +269,66 @@ export default function Index() {
           </p>
           <div className="mt-10">
             <Link to="/signup">
-              <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_20px_hsl(var(--accent)/0.4)] px-10 h-14 text-base gap-2 transition-all">
+              <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_20px_hsl(var(--accent)/0.4)] px-10 h-14 text-base gap-2 transition-all hover:scale-105">
                 Create Your First Proposal Free
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
           </div>
-        </div>
+        </AnimateIn>
       </section>
 
       {/* Pricing */}
       <section id="pricing" className="py-20 pb-24 px-4">
         <div className="container max-w-4xl">
-          <div className="text-center mb-14">
+          <AnimateIn className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Simple, transparent pricing</h2>
             <p className="text-muted-foreground text-lg">No hidden fees. Cancel anytime.</p>
-          </div>
+          </AnimateIn>
           <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto items-stretch">
-            {plans.map((plan) => (
-              <Card key={plan.name} className={`border relative transition-all flex flex-col ${plan.popular ? "border-accent border-2 shadow-2xl shadow-accent/30 ring-2 ring-accent/40 z-10" : "border-border shadow-none"}`}>
-                {plan.popular && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-accent text-accent-foreground text-xs font-semibold tracking-wide shadow-lg shadow-accent/30">
-                    Most popular
-                  </div>
-                )}
-                <CardContent className="p-8 flex flex-col flex-1">
-                  <h3 className="text-lg font-semibold text-foreground mb-1">{plan.name}</h3>
-                  <p className="text-sm text-muted-foreground mb-6">{plan.description}</p>
-                  <div className="mb-2">
-                    <span className="text-4xl font-bold text-foreground">{plan.price}</span>
-                    <span className="text-muted-foreground">{plan.period}</span>
-                  </div>
-                  {plan.valueLine ? (
-                    <p className="text-xs text-accent mb-6 font-medium">{plan.valueLine}</p>
-                  ) : (
-                    <div className="mb-6" />
+            {plans.map((plan, i) => (
+              <AnimateIn key={plan.name} delay={i * 150} direction="up">
+                <Card className={`border relative transition-all duration-300 flex flex-col h-full hover:translate-y-[-4px] ${plan.popular ? "border-accent border-2 shadow-2xl shadow-accent/30 ring-2 ring-accent/40 z-10" : "border-border shadow-none hover:border-muted-foreground/30"}`}>
+                  {plan.popular && (
+                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-accent text-accent-foreground text-xs font-semibold tracking-wide shadow-lg shadow-accent/30">
+                      Most popular
+                    </div>
                   )}
-                  <ul className="space-y-3 mb-8 flex-1">
-                    {plan.features.map((f) => (
-                      <li key={f} className="flex items-center gap-2 text-sm text-foreground">
-                        <CheckCircle className="w-4 h-4 text-accent flex-shrink-0" />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <Link to="/signup" className="mt-auto">
-                    <Button className={`w-full h-12 text-base transition-all ${plan.popular ? "bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_24px_hsl(var(--accent)/0.5)] font-semibold" : "hover:brightness-110"}`} variant={plan.popular ? "default" : "outline"}>
-                      {plan.cta}
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
+                  <CardContent className="p-8 flex flex-col flex-1">
+                    <h3 className="text-lg font-semibold text-foreground mb-1">{plan.name}</h3>
+                    <p className="text-sm text-muted-foreground mb-6">{plan.description}</p>
+                    <div className="mb-2">
+                      <span className="text-4xl font-bold text-foreground">{plan.price}</span>
+                      <span className="text-muted-foreground">{plan.period}</span>
+                    </div>
+                    {plan.valueLine ? (
+                      <p className="text-xs text-accent mb-6 font-medium">{plan.valueLine}</p>
+                    ) : (
+                      <div className="mb-6" />
+                    )}
+                    <ul className="space-y-3 mb-8 flex-1">
+                      {plan.features.map((f) => (
+                        <li key={f} className="flex items-center gap-2 text-sm text-foreground">
+                          <CheckCircle className="w-4 h-4 text-accent flex-shrink-0" />
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+                    <Link to="/signup" className="mt-auto">
+                      <Button className={`w-full h-12 text-base transition-all ${plan.popular ? "bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_24px_hsl(var(--accent)/0.5)] font-semibold" : "hover:brightness-110"}`} variant={plan.popular ? "default" : "outline"}>
+                        {plan.cta}
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              </AnimateIn>
             ))}
           </div>
-          <p className="text-center text-sm text-muted-foreground mt-12">
-            If this helps you close just one extra client, it pays for itself.
-          </p>
+          <AnimateIn>
+            <p className="text-center text-sm text-muted-foreground mt-12">
+              If this helps you close just one extra client, it pays for itself.
+            </p>
+          </AnimateIn>
         </div>
       </section>
 
