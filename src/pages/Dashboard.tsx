@@ -89,41 +89,7 @@ export default function Dashboard() {
           <QuickActions />
         </div>
 
-        {/* Top Clients Preview */}
-        {topClients.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold text-foreground">Top Clients</h2>
-              <button
-                onClick={() => navigate("/dashboard/clients")}
-                className="text-xs text-accent hover:underline flex items-center gap-1"
-              >
-                View all clients <ChevronRight className="w-3 h-3" />
-              </button>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {topClients.map((c) => (
-                <Card key={c.name} className="hover:border-accent/20 transition-colors cursor-pointer" onClick={() => navigate("/dashboard/clients")}>
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-                      <span className="text-sm font-semibold text-accent">{c.name.charAt(0).toUpperCase()}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{c.name}</p>
-                      <p className="text-xs text-muted-foreground">{c.count} proposal{c.count !== 1 ? "s" : ""}</p>
-                    </div>
-                    {c.value > 0 && (
-                      <span className="flex items-center gap-0.5 text-xs text-emerald-400">
-                        <DollarSign className="w-3 h-3" />
-                        {c.value >= 1000 ? `${(c.value / 1000).toFixed(1)}k` : c.value}
-                      </span>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
+
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
