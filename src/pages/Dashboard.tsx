@@ -48,7 +48,20 @@ export default function Dashboard() {
         const num = parseFloat(p.budget?.replace(/[^0-9.]/g, "") || "0");
         return acc + (isNaN(num) ? 0 : num);
       }, 0);
-    return { total: proposals.length, revenue, clients: uniqueClients, timeSaved };
+
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    const thisWeek = proposals.filter((p) => new Date(p.created_at) >= oneWeekAgo).length;
+
+    const proposalStats = {
+      total: proposals.length,
+      accepted: proposals.filter((p) => p.status === "accepted").length,
+      pending: proposals.filter((p) => p.status === "pending").length,
+      rejected: proposals.filter((p) => p.status === "rejected").length,
+      thisWeek,
+    };
+
+    return { total: proposals.length, revenue, clients: uniqueClients, timeSaved, proposalStats };
   }, [proposals]);
 
   return (
