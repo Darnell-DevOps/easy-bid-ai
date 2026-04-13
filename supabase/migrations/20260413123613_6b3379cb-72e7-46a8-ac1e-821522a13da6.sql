@@ -1,0 +1,1 @@
+ALTER TABLE public.proposals ADD COLUMN client_paid BOOLEAN NOT NULL DEFAULT false;

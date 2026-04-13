@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           budget: string
           client_name: string
+          client_paid: boolean
           company_name: string
           created_at: string
           id: string
@@ -34,6 +35,7 @@ export type Database = {
         Insert: {
           budget?: string
           client_name: string
+          client_paid?: boolean
           company_name: string
           created_at?: string
           id?: string
@@ -50,6 +52,7 @@ export type Database = {
         Update: {
           budget?: string
           client_name?: string
+          client_paid?: boolean
           company_name?: string
           created_at?: string
           id?: string

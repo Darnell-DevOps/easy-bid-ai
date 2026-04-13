@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Save, Loader2, Pencil, Eye, Copy, Check } from "lucide-react";
+import { Download, Save, Loader2, Pencil, Eye, Copy, Check, DollarSign } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 interface ProposalData {
@@ -19,6 +21,8 @@ interface ProposalData {
   pricing_breakdown: string;
   invoice_content: string;
   created_at: string;
+  client_paid: boolean;
+  budget: string;
 }
 
 function MarkdownPreview({ content }: { content: string }) {
@@ -56,6 +60,7 @@ export default function ProposalView() {
   const [editedPricing, setEditedPricing] = useState("");
   const [editedInvoice, setEditedInvoice] = useState("");
   const [copied, setCopied] = useState(false);
+  const [clientPaid, setClientPaid] = useState(false);
 
   const handleCopyProposal = async () => {
     const fullText = [editedProposal, editedPricing, editedInvoice].filter(Boolean).join("\n\n---\n\n");
@@ -78,6 +83,7 @@ export default function ProposalView() {
         setEditedProposal(data.proposal_content || "");
         setEditedPricing(data.pricing_breakdown || "");
         setEditedInvoice(data.invoice_content || "");
+        setClientPaid(data.client_paid || false);
       }
       setLoading(false);
     };
@@ -355,10 +361,37 @@ export default function ProposalView() {
   return (
     <DashboardLayout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">{proposal.client_name}</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {proposal.company_name} · {proposal.service_type} · {new Date(proposal.created_at).toLocaleDateString()}
-        </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">{proposal.client_name}</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {proposal.company_name} · {proposal.service_type} · {new Date(proposal.created_at).toLocaleDateString()}
+            </p>
+          </div>
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 border border-border">
+            <DollarSign className={`w-4 h-4 ${clientPaid ? "text-emerald-400" : "text-muted-foreground"}`} />
+            <Label htmlFor="client-paid" className="text-sm font-medium text-foreground cursor-pointer">
+              Client Paid
+            </Label>
+            <Switch
+              id="client-paid"
+              checked={clientPaid}
+              onCheckedChange={async (checked) => {
+                setClientPaid(checked);
+                const { error } = await supabase
+                  .from("proposals")
+                  .update({ client_paid: checked })
+                  .eq("id", id);
+                if (error) {
+                  setClientPaid(!checked);
+                  toast({ title: "Failed to update", description: error.message, variant: "destructive" });
+                } else {
+                  toast({ title: checked ? "Marked as paid" : "Marked as unpaid" });
+                }
+              }}
+            />
+          </div>
+        </div>
       </div>
 
       <Card>
