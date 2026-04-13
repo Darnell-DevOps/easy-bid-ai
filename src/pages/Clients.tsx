@@ -57,6 +57,10 @@ export default function Clients() {
 
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
+  const topClients = useMemo(() => {
+    return [...clients].sort((a, b) => b.totalValue - a.totalValue).slice(0, 3);
+  }, [clients]);
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -68,6 +72,33 @@ export default function Clients() {
             </p>
           </div>
         </div>
+
+        {!loading && topClients.length > 0 && topClients.some(c => c.totalValue > 0) && (
+          <div>
+            <h2 className="text-lg font-semibold text-foreground mb-3">Top Clients</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {topClients.map((c) => (
+                <Card key={c.id} className="hover:border-accent/20 transition-colors cursor-pointer" onClick={() => navigate(`/dashboard/clients/${c.id}`)}>
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
+                      <span className="text-sm font-semibold text-accent">{c.name.charAt(0).toUpperCase()}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{c.name}</p>
+                      <p className="text-xs text-muted-foreground">{c.proposalCount} proposal{c.proposalCount !== 1 ? "s" : ""}</p>
+                    </div>
+                    {c.totalValue > 0 && (
+                      <span className="flex items-center gap-0.5 text-xs text-emerald-400">
+                        <DollarSign className="w-3 h-3" />
+                        {c.totalValue >= 1000 ? `${(c.totalValue / 1000).toFixed(1)}k` : c.totalValue}
+                      </span>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
 
         {loading ? (
           <div className="space-y-3">
