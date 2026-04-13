@@ -1,31 +1,40 @@
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText, Users, DollarSign, Clock } from "lucide-react";
+import { Users, DollarSign, Clock } from "lucide-react";
+import TotalProposalsCard from "./TotalProposalsCard";
+
+interface ProposalStats {
+  total: number;
+  accepted: number;
+  pending: number;
+  rejected: number;
+  thisWeek: number;
+}
 
 interface StatsCardsProps {
   totalProposals: number;
   revenueGenerated: number;
   activeClients: number;
   timeSavedMinutes: number;
+  proposalStats: ProposalStats;
 }
 
-export default function StatsCards({ totalProposals, revenueGenerated, activeClients, timeSavedMinutes }: StatsCardsProps) {
+export default function StatsCards({ revenueGenerated, activeClients, timeSavedMinutes, proposalStats }: StatsCardsProps) {
   const navigate = useNavigate();
   const hours = Math.floor(timeSavedMinutes / 60);
   const mins = timeSavedMinutes % 60;
   const timeSaved = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
   const revDisplay = revenueGenerated >= 1000 ? `$${(revenueGenerated / 1000).toFixed(1)}k` : `$${revenueGenerated.toLocaleString()}`;
 
-  const stats = [
+  const otherStats = [
     { label: "Revenue Generated", value: revDisplay, icon: DollarSign, accent: "text-emerald-400", link: "/dashboard/revenue" },
-    { label: "Total Proposals", value: totalProposals, icon: FileText, accent: "text-primary", link: "/dashboard" },
     { label: "Active Clients", value: activeClients, icon: Users, accent: "text-accent", link: "/dashboard" },
     { label: "Time Saved", value: timeSaved, icon: Clock, accent: "text-amber-400", link: "/dashboard" },
   ];
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-      {stats.map((s) => (
+      {otherStats.map((s) => (
         <Card
           key={s.label}
           className="group hover:shadow-lg hover:border-accent/20 transition-all duration-300 cursor-pointer"
@@ -42,6 +51,7 @@ export default function StatsCards({ totalProposals, revenueGenerated, activeCli
           </CardContent>
         </Card>
       ))}
+      <TotalProposalsCard stats={proposalStats} />
     </div>
   );
 }

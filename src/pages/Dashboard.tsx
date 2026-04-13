@@ -16,6 +16,7 @@ interface FullProposal {
   invoice_content: string | null;
   budget: string;
   client_paid: boolean;
+  status: string;
 }
 
 export default function Dashboard() {
@@ -25,7 +26,7 @@ export default function Dashboard() {
   const fetchProposals = async () => {
     const { data } = await supabase
       .from("proposals")
-      .select("id, client_name, company_name, service_type, created_at, proposal_content, invoice_content, budget, client_paid")
+      .select("id, client_name, company_name, service_type, created_at, proposal_content, invoice_content, budget, client_paid, status")
       .order("created_at", { ascending: false });
     setProposals(data || []);
     setLoading(false);
@@ -47,7 +48,20 @@ export default function Dashboard() {
         const num = parseFloat(p.budget?.replace(/[^0-9.]/g, "") || "0");
         return acc + (isNaN(num) ? 0 : num);
       }, 0);
-    return { total: proposals.length, revenue, clients: uniqueClients, timeSaved };
+
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    const thisWeek = proposals.filter((p) => new Date(p.created_at) >= oneWeekAgo).length;
+
+    const proposalStats = {
+      total: proposals.length,
+      accepted: proposals.filter((p) => p.status === "accepted").length,
+      pending: proposals.filter((p) => p.status === "pending").length,
+      rejected: proposals.filter((p) => p.status === "rejected").length,
+      thisWeek,
+    };
+
+    return { total: proposals.length, revenue, clients: uniqueClients, timeSaved, proposalStats };
   }, [proposals]);
 
   return (
@@ -65,6 +79,7 @@ export default function Dashboard() {
           revenueGenerated={stats.revenue}
           activeClients={stats.clients}
           timeSavedMinutes={stats.timeSaved}
+          proposalStats={stats.proposalStats}
         />
 
         {/* Quick Actions */}
