@@ -142,13 +142,18 @@ export default function Clients() {
                     <button
                       key={client.id}
                       onClick={() => navigate(`/dashboard/clients/${client.id}`)}
-                      className="w-full flex items-center gap-4 px-4 py-3 hover:bg-secondary/50 transition-colors text-left group border-b border-border/30"
+                      className={`w-full flex items-center gap-4 px-4 py-3 hover:bg-secondary/50 transition-colors text-left group border-b border-border/30 ${!client.is_active ? "opacity-50" : ""}`}
                     >
-                      <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-                        <span className="text-sm font-semibold text-accent">{client.name.charAt(0).toUpperCase()}</span>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${client.is_active ? "bg-accent/10" : "bg-muted"}`}>
+                        <span className={`text-sm font-semibold ${client.is_active ? "text-accent" : "text-muted-foreground"}`}>{client.name.charAt(0).toUpperCase()}</span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{client.name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium text-foreground truncate">{client.name}</p>
+                          {!client.is_active && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-border text-muted-foreground">Inactive</Badge>
+                          )}
+                        </div>
                         {client.company && (
                           <p className="text-xs text-muted-foreground truncate">{client.company}</p>
                         )}
