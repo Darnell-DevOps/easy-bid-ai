@@ -89,6 +89,7 @@ export default function Clients() {
               {showInactive ? "Hide inactive" : `Show inactive (${inactiveCount})`}
             </button>
           )}
+        </div>
 
         {!loading && topClients.length > 0 && topClients.some(c => c.totalValue > 0) && (
           <div>
