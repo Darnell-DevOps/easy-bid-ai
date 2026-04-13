@@ -1,1 +1,0 @@
-ALTER TABLE public.proposals ADD COLUMN status text NOT NULL DEFAULT 'pending' CHECK (status IN ('accepted', 'pending', 'rejected'));
