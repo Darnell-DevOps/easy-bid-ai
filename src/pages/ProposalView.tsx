@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Save, Loader2, Pencil, Eye, Copy, Check } from "lucide-react";
+import { Download, Save, Loader2, Pencil, Eye, Copy, Check, DollarSign } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 interface ProposalData {
@@ -19,6 +21,8 @@ interface ProposalData {
   pricing_breakdown: string;
   invoice_content: string;
   created_at: string;
+  client_paid: boolean;
+  budget: string;
 }
 
 function MarkdownPreview({ content }: { content: string }) {
@@ -56,6 +60,7 @@ export default function ProposalView() {
   const [editedPricing, setEditedPricing] = useState("");
   const [editedInvoice, setEditedInvoice] = useState("");
   const [copied, setCopied] = useState(false);
+  const [clientPaid, setClientPaid] = useState(false);
 
   const handleCopyProposal = async () => {
     const fullText = [editedProposal, editedPricing, editedInvoice].filter(Boolean).join("\n\n---\n\n");
@@ -78,6 +83,7 @@ export default function ProposalView() {
         setEditedProposal(data.proposal_content || "");
         setEditedPricing(data.pricing_breakdown || "");
         setEditedInvoice(data.invoice_content || "");
+        setClientPaid(data.client_paid || false);
       }
       setLoading(false);
     };
