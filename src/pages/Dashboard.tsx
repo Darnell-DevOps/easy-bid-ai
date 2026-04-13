@@ -37,12 +37,7 @@ export default function Dashboard() {
 
   const stats = useMemo(() => {
     const uniqueClients = new Set(proposals.map((p) => p.client_name.toLowerCase().trim())).size;
-    const timeSaved = proposals.reduce((acc, p) => {
-      let mins = 0;
-      if (p.proposal_content) mins += 45;
-      if (p.invoice_content) mins += 15;
-      return acc + mins;
-    }, 0);
+    const timeSaved = proposals.length * 55;
     const revenue = proposals
       .filter((p) => p.client_paid)
       .reduce((acc, p) => {

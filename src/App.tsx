@@ -18,6 +18,7 @@ import RevenueDashboard from "./pages/RevenueDashboard";
 import ProposalsDashboard from "./pages/ProposalsDashboard";
 import Clients from "./pages/Clients";
 import ClientDetail from "./pages/ClientDetail";
+import TimeSavedDashboard from "./pages/TimeSavedDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ const App = () => (
           <Route path="/dashboard/proposals" element={<AuthGuard><ProposalsDashboard /></AuthGuard>} />
           <Route path="/dashboard/clients" element={<AuthGuard><Clients /></AuthGuard>} />
           <Route path="/dashboard/clients/:id" element={<AuthGuard><ClientDetail /></AuthGuard>} />
+          <Route path="/dashboard/time-saved" element={<AuthGuard><TimeSavedDashboard /></AuthGuard>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
