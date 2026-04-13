@@ -18,7 +18,7 @@ export default function StatsCards({ totalProposals, revenueGenerated, activeCli
 
   const stats = [
     { label: "Revenue Generated", value: revDisplay, icon: DollarSign, accent: "text-emerald-400", link: "/dashboard/revenue" },
-    { label: "Total Proposals", value: totalProposals, icon: FileText, accent: "text-primary", link: "/dashboard" },
+    { label: "Total Proposals", value: totalProposals, icon: FileText, accent: "text-primary", link: "/dashboard/proposals" },
     { label: "Active Clients", value: activeClients, icon: Users, accent: "text-accent", link: "/dashboard" },
     { label: "Time Saved", value: timeSaved, icon: Clock, accent: "text-amber-400", link: "/dashboard" },
   ];

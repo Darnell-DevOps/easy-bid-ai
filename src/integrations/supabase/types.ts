@@ -28,6 +28,7 @@ export type Database = {
           project_scope: string
           proposal_content: string | null
           service_type: string
+          status: string
           timeline: string
           updated_at: string
           user_id: string
@@ -45,6 +46,7 @@ export type Database = {
           project_scope?: string
           proposal_content?: string | null
           service_type: string
+          status?: string
           timeline?: string
           updated_at?: string
           user_id: string
@@ -62,6 +64,7 @@ export type Database = {
           project_scope?: string
           proposal_content?: string | null
           service_type?: string
+          status?: string
           timeline?: string
           updated_at?: string
           user_id?: string
