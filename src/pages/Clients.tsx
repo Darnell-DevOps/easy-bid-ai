@@ -36,6 +36,7 @@ export default function Clients() {
           name: c.name,
           company: c.company,
           email: c.email,
+          is_active: c.is_active ?? true,
           proposalCount: clientProposals.length,
           totalValue,
         };
