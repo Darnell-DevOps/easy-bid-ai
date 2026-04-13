@@ -1,22 +1,23 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText, Users, DollarSign, TrendingUp, Clock } from "lucide-react";
+import { FileText, Users, DollarSign, Clock } from "lucide-react";
 
 interface StatsCardsProps {
   totalProposals: number;
-  monthlyProposals: number;
+  revenueGenerated: number;
   activeClients: number;
   timeSavedMinutes: number;
 }
 
-export default function StatsCards({ totalProposals, monthlyProposals, activeClients, timeSavedMinutes }: StatsCardsProps) {
+export default function StatsCards({ totalProposals, revenueGenerated, activeClients, timeSavedMinutes }: StatsCardsProps) {
   const hours = Math.floor(timeSavedMinutes / 60);
   const mins = timeSavedMinutes % 60;
   const timeSaved = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+  const revDisplay = revenueGenerated >= 1000 ? `$${(revenueGenerated / 1000).toFixed(1)}k` : `$${revenueGenerated.toLocaleString()}`;
 
   const stats = [
-    { label: "This Month", value: monthlyProposals, icon: TrendingUp, accent: "text-accent" },
+    { label: "Revenue Generated", value: revDisplay, icon: DollarSign, accent: "text-emerald-400" },
     { label: "Total Proposals", value: totalProposals, icon: FileText, accent: "text-primary" },
-    { label: "Active Clients", value: activeClients, icon: Users, accent: "text-emerald-400" },
+    { label: "Active Clients", value: activeClients, icon: Users, accent: "text-accent" },
     { label: "Time Saved", value: timeSaved, icon: Clock, accent: "text-amber-400" },
   ];
 

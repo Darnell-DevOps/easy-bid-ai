@@ -14,6 +14,7 @@ interface FullProposal {
   created_at: string;
   proposal_content: string | null;
   invoice_content: string | null;
+  budget: string;
 }
 
 export default function Dashboard() {
@@ -23,7 +24,7 @@ export default function Dashboard() {
   const fetchProposals = async () => {
     const { data } = await supabase
       .from("proposals")
-      .select("id, client_name, company_name, service_type, created_at, proposal_content, invoice_content")
+      .select("id, client_name, company_name, service_type, created_at, proposal_content, invoice_content, budget")
       .order("created_at", { ascending: false });
     setProposals(data || []);
     setLoading(false);
@@ -32,18 +33,18 @@ export default function Dashboard() {
   useEffect(() => { fetchProposals(); }, []);
 
   const stats = useMemo(() => {
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthlyProposals = proposals.filter((p) => new Date(p.created_at) >= startOfMonth).length;
     const uniqueClients = new Set(proposals.map((p) => p.client_name.toLowerCase().trim())).size;
-    // Time saved: 45 min per proposal + 15 min per invoice
     const timeSaved = proposals.reduce((acc, p) => {
       let mins = 0;
       if (p.proposal_content) mins += 45;
       if (p.invoice_content) mins += 15;
       return acc + mins;
     }, 0);
-    return { total: proposals.length, monthly: monthlyProposals, clients: uniqueClients, timeSaved };
+    const revenue = proposals.reduce((acc, p) => {
+      const num = parseFloat(p.budget?.replace(/[^0-9.]/g, "") || "0");
+      return acc + (isNaN(num) ? 0 : num);
+    }, 0);
+    return { total: proposals.length, revenue, clients: uniqueClients, timeSaved };
   }, [proposals]);
 
   return (
@@ -58,7 +59,7 @@ export default function Dashboard() {
         {/* Stats */}
         <StatsCards
           totalProposals={stats.total}
-          monthlyProposals={stats.monthly}
+          revenueGenerated={stats.revenue}
           activeClients={stats.clients}
           timeSavedMinutes={stats.timeSaved}
         />
