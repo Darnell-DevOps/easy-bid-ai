@@ -5,9 +5,7 @@ import StatsCards from "@/components/dashboard/StatsCards";
 import QuickActions from "@/components/dashboard/QuickActions";
 import RecentActivity from "@/components/dashboard/RecentActivity";
 import ProposalsList from "@/components/dashboard/ProposalsList";
-import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronRight, DollarSign } from "lucide-react";
 
 interface FullProposal {
   id: string;
@@ -54,21 +52,6 @@ export default function Dashboard() {
     return { total: proposals.length, revenue, clients: uniqueClients, timeSaved };
   }, [proposals]);
 
-  // Top 3 clients by value
-  const topClients = useMemo(() => {
-    const map = new Map<string, { name: string; value: number; count: number }>();
-    proposals.forEach((p) => {
-      const key = p.client_name.toLowerCase().trim();
-      const existing = map.get(key) || { name: p.client_name, value: 0, count: 0 };
-      existing.count++;
-      if (p.client_paid) {
-        existing.value += parseFloat(p.budget?.replace(/[^0-9.]/g, "") || "0") || 0;
-      }
-      map.set(key, existing);
-    });
-    return Array.from(map.values()).sort((a, b) => b.value - a.value).slice(0, 3);
-  }, [proposals]);
-
   return (
     <DashboardLayout>
       <div className="space-y-8">
@@ -88,42 +71,6 @@ export default function Dashboard() {
           <h2 className="text-lg font-semibold text-foreground mb-3">Quick Actions</h2>
           <QuickActions />
         </div>
-
-        {/* Top Clients Preview */}
-        {topClients.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold text-foreground">Top Clients</h2>
-              <button
-                onClick={() => navigate("/dashboard/clients")}
-                className="text-xs text-accent hover:underline flex items-center gap-1"
-              >
-                View all clients <ChevronRight className="w-3 h-3" />
-              </button>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {topClients.map((c) => (
-                <Card key={c.name} className="hover:border-accent/20 transition-colors cursor-pointer" onClick={() => navigate("/dashboard/clients")}>
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-                      <span className="text-sm font-semibold text-accent">{c.name.charAt(0).toUpperCase()}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{c.name}</p>
-                      <p className="text-xs text-muted-foreground">{c.count} proposal{c.count !== 1 ? "s" : ""}</p>
-                    </div>
-                    {c.value > 0 && (
-                      <span className="flex items-center gap-0.5 text-xs text-emerald-400">
-                        <DollarSign className="w-3 h-3" />
-                        {c.value >= 1000 ? `${(c.value / 1000).toFixed(1)}k` : c.value}
-                      </span>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
