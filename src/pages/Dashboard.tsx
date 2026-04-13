@@ -15,6 +15,7 @@ interface FullProposal {
   proposal_content: string | null;
   invoice_content: string | null;
   budget: string;
+  client_paid: boolean;
 }
 
 export default function Dashboard() {
@@ -24,7 +25,7 @@ export default function Dashboard() {
   const fetchProposals = async () => {
     const { data } = await supabase
       .from("proposals")
-      .select("id, client_name, company_name, service_type, created_at, proposal_content, invoice_content, budget")
+      .select("id, client_name, company_name, service_type, created_at, proposal_content, invoice_content, budget, client_paid")
       .order("created_at", { ascending: false });
     setProposals(data || []);
     setLoading(false);
@@ -40,10 +41,12 @@ export default function Dashboard() {
       if (p.invoice_content) mins += 15;
       return acc + mins;
     }, 0);
-    const revenue = proposals.reduce((acc, p) => {
-      const num = parseFloat(p.budget?.replace(/[^0-9.]/g, "") || "0");
-      return acc + (isNaN(num) ? 0 : num);
-    }, 0);
+    const revenue = proposals
+      .filter((p) => p.client_paid)
+      .reduce((acc, p) => {
+        const num = parseFloat(p.budget?.replace(/[^0-9.]/g, "") || "0");
+        return acc + (isNaN(num) ? 0 : num);
+      }, 0);
     return { total: proposals.length, revenue, clients: uniqueClients, timeSaved };
   }, [proposals]);
 
