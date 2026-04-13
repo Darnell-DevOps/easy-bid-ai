@@ -79,6 +79,7 @@ export default function Dashboard() {
           revenueGenerated={stats.revenue}
           activeClients={stats.clients}
           timeSavedMinutes={stats.timeSaved}
+          proposalStats={stats.proposalStats}
         />
 
         {/* Quick Actions */}
