@@ -26,7 +26,7 @@ export default function Dashboard() {
   const fetchProposals = async () => {
     const { data } = await supabase
       .from("proposals")
-      .select("id, client_name, company_name, service_type, created_at, proposal_content, invoice_content, budget, client_paid")
+      .select("id, client_name, company_name, service_type, created_at, proposal_content, invoice_content, budget, client_paid, status")
       .order("created_at", { ascending: false });
     setProposals(data || []);
     setLoading(false);
