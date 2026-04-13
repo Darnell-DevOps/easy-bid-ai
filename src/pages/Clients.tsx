@@ -11,6 +11,7 @@ interface ClientWithStats {
   name: string;
   company: string | null;
   email: string | null;
+  is_active: boolean;
   proposalCount: number;
   totalValue: number;
 }

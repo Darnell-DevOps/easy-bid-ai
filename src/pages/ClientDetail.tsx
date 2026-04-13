@@ -6,13 +6,27 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Mail, Building2, FileText, DollarSign, Plus } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { ArrowLeft, Mail, Building2, FileText, DollarSign, Plus, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from "@/hooks/use-toast";
 
 interface ClientInfo {
   id: string;
   name: string;
   company: string | null;
   email: string | null;
+  is_active: boolean;
 }
 
 interface Proposal {
@@ -31,6 +45,8 @@ export default function ClientDetail() {
   const [client, setClient] = useState<ClientInfo | null>(null);
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [toggling, setToggling] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const fetch = async () => {
@@ -46,6 +62,34 @@ export default function ClientDetail() {
     };
     fetch();
   }, [id]);
+
+  const toggleActive = async () => {
+    if (!client) return;
+    setToggling(true);
+    const newStatus = !client.is_active;
+    await supabase.from("clients").update({ is_active: newStatus }).eq("id", client.id);
+    setClient({ ...client, is_active: newStatus });
+    toast({
+      title: newStatus ? "Client activated" : "Client marked inactive",
+      description: newStatus
+        ? "This client is now active again."
+        : "Client is inactive. Their history is preserved.",
+    });
+    setToggling(false);
+  };
+
+  const deleteClient = async () => {
+    if (!client) return;
+    setDeleting(true);
+    // Remove associated proposals first, then the client
+    await supabase.from("proposals").delete().eq("client_id", client.id);
+    await supabase.from("clients").delete().eq("id", client.id);
+    toast({
+      title: "Client deleted",
+      description: "Client and all associated data have been permanently removed.",
+    });
+    navigate("/dashboard/clients");
+  };
 
   const totalRevenue = proposals
     .filter((p) => p.client_paid)
@@ -88,11 +132,18 @@ export default function ClientDetail() {
 
         {/* Client header */}
         <div className="flex items-start gap-4">
-          <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-            <span className="text-xl font-bold text-accent">{client.name.charAt(0).toUpperCase()}</span>
+          <div className={`w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 ${client.is_active ? "bg-accent/10" : "bg-muted"}`}>
+            <span className={`text-xl font-bold ${client.is_active ? "text-accent" : "text-muted-foreground"}`}>{client.name.charAt(0).toUpperCase()}</span>
           </div>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-foreground">{client.name}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-foreground">{client.name}</h1>
+              {!client.is_active && (
+                <Badge variant="outline" className="bg-muted text-muted-foreground border-border text-xs">
+                  Inactive
+                </Badge>
+              )}
+            </div>
             <div className="flex flex-wrap gap-3 mt-1">
               {client.company && (
                 <span className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -107,6 +158,43 @@ export default function ClientDetail() {
             </div>
           </div>
         </div>
+
+        {/* Actions */}
+        <Card>
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Switch checked={client.is_active} onCheckedChange={toggleActive} disabled={toggling} />
+              <div>
+                <p className="text-sm font-medium text-foreground">{client.is_active ? "Active" : "Inactive"}</p>
+                <p className="text-xs text-muted-foreground">
+                  {client.is_active ? "Client is active and visible" : "Hidden from active list, history preserved"}
+                </p>
+              </div>
+            </div>
+
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm">
+                  <Trash2 className="w-4 h-4 mr-1" /> Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete {client.name}?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete this client and all associated proposals and invoices. This action cannot be undone. Consider marking as inactive instead.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={deleteClient} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    {deleting ? "Deleting..." : "Delete permanently"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </CardContent>
+        </Card>
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
