@@ -32,7 +32,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const NavContent = () => (
     <>
       <div className="p-6">
-        <Link to="/" className="text-lg font-semibold text-sidebar-foreground tracking-tight">
+        <Link to="/dashboard" className="text-lg font-semibold text-sidebar-foreground tracking-tight">
           Close<span className="text-gradient-sync">Sync</span> <span className="text-sidebar-foreground">AI</span>
         </Link>
       </div>
