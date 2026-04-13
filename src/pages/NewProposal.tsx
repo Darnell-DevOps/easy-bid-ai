@@ -86,6 +86,29 @@ export default function NewProposal() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      // Auto-create or find client
+      let clientId: string | null = null;
+      const clientNameNorm = form.client_name.trim().toLowerCase();
+      if (clientNameNorm) {
+        const { data: existing } = await supabase
+          .from("clients")
+          .select("id")
+          .eq("user_id", user.id)
+          .ilike("name", clientNameNorm)
+          .maybeSingle();
+
+        if (existing) {
+          clientId = existing.id;
+        } else {
+          const { data: newClient } = await supabase
+            .from("clients")
+            .insert({ user_id: user.id, name: form.client_name.trim(), company: form.company_name.trim() || null })
+            .select("id")
+            .single();
+          clientId = newClient?.id || null;
+        }
+      }
+
       // Save proposal to database
       const { data: proposal, error: saveError } = await supabase
         .from("proposals")
@@ -101,6 +124,7 @@ export default function NewProposal() {
           proposal_content: aiData.proposal,
           pricing_breakdown: aiData.pricing,
           invoice_content: aiData.invoice,
+          client_id: clientId,
         })
         .select()
         .single();
