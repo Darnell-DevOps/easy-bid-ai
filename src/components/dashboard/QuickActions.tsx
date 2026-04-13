@@ -6,7 +6,7 @@ export default function QuickActions() {
   const actions = [
     { label: "New Proposal", description: "Create a new AI-powered proposal", icon: Plus, href: "/dashboard/new", accent: "from-accent to-purple" },
     { label: "Saved Proposals", description: "View and manage your proposals", icon: FileText, href: "/dashboard", accent: "from-primary to-accent" },
-    { label: "View Templates", description: "Browse proposal templates", icon: LayoutTemplate, href: "/dashboard/new", accent: "from-emerald-500 to-teal-500" },
+    { label: "View Templates", description: "Browse proposal templates", icon: LayoutTemplate, href: "/dashboard/templates", accent: "from-emerald-500 to-teal-500" },
   ];
 
   return (

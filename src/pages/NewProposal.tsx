@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,14 +55,17 @@ export default function NewProposal() {
     return () => stepTimers.current.forEach(clearTimeout);
   }, [loading]);
 
+  const location = useLocation();
+  const templateData = (location.state as any)?.template;
+
   const [form, setForm] = useState({
     client_name: "",
     company_name: "",
-    service_type: "",
-    project_scope: "",
-    budget: "",
-    timeline: "",
-    notes: "",
+    service_type: templateData?.serviceType || "",
+    project_scope: templateData?.prefill?.project_scope || "",
+    budget: templateData?.prefill?.budget || "",
+    timeline: templateData?.prefill?.timeline || "",
+    notes: templateData?.prefill?.notes || "",
   });
 
   const update = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
