@@ -361,10 +361,37 @@ export default function ProposalView() {
   return (
     <DashboardLayout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">{proposal.client_name}</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {proposal.company_name} · {proposal.service_type} · {new Date(proposal.created_at).toLocaleDateString()}
-        </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">{proposal.client_name}</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {proposal.company_name} · {proposal.service_type} · {new Date(proposal.created_at).toLocaleDateString()}
+            </p>
+          </div>
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 border border-border">
+            <DollarSign className={`w-4 h-4 ${clientPaid ? "text-emerald-400" : "text-muted-foreground"}`} />
+            <Label htmlFor="client-paid" className="text-sm font-medium text-foreground cursor-pointer">
+              Client Paid
+            </Label>
+            <Switch
+              id="client-paid"
+              checked={clientPaid}
+              onCheckedChange={async (checked) => {
+                setClientPaid(checked);
+                const { error } = await supabase
+                  .from("proposals")
+                  .update({ client_paid: checked })
+                  .eq("id", id);
+                if (error) {
+                  setClientPaid(!checked);
+                  toast({ title: "Failed to update", description: error.message, variant: "destructive" });
+                } else {
+                  toast({ title: checked ? "Marked as paid" : "Marked as unpaid" });
+                }
+              }}
+            />
+          </div>
+        </div>
       </div>
 
       <Card>
