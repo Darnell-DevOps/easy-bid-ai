@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
 import { Users, FileText, DollarSign, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -20,6 +21,7 @@ export default function Clients() {
   const navigate = useNavigate();
   const [clients, setClients] = useState<ClientWithStats[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showInactive, setShowInactive] = useState(false);
 
   useEffect(() => {
     const fetch = async () => {
@@ -47,15 +49,21 @@ export default function Clients() {
     fetch();
   }, []);
 
+  const filteredClients = useMemo(() => {
+    return showInactive ? clients : clients.filter((c) => c.is_active);
+  }, [clients, showInactive]);
+
+  const inactiveCount = useMemo(() => clients.filter((c) => !c.is_active).length, [clients]);
+
   const grouped = useMemo(() => {
     const groups: Record<string, ClientWithStats[]> = {};
-    clients.forEach((c) => {
+    filteredClients.forEach((c) => {
       const letter = c.name.charAt(0).toUpperCase();
       if (!groups[letter]) groups[letter] = [];
       groups[letter].push(c);
     });
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
-  }, [clients]);
+  }, [filteredClients]);
 
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
@@ -70,10 +78,17 @@ export default function Clients() {
           <div>
             <h1 className="text-2xl font-bold text-foreground">Clients</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              {clients.length} client{clients.length !== 1 ? "s" : ""}
+              {filteredClients.length} client{filteredClients.length !== 1 ? "s" : ""}
             </p>
           </div>
-        </div>
+          {inactiveCount > 0 && (
+            <button
+              onClick={() => setShowInactive(!showInactive)}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md border border-border"
+            >
+              {showInactive ? "Hide inactive" : `Show inactive (${inactiveCount})`}
+            </button>
+          )}
 
         {!loading && topClients.length > 0 && topClients.some(c => c.totalValue > 0) && (
           <div>
