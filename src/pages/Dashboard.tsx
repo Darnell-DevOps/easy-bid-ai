@@ -16,6 +16,7 @@ interface FullProposal {
   invoice_content: string | null;
   budget: string;
   client_paid: boolean;
+  status: string;
 }
 
 export default function Dashboard() {
