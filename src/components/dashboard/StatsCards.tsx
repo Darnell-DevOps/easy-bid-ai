@@ -51,7 +51,7 @@ export default function StatsCards({ revenueGenerated, activeClients, timeSavedM
           </CardContent>
         </Card>
       ))}
-      <div className="cursor-pointer" onClick={() => navigate("/dashboard/proposals")}>
+      <div className="cursor-pointer" onClick={() => navigate("/dashboard")}>
         <TotalProposalsCard stats={proposalStats} />
       </div>
     </div>
