@@ -115,203 +115,195 @@ export default function ProposalView() {
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
 
-    // Convert markdown to HTML with better parsing
+    // Convert markdown to structured HTML
     let htmlContent = content
-      .replace(/^## (.+)$/gm, '<div class="section-block"><h2>$1</h2>')
+      .replace(/^## (.+)$/gm, '</div><div class="section"><div class="section-title-wrap"><h2>$1</h2><div class="section-accent"></div></div>')
       .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-      .replace(/^\*\*(.+?)\*\*/gm, '<strong>$1</strong>')
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/^- (.+)$/gm, '<li>$1</li>')
+      .replace(/^- (.+)$/gm, '<li><span class="bullet"></span><span class="li-text">$1</span></li>')
       .replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>')
       .replace(/\|(.+)\|/g, (match) => {
         const cells = match.split('|').filter(Boolean).map(c => c.trim());
         if (cells.every(c => /^[-:]+$/.test(c))) return '';
         return '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
       })
-      .replace(/(<tr>.*<\/tr>\n?)+/g, '<div class="table-wrapper"><table><tbody>$&</tbody></table></div>')
+      .replace(/(<tr>.*<\/tr>\n?)+/g, '<div class="pricing-card"><table><tbody>$&</tbody></table></div>')
       .replace(/\n{2,}/g, '</p><p>')
-      .replace(/^(?!<[hultdop])(.+)$/gm, '<p>$1</p>')
-      .replace(/---/g, '<hr />');
+      .replace(/^(?!<[hultdops])(.+)$/gm, '<p>$1</p>')
+      .replace(/---/g, '');
 
-    // Bold the last row of each table (total row)
+    // Style table header and total rows
     htmlContent = htmlContent.replace(
       /<tbody>([\s\S]*?)<\/tbody>/g,
       (match) => {
         const rows = match.match(/<tr>[\s\S]*?<\/tr>/g);
         if (!rows || rows.length < 2) return match;
-        // First row = header
         const firstRow = rows[0];
-        const headerRow = firstRow.replace(/<td>/g, '<td class="table-header">');
+        const headerRow = firstRow.replace(/<td>/g, '<td class="th">');
         let result = match.replace(firstRow, headerRow);
-        // Last row = total
         const lastRow = rows[rows.length - 1];
-        const boldedRow = lastRow.replace(/<td>/g, '<td class="total-row">');
-        result = result.replace(lastRow, boldedRow);
+        const totalRow = lastRow.replace(/<tr>/, '<tr class="total-row">');
+        result = result.replace(lastRow, totalRow);
         return result;
       }
     );
 
-    // Close section blocks before next section or at end
-    htmlContent = htmlContent.replace(/<div class="section-block"><h2>/g, '</div><div class="section-block"><h2>');
+    // Remove leading empty div
     htmlContent = htmlContent.replace(/^<\/div>/, '');
     htmlContent += '</div>';
+
+    const dateStr = new Date(proposal?.created_at || '').toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
 
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
       <head>
         <title>${title}</title>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
-          @page {
-            margin: 56px 64px;
-            size: A4;
-          }
-          * { box-sizing: border-box; margin: 0; padding: 0; }
+          @page { size: A4; margin: 48px 56px 56px 56px; }
+          *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
           body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            max-width: 100%;
-            margin: 0;
-            padding: 0;
-            color: #3a3a4a;
-            line-height: 1.85;
+            font-family: 'Inter', -apple-system, sans-serif;
+            color: #374151;
+            line-height: 1.8;
             font-size: 13px;
+            background: #ffffff;
             -webkit-font-smoothing: antialiased;
-            background: #fff;
           }
 
-          /* ─── Header ─── */
-          .doc-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            padding-bottom: 28px;
-            margin-bottom: 0;
-          }
-          .brand-group {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-          }
-          .logo { width: 40px; height: 40px; }
-          .brand-text .brand-name {
-            font-size: 20px;
-            font-weight: 800;
-            color: #6c5ce7;
-            letter-spacing: -0.5px;
-            line-height: 1.2;
-          }
-          .brand-text .brand-sub {
-            font-size: 10px;
-            font-weight: 500;
-            color: #a0a0b8;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-          }
-          .header-meta {
-            text-align: right;
-            font-size: 11px;
-            color: #8b8ba3;
-            line-height: 1.7;
-          }
-          .header-meta strong {
-            color: #2d2d3a;
-            font-weight: 600;
-          }
-          .header-divider {
-            height: 3px;
-            background: linear-gradient(90deg, #6c5ce7 0%, #a29bfe 50%, #e8e8f0 100%);
-            border: none;
-            border-radius: 2px;
-            margin-bottom: 36px;
-          }
-
-          /* ─── Title block ─── */
-          .doc-title-block {
-            margin-bottom: 40px;
-          }
-          .doc-title {
-            font-size: 32px;
-            font-weight: 800;
-            color: #1a1a2e;
-            letter-spacing: -0.8px;
-            line-height: 1.2;
-            margin-bottom: 6px;
-          }
-          .doc-subtitle {
-            font-size: 14px;
-            color: #8b8ba3;
-            font-weight: 400;
-          }
-
-          /* ─── Sections ─── */
-          .section-block {
-            margin-bottom: 32px;
-            padding: 0;
-          }
-          h2 {
-            font-size: 18px;
-            font-weight: 700;
-            color: #1a1a2e;
-            margin: 0 0 16px 0;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #f0f0f8;
-            letter-spacing: -0.3px;
+          /* ═══════════ HERO / COVER ═══════════ */
+          .hero {
+            padding: 48px 0 40px 0;
+            border-bottom: none;
+            margin-bottom: 8px;
             position: relative;
           }
-          h2::after {
+          .hero::after {
             content: '';
             position: absolute;
-            bottom: -2px;
+            bottom: 0;
             left: 0;
-            width: 48px;
-            height: 2px;
-            background: #6c5ce7;
-            border-radius: 1px;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #6c5ce7, #a78bfa, #c4b5fd, transparent);
+            border-radius: 4px;
           }
-          h3 {
+          .hero-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 36px;
+          }
+          .hero-logo {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+          }
+          .hero-brand-name {
             font-size: 15px;
+            font-weight: 700;
+            color: #6c5ce7;
+            letter-spacing: -0.3px;
+          }
+          .hero-title {
+            font-size: 38px;
+            font-weight: 900;
+            color: #111827;
+            letter-spacing: -1.5px;
+            line-height: 1.1;
+            margin-bottom: 16px;
+          }
+          .hero-meta {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+          }
+          .hero-meta-item {
+            font-size: 12px;
+            color: #9ca3af;
+            font-weight: 500;
+          }
+          .hero-meta-item span {
+            display: block;
+            font-size: 14px;
             font-weight: 600;
-            color: #2d2d3a;
-            margin: 24px 0 10px 0;
+            color: #374151;
+            margin-top: 2px;
           }
 
-          /* ─── Body ─── */
-          p {
-            margin: 10px 0;
-            color: #4a4a5a;
-            max-width: 62ch;
+          /* ═══════════ SECTIONS ═══════════ */
+          .section {
+            margin-top: 36px;
+            padding: 0;
           }
+          .section-title-wrap {
+            margin-bottom: 16px;
+          }
+          h2 {
+            font-size: 17px;
+            font-weight: 800;
+            color: #111827;
+            letter-spacing: -0.4px;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 1.2px;
+            margin-bottom: 6px;
+          }
+          .section-accent {
+            width: 32px;
+            height: 3px;
+            background: linear-gradient(90deg, #6c5ce7, #a78bfa);
+            border-radius: 2px;
+          }
+          h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 20px 0 8px 0;
+          }
+          p {
+            margin: 8px 0;
+            color: #4b5563;
+            max-width: 60ch;
+            font-size: 13px;
+          }
+          strong { color: #111827; font-weight: 700; }
+
+          /* ═══════════ LISTS ═══════════ */
           ul {
-            padding-left: 0;
-            margin: 14px 0;
+            padding: 0;
+            margin: 12px 0;
             list-style: none;
           }
           li {
-            margin: 10px 0;
-            color: #4a4a5a;
-            padding-left: 22px;
-            position: relative;
-            line-height: 1.7;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 8px 0;
+            color: #4b5563;
+            line-height: 1.6;
+            border-bottom: 1px solid #f3f4f6;
           }
-          li::before {
-            content: '';
-            position: absolute;
-            left: 2px;
-            top: 8px;
-            width: 8px;
-            height: 8px;
+          li:last-child { border-bottom: none; }
+          .bullet {
+            flex-shrink: 0;
+            width: 7px;
+            height: 7px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            background: #6c5ce7;
+            margin-top: 7px;
           }
-          strong { color: #1a1a2e; font-weight: 600; }
+          .li-text { flex: 1; }
 
-          /* ─── Tables (Pricing) ─── */
-          .table-wrapper {
+          /* ═══════════ PRICING ═══════════ */
+          .pricing-card {
             margin: 20px 0;
-            border: 1px solid #e8e8f0;
-            border-radius: 10px;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 12px;
             overflow: hidden;
+            background: #fff;
           }
           table {
             width: 100%;
@@ -319,106 +311,95 @@ export default function ProposalView() {
             font-size: 13px;
           }
           td {
-            padding: 13px 20px;
-            border-bottom: 1px solid #f0f0f8;
-            color: #4a4a5a;
-            vertical-align: top;
+            padding: 14px 24px;
+            border-bottom: 1px solid #f3f4f6;
+            color: #4b5563;
           }
-          td.table-header {
-            background: #f8f8fc;
+          td.th {
+            background: #f9fafb;
             font-weight: 700;
-            color: #1a1a2e;
-            font-size: 11px;
+            color: #111827;
+            font-size: 10px;
             text-transform: uppercase;
-            letter-spacing: 0.6px;
-            border-bottom: 2px solid #e8e8f0;
+            letter-spacing: 0.8px;
+            border-bottom: 1.5px solid #e5e7eb;
+            padding: 12px 24px;
           }
-          td.total-row {
-            font-weight: 800;
-            color: #1a1a2e;
-            font-size: 15px;
-            background: linear-gradient(135deg, #f8f7ff 0%, #f0eeff 100%);
+          .total-row td {
+            background: linear-gradient(135deg, #f5f3ff, #ede9fe);
             border-top: 2px solid #6c5ce7;
             border-bottom: none;
+            font-weight: 800;
+            color: #111827;
+            font-size: 15px;
+            padding: 18px 24px;
           }
-          tr:last-child td:not(.total-row):not(.table-header) {
+          tr:last-child td:not(.th) {
             border-bottom: none;
           }
 
-          /* ─── Dividers ─── */
-          hr {
-            border: none;
-            border-top: 1px solid #f0f0f8;
-            margin: 36px 0;
-          }
-
-          /* ─── CTA / Next Steps ─── */
-          .section-block:last-child {
-            background: linear-gradient(135deg, #f8f7ff 0%, #f0eeff 100%);
-            border: 1px solid #e0ddf8;
+          /* ═══════════ NEXT STEPS CTA ═══════════ */
+          .section:last-child {
+            background: #f5f3ff;
+            border: 1.5px solid #ddd6fe;
             border-radius: 12px;
             padding: 28px 32px;
-            margin-top: 8px;
+            margin-top: 40px;
           }
-          .section-block:last-child h2 {
-            border-bottom-color: #d8d5f0;
-          }
-          .section-block:last-child h2::after {
+          .section:last-child .section-accent {
             background: #6c5ce7;
           }
 
-          /* ─── Footer ─── */
+          /* ═══════════ FOOTER ═══════════ */
           .doc-footer {
             margin-top: 56px;
             padding-top: 20px;
-            border-top: 2px solid #f0f0f8;
-            text-align: center;
+            border-top: 1.5px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             font-size: 10px;
-            color: #b0b0c8;
-            letter-spacing: 0.5px;
+            color: #9ca3af;
           }
-          .doc-footer .footer-brand {
+          .footer-brand {
             font-weight: 700;
             color: #6c5ce7;
           }
 
+          /* ═══════════ PRINT ═══════════ */
           @media print {
             body { padding: 0; }
-            .doc-header { break-inside: avoid; }
-            h2, h3 { break-after: avoid; }
-            .table-wrapper, table { break-inside: avoid; }
-            .section-block { break-inside: avoid; }
-            .section-block:last-child { break-inside: avoid; }
+            .hero { break-after: avoid; }
+            h2 { break-after: avoid; }
+            .pricing-card, table { break-inside: avoid; }
+            .section { break-inside: avoid; }
+            .section:last-child { break-inside: avoid; }
           }
         </style>
       </head>
       <body>
-        <div class="doc-header">
-          <div class="brand-group">
-            <img src="${LOGO_BASE64}" alt="CloseSync AI" class="logo" />
-            <div class="brand-text">
-              <div class="brand-name">CloseSync AI</div>
-              <div class="brand-sub">Professional Services</div>
-            </div>
-          </div>
-          <div class="header-meta">
-            <strong>${proposal?.client_name}</strong><br>
-            ${proposal?.company_name}<br>
-            ${new Date(proposal?.created_at || '').toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}
-          </div>
-        </div>
-        <div class="header-divider"></div>
 
-        <div class="doc-title-block">
-          <div class="doc-title">${docTitle}</div>
-          <div class="doc-subtitle">${proposal?.service_type} · Prepared exclusively for ${proposal?.company_name}</div>
+        <div class="hero">
+          <div class="hero-brand">
+            <img src="${LOGO_BASE64}" alt="CloseSync AI" class="hero-logo" />
+            <div class="hero-brand-name">CloseSync AI</div>
+          </div>
+          <div class="hero-title">${docTitle}</div>
+          <div class="hero-meta">
+            <div class="hero-meta-item">Prepared for<span>${proposal?.client_name}</span></div>
+            <div class="hero-meta-item">Company<span>${proposal?.company_name}</span></div>
+            <div class="hero-meta-item">Service<span>${proposal?.service_type}</span></div>
+            <div class="hero-meta-item">Date<span>${dateStr}</span></div>
+          </div>
         </div>
 
         ${htmlContent}
 
         <div class="doc-footer">
-          Generated by <span class="footer-brand">CloseSync AI</span> · Confidential · All rights reserved
+          <div>Prepared by <span class="footer-brand">CloseSync AI</span></div>
+          <div>Confidential · All rights reserved</div>
         </div>
+
       </body>
       </html>
     `);
