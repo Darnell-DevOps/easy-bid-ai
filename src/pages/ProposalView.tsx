@@ -25,24 +25,12 @@ interface ProposalData {
   budget: string;
 }
 
-function MarkdownPreview({ content }: { content: string }) {
+function MarkdownPreview({ content, isPremium }: { content: string; isPremium?: boolean }) {
+  if (isPremium) {
+    return <PremiumProposalRenderer content={content} />;
+  }
   return (
-    <div className="proposal-preview prose prose-invert prose-base max-w-none
-      prose-headings:font-bold prose-headings:tracking-tight prose-headings:leading-snug
-      prose-h1:text-2xl prose-h1:mt-10 prose-h1:mb-4
-      prose-h2:text-xl prose-h2:mt-10 prose-h2:mb-4 prose-h2:pb-3 prose-h2:border-b prose-h2:border-purple/20
-      prose-h3:text-lg prose-h3:mt-8 prose-h3:mb-3
-      prose-p:text-muted-foreground prose-p:leading-[1.85] prose-p:mb-4 prose-p:max-w-[65ch]
-      prose-li:text-muted-foreground prose-li:leading-[1.85] prose-li:mb-1
-      prose-ul:my-4 prose-ol:my-4
-      prose-strong:font-semibold
-      prose-hr:border-purple/15 prose-hr:my-8
-      prose-table:text-sm prose-table:my-6
-      prose-th:text-foreground prose-th:font-semibold prose-th:px-5 prose-th:py-3 prose-th:text-left prose-th:border-b prose-th:border-purple/20 prose-th:bg-purple/5
-      prose-td:text-muted-foreground prose-td:px-5 prose-td:py-3 prose-td:border-b prose-td:border-border/60
-      prose-a:text-purple prose-a:no-underline hover:prose-a:underline
-      prose-blockquote:border-l-purple/40 prose-blockquote:text-muted-foreground prose-blockquote:italic
-    ">
+    <div className="prose prose-invert prose-sm max-w-none text-muted-foreground leading-relaxed">
       <ReactMarkdown>{content}</ReactMarkdown>
     </div>
   );
