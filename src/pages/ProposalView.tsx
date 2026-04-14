@@ -404,16 +404,18 @@ export default function ProposalView() {
       <body>
 
         <div class="hero">
-          <div class="hero-brand">
-            <img src="${LOGO_BASE64}" alt="CloseSync AI" class="hero-logo" />
-            <div class="hero-brand-name">CloseSync AI</div>
-          </div>
-          <div class="hero-title">${docTitle}</div>
-          <div class="hero-meta">
-            <div class="hero-meta-item">Prepared for<span>${proposal?.client_name}</span></div>
-            <div class="hero-meta-item">Company<span>${proposal?.company_name}</span></div>
-            <div class="hero-meta-item">Service<span>${proposal?.service_type}</span></div>
-            <div class="hero-meta-item">Date<span>${dateStr}</span></div>
+          <div class="hero-inner">
+            <div class="hero-brand">
+              <img src="${LOGO_BASE64}" alt="CloseSync AI" class="hero-logo" />
+              <div class="hero-brand-name">CloseSync AI</div>
+            </div>
+            <div class="hero-title">${docTitle}</div>
+            <div class="hero-meta">
+              <div class="hero-meta-item">Prepared for<span>${proposal?.client_name}</span></div>
+              <div class="hero-meta-item">Company<span>${proposal?.company_name}</span></div>
+              <div class="hero-meta-item">Service<span>${proposal?.service_type}</span></div>
+              <div class="hero-meta-item">Date<span>${dateStr}</span></div>
+            </div>
           </div>
         </div>
 
