@@ -348,102 +348,113 @@ export default function ProposalView() {
 
   return (
     <DashboardLayout>
-      <div className="mb-6">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">{proposal.client_name}</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {proposal.company_name} · {proposal.service_type} · {new Date(proposal.created_at).toLocaleDateString()}
-            </p>
-          </div>
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 border border-border">
-            <DollarSign className={`w-4 h-4 ${clientPaid ? "text-emerald-400" : "text-muted-foreground"}`} />
-            <Label htmlFor="client-paid" className="text-sm font-medium text-foreground cursor-pointer">
-              Client Paid
-            </Label>
-            <Switch
-              id="client-paid"
-              checked={clientPaid}
-              onCheckedChange={async (checked) => {
-                setClientPaid(checked);
-                const { error } = await supabase
-                  .from("proposals")
-                  .update({ client_paid: checked })
-                  .eq("id", id);
-                if (error) {
-                  setClientPaid(!checked);
-                  toast({ title: "Failed to update", description: error.message, variant: "destructive" });
-                } else {
-                  toast({ title: checked ? "Marked as paid" : "Marked as unpaid" });
-                }
-              }}
-            />
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-6">
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">{proposal.client_name}</h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                {proposal.company_name} · {proposal.service_type} · {new Date(proposal.created_at).toLocaleDateString()}
+              </p>
+            </div>
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 border border-border">
+              <DollarSign className={`w-4 h-4 ${clientPaid ? "text-emerald-400" : "text-muted-foreground"}`} />
+              <Label htmlFor="client-paid" className="text-sm font-medium text-foreground cursor-pointer">
+                Client Paid
+              </Label>
+              <Switch
+                id="client-paid"
+                checked={clientPaid}
+                onCheckedChange={async (checked) => {
+                  setClientPaid(checked);
+                  const { error } = await supabase
+                    .from("proposals")
+                    .update({ client_paid: checked })
+                    .eq("id", id);
+                  if (error) {
+                    setClientPaid(!checked);
+                    toast({ title: "Failed to update", description: error.message, variant: "destructive" });
+                  } else {
+                    toast({ title: checked ? "Marked as paid" : "Marked as unpaid" });
+                  }
+                }}
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="px-6 py-5 border-b border-border bg-secondary/30">
-            <p className="text-xs text-muted-foreground mb-4">Your proposal is ready</p>
-            <div className="flex flex-col gap-3">
-              <Button
-                onClick={() => handleExportPDF("proposal")}
-                size="lg"
-                className="w-full gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 hover:shadow-purple/30 transition-all h-11"
-              >
-                <Download className="w-4 h-4" /> Export Proposal
+        {/* Action bar */}
+        <div className="rounded-xl border border-border bg-card p-5 mb-6">
+          <p className="text-xs text-muted-foreground mb-4">Your proposal is ready</p>
+          <div className="flex flex-col gap-3">
+            <Button
+              onClick={() => handleExportPDF("proposal")}
+              size="lg"
+              className="w-full gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 hover:shadow-purple/30 transition-all h-11"
+            >
+              <Download className="w-4 h-4" /> Export Proposal
+            </Button>
+            <div className="grid grid-cols-3 gap-3">
+              <Button variant="outline" onClick={handleSave} disabled={saving} className="gap-2 hover:brightness-125 transition-all h-10">
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Save
               </Button>
-              <div className="grid grid-cols-2 gap-3">
-                <Button variant="outline" onClick={handleSave} disabled={saving} className="gap-2 hover:brightness-125 transition-all h-10">
-                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                  Save
-                </Button>
-                <Button variant="outline" onClick={() => handleExportPDF("invoice")} className="gap-2 hover:brightness-125 transition-all h-10">
-                  <Download className="w-4 h-4" /> Export Invoice
-                </Button>
-              </div>
-              <Button variant="outline" onClick={handleCopyProposal} className="w-full gap-2 hover:brightness-125 transition-all h-10">
+              <Button variant="outline" onClick={() => handleExportPDF("invoice")} className="gap-2 hover:brightness-125 transition-all h-10">
+                <Download className="w-4 h-4" /> Invoice
+              </Button>
+              <Button variant="outline" onClick={handleCopyProposal} className="gap-2 hover:brightness-125 transition-all h-10">
                 {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                {copied ? "Copied!" : "Copy Proposal"}
+                {copied ? "Copied!" : "Copy"}
               </Button>
             </div>
           </div>
-          <Tabs defaultValue="proposal">
-            <TabsList className="w-full justify-start border-b border-border rounded-none bg-transparent px-6 pt-4">
-              {tabs.map((t) => (
-                <TabsTrigger key={t.key} value={t.key}>{t.label}</TabsTrigger>
-              ))}
-            </TabsList>
-            <div className="p-6">
-              {tabs.map((t) => (
-                <TabsContent key={t.key} value={t.key} className="mt-0">
-                  <div className="flex justify-end mb-4">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleEdit(t.key)}
-                      className="gap-2 text-muted-foreground"
-                    >
-                      {editMode[t.key] ? <><Eye className="w-4 h-4" /> Preview</> : <><Pencil className="w-4 h-4" /> Edit</>}
-                    </Button>
-                  </div>
-                  {editMode[t.key] ? (
-                    <Textarea
-                      value={t.content}
-                      onChange={(e) => t.setter(e.target.value)}
-                      rows={t.rows}
-                      className="font-mono text-sm"
+        </div>
+
+        {/* Tabs */}
+        <Tabs defaultValue="proposal">
+          <TabsList className="w-full justify-start border-b border-border rounded-none bg-transparent mb-6">
+            {tabs.map((t) => (
+              <TabsTrigger key={t.key} value={t.key}>{t.label}</TabsTrigger>
+            ))}
+          </TabsList>
+          {tabs.map((t) => (
+            <TabsContent key={t.key} value={t.key} className="mt-0">
+              <div className="flex justify-end mb-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => toggleEdit(t.key)}
+                  className="gap-2 text-muted-foreground"
+                >
+                  {editMode[t.key] ? <><Eye className="w-4 h-4" /> Preview</> : <><Pencil className="w-4 h-4" /> Edit</>}
+                </Button>
+              </div>
+              {editMode[t.key] ? (
+                <Textarea
+                  value={t.content}
+                  onChange={(e) => t.setter(e.target.value)}
+                  rows={t.rows}
+                  className="font-mono text-sm"
+                />
+              ) : (
+                <>
+                  {t.key === "proposal" && !editMode[t.key] && (
+                    <ProposalHeader
+                      clientName={proposal.client_name}
+                      companyName={proposal.company_name}
+                      serviceType={proposal.service_type}
+                      createdAt={proposal.created_at}
                     />
-                  ) : (
-                    <MarkdownPreview content={t.content} />
                   )}
-                </TabsContent>
-              ))}
-            </div>
-          </Tabs>
-        </CardContent>
-      </Card>
+                  <div className={t.key === "proposal" ? "mt-6" : ""}>
+                    <MarkdownPreview content={t.content} isPremium={t.key === "proposal"} />
+                  </div>
+                </>
+              )}
+            </TabsContent>
+          ))}
+        </Tabs>
+      </div>
     </DashboardLayout>
   );
 }
