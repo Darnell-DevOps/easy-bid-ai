@@ -452,16 +452,16 @@ export default function ProposalView() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <div className="flex items-start justify-between">
+      <div className="max-w-5xl mx-auto px-2 sm:px-4 lg:px-8">
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-foreground">{proposal.client_name}</h1>
+              <h1 className="text-2xl lg:text-3xl font-bold text-foreground">{proposal.client_name}</h1>
               <p className="text-sm text-muted-foreground mt-1">
                 {proposal.company_name} · {proposal.service_type} · {new Date(proposal.created_at).toLocaleDateString()}
               </p>
             </div>
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 border border-border">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 border border-border shrink-0">
               <DollarSign className={`w-4 h-4 ${clientPaid ? "text-emerald-400" : "text-muted-foreground"}`} />
               <Label htmlFor="client-paid" className="text-sm font-medium text-foreground cursor-pointer">
                 Client Paid
@@ -488,28 +488,30 @@ export default function ProposalView() {
         </div>
 
         {/* Action bar */}
-        <div className="rounded-xl border border-border bg-card p-5 mb-6">
-          <p className="text-xs text-muted-foreground mb-4">Your proposal is ready</p>
-          <div className="flex flex-col gap-3">
-            <Button
-              onClick={() => handleExportPDF("proposal")}
-              size="lg"
-              className="w-full gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 hover:shadow-purple/30 transition-all h-11"
-            >
-              <Download className="w-4 h-4" /> Export Proposal
-            </Button>
-            <div className="grid grid-cols-3 gap-3">
-              <Button variant="outline" onClick={handleSave} disabled={saving} className="gap-2 hover:brightness-125 transition-all h-10">
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                Save
+        <div className="rounded-xl border border-border bg-card p-5 mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <p className="text-xs text-muted-foreground">Your proposal is ready</p>
+            <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+              <Button
+                onClick={() => handleExportPDF("proposal")}
+                size="lg"
+                className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 hover:shadow-purple/30 transition-all h-11 sm:flex-1 lg:flex-none lg:px-8"
+              >
+                <Download className="w-4 h-4" /> Export Proposal
               </Button>
-              <Button variant="outline" onClick={() => handleExportPDF("invoice")} className="gap-2 hover:brightness-125 transition-all h-10">
-                <Download className="w-4 h-4" /> Invoice
-              </Button>
-              <Button variant="outline" onClick={handleCopyProposal} className="gap-2 hover:brightness-125 transition-all h-10">
-                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                {copied ? "Copied!" : "Copy"}
-              </Button>
+              <div className="flex gap-3 sm:flex-1 lg:flex-none">
+                <Button variant="outline" onClick={handleSave} disabled={saving} className="gap-2 hover:brightness-125 transition-all h-10 flex-1 lg:px-6">
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  Save
+                </Button>
+                <Button variant="outline" onClick={() => handleExportPDF("invoice")} className="gap-2 hover:brightness-125 transition-all h-10 flex-1 lg:px-6">
+                  <Download className="w-4 h-4" /> Invoice
+                </Button>
+                <Button variant="outline" onClick={handleCopyProposal} className="gap-2 hover:brightness-125 transition-all h-10 flex-1 lg:px-6">
+                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  {copied ? "Copied!" : "Copy"}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
