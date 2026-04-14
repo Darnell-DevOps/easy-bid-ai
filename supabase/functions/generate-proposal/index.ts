@@ -13,57 +13,75 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = `You are an expert business proposal writer for agencies and consultants. You write polished, client-ready proposals that are professional, confident, and clear. Use British English and £ for currency. Keep content concise — avoid long blocks of text. Use short paragraphs and clear structure.`;
+    const systemPrompt = `You are an elite business proposal writer for agencies and consultants. You produce polished, client-ready proposals that read as if crafted by a top-tier agency strategist.
 
-    const userPrompt = `Generate a professional, client-ready proposal for the following lead:
+VOICE & TONE RULES:
+- Professional, confident, and direct — never robotic or generic
+- Client-focused: frame everything around the client's goals, challenges, and outcomes
+- Concise: short paragraphs (2-3 sentences max), no filler or waffle
+- British English, £ for currency
+- CRITICAL: Never repeat the same phrases across proposals. Vary your vocabulary, sentence structure, and opening lines every time. Use synonyms, rephrase ideas, and approach each section from a fresh angle. Imagine you are writing for the 100th time — it must still feel original.
+- Never use clichés like "It is a pleasure", "We are delighted", "In today's fast-paced world", "look no further", "cutting-edge", "synergy", "leverage" (as a verb), "utilize"
+- Lead with outcomes and results, not process descriptions`;
 
-Client: ${client_name}
-Company: ${company_name}
-Service: ${service_type}
-Scope: ${project_scope}
-Budget: ${budget}
-Timeline: ${timeline}
-${notes ? `Additional notes: ${notes}` : ""}
+    const userPrompt = `Write a professional, client-ready proposal for this project. Make it specific, practical, and compelling.
 
-Return your response as valid JSON with exactly these three keys:
+CLIENT DETAILS:
+- Client: ${client_name}
+- Company: ${company_name}
+- Service: ${service_type}
+- Scope: ${project_scope}
+- Budget: ${budget}
+- Timeline: ${timeline}
+${notes ? `- Additional context: ${notes}` : ""}
 
-1. "proposal" — A structured proposal document using Markdown formatting with clear section headings (##). Include these sections in order:
-   ## Project Proposal
-   A one-line subtitle with client name and company.
+Return valid JSON with exactly three keys: "proposal", "pricing", "invoice".
 
-   ## Introduction
-   Start with a strong, outcome-focused opening statement. Do NOT use generic phrases like "It is a pleasure to submit" or "We are delighted to present". Instead, lead with the result the client will achieve. Example tone: "This proposal outlines a strategy to transform your Instagram presence into a consistent lead generation channel." Keep it to 2-3 sentences max.
+"proposal" must be a Markdown document with these sections IN THIS EXACT ORDER. Every section is mandatory:
 
-   ## Understanding of Your Needs
-   Show you understand the client's situation and goals (2-3 short paragraphs max).
+## Project Proposal
+A one-line subtitle with the client name and company.
 
-   ## Proposed Solution
-   Describe your recommended approach clearly and confidently (2-3 short paragraphs).
+## Introduction
+Open with a strong, outcome-focused statement specific to this project. State what you will deliver and why it matters to the client. 2-3 sentences maximum. Do NOT use generic greetings.
 
-   ## Scope of Work
-   List the specific deliverables and activities using bullet points.
+## Understanding of Your Needs
+Demonstrate genuine understanding of the client's situation, challenges, and objectives. Reference their specific industry, market position, or goals. 2-3 short paragraphs. Be specific — never vague.
 
-   ## Timeline
-   A clear breakdown of phases or milestones.
+## Proposed Solution
+Describe your recommended strategy clearly. Explain the approach, methodology, and key decisions. Connect every recommendation back to the client's goals. 2-3 focused paragraphs.
 
-   ## Expected Outcomes
-   List 4-6 specific, benefit-driven outcomes the client can expect as bullet points. Tailor these to the service type and project scope. Examples include increased brand visibility, more consistent content output, higher engagement rates, clear brand positioning, improved conversion from followers to clients. Make each outcome specific to the client's project — avoid generic filler.
+## Scope of Work
+List every specific deliverable and activity as bullet points. Be concrete — name actual outputs (e.g. "12 branded social media templates" not "content creation"). Group related items logically.
 
-   ## Why Choose Us
-   A short, persuasive section (3-4 bullet points) highlighting why the client should work with you. Cover: relevant experience and expertise, focus on measurable results, professional and efficient delivery, and clear communication throughout. Keep it confident but not arrogant. No more than one sentence per bullet.
+## Timeline
+Break the project into clear phases with durations. Use a structured format (Phase 1: Discovery — Week 1-2). Be realistic and specific.
 
-   ## Next Steps
-   2-3 sentences on how to proceed (e.g. sign-off, kick-off call).
+## Expected Outcomes
+List 4-6 specific, measurable outcomes the client can expect. Each must be tailored to this project — no generic filler. Frame as tangible results (e.g. "30% increase in engagement within 90 days" not "improved social media presence").
 
-2. "pricing" — Start with a short paragraph (2-3 sentences) before the pricing table that frames the investment. Position the cost as an investment in long-term growth and ROI — not just an expense. Emphasise the lasting value and return the client will see. Then include a clear pricing table with columns: Item, Description, Cost. Include a subtotal, VAT (20%), and total. Keep it clean and professional.
+## Why Choose Us
+3-4 bullet points. Each one sentence. Cover: relevant expertise, results focus, delivery quality, communication approach. Be confident but not arrogant.
 
-3. "invoice" — A professional invoice in Markdown. Include:
-   - Invoice number (format: INV-2026-001)
-   - Date (today)
-   - Bill to: client name and company
-   - A table of line items with costs
-   - Subtotal, VAT at 20%, and Total
-   - Payment terms: "Due within 14 days"
+## Next Steps
+2-3 sentences explaining how to proceed. Include a clear call to action.
+
+"pricing" — Start with a 2-3 sentence paragraph framing the investment in terms of ROI and long-term value. Then include a Markdown table with columns: Item | Description | Cost. Add subtotal, VAT (20%), and total. Costs must align with the stated budget.
+
+"invoice" — A professional Markdown invoice with:
+- Invoice number: INV-2026-001
+- Date: today's date
+- Bill to: client name and company
+- Table of line items with costs
+- Subtotal, VAT at 20%, Total
+- Payment terms: Due within 14 days
+
+QUALITY CHECKLIST (follow all):
+- Every section references the client's specific project, not generic templates
+- No repeated phrases or sentence patterns across sections
+- Bullet points are concrete and actionable
+- Numbers and timelines are realistic for the stated budget
+- The proposal reads as ready to send — no placeholder text
 
 Return ONLY the JSON object. No markdown code fences. No extra text.`;
 
