@@ -115,9 +115,9 @@ export default function ProposalView() {
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
 
-    // Convert markdown to HTML
+    // Convert markdown to HTML with better parsing
     let htmlContent = content
-      .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+      .replace(/^## (.+)$/gm, '<div class="section-block"><h2>$1</h2>')
       .replace(/^### (.+)$/gm, '<h3>$1</h3>')
       .replace(/^\*\*(.+?)\*\*/gm, '<strong>$1</strong>')
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
@@ -126,13 +126,11 @@ export default function ProposalView() {
       .replace(/\|(.+)\|/g, (match) => {
         const cells = match.split('|').filter(Boolean).map(c => c.trim());
         if (cells.every(c => /^[-:]+$/.test(c))) return '';
-        const isHeader = cells.some(c => /^[-:]+$/.test(c));
-        if (isHeader) return '';
         return '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
       })
-      .replace(/(<tr>.*<\/tr>\n?)+/g, '<table><tbody>$&</tbody></table>')
+      .replace(/(<tr>.*<\/tr>\n?)+/g, '<div class="table-wrapper"><table><tbody>$&</tbody></table></div>')
       .replace(/\n{2,}/g, '</p><p>')
-      .replace(/^(?!<[hultop])(.+)$/gm, '<p>$1</p>')
+      .replace(/^(?!<[hultdop])(.+)$/gm, '<p>$1</p>')
       .replace(/---/g, '<hr />');
 
     // Bold the last row of each table (total row)
@@ -141,158 +139,256 @@ export default function ProposalView() {
       (match) => {
         const rows = match.match(/<tr>[\s\S]*?<\/tr>/g);
         if (!rows || rows.length < 2) return match;
+        // First row = header
+        const firstRow = rows[0];
+        const headerRow = firstRow.replace(/<td>/g, '<td class="table-header">');
+        let result = match.replace(firstRow, headerRow);
+        // Last row = total
         const lastRow = rows[rows.length - 1];
         const boldedRow = lastRow.replace(/<td>/g, '<td class="total-row">');
-        return match.replace(lastRow, boldedRow);
+        result = result.replace(lastRow, boldedRow);
+        return result;
       }
     );
+
+    // Close section blocks before next section or at end
+    htmlContent = htmlContent.replace(/<div class="section-block"><h2>/g, '</div><div class="section-block"><h2>');
+    htmlContent = htmlContent.replace(/^<\/div>/, '');
+    htmlContent += '</div>';
 
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
       <head>
         <title>${title}</title>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
         <style>
-          @page { margin: 48px 56px; }
-          * { box-sizing: border-box; }
+          @page {
+            margin: 56px 64px;
+            size: A4;
+          }
+          * { box-sizing: border-box; margin: 0; padding: 0; }
           body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             max-width: 100%;
             margin: 0;
             padding: 0;
-            color: #2d2d3a;
-            line-height: 1.8;
-            font-size: 13.5px;
+            color: #3a3a4a;
+            line-height: 1.85;
+            font-size: 13px;
             -webkit-font-smoothing: antialiased;
+            background: #fff;
           }
 
-          /* Header */
+          /* ─── Header ─── */
           .doc-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            padding-bottom: 24px;
-            border-bottom: 2px solid #6c5ce7;
-            margin-bottom: 24px;
-            margin-bottom: 8px;
+            align-items: flex-start;
+            padding-bottom: 28px;
+            margin-bottom: 0;
           }
-          .doc-header .brand-group {
+          .brand-group {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
           }
-          .doc-header .logo {
-            width: 36px;
-            height: 36px;
-          }
-          .doc-header .brand {
-            font-size: 18px;
-            font-weight: 700;
+          .logo { width: 40px; height: 40px; }
+          .brand-text .brand-name {
+            font-size: 20px;
+            font-weight: 800;
             color: #6c5ce7;
-            letter-spacing: -0.3px;
+            letter-spacing: -0.5px;
+            line-height: 1.2;
           }
-          .doc-header .brand span {
-            font-weight: 400;
-            color: #8b8ba3;
+          .brand-text .brand-sub {
+            font-size: 10px;
+            font-weight: 500;
+            color: #a0a0b8;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
           }
-          .doc-header .meta {
+          .header-meta {
             text-align: right;
             font-size: 11px;
             color: #8b8ba3;
-            line-height: 1.6;
+            line-height: 1.7;
+          }
+          .header-meta strong {
+            color: #2d2d3a;
+            font-weight: 600;
+          }
+          .header-divider {
+            height: 3px;
+            background: linear-gradient(90deg, #6c5ce7 0%, #a29bfe 50%, #e8e8f0 100%);
+            border: none;
+            border-radius: 2px;
+            margin-bottom: 36px;
           }
 
-          /* Title */
+          /* ─── Title block ─── */
+          .doc-title-block {
+            margin-bottom: 40px;
+          }
           .doc-title {
-            font-size: 28px;
-            font-weight: 700;
+            font-size: 32px;
+            font-weight: 800;
             color: #1a1a2e;
-            margin: 32px 0 4px 0;
-            letter-spacing: -0.5px;
+            letter-spacing: -0.8px;
+            line-height: 1.2;
+            margin-bottom: 6px;
           }
           .doc-subtitle {
             font-size: 14px;
             color: #8b8ba3;
-            margin: 0 0 32px 0;
             font-weight: 400;
           }
 
-          /* Section headings */
+          /* ─── Sections ─── */
+          .section-block {
+            margin-bottom: 32px;
+            padding: 0;
+          }
           h2 {
-            font-size: 17px;
+            font-size: 18px;
             font-weight: 700;
             color: #1a1a2e;
-            margin: 36px 0 12px 0;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #e8e8f0;
-            letter-spacing: -0.2px;
+            margin: 0 0 16px 0;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f0f8;
+            letter-spacing: -0.3px;
+            position: relative;
+          }
+          h2::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 48px;
+            height: 2px;
+            background: #6c5ce7;
+            border-radius: 1px;
           }
           h3 {
-            font-size: 14.5px;
+            font-size: 15px;
             font-weight: 600;
             color: #2d2d3a;
-            margin: 28px 0 10px 0;
+            margin: 24px 0 10px 0;
           }
 
-          /* Body */
-          p { margin: 10px 0; color: #4a4a5a; }
-          ul { padding-left: 20px; margin: 12px 0; }
-          li { margin: 6px 0; color: #4a4a5a; }
-          li::marker { color: #6c5ce7; }
+          /* ─── Body ─── */
+          p {
+            margin: 10px 0;
+            color: #4a4a5a;
+            max-width: 62ch;
+          }
+          ul {
+            padding-left: 0;
+            margin: 14px 0;
+            list-style: none;
+          }
+          li {
+            margin: 10px 0;
+            color: #4a4a5a;
+            padding-left: 22px;
+            position: relative;
+            line-height: 1.7;
+          }
+          li::before {
+            content: '';
+            position: absolute;
+            left: 2px;
+            top: 8px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+          }
           strong { color: #1a1a2e; font-weight: 600; }
 
-          /* Table */
+          /* ─── Tables (Pricing) ─── */
+          .table-wrapper {
+            margin: 20px 0;
+            border: 1px solid #e8e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+          }
           table {
             width: 100%;
             border-collapse: collapse;
-            margin: 20px 0;
             font-size: 13px;
           }
-          tr:first-child td {
-            background: #f8f8fc;
-            font-weight: 600;
-            color: #1a1a2e;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
-          }
           td {
-            padding: 11px 16px;
-            border-bottom: 1px solid #ececf4;
+            padding: 13px 20px;
+            border-bottom: 1px solid #f0f0f8;
             color: #4a4a5a;
             vertical-align: top;
           }
-          td.total-row {
+          td.table-header {
+            background: #f8f8fc;
             font-weight: 700;
             color: #1a1a2e;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            border-bottom: 2px solid #e8e8f0;
+          }
+          td.total-row {
+            font-weight: 800;
+            color: #1a1a2e;
+            font-size: 15px;
+            background: linear-gradient(135deg, #f8f7ff 0%, #f0eeff 100%);
             border-top: 2px solid #6c5ce7;
-            background: #f8f7ff;
-            font-size: 14px;
+            border-bottom: none;
+          }
+          tr:last-child td:not(.total-row):not(.table-header) {
+            border-bottom: none;
           }
 
-          /* Dividers */
+          /* ─── Dividers ─── */
           hr {
             border: none;
-            border-top: 1px solid #ececf4;
-            margin: 32px 0;
+            border-top: 1px solid #f0f0f8;
+            margin: 36px 0;
           }
 
-          /* Footer */
+          /* ─── CTA / Next Steps ─── */
+          .section-block:last-child {
+            background: linear-gradient(135deg, #f8f7ff 0%, #f0eeff 100%);
+            border: 1px solid #e0ddf8;
+            border-radius: 12px;
+            padding: 28px 32px;
+            margin-top: 8px;
+          }
+          .section-block:last-child h2 {
+            border-bottom-color: #d8d5f0;
+          }
+          .section-block:last-child h2::after {
+            background: #6c5ce7;
+          }
+
+          /* ─── Footer ─── */
           .doc-footer {
-            margin-top: 48px;
-            padding-top: 16px;
-            border-top: 1px solid #ececf4;
-            font-size: 11px;
-            color: #a0a0b8;
+            margin-top: 56px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f8;
             text-align: center;
+            font-size: 10px;
+            color: #b0b0c8;
+            letter-spacing: 0.5px;
+          }
+          .doc-footer .footer-brand {
+            font-weight: 700;
+            color: #6c5ce7;
           }
 
           @media print {
             body { padding: 0; }
             .doc-header { break-inside: avoid; }
             h2, h3 { break-after: avoid; }
-            table { break-inside: avoid; }
+            .table-wrapper, table { break-inside: avoid; }
+            .section-block { break-inside: avoid; }
+            .section-block:last-child { break-inside: avoid; }
           }
         </style>
       </head>
@@ -300,22 +396,28 @@ export default function ProposalView() {
         <div class="doc-header">
           <div class="brand-group">
             <img src="${LOGO_BASE64}" alt="CloseSync AI" class="logo" />
-            <div class="brand">CloseSync <span>AI</span></div>
+            <div class="brand-text">
+              <div class="brand-name">CloseSync AI</div>
+              <div class="brand-sub">Professional Services</div>
+            </div>
           </div>
-          <div class="meta">
-            Prepared for: ${proposal?.client_name}<br>
+          <div class="header-meta">
+            <strong>${proposal?.client_name}</strong><br>
             ${proposal?.company_name}<br>
-            ${new Date(proposal?.created_at || '').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+            ${new Date(proposal?.created_at || '').toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}
           </div>
         </div>
+        <div class="header-divider"></div>
 
-        <div class="doc-title">${docTitle}</div>
-        <div class="doc-subtitle">${proposal?.service_type} · ${proposal?.company_name}</div>
+        <div class="doc-title-block">
+          <div class="doc-title">${docTitle}</div>
+          <div class="doc-subtitle">${proposal?.service_type} · Prepared exclusively for ${proposal?.company_name}</div>
+        </div>
 
         ${htmlContent}
 
         <div class="doc-footer">
-          Generated by CloseSync AI · Confidential
+          Generated by <span class="footer-brand">CloseSync AI</span> · Confidential · All rights reserved
         </div>
       </body>
       </html>
