@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Download, Save, Loader2, Pencil, Eye, Copy, Check, DollarSign } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import PremiumProposalRenderer from "@/components/proposal/PremiumProposalRenderer";
+import ProposalHeader from "@/components/proposal/ProposalHeader";
 
 interface ProposalData {
   id: string;
