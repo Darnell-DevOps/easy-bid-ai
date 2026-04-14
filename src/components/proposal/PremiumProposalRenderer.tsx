@@ -24,7 +24,7 @@ export default function PremiumProposalRenderer({ content }: PremiumProposalRend
   const sections = content.split(/(?=^## )/m).filter(Boolean);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 lg:space-y-8">
       {sections.map((section, i) => {
         const lines = section.trim().split("\n");
         const titleLine = lines[0]?.replace(/^##\s*/, "") || "";
@@ -35,7 +35,7 @@ export default function PremiumProposalRenderer({ content }: PremiumProposalRend
           return (
             <div
               key={i}
-              className="relative overflow-hidden rounded-xl border border-purple/30 bg-gradient-to-br from-purple/10 via-accent/5 to-transparent p-8"
+              className="relative overflow-hidden rounded-xl border border-purple/30 bg-gradient-to-br from-purple/10 via-accent/5 to-transparent p-6 lg:p-10"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-purple/5 to-accent/5 opacity-50" />
               <div className="relative">
@@ -43,9 +43,9 @@ export default function PremiumProposalRenderer({ content }: PremiumProposalRend
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple/20">
                     <ArrowRight className="h-5 w-5 text-purple" />
                   </div>
-                  <h2 className="text-xl font-bold text-foreground">{titleLine}</h2>
+                  <h2 className="text-xl lg:text-2xl font-bold text-foreground">{titleLine}</h2>
                 </div>
-                <div className="prose-content text-muted-foreground leading-relaxed max-w-[60ch]">
+              <div className="prose-content text-muted-foreground leading-relaxed max-w-none lg:max-w-[70ch]">
                   <ReactMarkdown>{body}</ReactMarkdown>
                 </div>
                 <div className="mt-6 inline-flex items-center gap-2 rounded-lg bg-purple/20 border border-purple/30 px-5 py-3 text-sm font-semibold text-purple">
@@ -61,14 +61,14 @@ export default function PremiumProposalRenderer({ content }: PremiumProposalRend
           return (
             <div
               key={i}
-              className="relative overflow-hidden rounded-xl border border-purple/30 bg-card p-8 shadow-lg shadow-purple/5"
+              className="relative overflow-hidden rounded-xl border border-purple/30 bg-card p-6 lg:p-10 shadow-lg shadow-purple/5"
             >
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple to-accent" />
               <div className="flex items-center gap-3 mb-6">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple/20">
                   <span className="text-lg font-bold text-purple">£</span>
                 </div>
-                <h2 className="text-xl font-bold text-foreground">{titleLine}</h2>
+                <h2 className="text-xl lg:text-2xl font-bold text-foreground">{titleLine}</h2>
               </div>
               <div className="pricing-section text-muted-foreground leading-relaxed">
                 <ReactMarkdown
@@ -126,8 +126,8 @@ export default function PremiumProposalRenderer({ content }: PremiumProposalRend
           }
 
           return (
-            <div key={i} className="rounded-xl border border-border bg-card p-8">
-              <h2 className="text-xl font-bold text-foreground mb-6">{titleLine}</h2>
+            <div key={i} className="rounded-xl border border-border bg-card p-6 lg:p-10">
+              <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-6">{titleLine}</h2>
               {timelineItems.length > 0 ? (
                 <div className="relative pl-8 space-y-6">
                   <div className="absolute left-3 top-2 bottom-2 w-px bg-gradient-to-b from-purple via-accent to-purple/20" />
@@ -152,9 +152,9 @@ export default function PremiumProposalRenderer({ content }: PremiumProposalRend
 
         if (sectionType === "scope" || sectionType === "why") {
           return (
-            <div key={i} className="rounded-xl border border-border bg-card p-8">
-              <h2 className="text-xl font-bold text-foreground mb-5">{titleLine}</h2>
-              <div className="scope-content text-muted-foreground leading-relaxed max-w-[60ch]">
+            <div key={i} className="rounded-xl border border-border bg-card p-6 lg:p-10">
+              <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-5">{titleLine}</h2>
+              <div className="scope-content text-muted-foreground leading-relaxed max-w-none lg:max-w-[70ch]">
                 <ReactMarkdown
                   components={{
                     li: ({ children }) => (
@@ -177,9 +177,9 @@ export default function PremiumProposalRenderer({ content }: PremiumProposalRend
 
         // Default section card
         return (
-          <div key={i} className="rounded-xl border border-border bg-card p-8">
-            <h2 className="text-xl font-bold text-foreground mb-4">{titleLine}</h2>
-            <div className="prose-content text-muted-foreground leading-relaxed max-w-[60ch]">
+          <div key={i} className="rounded-xl border border-border bg-card p-6 lg:p-10">
+            <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-4">{titleLine}</h2>
+            <div className="prose-content text-muted-foreground leading-relaxed max-w-none lg:max-w-[70ch]">
               <ReactMarkdown>{body}</ReactMarkdown>
             </div>
           </div>
