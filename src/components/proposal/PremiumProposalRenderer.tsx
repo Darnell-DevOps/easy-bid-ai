@@ -142,7 +142,7 @@ export default function PremiumProposalRenderer({ content }: PremiumProposalRend
                   ))}
                 </div>
               ) : (
-                <div className="prose-content text-muted-foreground leading-relaxed max-w-[60ch]">
+                <div className="prose-content text-muted-foreground leading-relaxed max-w-none lg:max-w-[70ch]">
                   <ReactMarkdown>{body}</ReactMarkdown>
                 </div>
               )}
