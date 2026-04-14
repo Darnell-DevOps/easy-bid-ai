@@ -161,24 +161,41 @@ export default function ProposalView() {
         <title>${title}</title>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
-          @page { size: A4; margin: 48px 56px 56px 56px; }
+          @page { size: A4; margin: 0; }
           *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
           body {
             font-family: 'Inter', -apple-system, sans-serif;
-            color: #374151;
+            color: #c8cdd5;
             line-height: 1.8;
             font-size: 13px;
-            background: #ffffff;
+            background: #0b1120;
             -webkit-font-smoothing: antialiased;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+
+          .page-wrap {
+            max-width: 100%;
+            padding: 0 56px;
           }
 
           /* ═══════════ HERO / COVER ═══════════ */
           .hero {
-            padding: 48px 0 40px 0;
-            border-bottom: none;
-            margin-bottom: 8px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+            padding: 56px 56px 48px 56px;
             position: relative;
+            overflow: hidden;
+          }
+          .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 70%);
+            pointer-events: none;
           }
           .hero::after {
             content: '';
@@ -186,15 +203,14 @@ export default function ProposalView() {
             bottom: 0;
             left: 0;
             right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #6c5ce7, #a78bfa, #c4b5fd, transparent);
-            border-radius: 4px;
+            height: 3px;
+            background: linear-gradient(90deg, #6c5ce7, #a78bfa, #818cf8, transparent);
           }
           .hero-brand {
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 36px;
+            margin-bottom: 40px;
           }
           .hero-logo {
             width: 36px;
@@ -202,74 +218,81 @@ export default function ProposalView() {
             border-radius: 10px;
           }
           .hero-brand-name {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 700;
-            color: #6c5ce7;
-            letter-spacing: -0.3px;
+            color: #a78bfa;
+            letter-spacing: 0.5px;
           }
           .hero-title {
-            font-size: 38px;
+            font-size: 36px;
             font-weight: 900;
-            color: #111827;
+            color: #f1f5f9;
             letter-spacing: -1.5px;
             line-height: 1.1;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
           }
           .hero-meta {
             display: flex;
-            gap: 24px;
+            gap: 32px;
             flex-wrap: wrap;
           }
           .hero-meta-item {
-            font-size: 12px;
-            color: #9ca3af;
+            font-size: 11px;
+            color: #64748b;
             font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
           }
           .hero-meta-item span {
             display: block;
             font-size: 14px;
             font-weight: 600;
-            color: #374151;
-            margin-top: 2px;
+            color: #e2e8f0;
+            margin-top: 4px;
+            text-transform: none;
+            letter-spacing: 0;
           }
 
           /* ═══════════ SECTIONS ═══════════ */
           .section {
-            margin-top: 36px;
-            padding: 0;
+            margin-top: 32px;
+            padding: 28px 32px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 12px;
           }
           .section-title-wrap {
             margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
           }
           h2 {
-            font-size: 17px;
+            font-size: 11px;
             font-weight: 800;
-            color: #111827;
-            letter-spacing: -0.4px;
+            color: #a78bfa;
             text-transform: uppercase;
-            font-size: 12px;
-            letter-spacing: 1.2px;
-            margin-bottom: 6px;
+            letter-spacing: 1.5px;
+            margin: 0;
           }
           .section-accent {
-            width: 32px;
-            height: 3px;
-            background: linear-gradient(90deg, #6c5ce7, #a78bfa);
-            border-radius: 2px;
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(139,92,246,0.3), transparent);
           }
           h3 {
             font-size: 14px;
             font-weight: 700;
-            color: #1f2937;
+            color: #e2e8f0;
             margin: 20px 0 8px 0;
           }
           p {
             margin: 8px 0;
-            color: #4b5563;
-            max-width: 60ch;
+            color: #94a3b8;
+            max-width: 62ch;
             font-size: 13px;
           }
-          strong { color: #111827; font-weight: 700; }
+          strong { color: #e2e8f0; font-weight: 700; }
 
           /* ═══════════ LISTS ═══════════ */
           ul {
@@ -281,10 +304,10 @@ export default function ProposalView() {
             display: flex;
             align-items: flex-start;
             gap: 12px;
-            padding: 8px 0;
-            color: #4b5563;
+            padding: 10px 0;
+            color: #94a3b8;
             line-height: 1.6;
-            border-bottom: 1px solid #f3f4f6;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.08);
           }
           li:last-child { border-bottom: none; }
           .bullet {
@@ -292,18 +315,18 @@ export default function ProposalView() {
             width: 7px;
             height: 7px;
             border-radius: 50%;
-            background: #6c5ce7;
+            background: linear-gradient(135deg, #6c5ce7, #a78bfa);
             margin-top: 7px;
           }
           .li-text { flex: 1; }
 
           /* ═══════════ PRICING ═══════════ */
           .pricing-card {
-            margin: 20px 0;
-            border: 1.5px solid #e5e7eb;
+            margin: 16px 0;
+            border: 1px solid rgba(139, 92, 246, 0.2);
             border-radius: 12px;
             overflow: hidden;
-            background: #fff;
+            background: rgba(15, 23, 42, 0.6);
           }
           table {
             width: 100%;
@@ -312,25 +335,25 @@ export default function ProposalView() {
           }
           td {
             padding: 14px 24px;
-            border-bottom: 1px solid #f3f4f6;
-            color: #4b5563;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+            color: #94a3b8;
           }
           td.th {
-            background: #f9fafb;
+            background: rgba(139, 92, 246, 0.08);
             font-weight: 700;
-            color: #111827;
+            color: #a78bfa;
             font-size: 10px;
             text-transform: uppercase;
-            letter-spacing: 0.8px;
-            border-bottom: 1.5px solid #e5e7eb;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(139, 92, 246, 0.15);
             padding: 12px 24px;
           }
           .total-row td {
-            background: linear-gradient(135deg, #f5f3ff, #ede9fe);
-            border-top: 2px solid #6c5ce7;
+            background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(99,102,241,0.1));
+            border-top: 2px solid rgba(139, 92, 246, 0.4);
             border-bottom: none;
             font-weight: 800;
-            color: #111827;
+            color: #f1f5f9;
             font-size: 15px;
             padding: 18px 24px;
           }
@@ -339,41 +362,35 @@ export default function ProposalView() {
           }
 
           /* ═══════════ NEXT STEPS CTA ═══════════ */
-          .section:last-child {
-            background: #f5f3ff;
-            border: 1.5px solid #ddd6fe;
-            border-radius: 12px;
-            padding: 28px 32px;
-            margin-top: 40px;
-          }
-          .section:last-child .section-accent {
-            background: #6c5ce7;
+          .section:last-of-type {
+            background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(99,102,241,0.05));
+            border: 1px solid rgba(139, 92, 246, 0.25);
+            margin-top: 36px;
           }
 
           /* ═══════════ FOOTER ═══════════ */
           .doc-footer {
-            margin-top: 56px;
+            margin: 48px 56px 40px 56px;
             padding-top: 20px;
-            border-top: 1.5px solid #e5e7eb;
+            border-top: 1px solid rgba(148, 163, 184, 0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-size: 10px;
-            color: #9ca3af;
+            color: #475569;
           }
           .footer-brand {
             font-weight: 700;
-            color: #6c5ce7;
+            color: #a78bfa;
           }
 
           /* ═══════════ PRINT ═══════════ */
           @media print {
-            body { padding: 0; }
+            body { padding: 0; background: #0b1120; }
             .hero { break-after: avoid; }
             h2 { break-after: avoid; }
             .pricing-card, table { break-inside: avoid; }
             .section { break-inside: avoid; }
-            .section:last-child { break-inside: avoid; }
           }
         </style>
       </head>
@@ -393,7 +410,9 @@ export default function ProposalView() {
           </div>
         </div>
 
-        ${htmlContent}
+        <div class="page-wrap">
+          ${htmlContent}
+        </div>
 
         <div class="doc-footer">
           <div>Prepared by <span class="footer-brand">CloseSync AI</span></div>
