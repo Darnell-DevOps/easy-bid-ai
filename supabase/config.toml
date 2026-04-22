@@ -1,1 +1,10 @@
 project_id = "avtogztwdoemxuffnwyv"
+
+[functions.create-proposal-checkout]
+verify_jwt = false
+
+[functions.get-paddle-price]
+verify_jwt = false
+
+[functions.payments-webhook]
+verify_jwt = false

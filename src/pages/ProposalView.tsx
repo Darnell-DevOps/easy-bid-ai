@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Download, Save, Loader2, Pencil, Eye, Copy, Check, DollarSign, Sparkles, RefreshCw, Wand2, Zap, Send, XCircle, CheckCircle2 } from "lucide-react";
@@ -36,6 +37,9 @@ interface ProposalData {
   viewed_at: string | null;
   accepted_at: string | null;
   rejected_at: string | null;
+  amount_cents: number | null;
+  currency: string | null;
+  paid_at: string | null;
 }
 
 const SECTION_HEADINGS = [
@@ -704,6 +708,68 @@ export default function ProposalView() {
             </div>
           );
         })()}
+
+        {/* Payment amount */}
+        <div className="rounded-xl border border-border bg-card p-4 sm:p-5 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-semibold text-foreground mb-1">Payment Amount</h3>
+              <p className="text-xs text-muted-foreground mb-3">
+                Set the total your client will pay via the secure checkout on the client portal.
+              </p>
+              <div className="flex items-center gap-2 max-w-xs">
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  inputMode="decimal"
+                  placeholder="0.00"
+                  value={proposal.amount_cents != null ? (proposal.amount_cents / 100).toString() : ""}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    const cents = v === "" ? null : Math.round(parseFloat(v) * 100);
+                    setProposal({ ...proposal, amount_cents: Number.isFinite(cents as number) ? (cents as number) : null });
+                  }}
+                  onBlur={async () => {
+                    const cents = proposal.amount_cents;
+                    const { error } = await supabase
+                      .from("proposals")
+                      .update({ amount_cents: cents, currency: proposal.currency || "USD" })
+                      .eq("id", proposal.id);
+                    if (error) {
+                      toast({ title: "Couldn't save amount", description: error.message, variant: "destructive" });
+                    } else {
+                      toast({ title: "Amount saved" });
+                    }
+                  }}
+                  className="h-10"
+                />
+                <select
+                  value={proposal.currency || "USD"}
+                  onChange={async (e) => {
+                    const currency = e.target.value;
+                    setProposal({ ...proposal, currency });
+                    await supabase.from("proposals").update({ currency }).eq("id", proposal.id);
+                  }}
+                  className="h-10 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+                >
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                  <option value="GBP">GBP</option>
+                  <option value="CAD">CAD</option>
+                  <option value="AUD">AUD</option>
+                </select>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground sm:text-right shrink-0">
+              {proposal.client_paid
+                ? "Paid in full ✓"
+                : proposal.amount_cents
+                  ? "Pay Now button is live on the client portal"
+                  : "No amount set — Pay Now is hidden"}
+            </p>
+          </div>
+        </div>
 
         {/* Action bar */}
         <div className="rounded-xl border border-border bg-card p-4 sm:p-5 mb-8 overflow-hidden">

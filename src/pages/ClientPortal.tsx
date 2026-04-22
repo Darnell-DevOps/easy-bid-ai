@@ -8,6 +8,7 @@ import PremiumProposalRenderer from "@/components/proposal/PremiumProposalRender
 import ReactMarkdown from "react-markdown";
 import StatusBadge, { normalizeStatus } from "@/components/proposal/StatusBadge";
 import { useToast } from "@/hooks/use-toast";
+import ProposalPayNow from "@/components/proposal/ProposalPayNow";
 
 interface PublicProposal {
   id: string;
@@ -21,6 +22,9 @@ interface PublicProposal {
   accepted_at: string | null;
   rejected_at: string | null;
   client_response_message: string | null;
+  amount_cents: number | null;
+  currency: string | null;
+  client_paid: boolean;
 }
 
 export default function ClientPortal() {
@@ -38,7 +42,7 @@ export default function ClientPortal() {
       const { data, error } = await supabase
         .from("proposals")
         .select(
-          "id, client_name, company_name, service_type, proposal_content, pricing_breakdown, created_at, status, accepted_at, rejected_at, client_response_message"
+          "id, client_name, company_name, service_type, proposal_content, pricing_breakdown, created_at, status, accepted_at, rejected_at, client_response_message, amount_cents, currency, client_paid"
         )
         .eq("id", id)
         .maybeSingle();
@@ -151,6 +155,17 @@ export default function ClientPortal() {
               <ReactMarkdown>{proposal.pricing_breakdown}</ReactMarkdown>
             </div>
           </div>
+        )}
+
+        {/* Pay Now — visible once accepted (or already paid) */}
+        {(status === "accepted" || proposal.client_paid) && (
+          <ProposalPayNow
+            proposalId={proposal.id}
+            amountCents={proposal.amount_cents}
+            currency={proposal.currency}
+            clientPaid={proposal.client_paid}
+            onPaid={() => setProposal({ ...proposal, client_paid: true })}
+          />
         )}
 
         {/* Response section */}
