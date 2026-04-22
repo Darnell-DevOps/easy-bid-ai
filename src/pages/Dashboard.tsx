@@ -108,11 +108,8 @@ export default function Dashboard() {
           <div className="lg:col-span-7 xl:col-span-8 space-y-6">
             {/* Hero */}
             <Card className="relative overflow-hidden border-accent/20 bg-gradient-to-br from-accent/10 via-card to-purple/10">
-              <CardContent className="p-8 sm:p-10 space-y-6">
+              <CardContent className="p-7 sm:p-8 space-y-5">
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-accent flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5" /> Start here
-                  </p>
                   <h2 className="text-2xl sm:text-3xl font-bold text-foreground leading-tight">
                     Create a proposal and get paid faster
                   </h2>
@@ -120,21 +117,28 @@ export default function Dashboard() {
                     Turn your next lead into a paying client in minutes.
                   </p>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button
-                    asChild
-                    size="lg"
-                    className="bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 gap-2 h-12 px-6 text-base font-semibold shadow-lg shadow-accent/20"
-                  >
-                    <Link to="/dashboard/new">
-                      <Sparkles className="w-4 h-4" /> Create Proposal <ArrowRight className="w-4 h-4" />
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" size="lg" className="gap-2 h-12 px-5">
-                    <Link to="/dashboard/clients/new">
-                      <UserPlus className="w-4 h-4" /> Add Client
-                    </Link>
-                  </Button>
+                <div className="space-y-2">
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button
+                      asChild
+                      size="lg"
+                      className="bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 gap-2 h-12 px-6 text-base font-semibold shadow-lg shadow-accent/20"
+                    >
+                      <Link to="/dashboard/new">
+                        <Sparkles className="w-4 h-4" /> Create Proposal <ArrowRight className="w-4 h-4" />
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" size="lg" className="gap-2 h-12 px-5">
+                      <Link to="/dashboard/clients/new">
+                        <UserPlus className="w-4 h-4" /> Add Client
+                      </Link>
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground/80 pl-1">Turn this into revenue in minutes.</p>
+                </div>
+                <div className="flex items-start gap-2 pt-1 border-t border-border/40 mt-1 pt-3">
+                  <Sparkles className="w-3.5 h-3.5 text-accent mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-foreground/80 font-medium">{insight}</p>
                 </div>
               </CardContent>
             </Card>
@@ -177,8 +181,8 @@ export default function Dashboard() {
                   <Lightbulb className="w-4 h-4 text-accent" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-foreground">Tip</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{guidance}</p>
+                  <p className="text-sm font-semibold text-foreground">{tip.title}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{tip.body}</p>
                 </div>
               </CardContent>
             </Card>
