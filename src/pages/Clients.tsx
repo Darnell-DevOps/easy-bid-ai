@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Users, Plus, Search, Sparkles, Lightbulb, Activity, ArrowRight } from "lucide-react";
+import { Users, Plus, Search, Sparkles, Lightbulb, Activity, ArrowRight, Eye, UserCheck } from "lucide-react";
 
 interface Client {
   id: string;
@@ -197,12 +197,12 @@ export default function Clients() {
 
         {/* Guidance / insight banner */}
         {!loading && insight && (
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border border-accent/20 bg-gradient-to-r from-accent/10 to-purple/5 px-4 py-3.5">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="w-9 h-9 rounded-lg bg-accent/15 flex items-center justify-center flex-shrink-0">
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-accent/20 bg-gradient-to-r from-accent/10 to-purple/5 px-4 py-2.5">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center flex-shrink-0">
                 <Lightbulb className="w-4 h-4 text-accent" />
               </div>
-              <p className="text-sm text-foreground/90">{insight}</p>
+              <p className="text-sm text-foreground/90 truncate">{insight}</p>
             </div>
             {topCandidate && (
               <Button
@@ -219,8 +219,8 @@ export default function Clients() {
 
         {/* Filters */}
         {clients.length > 0 && (
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative sm:w-[72%]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 value={search}
@@ -230,7 +230,7 @@ export default function Clients() {
               />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="sm:w-48">
+              <SelectTrigger className="sm:flex-1">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -243,6 +243,7 @@ export default function Clients() {
             </Select>
           </div>
         )}
+
 
         {/* Table */}
         {loading ? (
@@ -295,11 +296,31 @@ export default function Clients() {
                 </TableHeader>
                 <TableBody>
                   {filtered.map((c) => {
-                    const subtext = c.company || c.service_requested;
+                    const subtext = c.service_requested || "No service selected";
+                    // Contextual row action
+                    let actionLabel = "Create Proposal";
+                    let ActionIcon = Sparkles;
+                    let onAction = (e: React.MouseEvent) => goGenerate(c, e);
+                    if (c.lead_quality === "Low") {
+                      actionLabel = "Qualify Lead";
+                      ActionIcon = UserCheck;
+                      onAction = (e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        navigate(`/dashboard/clients/${c.id}`);
+                      };
+                    } else if (c.status === "Won" || c.status === "Proposal Sent") {
+                      actionLabel = "View Client";
+                      ActionIcon = Eye;
+                      onAction = (e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        navigate(`/dashboard/clients/${c.id}`);
+                      };
+                    }
+                    const isPrimary = actionLabel === "Create Proposal";
                     return (
                       <TableRow
                         key={c.id}
-                        className="cursor-pointer transition-colors hover:bg-accent/5"
+                        className="cursor-pointer transition-all duration-200 hover:bg-accent/[0.07] hover:shadow-[inset_3px_0_0_0_hsl(var(--accent))]"
                         onClick={() => navigate(`/dashboard/clients/${c.id}`)}
                       >
                         <TableCell>
@@ -311,9 +332,9 @@ export default function Clients() {
                             </div>
                             <div className="min-w-0">
                               <p className="text-sm font-medium text-foreground truncate">{c.name}</p>
-                              {subtext && (
-                                <p className="text-xs text-muted-foreground truncate">{subtext}</p>
-                              )}
+                              <p className="text-xs text-muted-foreground truncate">
+                                {c.company ? `${c.company} · ${subtext}` : subtext}
+                              </p>
                             </div>
                           </div>
                         </TableCell>
@@ -340,11 +361,16 @@ export default function Clients() {
                         <TableCell className="text-right">
                           <Button
                             size="sm"
-                            onClick={(e) => goGenerate(c, e)}
-                            className="gap-1.5 bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 shadow-sm shadow-accent/20"
+                            variant={isPrimary ? "default" : "outline"}
+                            onClick={onAction}
+                            className={
+                              isPrimary
+                                ? "gap-1.5 bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 shadow-sm shadow-accent/20"
+                                : "gap-1.5"
+                            }
                           >
-                            <Sparkles className="w-3.5 h-3.5" />
-                            Create Proposal
+                            <ActionIcon className="w-3.5 h-3.5" />
+                            {actionLabel}
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -359,33 +385,33 @@ export default function Clients() {
         {/* Recent client activity */}
         {!loading && recentActivity.length > 0 && (
           <Card>
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between mb-4">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2.5">
                 <div className="flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-accent" />
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <Activity className="w-3.5 h-3.5 text-accent" />
+                  <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Recent Client Activity
                   </h3>
                 </div>
               </div>
-              <div className="space-y-3">
-                {recentActivity.map((c) => (
+              <div className="divide-y divide-border/50">
+                {recentActivity.slice(0, 4).map((c) => (
                   <button
                     key={c.id}
                     onClick={() => navigate(`/dashboard/clients/${c.id}`)}
-                    className="w-full flex items-center justify-between gap-3 py-2 px-3 -mx-3 rounded-lg hover:bg-accent/5 transition-colors text-left group"
+                    className="w-full flex items-center justify-between gap-3 py-2 px-2 -mx-2 rounded-md hover:bg-accent/5 transition-colors text-left group"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-2 h-2 rounded-full bg-accent flex-shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-sm text-foreground truncate">
-                          <span className="font-medium">{c.name}</span>
-                          <span className="text-muted-foreground"> added as a client</span>
-                        </p>
-                        <p className="text-xs text-muted-foreground">{timeAgo(c.created_at)}</p>
-                      </div>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-1.5 h-1.5 rounded-full bg-accent flex-shrink-0" />
+                      <p className="text-sm text-foreground truncate">
+                        <span className="font-medium">{c.name}</span>
+                        <span className="text-muted-foreground"> added as a client</span>
+                      </p>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-accent group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="text-xs text-muted-foreground">{timeAgo(c.created_at)}</span>
+                      <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-accent group-hover:translate-x-0.5 transition-all" />
+                    </div>
                   </button>
                 ))}
               </div>
