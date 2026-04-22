@@ -256,6 +256,13 @@ export default function ClientDetail() {
     .reduce((acc, p) => acc + (parseFloat(p.budget?.replace(/[^0-9.]/g, "") || "0") || 0), 0);
 
   const invoiceCount = proposals.filter((p) => p.invoice_content).length;
+  const acceptedCount = proposals.filter(
+    (p) => p.status?.toLowerCase() === "accepted" || p.client_paid,
+  ).length;
+  const acceptedUnpaidCount = proposals.filter(
+    (p) => p.status?.toLowerCase() === "accepted" && !p.client_paid,
+  ).length;
+  const hasAcceptedUnpaid = acceptedUnpaidCount > 0;
 
   // Dynamic CTA based on proposal state
   const heroAction = useMemo(() => {
@@ -281,8 +288,8 @@ export default function ClientDetail() {
         label: "Request Payment",
         Icon: CreditCard,
         onClick: () => navigate(`/dashboard/proposal/${acceptedUnpaid.id}`),
-        title: "Proposal accepted — request payment now",
-        subtitle: "Send the invoice and get paid faster",
+        title: "Proposal accepted — get paid now",
+        subtitle: "Send the invoice and collect payment in minutes",
         variant: "primary" as const,
       };
     }
@@ -342,7 +349,7 @@ export default function ClientDetail() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-5">
         <button
           onClick={() => navigate("/dashboard/clients")}
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -424,9 +431,9 @@ export default function ClientDetail() {
                 : "border-accent/30 bg-gradient-to-br from-accent/15 via-card to-purple/15"
             }`}
           >
-            <CardContent className="p-7 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-              <div className="space-y-1.5 max-w-xl">
-                {client.lead_quality === "High" && heroAction.variant === "primary" && (
+            <CardContent className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1 max-w-xl">
+                {client.lead_quality === "High" && heroAction.variant === "primary" && !hasAcceptedUnpaid && (
                   <p className="text-xs font-semibold uppercase tracking-wider text-emerald-500 flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5" /> High-quality lead — act now
                   </p>
@@ -439,7 +446,7 @@ export default function ClientDetail() {
               <Button
                 onClick={heroAction.onClick}
                 size="lg"
-                className={`gap-2 h-14 px-7 text-base font-semibold flex-shrink-0 ${
+                className={`gap-2 h-13 px-6 text-base font-semibold flex-shrink-0 ${
                   heroAction.variant === "success"
                     ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:brightness-110 shadow-lg shadow-emerald-500/25"
                     : "bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 shadow-lg shadow-accent/30"
@@ -454,28 +461,32 @@ export default function ClientDetail() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
           <Card>
-            <CardContent className="p-4 text-center">
+            <CardContent className="p-3.5 text-center">
               <FileText className="w-5 h-5 text-accent mx-auto mb-1" />
-              <p className="text-2xl font-bold text-foreground">{proposals.length}</p>
-              <p className="text-xs text-muted-foreground">Proposals</p>
+              <p className="text-2xl font-bold text-foreground leading-tight">{proposals.length}</p>
+              <p className="text-xs text-muted-foreground">
+                Proposals{acceptedCount > 0 && ` (${acceptedCount} accepted)`}
+              </p>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4 text-center">
+            <CardContent className="p-3.5 text-center">
               <DollarSign className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-2xl font-bold text-foreground leading-tight">
                 $
                 {totalRevenue >= 1000
                   ? `${(totalRevenue / 1000).toFixed(1)}k`
                   : totalRevenue.toLocaleString()}
               </p>
-              <p className="text-xs text-muted-foreground">Revenue</p>
+              <p className="text-xs text-muted-foreground">
+                {hasAcceptedUnpaid ? "Revenue · collect payment" : "Revenue collected"}
+              </p>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4 text-center">
+            <CardContent className="p-3.5 text-center">
               <FileText className="w-5 h-5 text-amber-400 mx-auto mb-1" />
-              <p className="text-2xl font-bold text-foreground">{invoiceCount}</p>
+              <p className="text-2xl font-bold text-foreground leading-tight">{invoiceCount}</p>
               <p className="text-xs text-muted-foreground">Invoices</p>
             </CardContent>
           </Card>
@@ -485,7 +496,7 @@ export default function ClientDetail() {
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-semibold text-foreground">Proposals</h2>
-            <Button size="sm" variant="outline" onClick={generateProposal} className="gap-2">
+            <Button size="sm" variant="ghost" onClick={generateProposal} className="gap-2 text-muted-foreground hover:text-foreground">
               <Plus className="w-4 h-4" /> New Proposal
             </Button>
           </div>
@@ -508,39 +519,60 @@ export default function ClientDetail() {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-3">
-              {proposals.map((p) => (
-                <Card
-                  key={p.id}
-                  className="group cursor-pointer transition-all duration-200 hover:border-accent/40 hover:shadow-lg hover:shadow-accent/10 hover:-translate-y-0.5"
-                  onClick={() => navigate(`/dashboard/proposal/${p.id}`)}
-                >
-                  <CardContent className="p-5 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-4 min-w-0">
-                      <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
-                        <FileText className="w-5 h-5 text-accent" />
+            <div className="space-y-2.5">
+              {proposals.map((p) => {
+                const status = p.status?.toLowerCase();
+                const quickAction =
+                  status === "draft"
+                    ? { label: "Finish & Send", Icon: Send }
+                    : status === "accepted" && !p.client_paid
+                    ? { label: "Request Payment", Icon: CreditCard }
+                    : null;
+                return (
+                  <Card
+                    key={p.id}
+                    className="group cursor-pointer transition-all duration-200 hover:border-accent/50 hover:shadow-xl hover:shadow-accent/15 hover:-translate-y-0.5 hover:bg-accent/[0.04]"
+                    onClick={() => navigate(`/dashboard/proposal/${p.id}`)}
+                  >
+                    <CardContent className="p-4 flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0 group-hover:bg-accent/20 transition-colors">
+                          <FileText className="w-5 h-5 text-accent" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-foreground truncate">
+                            {p.service_type}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {new Date(p.created_at).toLocaleDateString()} · {p.budget || "No budget"}
+                          </p>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-foreground truncate">
-                          {p.service_type}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {new Date(p.created_at).toLocaleDateString()} · {p.budget || "No budget"}
-                        </p>
+                      <div className="flex items-center gap-2.5 flex-shrink-0">
+                        <Badge
+                          variant="outline"
+                          className={`${proposalStatusStyle(p.status, p.client_paid)} text-xs whitespace-nowrap`}
+                        >
+                          {descriptiveProposalStatus(p.status, p.client_paid)}
+                        </Badge>
+                        {quickAction && (
+                          <Button
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/dashboard/proposal/${p.id}`);
+                            }}
+                            className="h-8 px-3 text-xs gap-1.5 bg-gradient-to-r from-accent to-purple text-white hover:brightness-110"
+                          >
+                            <quickAction.Icon className="w-3.5 h-3.5" /> {quickAction.label}
+                          </Button>
+                        )}
+                        <ArrowRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-accent group-hover:translate-x-1 transition-all" />
                       </div>
-                    </div>
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                      <Badge
-                        variant="outline"
-                        className={`${proposalStatusStyle(p.status, p.client_paid)} text-xs whitespace-nowrap`}
-                      >
-                        {descriptiveProposalStatus(p.status, p.client_paid)}
-                      </Badge>
-                      <ArrowRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-accent group-hover:translate-x-0.5 transition-all" />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </div>
@@ -561,17 +593,27 @@ export default function ClientDetail() {
               </div>
               <div className="h-px bg-border" />
 
-              {/* Low-quality lead CTA */}
+              {/* Low-quality lead CTA — de-emphasized when payment is the priority */}
               {isLowQuality && (
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
+                <div
+                  className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border p-3.5 ${
+                    hasAcceptedUnpaid
+                      ? "border-border/60 bg-muted/30"
+                      : "border-amber-500/30 bg-amber-500/5"
+                  }`}
+                >
                   <div className="flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                    <AlertCircle
+                      className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
+                        hasAcceptedUnpaid ? "text-muted-foreground" : "text-amber-500"
+                      }`}
+                    />
                     <div>
                       <p className="text-sm font-medium text-foreground">
                         This lead looks low quality
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        Add more details or qualify the lead before sending a proposal.
+                        Add more details or qualify the lead before sending another proposal.
                       </p>
                     </div>
                   </div>
@@ -579,7 +621,11 @@ export default function ClientDetail() {
                     size="sm"
                     variant="outline"
                     onClick={startEdit}
-                    className="gap-2 flex-shrink-0 border-amber-500/40 text-amber-600 hover:bg-amber-500/10"
+                    className={`gap-2 flex-shrink-0 ${
+                      hasAcceptedUnpaid
+                        ? ""
+                        : "border-amber-500/40 text-amber-600 hover:bg-amber-500/10"
+                    }`}
                   >
                     <Pencil className="w-3.5 h-3.5" /> Qualify this lead
                   </Button>
