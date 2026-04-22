@@ -174,6 +174,8 @@ export default function ProposalView() {
     };
     toast({ title: `Marked as ${labels[next]}` });
   };
+
+  const handleCopyProposal = async () => {
     const fullText = [editedProposal, editedPricing, editedInvoice].filter(Boolean).join("\n\n---\n\n");
     await navigator.clipboard.writeText(fullText);
     setCopied(true);
