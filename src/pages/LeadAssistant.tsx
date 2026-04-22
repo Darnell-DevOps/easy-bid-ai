@@ -27,6 +27,9 @@ export default function LeadAssistant() {
   const [budget, setBudget] = useState("");
   const [timeline, setTimeline] = useState("");
   const [notes, setNotes] = useState("");
+  const [leadQuality, setLeadQuality] = useState<"High" | "Medium" | "Low" | "">("");
+  const [qualityReason, setQualityReason] = useState("");
+  const [aiRecommendation, setAiRecommendation] = useState("");
 
   const [saving, setSaving] = useState(false);
   const [savedClientId, setSavedClientId] = useState<string | null>(null);
