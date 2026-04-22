@@ -97,6 +97,8 @@ export default function LeadAssistant() {
           timeline: timeline || null,
           goals: notes || null,
           status: "Qualified",
+          lead_quality: leadQuality || null,
+          ai_recommendation: aiRecommendation || null,
         })
         .select()
         .single();
