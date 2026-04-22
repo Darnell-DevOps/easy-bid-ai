@@ -107,18 +107,48 @@ export default function NewProposal() {
   const templateData = (location.state as any)?.template;
   const clientPrefill = (location.state as any)?.prefillFromClient;
 
+  // Initial budget normalisation: parse digits from prefill so we store digits and display formatted
+  const initialBudgetDigits = parseBudgetDigits(
+    clientPrefill?.budget || templateData?.prefill?.budget || "",
+  );
+  const initialTimelineRaw = clientPrefill?.timeline || templateData?.prefill?.timeline || "";
+  const initialTimeline = parseTimeline(initialTimelineRaw);
+
   const [form, setForm] = useState({
     client_name: clientPrefill?.client_name || "",
     company_name: clientPrefill?.company_name || "",
     service_type: clientPrefill?.service_type || templateData?.serviceType || "",
     project_scope:
       clientPrefill?.project_scope || templateData?.prefill?.project_scope || "",
-    budget: clientPrefill?.budget || templateData?.prefill?.budget || "",
-    timeline: clientPrefill?.timeline || templateData?.prefill?.timeline || "",
+    budget: initialBudgetDigits, // stored as plain digits, displayed formatted
+    timeline: initialTimelineRaw,
     notes: clientPrefill?.notes || templateData?.prefill?.notes || "",
     goals: clientPrefill?.goals || "",
     deliverables: clientPrefill?.deliverables || "",
   });
+
+  // Structured timeline state
+  const [timelineQty, setTimelineQty] = useState<string>(initialTimeline.qty);
+  const [timelineUnit, setTimelineUnit] = useState<TimelineUnit>(initialTimeline.unit);
+  const [timelineCustom, setTimelineCustom] = useState<boolean>(initialTimeline.custom);
+  const [timelineCustomText, setTimelineCustomText] = useState<string>(
+    initialTimeline.custom ? initialTimelineRaw : "",
+  );
+
+  // Track which fields the user has interacted with (for showing errors)
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const markTouched = (field: string) => setTouched((t) => ({ ...t, [field]: true }));
+
+  // Sync structured timeline → form.timeline
+  useEffect(() => {
+    const value = timelineCustom
+      ? timelineCustomText.trim()
+      : timelineQty
+        ? `${timelineQty} ${timelineUnit}`
+        : "";
+    setForm((prev) => (prev.timeline === value ? prev : { ...prev, timeline: value }));
+  }, [timelineQty, timelineUnit, timelineCustom, timelineCustomText]);
+
   const prefilledClientId: string | undefined = clientPrefill?.client_id;
   const originalLeadMessage: string | undefined = clientPrefill?.original_lead_message;
   const leadQuality: string | undefined = clientPrefill?.lead_quality;
@@ -131,14 +161,56 @@ export default function NewProposal() {
     [form.project_scope, originalLeadMessage],
   );
 
+  // Field-level validation
+  const errors = useMemo(() => {
+    const e: Record<string, string> = {};
+    const name = form.client_name.trim();
+    if (!name) e.client_name = "Client name is required";
+    else if (name.length < 2 || !NAME_REGEX.test(name)) e.client_name = "Enter a valid client name";
+
+    const company = form.company_name.trim();
+    if (!company) e.company_name = "Company name is required";
+    else if (!COMPANY_REGEX.test(company)) e.company_name = "Enter a valid company name";
+
+    if (!form.service_type) e.service_type = "Select a service type";
+
+    const budgetDigits = form.budget;
+    const budgetN = parseInt(budgetDigits, 10);
+    if (!budgetDigits) e.budget = "Enter a budget amount";
+    else if (isNaN(budgetN) || budgetN <= 0) e.budget = "Enter a valid budget amount";
+
+    if (!form.timeline.trim()) {
+      e.timeline = "Set a project timeline";
+    } else if (timelineCustom && form.timeline.trim().length < 3) {
+      e.timeline = "Enter a valid timeline";
+    } else if (!timelineCustom && (!timelineQty || parseInt(timelineQty, 10) <= 0)) {
+      e.timeline = "Enter a valid timeline";
+    }
+
+    const scope = form.project_scope.trim();
+    if (!scope) e.project_scope = "Project scope is required";
+    else if (scope.length < 20)
+      e.project_scope = "Add more detail so AI can generate a better proposal";
+
+    if (form.goals.trim() && form.goals.trim().length < 10)
+      e.goals = "Add a bit more detail (10+ characters)";
+
+    if (form.deliverables.trim() && form.deliverables.trim().length < 10)
+      e.deliverables = "Add a bit more detail (10+ characters)";
+
+    return e;
+  }, [form, timelineCustom, timelineQty]);
+
+  const isValid = Object.keys(errors).length === 0;
+
   const missingFields = useMemo(() => {
     const missing: string[] = [];
-    if (!form.service_type) missing.push("service type");
-    if (!form.timeline) missing.push("timeline");
-    if (!form.goals) missing.push("goals");
-    if (!form.project_scope || form.project_scope.length < 20) missing.push("project scope");
+    if (errors.service_type) missing.push("service type");
+    if (errors.timeline) missing.push("timeline");
+    if (!form.goals.trim()) missing.push("goals");
+    if (errors.project_scope) missing.push("project scope");
     return missing;
-  }, [form]);
+  }, [errors, form.goals]);
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
