@@ -25,7 +25,9 @@ export type Database = {
           id: string
           is_active: boolean
           lead_quality: string | null
+          lead_source: string | null
           name: string
+          original_lead_message: string | null
           phone: string | null
           project_description: string | null
           service_requested: string | null
@@ -44,7 +46,9 @@ export type Database = {
           id?: string
           is_active?: boolean
           lead_quality?: string | null
+          lead_source?: string | null
           name: string
+          original_lead_message?: string | null
           phone?: string | null
           project_description?: string | null
           service_requested?: string | null
@@ -63,7 +67,9 @@ export type Database = {
           id?: string
           is_active?: boolean
           lead_quality?: string | null
+          lead_source?: string | null
           name?: string
+          original_lead_message?: string | null
           phone?: string | null
           project_description?: string | null
           service_requested?: string | null

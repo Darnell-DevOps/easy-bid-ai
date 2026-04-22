@@ -82,6 +82,14 @@ ${message}
                     type: "string",
                     description: "Service the lead is asking about, or empty string if unclear",
                   },
+                  phone: {
+                    type: "string",
+                    description: "Phone number mentioned in the message, or empty string",
+                  },
+                  goals: {
+                    type: "string",
+                    description: "What the lead seems to want to achieve / their desired outcome, or empty string",
+                  },
                   budget: {
                     type: "string",
                     description: "Mentioned budget, or empty string",
@@ -108,7 +116,7 @@ ${message}
                     description: "Recommended next action based on lead quality",
                   },
                 },
-                required: ["reply", "service_requested", "budget", "timeline", "notes", "lead_quality", "quality_reason", "ai_recommendation"],
+                required: ["reply", "service_requested", "phone", "goals", "budget", "timeline", "notes", "lead_quality", "quality_reason", "ai_recommendation"],
                 additionalProperties: false,
               },
             },
