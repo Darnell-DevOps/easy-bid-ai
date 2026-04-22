@@ -12,7 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
   Loader2, Sparkles, User, Building2, Briefcase, PoundSterling, FileText, Clock,
-  StickyNote, Target, ListChecks, Users, AlertTriangle, Info, ArrowLeft, Pencil,
+  StickyNote, Target, ListChecks, Users, AlertTriangle, ArrowLeft, Pencil,
+  CheckCircle2, Circle, Wand2, ArrowRight,
 } from "lucide-react";
 
 const serviceTypes = [
@@ -276,20 +277,22 @@ export default function NewProposal() {
       )}
 
       {savedClients.length > 0 && !prefilledClientId && (
-        <Card className="mb-6 border-accent/20 bg-accent/5">
-          <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
-                <Users className="w-4 h-4 text-accent" />
+        <Card className="mb-6 border-accent/30 bg-gradient-to-br from-accent/10 via-accent/5 to-transparent shadow-lg shadow-accent/5">
+          <CardContent className="p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent to-purple flex items-center justify-center flex-shrink-0 shadow-md shadow-accent/30">
+                <Wand2 className="w-5 h-5 text-accent-foreground" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-foreground">Generate from a saved client</p>
-                <p className="text-xs text-muted-foreground">Skip the typing — prefill with their saved details.</p>
+                <p className="text-base font-semibold text-foreground">Generate from existing client</p>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Instantly pre-fill this proposal using saved client details.
+                </p>
               </div>
             </div>
             <Select onValueChange={handleGenerateFromClient}>
-              <SelectTrigger className="w-full sm:w-[240px]">
-                <SelectValue placeholder="Choose a client…" />
+              <SelectTrigger className="w-full md:w-[260px] bg-background border-accent/30 hover:border-accent/50 transition-colors">
+                <SelectValue placeholder="Select Client" />
               </SelectTrigger>
               <SelectContent>
                 {savedClients.map((c) => (
@@ -310,6 +313,22 @@ export default function NewProposal() {
             <section>
               <SectionHeader title="Essentials" subtitle="The basics needed to draft your proposal." />
               <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="service_type">Service Type</Label>
+                  <div className="relative mt-2">
+                    <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
+                    <Select value={form.service_type} onValueChange={(v) => update("service_type", v)}>
+                      <SelectTrigger className="pl-10">
+                        <SelectValue placeholder="What service are you offering?" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {serviceTypes.map((s) => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
                 <div>
                   <Label htmlFor="client_name">Client Name</Label>
                   <div className="relative mt-2">
@@ -336,22 +355,6 @@ export default function NewProposal() {
                       required
                       className="pl-10"
                     />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="service_type">Service Type</Label>
-                  <div className="relative mt-2">
-                    <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
-                    <Select value={form.service_type} onValueChange={(v) => update("service_type", v)}>
-                      <SelectTrigger className="pl-10">
-                        <SelectValue placeholder="What service are you offering?" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {serviceTypes.map((s) => (
-                          <SelectItem key={s} value={s}>{s}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
                   </div>
                 </div>
                 <div>
@@ -403,7 +406,7 @@ export default function NewProposal() {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground mt-1.5">
-                    Describe what the client needs, the problem being solved, and what is being delivered.
+                    In 1–2 sentences, describe what the client needs. Don't worry if this isn't perfect — AI will refine it.
                   </p>
                 </div>
 
@@ -488,22 +491,49 @@ export default function NewProposal() {
               </div>
             </section>
 
-            {/* READINESS GUIDANCE + CTA */}
-            {!loading && (
-              <div className="flex items-start gap-2 rounded-lg border border-border/60 bg-muted/30 p-3">
-                <Info className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-muted-foreground">
-                  {missingFields.length > 0 ? (
-                    <>
-                      <span className="font-medium text-foreground">Missing:</span>{" "}
-                      {missingFields.join(", ")}. Filling these in will improve proposal quality.
-                    </>
-                  ) : (
-                    <span>All key details look good — your proposal is ready to generate.</span>
-                  )}
-                </p>
-              </div>
-            )}
+            {/* READINESS CHECKLIST + CTA */}
+            {!loading && (() => {
+              const checks = [
+                { label: "Service Type", done: !!form.service_type },
+                { label: "Project Scope", done: !!form.project_scope && form.project_scope.length >= 20 },
+                { label: "Timeline", done: !!form.timeline },
+                { label: "Goals", done: !!form.goals },
+              ];
+              const aiReady = checks[0].done && checks[1].done;
+              const allDone = checks.every((c) => c.done);
+              return (
+                <div className={`rounded-xl border p-4 transition-colors ${
+                  allDone ? "border-emerald-500/30 bg-emerald-500/5"
+                  : aiReady ? "border-accent/30 bg-accent/5"
+                  : "border-border/60 bg-muted/30"
+                }`}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Sparkles className={`w-4 h-4 ${aiReady ? "text-accent" : "text-muted-foreground"}`} />
+                    <p className="text-sm font-semibold text-foreground">
+                      {allDone
+                        ? "All key details look great — ready to generate"
+                        : aiReady
+                        ? "Great — AI now has enough to generate a strong proposal"
+                        : "To improve your proposal quality, add the items below"}
+                    </p>
+                  </div>
+                  <ul className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {checks.map((c) => (
+                      <li key={c.label} className="flex items-center gap-2 text-xs">
+                        {c.done ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                        ) : (
+                          <Circle className="w-3.5 h-3.5 text-muted-foreground/60 flex-shrink-0" />
+                        )}
+                        <span className={c.done ? "text-foreground" : "text-muted-foreground"}>
+                          {c.label}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })()}
 
             {loading ? (
               <div className="flex flex-col items-center gap-4 py-6">
@@ -514,27 +544,31 @@ export default function NewProposal() {
                 <Progress value={progress} className="w-full max-w-xs h-2" />
               </div>
             ) : (
-              <div className="flex flex-col-reverse sm:flex-row sm:items-center gap-3 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="lg"
-                  onClick={() => prefilledClientId
-                    ? navigate(`/dashboard/clients/${prefilledClientId}`)
-                    : navigate(-1)}
-                  className="gap-2"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  {prefilledClientId ? "Back to Client" : "Back"}
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={!form.service_type}
-                  className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-90 gap-2 flex-1 sm:flex-initial sm:min-w-[280px] shadow-lg shadow-accent/20 hover:shadow-accent/30"
-                  size="lg"
-                >
-                  <Sparkles className="w-5 h-5" /> Generate Proposal with AI
-                </Button>
+              <div className="pt-4 mt-2 border-t border-border/40">
+                <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="lg"
+                    onClick={() => prefilledClientId
+                      ? navigate(`/dashboard/clients/${prefilledClientId}`)
+                      : navigate(-1)}
+                    className="gap-2 text-muted-foreground hover:text-foreground"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    {prefilledClientId ? "Back to Client" : "Back"}
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={!form.service_type}
+                    className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-90 gap-2 w-full sm:w-auto sm:min-w-[300px] h-12 text-base font-semibold shadow-xl shadow-accent/25 hover:shadow-accent/40 hover:scale-[1.02] transition-all group"
+                    size="lg"
+                  >
+                    <Sparkles className="w-5 h-5" />
+                    Generate Proposal with AI
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  </Button>
+                </div>
               </div>
             )}
           </form>
