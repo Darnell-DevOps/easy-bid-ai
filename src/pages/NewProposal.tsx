@@ -323,7 +323,7 @@ export default function NewProposal() {
                     id="goals"
                     value={form.goals}
                     onChange={(e) => update("goals", e.target.value)}
-                    placeholder="What does the client want to achieve?"
+                    placeholder="What outcome does the client want?"
                     rows={2}
                     className="pl-10"
                   />
