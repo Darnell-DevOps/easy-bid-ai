@@ -209,91 +209,129 @@ export default function Clients() {
             </CardContent>
           </Card>
         ) : (
-          <Card className="overflow-hidden">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead>Client</TableHead>
-                    <TableHead className="hidden md:table-cell">Email</TableHead>
-                    <TableHead className="hidden lg:table-cell">Service</TableHead>
-                    <TableHead className="hidden lg:table-cell">Budget</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="hidden md:table-cell">Created</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map((c) => (
-                    <TableRow
-                      key={c.id}
-                      className="cursor-pointer"
-                      onClick={() => navigate(`/dashboard/clients/${c.id}`)}
-                    >
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-                            <span className="text-sm font-semibold text-accent">
-                              {c.name.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">
-                              {c.name}
-                            </p>
-                            {c.company && (
-                              <p className="text-xs text-muted-foreground truncate">
-                                {c.company}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                        {c.email || "—"}
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
-                        {c.service_requested || "—"}
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
-                        {c.budget || "—"}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={`${statusStyle(c.status)} text-xs`}>
-                          {c.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
-                        {new Date(c.created_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/dashboard/clients/${c.id}`);
-                            }}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="text-accent hover:text-accent"
-                            onClick={(e) => goGenerate(c, e)}
-                          >
-                            <Sparkles className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
+          <div className="relative flex gap-2">
+            <Card className="overflow-hidden flex-1 min-w-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead>Client</TableHead>
+                      <TableHead className="hidden md:table-cell">Email</TableHead>
+                      <TableHead className="hidden lg:table-cell">Service</TableHead>
+                      <TableHead className="hidden lg:table-cell">Budget</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="hidden md:table-cell">Created</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {grouped.map(([letter, items]) => (
+                      <React.Fragment key={`group-${letter}`}>
+                        <TableRow
+                          id={`client-section-${letter}`}
+                          className="hover:bg-transparent bg-muted/30 scroll-mt-20"
+                        >
+                          <TableCell
+                            colSpan={7}
+                            className="py-2 text-xs font-semibold text-accent uppercase tracking-wider"
+                          >
+                            {letter}
+                          </TableCell>
+                        </TableRow>
+                        {items.map((c) => (
+                          <TableRow
+                            key={c.id}
+                            className="cursor-pointer"
+                            onClick={() => navigate(`/dashboard/clients/${c.id}`)}
+                          >
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
+                                  <span className="text-sm font-semibold text-accent">
+                                    {c.name.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium text-foreground truncate">
+                                    {c.name}
+                                  </p>
+                                  {c.company && (
+                                    <p className="text-xs text-muted-foreground truncate">
+                                      {c.company}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                              {c.email || "—"}
+                            </TableCell>
+                            <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
+                              {c.service_requested || "—"}
+                            </TableCell>
+                            <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
+                              {c.budget || "—"}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className={`${statusStyle(c.status)} text-xs`}>
+                                {c.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
+                              {new Date(c.created_at).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/dashboard/clients/${c.id}`);
+                                  }}
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-accent hover:text-accent"
+                                  onClick={(e) => goGenerate(c, e)}
+                                >
+                                  <Sparkles className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </React.Fragment>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </Card>
+
+            {/* Alphabetical index (iPhone Contacts style) */}
+            <div className="sticky top-4 self-start flex flex-col items-center py-2 px-1 rounded-full bg-card/60 border border-border/50 backdrop-blur-sm">
+              {ALPHABET.map((letter) => {
+                const enabled = availableLetters.has(letter);
+                return (
+                  <button
+                    key={letter}
+                    disabled={!enabled}
+                    onClick={() => scrollToLetter(letter)}
+                    className={`text-[10px] leading-tight font-semibold w-5 h-4 flex items-center justify-center rounded transition-colors ${
+                      enabled
+                        ? "text-accent hover:bg-accent/10 cursor-pointer"
+                        : "text-muted-foreground/30 cursor-default"
+                    }`}
+                  >
+                    {letter}
+                  </button>
+                );
+              })}
             </div>
-          </Card>
+          </div>
         )}
       </div>
     </DashboardLayout>
