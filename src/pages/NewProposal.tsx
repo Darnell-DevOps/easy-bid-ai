@@ -12,7 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
   Loader2, Sparkles, User, Building2, Briefcase, PoundSterling, FileText, Clock,
-  StickyNote, Target, ListChecks, Users, AlertTriangle, Info, ArrowLeft, Pencil,
+  StickyNote, Target, ListChecks, Users, AlertTriangle, ArrowLeft, Pencil,
+  CheckCircle2, Circle, Wand2, ArrowRight,
 } from "lucide-react";
 
 const serviceTypes = [
