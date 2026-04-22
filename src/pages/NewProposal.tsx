@@ -83,7 +83,7 @@ export default function NewProposal() {
     try {
       // Call edge function to generate proposal content via AI
       const { data: aiData, error: aiError } = await supabase.functions.invoke("generate-proposal", {
-        body: form,
+        body: { ...form, original_lead_message: originalLeadMessage },
       });
 
       if (aiError) throw aiError;
