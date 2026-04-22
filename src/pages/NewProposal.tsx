@@ -265,7 +265,7 @@ export default function NewProposal() {
 
     setLoading(true);
 
-    const payload = { ...form, budget: formatBudget(form.budget) };
+    const payload = { ...form, budget: formatBudget(form.budget, currency) };
 
     try {
       const { data: aiData, error: aiError } = await supabase.functions.invoke("generate-proposal", {
