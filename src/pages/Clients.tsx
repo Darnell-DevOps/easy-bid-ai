@@ -197,12 +197,12 @@ export default function Clients() {
 
         {/* Guidance / insight banner */}
         {!loading && insight && (
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border border-accent/20 bg-gradient-to-r from-accent/10 to-purple/5 px-4 py-3.5">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="w-9 h-9 rounded-lg bg-accent/15 flex items-center justify-center flex-shrink-0">
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-accent/20 bg-gradient-to-r from-accent/10 to-purple/5 px-4 py-2.5">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center flex-shrink-0">
                 <Lightbulb className="w-4 h-4 text-accent" />
               </div>
-              <p className="text-sm text-foreground/90">{insight}</p>
+              <p className="text-sm text-foreground/90 truncate">{insight}</p>
             </div>
             {topCandidate && (
               <Button
@@ -214,6 +214,33 @@ export default function Clients() {
                 Create Proposal
               </Button>
             )}
+          </div>
+        )}
+
+        {/* Filters */}
+        {clients.length > 0 && (
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative sm:w-[72%]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name, email, or service…"
+                className="pl-10"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="sm:flex-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_OPTIONS.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         )}
 
