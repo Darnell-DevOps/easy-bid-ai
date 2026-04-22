@@ -349,7 +349,7 @@ export default function ClientDetail() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-5">
+      <div className="space-y-4">
         <button
           onClick={() => navigate("/dashboard/clients")}
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -446,10 +446,10 @@ export default function ClientDetail() {
               <Button
                 onClick={heroAction.onClick}
                 size="lg"
-                className={`gap-2 h-13 px-6 text-base font-semibold flex-shrink-0 ${
+                className={`gap-2 h-13 px-6 text-base font-semibold flex-shrink-0 transition-all duration-300 hover:scale-[1.03] ${
                   heroAction.variant === "success"
-                    ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:brightness-110 shadow-lg shadow-emerald-500/25"
-                    : "bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 shadow-lg shadow-accent/30"
+                    ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:brightness-110 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50"
+                    : "bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 shadow-lg shadow-accent/30 hover:shadow-accent/60"
                 }`}
               >
                 <heroAction.Icon className="w-5 h-5" /> {heroAction.label}
@@ -496,8 +496,8 @@ export default function ClientDetail() {
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-semibold text-foreground">Proposals</h2>
-            <Button size="sm" variant="ghost" onClick={generateProposal} className="gap-2 text-muted-foreground hover:text-foreground">
-              <Plus className="w-4 h-4" /> New Proposal
+            <Button size="sm" variant="ghost" onClick={generateProposal} className="gap-2 text-xs text-muted-foreground hover:text-foreground h-8 px-2.5">
+              <Plus className="w-3.5 h-3.5" /> New Proposal
             </Button>
           </div>
 
@@ -534,8 +534,8 @@ export default function ClientDetail() {
                     className="group cursor-pointer transition-all duration-200 hover:border-accent/50 hover:shadow-xl hover:shadow-accent/15 hover:-translate-y-0.5 hover:bg-accent/[0.04]"
                     onClick={() => navigate(`/dashboard/proposal/${p.id}`)}
                   >
-                    <CardContent className="p-4 flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3.5 min-w-0">
+                    <CardContent className="p-4 flex items-center justify-between gap-6">
+                      <div className="flex items-center gap-3.5 min-w-0 flex-1">
                         <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0 group-hover:bg-accent/20 transition-colors">
                           <FileText className="w-5 h-5 text-accent" />
                         </div>
@@ -543,12 +543,18 @@ export default function ClientDetail() {
                           <p className="text-sm font-semibold text-foreground truncate">
                             {p.service_type}
                           </p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {new Date(p.created_at).toLocaleDateString()} · {p.budget || "No budget"}
+                          <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
+                            {p.budget && (
+                              <>
+                                <span className="font-medium text-foreground/80">{p.budget}</span>
+                                <span className="text-muted-foreground/50">•</span>
+                              </>
+                            )}
+                            <span>{new Date(p.created_at).toLocaleDateString()}</span>
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2.5 flex-shrink-0">
+                      <div className="flex items-center gap-2 flex-shrink-0">
                         <Badge
                           variant="outline"
                           className={`${proposalStatusStyle(p.status, p.client_paid)} text-xs whitespace-nowrap`}
@@ -558,13 +564,14 @@ export default function ClientDetail() {
                         {quickAction && (
                           <Button
                             size="sm"
+                            variant="outline"
                             onClick={(e) => {
                               e.stopPropagation();
                               navigate(`/dashboard/proposal/${p.id}`);
                             }}
-                            className="h-8 px-3 text-xs gap-1.5 bg-gradient-to-r from-accent to-purple text-white hover:brightness-110"
+                            className="h-7 px-2.5 text-xs gap-1.5 border-accent/30 text-accent hover:bg-accent/10 hover:text-accent"
                           >
-                            <quickAction.Icon className="w-3.5 h-3.5" /> {quickAction.label}
+                            <quickAction.Icon className="w-3 h-3" /> {quickAction.label}
                           </Button>
                         )}
                         <ArrowRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-accent group-hover:translate-x-1 transition-all" />
@@ -596,10 +603,10 @@ export default function ClientDetail() {
               {/* Low-quality lead CTA — de-emphasized when payment is the priority */}
               {isLowQuality && (
                 <div
-                  className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border p-3.5 ${
+                  className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border p-3 ${
                     hasAcceptedUnpaid
-                      ? "border-border/60 bg-muted/30"
-                      : "border-amber-500/30 bg-amber-500/5"
+                      ? "border-border/40 bg-muted/20"
+                      : "border-amber-500/20 bg-amber-500/[0.04]"
                   }`}
                 >
                   <div className="flex items-start gap-3">
