@@ -15,6 +15,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, FileText, Search, MoreVertical, Eye, Pencil, Copy, Trash2, Calendar } from "lucide-react";
+import StatusBadge from "@/components/proposal/StatusBadge";
 
 interface Proposal {
   id: string;
@@ -22,6 +23,7 @@ interface Proposal {
   company_name: string;
   service_type: string;
   created_at: string;
+  status?: string | null;
 }
 
 const SERVICE_TYPES = [
@@ -164,7 +166,8 @@ export default function ProposalsList({ proposals, loading, onRefresh }: Proposa
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0 ml-3">
-                  <span className="text-xs text-muted-foreground hidden sm:block">{new Date(p.created_at).toLocaleDateString()}</span>
+                  <StatusBadge status={p.status} className="hidden sm:inline-flex" />
+                  <span className="text-xs text-muted-foreground hidden md:block">{new Date(p.created_at).toLocaleDateString()}</span>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                       <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">

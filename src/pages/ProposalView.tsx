@@ -30,6 +30,11 @@ interface ProposalData {
   timeline: string;
   notes: string | null;
   client_id: string | null;
+  status: string | null;
+  sent_at: string | null;
+  viewed_at: string | null;
+  accepted_at: string | null;
+  rejected_at: string | null;
 }
 
 const SECTION_HEADINGS = [
