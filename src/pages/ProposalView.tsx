@@ -74,12 +74,76 @@ export default function ProposalView() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editMode, setEditMode] = useState<Record<string, boolean>>({});
+  const [regenerating, setRegenerating] = useState<string | null>(null);
 
   const [editedProposal, setEditedProposal] = useState("");
   const [editedPricing, setEditedPricing] = useState("");
   const [editedInvoice, setEditedInvoice] = useState("");
   const [copied, setCopied] = useState(false);
   const [clientPaid, setClientPaid] = useState(false);
+
+  const buildSourcePayload = () => {
+    if (!proposal) return null;
+    return {
+      client_name: proposal.client_name,
+      company_name: proposal.company_name,
+      service_type: proposal.service_type,
+      project_scope: proposal.project_scope || "",
+      budget: proposal.budget || "",
+      timeline: proposal.timeline || "",
+      notes: proposal.notes || "",
+    };
+  };
+
+  const handleRegenerateFull = async (tone?: "concise" | "persuasive" | "alternative") => {
+    const source = buildSourcePayload();
+    if (!source) return;
+    const key = tone || "full";
+    setRegenerating(key);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-proposal", {
+        body: { ...source, tone },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.proposal) setEditedProposal(data.proposal);
+      if (data?.pricing) setEditedPricing(data.pricing);
+      if (data?.invoice) setEditedInvoice(data.invoice);
+      await supabase.from("proposals").update({
+        proposal_content: data.proposal,
+        pricing_breakdown: data.pricing,
+        invoice_content: data.invoice,
+      }).eq("id", id);
+      toast({ title: tone ? `Regenerated (${tone})` : "Proposal regenerated" });
+    } catch (e: any) {
+      toast({ title: "Regeneration failed", description: e.message || "Try again.", variant: "destructive" });
+    } finally {
+      setRegenerating(null);
+    }
+  };
+
+  const handleRegenerateSection = async (section: string) => {
+    const source = buildSourcePayload();
+    if (!source) return;
+    setRegenerating(section);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-proposal", {
+        body: { ...source, section, existing_proposal: editedProposal },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const newSection = (data?.section || "").trim();
+      if (!newSection) throw new Error("Empty section returned");
+      const updated = replaceSection(editedProposal, section, newSection);
+      setEditedProposal(updated);
+      await supabase.from("proposals").update({ proposal_content: updated }).eq("id", id);
+      toast({ title: `${section} regenerated` });
+    } catch (e: any) {
+      toast({ title: "Regeneration failed", description: e.message || "Try again.", variant: "destructive" });
+    } finally {
+      setRegenerating(null);
+    }
+  };
 
   const handleCopyProposal = async () => {
     const fullText = [editedProposal, editedPricing, editedInvoice].filter(Boolean).join("\n\n---\n\n");
