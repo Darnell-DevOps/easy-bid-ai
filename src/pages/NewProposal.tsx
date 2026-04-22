@@ -876,7 +876,10 @@ export default function NewProposal() {
                 <Progress value={progress} className="w-full max-w-xs h-2" />
               </div>
             ) : (
-              <div className="pt-4 mt-2 border-t border-border/40">
+              <div className="pt-8 mt-4 border-t border-border/40">
+                <p className="text-xs text-muted-foreground text-center sm:text-right mb-3">
+                  AI will generate a polished, client-ready proposal instantly.
+                </p>
                 <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3">
                   <Button
                     type="button"
@@ -885,7 +888,7 @@ export default function NewProposal() {
                     onClick={() => prefilledClientId
                       ? navigate(`/dashboard/clients/${prefilledClientId}`)
                       : navigate(-1)}
-                    className="gap-2 text-muted-foreground hover:text-foreground"
+                    className="gap-2 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <ArrowLeft className="w-4 h-4" />
                     {prefilledClientId ? "Back to Client" : "Back"}
@@ -897,10 +900,10 @@ export default function NewProposal() {
                           <Button
                             type="submit"
                             disabled={!isValid}
-                            className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-90 gap-2 w-full sm:w-auto sm:min-w-[300px] h-12 text-base font-semibold shadow-xl shadow-accent/25 hover:shadow-accent/40 hover:scale-[1.02] transition-all group"
+                            className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-95 gap-2 w-full sm:w-auto sm:min-w-[300px] h-12 text-base font-semibold shadow-xl shadow-accent/30 hover:shadow-2xl hover:shadow-accent/50 hover:-translate-y-0.5 hover:scale-[1.02] active:scale-[0.99] transition-all duration-200 group"
                             size="lg"
                           >
-                            <Sparkles className="w-5 h-5" />
+                            <Sparkles className="w-5 h-5 transition-transform group-hover:rotate-12" />
                             Generate Proposal with AI
                             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                           </Button>
