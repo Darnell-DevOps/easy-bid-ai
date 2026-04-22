@@ -785,24 +785,28 @@ export default function ProposalView() {
                 />
               ) : (
                 <>
-                  {t.key === "proposal" && !editMode[t.key] && (
-                    <ProposalHeader
-                      clientName={proposal.client_name}
-                      companyName={proposal.company_name}
-                      serviceType={proposal.service_type}
-                      createdAt={proposal.created_at}
-                    />
+                  {t.key === "proposal" ? (
+                    <div className="rounded-2xl border border-border/60 bg-card/40 px-6 sm:px-10 lg:px-14 py-8 lg:py-10 shadow-sm">
+                      <ProposalHeader
+                        clientName={proposal.client_name}
+                        companyName={proposal.company_name}
+                        serviceType={proposal.service_type}
+                        createdAt={proposal.created_at}
+                      />
+                      <MarkdownPreview content={t.content} isPremium />
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl border border-border/60 bg-card/40 px-6 sm:px-10 lg:px-14 py-8 lg:py-10 shadow-sm">
+                      <MarkdownPreview content={t.content} />
+                    </div>
                   )}
-                  <div className={t.key === "proposal" ? "mt-6" : ""}>
-                    <MarkdownPreview content={t.content} isPremium={t.key === "proposal"} />
-                  </div>
                   {t.key === "proposal" && (
-                    <div className="mt-8 rounded-xl border border-border bg-card/50 p-5">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Sparkles className="w-4 h-4 text-accent" />
-                        <h3 className="text-sm font-semibold text-foreground">Regenerate a section</h3>
+                    <div className="mt-6 rounded-xl border border-border/60 bg-card/30 p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Sparkles className="w-3.5 h-3.5 text-accent" />
+                        <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider">Regenerate a section</h3>
                       </div>
-                      <p className="text-xs text-muted-foreground mb-4">
+                      <p className="text-xs text-muted-foreground mb-3">
                         Don't love a part? Regenerate just that section — the rest stays untouched.
                       </p>
                       <div className="flex flex-wrap gap-2">
