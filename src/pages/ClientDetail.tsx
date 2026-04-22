@@ -593,17 +593,27 @@ export default function ClientDetail() {
               </div>
               <div className="h-px bg-border" />
 
-              {/* Low-quality lead CTA */}
+              {/* Low-quality lead CTA — de-emphasized when payment is the priority */}
               {isLowQuality && (
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
+                <div
+                  className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border p-3.5 ${
+                    hasAcceptedUnpaid
+                      ? "border-border/60 bg-muted/30"
+                      : "border-amber-500/30 bg-amber-500/5"
+                  }`}
+                >
                   <div className="flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                    <AlertCircle
+                      className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
+                        hasAcceptedUnpaid ? "text-muted-foreground" : "text-amber-500"
+                      }`}
+                    />
                     <div>
                       <p className="text-sm font-medium text-foreground">
                         This lead looks low quality
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        Add more details or qualify the lead before sending a proposal.
+                        Add more details or qualify the lead before sending another proposal.
                       </p>
                     </div>
                   </div>
@@ -611,7 +621,11 @@ export default function ClientDetail() {
                     size="sm"
                     variant="outline"
                     onClick={startEdit}
-                    className="gap-2 flex-shrink-0 border-amber-500/40 text-amber-600 hover:bg-amber-500/10"
+                    className={`gap-2 flex-shrink-0 ${
+                      hasAcceptedUnpaid
+                        ? ""
+                        : "border-amber-500/40 text-amber-600 hover:bg-amber-500/10"
+                    }`}
                   >
                     <Pencil className="w-3.5 h-3.5" /> Qualify this lead
                   </Button>
