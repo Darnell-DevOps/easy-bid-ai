@@ -1,5 +1,3 @@
-import { Separator } from "@/components/ui/separator";
-
 interface ProposalHeaderProps {
   clientName: string;
   companyName: string;
@@ -8,28 +6,30 @@ interface ProposalHeaderProps {
 }
 
 export default function ProposalHeader({ clientName, companyName, serviceType, createdAt }: ProposalHeaderProps) {
+  const dateStr = new Date(createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
   return (
-    <div className="rounded-xl border border-border bg-card p-6 lg:p-10">
-      <div className="flex items-start justify-between">
+    <div className="pb-8 lg:pb-10 mb-2 border-b border-border">
+      <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-purple to-accent">
-            <span className="text-sm font-bold text-accent-foreground">SS</span>
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-purple to-accent">
+            <span className="text-xs font-bold text-accent-foreground">SS</span>
           </div>
           <div>
-            <p className="text-sm font-semibold text-foreground">StriveSync</p>
-            <p className="text-xs text-muted-foreground">Professional Proposal</p>
+            <p className="text-sm font-semibold text-foreground leading-tight">StriveSync</p>
+            <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Professional Proposal</p>
           </div>
         </div>
-        <div className="text-right text-xs text-muted-foreground leading-relaxed">
-          <p>{new Date(createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>
-        </div>
+        <p className="text-xs text-muted-foreground">{dateStr}</p>
       </div>
-      <Separator className="my-6 bg-border" />
-      <div>
-        <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-2">Prepared for</p>
-        <h1 className="text-2xl lg:text-3xl font-bold text-foreground">{clientName}</h1>
-        <p className="text-sm text-muted-foreground mt-1">{companyName} · {serviceType}</p>
-      </div>
+      <p className="text-xs font-medium uppercase tracking-[0.2em] text-purple mb-3">Prepared for {companyName}</p>
+      <h1 className="text-3xl lg:text-5xl font-bold text-foreground tracking-tight leading-[1.1]">
+        Proposal for {clientName}
+      </h1>
+      <p className="text-base lg:text-lg text-muted-foreground mt-4 max-w-2xl leading-relaxed">
+        Here's how we'll help you achieve real results with{" "}
+        <span className="text-foreground font-medium">{serviceType.toLowerCase()}</span> — built around your goals,
+        delivered with care.
+      </p>
     </div>
   );
 }
