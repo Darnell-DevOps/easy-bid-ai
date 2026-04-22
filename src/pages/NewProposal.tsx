@@ -128,9 +128,9 @@ export default function NewProposal() {
   const clientPrefill = (location.state as any)?.prefillFromClient;
 
   // Initial budget normalisation: parse digits from prefill so we store digits and display formatted
-  const initialBudgetDigits = parseBudgetDigits(
-    clientPrefill?.budget || templateData?.prefill?.budget || "",
-  );
+  const initialBudgetRaw = clientPrefill?.budget || templateData?.prefill?.budget || "";
+  const initialBudgetDigits = parseBudgetDigits(initialBudgetRaw);
+  const initialCurrency: CurrencyCode = detectCurrency(initialBudgetRaw);
   const initialTimelineRaw = clientPrefill?.timeline || templateData?.prefill?.timeline || "";
   const initialTimeline = parseTimeline(initialTimelineRaw);
 
