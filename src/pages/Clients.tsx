@@ -22,8 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Users, Plus, Search, Eye, Sparkles } from "lucide-react";
+import { Users, Plus, Search, Sparkles, Lightbulb } from "lucide-react";
 
 interface Client {
   id: string;
@@ -71,7 +70,7 @@ const statusStyle = (status: string) => {
 };
 
 const Empty = ({ children }: { children?: React.ReactNode }) => (
-  <span className="text-muted-foreground/60">{children ?? "Not set"}</span>
+  <span className="text-muted-foreground/60">{children ?? "—"}</span>
 );
 
 export default function Clients() {
@@ -106,6 +105,27 @@ export default function Clients() {
     });
   }, [clients, search, statusFilter]);
 
+  // Dynamic insight based on data
+  const insight = useMemo(() => {
+    if (clients.length === 0) return null;
+    const readyForProposal = clients.filter(
+      (c) => c.status === "Qualified" || c.status === "New",
+    ).length;
+    const highQuality = clients.filter((c) => c.lead_quality === "High").length;
+    const lowQuality = clients.filter((c) => c.lead_quality === "Low").length;
+
+    if (highQuality > 0) {
+      return `${highQuality} high-quality ${highQuality === 1 ? "lead" : "leads"} ready for a proposal`;
+    }
+    if (readyForProposal > 0) {
+      return `${readyForProposal} ${readyForProposal === 1 ? "client" : "clients"} ready for a proposal — send one to get paid`;
+    }
+    if (lowQuality > 0) {
+      return `${lowQuality} low-quality ${lowQuality === 1 ? "lead" : "leads"} detected — focus on qualified ones first`;
+    }
+    return "Select a client to create a proposal and get paid faster";
+  }, [clients]);
+
   const goGenerate = (c: Client, e: React.MouseEvent) => {
     e.stopPropagation();
     navigate("/dashboard/new", {
@@ -137,38 +157,50 @@ export default function Clients() {
           </div>
           <Button
             onClick={() => navigate("/dashboard/clients/new")}
-            variant="outline"
-            className="gap-2"
+            size="lg"
+            className="gap-2 bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 shadow-lg shadow-accent/20"
           >
             <Plus className="w-4 h-4" />
             Add New Client
           </Button>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name, email, or service…"
-              className="pl-10"
-            />
+        {/* Guidance / insight banner */}
+        {!loading && insight && (
+          <div className="flex items-center gap-3 rounded-xl border border-accent/20 bg-accent/5 px-4 py-3">
+            <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
+              <Lightbulb className="w-4 h-4 text-accent" />
+            </div>
+            <p className="text-sm text-foreground/90">{insight}</p>
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="sm:w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {STATUS_OPTIONS.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {s}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        )}
+
+        {/* Filters */}
+        {clients.length > 0 && (
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name, email, or service…"
+                className="pl-10"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="sm:w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_OPTIONS.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         {/* Table */}
         {loading ? (
@@ -179,22 +211,22 @@ export default function Clients() {
           </div>
         ) : clients.length === 0 ? (
           <Card className="border-dashed">
-            <CardContent className="p-10 text-center">
-              <div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
-                <Users className="w-7 h-7 text-accent" />
+            <CardContent className="p-12 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-5">
+                <Users className="w-8 h-8 text-accent" />
               </div>
-              <h3 className="text-lg font-semibold text-foreground mb-1">
-                Add your first client to get started
+              <h3 className="text-xl font-semibold text-foreground mb-2">
+                No clients yet
               </h3>
               <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
-                Save leads and client details in one place — then generate proposals in seconds.
+                Add a client to start generating proposals and getting paid.
               </p>
               <Button
                 onClick={() => navigate("/dashboard/clients/new")}
                 size="lg"
                 className="bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 gap-2 shadow-lg shadow-accent/20"
               >
-                <Plus className="w-4 h-4" /> Add Your First Client
+                <Plus className="w-4 h-4" /> Add Client
               </Button>
             </CardContent>
           </Card>
@@ -211,12 +243,8 @@ export default function Clients() {
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
                     <TableHead>Client</TableHead>
-                    <TableHead className="hidden md:table-cell">Email</TableHead>
-                    <TableHead className="hidden lg:table-cell">Service</TableHead>
-                    <TableHead className="hidden lg:table-cell">Budget</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="hidden md:table-cell">Lead Quality</TableHead>
-                    <TableHead className="hidden xl:table-cell">Source</TableHead>
                     <TableHead className="hidden md:table-cell">Created</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -225,7 +253,7 @@ export default function Clients() {
                   {filtered.map((c) => (
                     <TableRow
                       key={c.id}
-                      className="cursor-pointer"
+                      className="cursor-pointer transition-colors hover:bg-accent/5"
                       onClick={() => navigate(`/dashboard/clients/${c.id}`)}
                     >
                       <TableCell>
@@ -242,15 +270,6 @@ export default function Clients() {
                             )}
                           </div>
                         </div>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                        {c.email || <Empty />}
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
-                        {c.service_requested || <Empty />}
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
-                        {c.budget || <Empty />}
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline" className={`${statusStyle(c.status)} text-xs`}>
@@ -269,47 +288,18 @@ export default function Clients() {
                           <Empty />
                         )}
                       </TableCell>
-                      <TableCell className="hidden xl:table-cell text-xs text-muted-foreground">
-                        {c.lead_source || <Empty />}
-                      </TableCell>
                       <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
                         {new Date(c.created_at).toLocaleDateString()}
                       </TableCell>
                       <TableCell className="text-right">
-                        <TooltipProvider delayDuration={200}>
-                          <div className="flex items-center justify-end gap-1">
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    navigate(`/dashboard/clients/${c.id}`);
-                                  }}
-                                  aria-label="View client"
-                                >
-                                  <Eye className="w-4 h-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>View Client</TooltipContent>
-                            </Tooltip>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="text-accent hover:text-accent"
-                                  onClick={(e) => goGenerate(c, e)}
-                                  aria-label="Generate proposal"
-                                >
-                                  <Sparkles className="w-4 h-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Generate Proposal</TooltipContent>
-                            </Tooltip>
-                          </div>
-                        </TooltipProvider>
+                        <Button
+                          size="sm"
+                          onClick={(e) => goGenerate(c, e)}
+                          className="gap-1.5 bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 shadow-sm shadow-accent/20"
+                        >
+                          <Sparkles className="w-3.5 h-3.5" />
+                          Create Proposal
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
