@@ -157,6 +157,17 @@ export default function ClientPortal() {
           </div>
         )}
 
+        {/* Pay Now — visible once accepted (or already paid) */}
+        {(status === "accepted" || proposal.client_paid) && (
+          <ProposalPayNow
+            proposalId={proposal.id}
+            amountCents={proposal.amount_cents}
+            currency={proposal.currency}
+            clientPaid={proposal.client_paid}
+            onPaid={() => setProposal({ ...proposal, client_paid: true })}
+          />
+        )}
+
         {/* Response section */}
         <div className="rounded-xl border border-border bg-card p-6 lg:p-10">
           {responded ? (
