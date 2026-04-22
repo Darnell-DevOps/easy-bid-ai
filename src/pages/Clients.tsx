@@ -79,17 +79,43 @@ export default function Clients() {
   }, []);
 
   const filtered = useMemo(() => {
-    return clients.filter((c) => {
-      if (statusFilter !== "All" && c.status !== statusFilter) return false;
-      if (!search) return true;
-      const q = search.toLowerCase();
-      return (
-        c.name?.toLowerCase().includes(q) ||
-        c.email?.toLowerCase().includes(q) ||
-        c.service_requested?.toLowerCase().includes(q)
-      );
-    });
+    return clients
+      .filter((c) => {
+        if (statusFilter !== "All" && c.status !== statusFilter) return false;
+        if (!search) return true;
+        const q = search.toLowerCase();
+        return (
+          c.name?.toLowerCase().includes(q) ||
+          c.email?.toLowerCase().includes(q) ||
+          c.service_requested?.toLowerCase().includes(q)
+        );
+      })
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, [clients, search, statusFilter]);
+
+  const getLetter = (name: string) => {
+    const ch = name?.trim().charAt(0).toUpperCase() || "#";
+    return /[A-Z]/.test(ch) ? ch : "#";
+  };
+
+  const grouped = useMemo(() => {
+    const map = new Map<string, Client[]>();
+    filtered.forEach((c) => {
+      const l = getLetter(c.name);
+      if (!map.has(l)) map.set(l, []);
+      map.get(l)!.push(c);
+    });
+    return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
+  }, [filtered]);
+
+  const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split("");
+  const availableLetters = new Set(grouped.map(([l]) => l));
+
+  const scrollToLetter = (letter: string) => {
+    const el = document.getElementById(`client-section-${letter}`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   const goGenerate = (c: Client, e: React.MouseEvent) => {
     e.stopPropagation();
