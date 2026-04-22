@@ -619,6 +619,71 @@ export default function ProposalView() {
           </div>
         </div>
 
+        {/* Proposal Status */}
+        {(() => {
+          const currentStatus = normalizeStatus(proposal.status);
+          const fmt = (iso: string | null) =>
+            iso ? new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "—";
+          const stages: { key: ProposalStatus; label: string; at: string | null }[] = [
+            { key: "sent",     label: "Sent",     at: proposal.sent_at },
+            { key: "viewed",   label: "Viewed",   at: proposal.viewed_at },
+            { key: "accepted", label: "Accepted", at: proposal.accepted_at },
+            { key: "rejected", label: "Rejected", at: proposal.rejected_at },
+          ];
+          return (
+            <div className="rounded-xl border border-border bg-card p-5 mb-6">
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-sm font-semibold text-foreground">Proposal Status</h3>
+                  <StatusBadge status={currentStatus} />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant={currentStatus === "sent" ? "default" : "outline"}
+                    onClick={() => updateStatus("sent")}
+                    className="gap-2 h-8 text-xs"
+                  >
+                    <Send className="w-3 h-3" /> Mark as Sent
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={currentStatus === "viewed" ? "default" : "outline"}
+                    onClick={() => updateStatus("viewed")}
+                    className="gap-2 h-8 text-xs"
+                  >
+                    <Eye className="w-3 h-3" /> Mark as Viewed
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => updateStatus("accepted")}
+                    className="gap-2 h-8 text-xs border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-500"
+                  >
+                    <CheckCircle2 className="w-3 h-3" /> Accepted
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => updateStatus("rejected")}
+                    className="gap-2 h-8 text-xs border-rose-500/30 text-rose-500 hover:bg-rose-500/10 hover:text-rose-500"
+                  >
+                    <XCircle className="w-3 h-3" /> Rejected
+                  </Button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                {stages.map((s) => (
+                  <div key={s.key} className="rounded-lg border border-border bg-background/40 p-3">
+                    <p className="text-muted-foreground uppercase tracking-wide text-[10px] font-semibold">{s.label}</p>
+                    <p className={`mt-1 ${s.at ? "text-foreground" : "text-muted-foreground"}`}>{fmt(s.at)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Action bar */}
         <div className="rounded-xl border border-border bg-card p-5 mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
