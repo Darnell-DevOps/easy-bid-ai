@@ -214,6 +214,14 @@ export default function ProposalView() {
         setEditedPricing(data.pricing_breakdown || "");
         setEditedInvoice(data.invoice_content || "");
         setClientPaid(data.client_paid || false);
+        if (data.client_id) {
+          const { data: client } = await supabase
+            .from("clients")
+            .select("email")
+            .eq("id", data.client_id)
+            .single();
+          if (client?.email) setClientEmail(client.email);
+        }
       }
       setLoading(false);
     };
