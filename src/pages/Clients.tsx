@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Users, Plus, Search, Sparkles, Lightbulb, Activity, ArrowRight } from "lucide-react";
+import { Users, Plus, Search, Sparkles, Lightbulb, Activity, ArrowRight, Eye, UserCheck } from "lucide-react";
 
 interface Client {
   id: string;
