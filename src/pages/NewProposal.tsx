@@ -918,16 +918,29 @@ export default function NewProposal() {
                     <ArrowLeft className="w-4 h-4" />
                     {prefilledClientId ? "Back to Client" : "Back"}
                   </Button>
-                  <Button
-                    type="submit"
-                    disabled={!isValid}
-                    className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-90 gap-2 w-full sm:w-auto sm:min-w-[300px] h-12 text-base font-semibold shadow-xl shadow-accent/25 hover:shadow-accent/40 hover:scale-[1.02] transition-all group"
-                    size="lg"
-                  >
-                    <Sparkles className="w-5 h-5" />
-                    Generate Proposal with AI
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                  </Button>
+                  <TooltipProvider delayDuration={150}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className={!isValid ? "cursor-not-allowed" : undefined}>
+                          <Button
+                            type="submit"
+                            disabled={!isValid}
+                            className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-90 gap-2 w-full sm:w-auto sm:min-w-[300px] h-12 text-base font-semibold shadow-xl shadow-accent/25 hover:shadow-accent/40 hover:scale-[1.02] transition-all group"
+                            size="lg"
+                          >
+                            <Sparkles className="w-5 h-5" />
+                            Generate Proposal with AI
+                            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      {!isValid && (
+                        <TooltipContent side="top">
+                          Complete required fields to generate your proposal
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
               </div>
             )}
