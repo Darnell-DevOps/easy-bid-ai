@@ -551,130 +551,109 @@ export default function ProposalView() {
     { key: "invoice", label: "Invoice", content: editedInvoice, setter: setEditedInvoice, rows: 16 },
   ];
 
+  const currentStatus = normalizeStatus(proposal.status);
+  const fmt = (iso: string | null) =>
+    iso ? new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "—";
+  const stages: { key: ProposalStatus; label: string; at: string | null }[] = [
+    { key: "sent",     label: "Sent",     at: proposal.sent_at },
+    { key: "viewed",   label: "Viewed",   at: proposal.viewed_at },
+    { key: "accepted", label: "Accepted", at: proposal.accepted_at },
+    { key: "rejected", label: "Rejected", at: proposal.rejected_at },
+  ];
+
   return (
     <DashboardLayout>
-      <div className="max-w-5xl mx-auto px-2 sm:px-4 lg:px-8">
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-            <div>
-              <h1 className="text-2xl lg:text-3xl font-bold text-foreground">{proposal.client_name}</h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                {proposal.company_name} · {proposal.service_type} · {new Date(proposal.created_at).toLocaleDateString()}
-              </p>
-            </div>
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 border border-border shrink-0">
-              <DollarSign className={`w-4 h-4 ${clientPaid ? "text-emerald-400" : "text-muted-foreground"}`} />
-              <Label htmlFor="client-paid" className="text-sm font-medium text-foreground cursor-pointer">
-                Client Paid
-              </Label>
-              <Switch
-                id="client-paid"
-                checked={clientPaid}
-                onCheckedChange={async (checked) => {
-                  setClientPaid(checked);
-                  const { error } = await supabase
-                    .from("proposals")
-                    .update({ client_paid: checked })
-                    .eq("id", id);
-                  if (error) {
-                    setClientPaid(!checked);
-                    toast({ title: "Failed to update", description: error.message, variant: "destructive" });
-                  } else {
-                    toast({ title: checked ? "Marked as paid" : "Marked as unpaid" });
-                  }
-                }}
-              />
-            </div>
+      <div className="max-w-4xl mx-auto px-2 sm:px-4 lg:px-8">
+        {/* Compact top meta strip */}
+        <div className="mb-5 flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3 min-w-0">
+            <p className="text-xs text-muted-foreground truncate">
+              <span className="text-foreground font-medium">{proposal.client_name}</span>
+              <span className="mx-2 text-muted-foreground/50">·</span>
+              {proposal.company_name}
+            </p>
+            <StatusBadge status={currentStatus} />
+          </div>
+          <div className="flex items-center gap-2">
+            <DollarSign className={`w-3.5 h-3.5 ${clientPaid ? "text-emerald-400" : "text-muted-foreground"}`} />
+            <Label htmlFor="client-paid" className="text-xs font-medium text-muted-foreground cursor-pointer">
+              Paid
+            </Label>
+            <Switch
+              id="client-paid"
+              checked={clientPaid}
+              onCheckedChange={async (checked) => {
+                setClientPaid(checked);
+                const { error } = await supabase
+                  .from("proposals")
+                  .update({ client_paid: checked })
+                  .eq("id", id);
+                if (error) {
+                  setClientPaid(!checked);
+                  toast({ title: "Failed to update", description: error.message, variant: "destructive" });
+                } else {
+                  toast({ title: checked ? "Marked as paid" : "Marked as unpaid" });
+                }
+              }}
+            />
           </div>
         </div>
 
-        {/* Proposal Status */}
-        {(() => {
-          const currentStatus = normalizeStatus(proposal.status);
-          const fmt = (iso: string | null) =>
-            iso ? new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "—";
-          const stages: { key: ProposalStatus; label: string; at: string | null }[] = [
-            { key: "sent",     label: "Sent",     at: proposal.sent_at },
-            { key: "viewed",   label: "Viewed",   at: proposal.viewed_at },
-            { key: "accepted", label: "Accepted", at: proposal.accepted_at },
-            { key: "rejected", label: "Rejected", at: proposal.rejected_at },
-          ];
-          return (
-            <div className="rounded-xl border border-border bg-card p-4 sm:p-5 mb-6 overflow-hidden">
-              <div className="flex flex-col gap-4 mb-4">
-                <div className="flex items-center justify-between gap-3 flex-wrap">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <h3 className="text-sm font-semibold text-foreground">Proposal Status</h3>
-                    <StatusBadge status={currentStatus} />
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={async () => {
-                      const url = `${window.location.origin}/proposal/view/${proposal.id}`;
-                      await navigator.clipboard.writeText(url);
-                      toast({ title: "Client link copied", description: "Share this link with your client." });
-                    }}
-                    className="gap-1.5 h-9 text-xs"
-                  >
-                    <Copy className="w-3 h-3 shrink-0" /> <span className="truncate">Copy Client Link</span>
-                  </Button>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full">
-                  <Button
-                    size="sm"
-                    variant={currentStatus === "sent" ? "default" : "outline"}
-                    onClick={() => updateStatus("sent")}
-                    className="gap-1.5 h-9 text-xs w-full min-w-0"
-                  >
-                    <Send className="w-3 h-3 shrink-0" /> <span className="truncate">Mark Sent</span>
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={currentStatus === "viewed" ? "default" : "outline"}
-                    onClick={() => updateStatus("viewed")}
-                    className="gap-1.5 h-9 text-xs w-full min-w-0"
-                  >
-                    <Eye className="w-3 h-3 shrink-0" /> <span className="truncate">Mark Viewed</span>
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => updateStatus("accepted")}
-                    className="gap-1.5 h-9 text-xs w-full min-w-0 border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-500"
-                  >
-                    <CheckCircle2 className="w-3 h-3 shrink-0" /> <span className="truncate">Accepted</span>
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => updateStatus("rejected")}
-                    className="gap-1.5 h-9 text-xs w-full min-w-0 border-rose-500/30 text-rose-500 hover:bg-rose-500/10 hover:text-rose-500"
-                  >
-                    <XCircle className="w-3 h-3 shrink-0" /> <span className="truncate">Rejected</span>
-                  </Button>
-                </div>
+        {/* Unified Proposal Controls — collapsible */}
+        <details className="group mb-8 rounded-xl border border-border/60 bg-card/40 overflow-hidden">
+          <summary className="flex items-center justify-between gap-3 px-4 py-3 cursor-pointer list-none hover:bg-card/60 transition-colors">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-xs font-semibold text-foreground uppercase tracking-wider">Proposal Controls</span>
+              <span className="text-[10px] text-muted-foreground">(only you can see this)</span>
+            </div>
+            <span className="text-xs text-muted-foreground transition-transform group-open:rotate-180">▾</span>
+          </summary>
+          <div className="px-4 pb-4 pt-1 space-y-5 border-t border-border/60">
+            {/* Status stages + actions */}
+            <div className="pt-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Status</p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={async () => {
+                    const url = `${window.location.origin}/proposal/view/${proposal.id}`;
+                    await navigator.clipboard.writeText(url);
+                    toast({ title: "Client link copied", description: "Share this link with your client." });
+                  }}
+                  className="gap-1.5 h-8 text-xs"
+                >
+                  <Copy className="w-3 h-3 shrink-0" /> Copy Client Link
+                </Button>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 text-xs">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+                <Button size="sm" variant={currentStatus === "sent" ? "default" : "outline"} onClick={() => updateStatus("sent")} className="gap-1.5 h-8 text-xs w-full min-w-0">
+                  <Send className="w-3 h-3 shrink-0" /> <span className="truncate">Mark Sent</span>
+                </Button>
+                <Button size="sm" variant={currentStatus === "viewed" ? "default" : "outline"} onClick={() => updateStatus("viewed")} className="gap-1.5 h-8 text-xs w-full min-w-0">
+                  <Eye className="w-3 h-3 shrink-0" /> <span className="truncate">Mark Viewed</span>
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => updateStatus("accepted")} className="gap-1.5 h-8 text-xs w-full min-w-0 border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-500">
+                  <CheckCircle2 className="w-3 h-3 shrink-0" /> <span className="truncate">Accepted</span>
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => updateStatus("rejected")} className="gap-1.5 h-8 text-xs w-full min-w-0 border-rose-500/30 text-rose-500 hover:bg-rose-500/10 hover:text-rose-500">
+                  <XCircle className="w-3 h-3 shrink-0" /> <span className="truncate">Rejected</span>
+                </Button>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                 {stages.map((s) => (
-                  <div key={s.key} className="rounded-lg border border-border bg-background/40 p-3 min-w-0">
+                  <div key={s.key} className="rounded-lg border border-border/60 bg-background/40 p-2.5 min-w-0">
                     <p className="text-muted-foreground uppercase tracking-wide text-[10px] font-semibold">{s.label}</p>
-                    <p className={`mt-1 truncate ${s.at ? "text-foreground" : "text-muted-foreground"}`}>{fmt(s.at)}</p>
+                    <p className={`mt-0.5 truncate text-[11px] ${s.at ? "text-foreground" : "text-muted-foreground"}`}>{fmt(s.at)}</p>
                   </div>
                 ))}
               </div>
             </div>
-          );
-        })()}
 
-        {/* Payment amount */}
-        <div className="rounded-xl border border-border bg-card p-4 sm:p-5 mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-semibold text-foreground mb-1">Payment Amount</h3>
-              <p className="text-xs text-muted-foreground mb-3">
-                Set the total your client will pay via the secure checkout on the client portal.
-              </p>
+            {/* Payment amount */}
+            <div className="pt-4 border-t border-border/60">
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">Payment Amount</p>
               <div className="flex items-center gap-2 max-w-xs">
                 <Input
                   type="number"
@@ -700,7 +679,7 @@ export default function ProposalView() {
                       toast({ title: "Amount saved" });
                     }
                   }}
-                  className="h-10"
+                  className="h-9"
                 />
                 <select
                   value={proposal.currency || "USD"}
@@ -709,7 +688,7 @@ export default function ProposalView() {
                     setProposal({ ...proposal, currency });
                     await supabase.from("proposals").update({ currency }).eq("id", proposal.id);
                   }}
-                  className="h-10 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+                  className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
                 >
                   <option value="USD">USD</option>
                   <option value="EUR">EUR</option>
@@ -718,42 +697,34 @@ export default function ProposalView() {
                   <option value="AUD">AUD</option>
                 </select>
               </div>
+              <p className="text-[11px] text-muted-foreground mt-2">
+                {proposal.client_paid
+                  ? "Paid in full ✓"
+                  : proposal.amount_cents
+                    ? "Pay Now button is live on the client portal"
+                    : "No amount set — Pay Now is hidden"}
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground sm:text-right shrink-0">
-              {proposal.client_paid
-                ? "Paid in full ✓"
-                : proposal.amount_cents
-                  ? "Pay Now button is live on the client portal"
-                  : "No amount set — Pay Now is hidden"}
-            </p>
-          </div>
-        </div>
 
-        {/* Action bar */}
-        <div className="rounded-xl border border-border bg-card p-4 sm:p-5 mb-8 overflow-hidden">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <p className="text-xs text-muted-foreground">Your proposal is ready</p>
-            <div className="flex flex-col gap-3 w-full lg:w-auto lg:flex-row">
-              <Button
-                onClick={() => handleExportPDF("proposal")}
-                size="lg"
-                className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 hover:shadow-purple/30 transition-all h-11 w-full lg:w-auto lg:px-8"
-              >
-                <Download className="w-4 h-4 shrink-0" /> <span className="truncate">Export Proposal</span>
-              </Button>
-              <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:flex lg:gap-3 w-full lg:w-auto">
+            {/* Actions */}
+            <div className="pt-4 border-t border-border/60">
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-3">Actions</p>
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={() => handleExportPDF("proposal")} size="sm" className="gap-1.5 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold hover:brightness-110 transition-all h-9">
+                  <Download className="w-3.5 h-3.5 shrink-0" /> Export Proposal
+                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" disabled={!!regenerating} className="gap-2 hover:brightness-125 transition-all h-10 w-full min-w-0 lg:w-auto lg:px-6">
+                    <Button variant="outline" size="sm" disabled={!!regenerating} className="gap-1.5 h-9">
                       {regenerating === "full" || regenerating === "concise" || regenerating === "persuasive" || regenerating === "alternative" ? (
-                        <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
+                        <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" />
                       ) : (
-                        <Sparkles className="w-4 h-4 shrink-0" />
+                        <Sparkles className="w-3.5 h-3.5 shrink-0" />
                       )}
-                      <span className="truncate">Regenerate</span>
+                      Regenerate
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuContent align="start" className="w-56">
                     <DropdownMenuLabel>AI Variations</DropdownMenuLabel>
                     <DropdownMenuItem onClick={() => handleRegenerateFull()} className="gap-2">
                       <RefreshCw className="w-4 h-4" /> Regenerate full proposal
@@ -770,21 +741,21 @@ export default function ProposalView() {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <Button variant="outline" onClick={handleSave} disabled={saving} className="gap-2 hover:brightness-125 transition-all h-10 w-full min-w-0 lg:w-auto lg:px-6">
-                  {saving ? <Loader2 className="w-4 h-4 shrink-0 animate-spin" /> : <Save className="w-4 h-4 shrink-0" />}
-                  <span className="truncate">Save</span>
+                <Button variant="outline" size="sm" onClick={handleSave} disabled={saving} className="gap-1.5 h-9">
+                  {saving ? <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" /> : <Save className="w-3.5 h-3.5 shrink-0" />}
+                  Save
                 </Button>
-                <Button variant="outline" onClick={() => handleExportPDF("invoice")} className="gap-2 hover:brightness-125 transition-all h-10 w-full min-w-0 lg:w-auto lg:px-6">
-                  <Download className="w-4 h-4 shrink-0" /> <span className="truncate">Invoice</span>
+                <Button variant="outline" size="sm" onClick={() => handleExportPDF("invoice")} className="gap-1.5 h-9">
+                  <Download className="w-3.5 h-3.5 shrink-0" /> Invoice
                 </Button>
-                <Button variant="outline" onClick={handleCopyProposal} className="gap-2 hover:brightness-125 transition-all h-10 w-full min-w-0 lg:w-auto lg:px-6">
-                  {copied ? <Check className="w-4 h-4 shrink-0" /> : <Copy className="w-4 h-4 shrink-0" />}
-                  <span className="truncate">{copied ? "Copied!" : "Copy"}</span>
+                <Button variant="outline" size="sm" onClick={handleCopyProposal} className="gap-1.5 h-9">
+                  {copied ? <Check className="w-3.5 h-3.5 shrink-0" /> : <Copy className="w-3.5 h-3.5 shrink-0" />}
+                  {copied ? "Copied!" : "Copy"}
                 </Button>
               </div>
             </div>
           </div>
-        </div>
+        </details>
 
         {/* Tabs */}
         <Tabs defaultValue="proposal">
