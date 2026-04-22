@@ -16,32 +16,53 @@ export type Database = {
     Tables: {
       clients: {
         Row: {
+          budget: string | null
           company: string | null
           created_at: string
           email: string | null
+          goals: string | null
           id: string
           is_active: boolean
           name: string
+          phone: string | null
+          project_description: string | null
+          service_requested: string | null
+          status: string
+          timeline: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          budget?: string | null
           company?: string | null
           created_at?: string
           email?: string | null
+          goals?: string | null
           id?: string
           is_active?: boolean
           name: string
+          phone?: string | null
+          project_description?: string | null
+          service_requested?: string | null
+          status?: string
+          timeline?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          budget?: string | null
           company?: string | null
           created_at?: string
           email?: string | null
+          goals?: string | null
           id?: string
           is_active?: boolean
           name?: string
+          phone?: string | null
+          project_description?: string | null
+          service_requested?: string | null
+          status?: string
+          timeline?: string | null
           updated_at?: string
           user_id?: string
         }
