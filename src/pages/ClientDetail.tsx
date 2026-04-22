@@ -245,6 +245,8 @@ export default function ClientDetail() {
           notes: "",
           goals: client.goals || "",
           original_lead_message: client.original_lead_message || "",
+          lead_quality: client.lead_quality || "",
+          ai_recommendation: client.ai_recommendation || "",
           client_id: client.id,
         },
       },
