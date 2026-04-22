@@ -17,6 +17,7 @@ import Templates from "./pages/Templates";
 import RevenueDashboard from "./pages/RevenueDashboard";
 import ProposalsDashboard from "./pages/ProposalsDashboard";
 import Clients from "./pages/Clients";
+import NewClient from "./pages/NewClient";
 import ClientDetail from "./pages/ClientDetail";
 import TimeSavedDashboard from "./pages/TimeSavedDashboard";
 import NotFound from "./pages/NotFound";
@@ -43,6 +44,7 @@ const App = () => (
           <Route path="/dashboard/revenue" element={<AuthGuard><RevenueDashboard /></AuthGuard>} />
           <Route path="/dashboard/proposals" element={<AuthGuard><ProposalsDashboard /></AuthGuard>} />
           <Route path="/dashboard/clients" element={<AuthGuard><Clients /></AuthGuard>} />
+          <Route path="/dashboard/clients/new" element={<AuthGuard><NewClient /></AuthGuard>} />
           <Route path="/dashboard/clients/:id" element={<AuthGuard><ClientDetail /></AuthGuard>} />
           <Route path="/dashboard/time-saved" element={<AuthGuard><TimeSavedDashboard /></AuthGuard>} />
           <Route path="*" element={<NotFound />} />
