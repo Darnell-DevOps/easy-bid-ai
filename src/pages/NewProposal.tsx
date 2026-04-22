@@ -491,22 +491,49 @@ export default function NewProposal() {
               </div>
             </section>
 
-            {/* READINESS GUIDANCE + CTA */}
-            {!loading && (
-              <div className="flex items-start gap-2 rounded-lg border border-border/60 bg-muted/30 p-3">
-                <Info className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-muted-foreground">
-                  {missingFields.length > 0 ? (
-                    <>
-                      <span className="font-medium text-foreground">Missing:</span>{" "}
-                      {missingFields.join(", ")}. Filling these in will improve proposal quality.
-                    </>
-                  ) : (
-                    <span>All key details look good — your proposal is ready to generate.</span>
-                  )}
-                </p>
-              </div>
-            )}
+            {/* READINESS CHECKLIST + CTA */}
+            {!loading && (() => {
+              const checks = [
+                { label: "Service Type", done: !!form.service_type },
+                { label: "Project Scope", done: !!form.project_scope && form.project_scope.length >= 20 },
+                { label: "Timeline", done: !!form.timeline },
+                { label: "Goals", done: !!form.goals },
+              ];
+              const aiReady = checks[0].done && checks[1].done;
+              const allDone = checks.every((c) => c.done);
+              return (
+                <div className={`rounded-xl border p-4 transition-colors ${
+                  allDone ? "border-emerald-500/30 bg-emerald-500/5"
+                  : aiReady ? "border-accent/30 bg-accent/5"
+                  : "border-border/60 bg-muted/30"
+                }`}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Sparkles className={`w-4 h-4 ${aiReady ? "text-accent" : "text-muted-foreground"}`} />
+                    <p className="text-sm font-semibold text-foreground">
+                      {allDone
+                        ? "All key details look great — ready to generate"
+                        : aiReady
+                        ? "Great — AI now has enough to generate a strong proposal"
+                        : "To improve your proposal quality, add the items below"}
+                    </p>
+                  </div>
+                  <ul className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {checks.map((c) => (
+                      <li key={c.label} className="flex items-center gap-2 text-xs">
+                        {c.done ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                        ) : (
+                          <Circle className="w-3.5 h-3.5 text-muted-foreground/60 flex-shrink-0" />
+                        )}
+                        <span className={c.done ? "text-foreground" : "text-muted-foreground"}>
+                          {c.label}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })()}
 
             {loading ? (
               <div className="flex flex-col items-center gap-4 py-6">
@@ -517,27 +544,31 @@ export default function NewProposal() {
                 <Progress value={progress} className="w-full max-w-xs h-2" />
               </div>
             ) : (
-              <div className="flex flex-col-reverse sm:flex-row sm:items-center gap-3 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="lg"
-                  onClick={() => prefilledClientId
-                    ? navigate(`/dashboard/clients/${prefilledClientId}`)
-                    : navigate(-1)}
-                  className="gap-2"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  {prefilledClientId ? "Back to Client" : "Back"}
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={!form.service_type}
-                  className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-90 gap-2 flex-1 sm:flex-initial sm:min-w-[280px] shadow-lg shadow-accent/20 hover:shadow-accent/30"
-                  size="lg"
-                >
-                  <Sparkles className="w-5 h-5" /> Generate Proposal with AI
-                </Button>
+              <div className="pt-4 mt-2 border-t border-border/40">
+                <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="lg"
+                    onClick={() => prefilledClientId
+                      ? navigate(`/dashboard/clients/${prefilledClientId}`)
+                      : navigate(-1)}
+                    className="gap-2 text-muted-foreground hover:text-foreground"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    {prefilledClientId ? "Back to Client" : "Back"}
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={!form.service_type}
+                    className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-90 gap-2 w-full sm:w-auto sm:min-w-[300px] h-12 text-base font-semibold shadow-xl shadow-accent/25 hover:shadow-accent/40 hover:scale-[1.02] transition-all group"
+                    size="lg"
+                  >
+                    <Sparkles className="w-5 h-5" />
+                    Generate Proposal with AI
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  </Button>
+                </div>
               </div>
             )}
           </form>
