@@ -22,6 +22,7 @@ interface FullProposal {
   invoice_content: string | null;
   budget: string;
   client_paid: boolean;
+  status?: string | null;
 }
 
 export default function Dashboard() {
@@ -64,11 +65,29 @@ export default function Dashboard() {
     return { total: proposals.length, revenue, clients: uniqueClients, timeSaved };
   }, [proposals]);
 
-  const guidance = proposals.length === 0
-    ? "Add a client and create your first proposal to start getting paid."
-    : stats.revenue === 0
-    ? "Next step: Send your proposal to your client to get paid."
-    : "Keep going — follow up on open proposals to close more deals.";
+  // Dynamic insight based on real data
+  const insight = useMemo(() => {
+    const drafts = proposals.filter((p) => !p.status || p.status === "draft").length;
+    const acceptedUnpaid = proposals.filter((p) => p.status === "accepted" && !p.client_paid).length;
+    const sent = proposals.filter((p) => p.status === "sent" || p.status === "viewed").length;
+    if (acceptedUnpaid > 0) return `${acceptedUnpaid} proposal${acceptedUnpaid > 1 ? "s" : ""} accepted — request payment now`;
+    if (drafts > 0) return `You have ${drafts} draft proposal${drafts > 1 ? "s" : ""} — send one to get paid`;
+    if (sent > 0) return `${sent} proposal${sent > 1 ? "s" : ""} awaiting client response — follow up to close`;
+    if (proposals.length === 0) return "Create your first proposal to start earning";
+    return "All caught up — create a new proposal to keep momentum";
+  }, [proposals]);
+
+  // Dynamic tip based on user state
+  const tip = useMemo(() => {
+    if (proposals.length === 0) return { title: "Get started", body: "Add your first client, then generate a proposal in under 2 minutes." };
+    const acceptedUnpaid = proposals.filter((p) => p.status === "accepted" && !p.client_paid).length;
+    if (acceptedUnpaid > 0) return { title: "Request payment", body: "A client said yes. Open the proposal and send the payment link to close the deal." };
+    const drafts = proposals.filter((p) => !p.status || p.status === "draft").length;
+    if (drafts > 0) return { title: "Send your draft", body: "Drafts don't get paid. Share your draft proposal with the client today." };
+    const sent = proposals.filter((p) => p.status === "sent" || p.status === "viewed").length;
+    if (sent > 0) return { title: "Follow up", body: "Most deals close after a follow-up. Nudge clients who haven't responded yet." };
+    return { title: "Keep growing", body: "Add more clients to your pipeline and generate proposals to scale revenue." };
+  }, [proposals]);
 
   return (
     <DashboardLayout>
@@ -89,11 +108,8 @@ export default function Dashboard() {
           <div className="lg:col-span-7 xl:col-span-8 space-y-6">
             {/* Hero */}
             <Card className="relative overflow-hidden border-accent/20 bg-gradient-to-br from-accent/10 via-card to-purple/10">
-              <CardContent className="p-8 sm:p-10 space-y-6">
+              <CardContent className="p-7 sm:p-8 space-y-5">
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-accent flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5" /> Start here
-                  </p>
                   <h2 className="text-2xl sm:text-3xl font-bold text-foreground leading-tight">
                     Create a proposal and get paid faster
                   </h2>
@@ -101,21 +117,28 @@ export default function Dashboard() {
                     Turn your next lead into a paying client in minutes.
                   </p>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button
-                    asChild
-                    size="lg"
-                    className="bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 gap-2 h-12 px-6 text-base font-semibold shadow-lg shadow-accent/20"
-                  >
-                    <Link to="/dashboard/new">
-                      <Sparkles className="w-4 h-4" /> Create Proposal <ArrowRight className="w-4 h-4" />
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" size="lg" className="gap-2 h-12 px-5">
-                    <Link to="/dashboard/clients/new">
-                      <UserPlus className="w-4 h-4" /> Add Client
-                    </Link>
-                  </Button>
+                <div className="space-y-2">
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button
+                      asChild
+                      size="lg"
+                      className="bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 gap-2 h-12 px-6 text-base font-semibold shadow-lg shadow-accent/20"
+                    >
+                      <Link to="/dashboard/new">
+                        <Sparkles className="w-4 h-4" /> Create Proposal <ArrowRight className="w-4 h-4" />
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" size="lg" className="gap-2 h-12 px-5">
+                      <Link to="/dashboard/clients/new">
+                        <UserPlus className="w-4 h-4" /> Add Client
+                      </Link>
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground/80 pl-1">Turn this into revenue in minutes.</p>
+                </div>
+                <div className="flex items-start gap-2 pt-1 border-t border-border/40 mt-1 pt-3">
+                  <Sparkles className="w-3.5 h-3.5 text-accent mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-foreground/80 font-medium">{insight}</p>
                 </div>
               </CardContent>
             </Card>
@@ -158,8 +181,8 @@ export default function Dashboard() {
                   <Lightbulb className="w-4 h-4 text-accent" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-foreground">Tip</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{guidance}</p>
+                  <p className="text-sm font-semibold text-foreground">{tip.title}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{tip.body}</p>
                 </div>
               </CardContent>
             </Card>

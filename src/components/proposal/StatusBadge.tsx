@@ -21,14 +21,24 @@ const STATUS_STYLES: Record<ProposalStatus, { label: string; cls: string }> = {
 interface StatusBadgeProps {
   status?: string | null;
   className?: string;
+  paid?: boolean;
+  descriptive?: boolean;
 }
 
-export default function StatusBadge({ status, className }: StatusBadgeProps) {
+export default function StatusBadge({ status, className, paid, descriptive }: StatusBadgeProps) {
   const s = normalizeStatus(status);
   const cfg = STATUS_STYLES[s];
+  let label = cfg.label;
+  if (descriptive) {
+    if (s === "draft") label = "Draft • Not sent";
+    else if (s === "sent") label = "Sent • Awaiting reply";
+    else if (s === "viewed") label = "Viewed • Awaiting reply";
+    else if (s === "accepted") label = paid ? "Accepted • Paid" : "Accepted • Awaiting payment";
+    else if (s === "rejected") label = "Rejected";
+  }
   return (
     <Badge variant="outline" className={cn("font-medium", cfg.cls, className)}>
-      {cfg.label}
+      {label}
     </Badge>
   );
 }
