@@ -170,7 +170,7 @@ export default function ProposalView() {
 
     const previous = proposal;
     setProposal({ ...proposal, ...(updates as Partial<ProposalData>) });
-    const { error } = await supabase.from("proposals").update(updates).eq("id", proposal.id);
+    const { error } = await supabase.from("proposals").update(updates as never).eq("id", proposal.id);
     if (error) {
       setProposal(previous);
       toast({ title: "Status update failed", description: error.message, variant: "destructive" });
