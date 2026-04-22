@@ -256,6 +256,13 @@ export default function ClientDetail() {
     .reduce((acc, p) => acc + (parseFloat(p.budget?.replace(/[^0-9.]/g, "") || "0") || 0), 0);
 
   const invoiceCount = proposals.filter((p) => p.invoice_content).length;
+  const acceptedCount = proposals.filter(
+    (p) => p.status?.toLowerCase() === "accepted" || p.client_paid,
+  ).length;
+  const acceptedUnpaidCount = proposals.filter(
+    (p) => p.status?.toLowerCase() === "accepted" && !p.client_paid,
+  ).length;
+  const hasAcceptedUnpaid = acceptedUnpaidCount > 0;
 
   // Dynamic CTA based on proposal state
   const heroAction = useMemo(() => {
