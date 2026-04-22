@@ -151,7 +151,29 @@ export default function ProposalView() {
     }
   };
 
-  const handleCopyProposal = async () => {
+  const updateStatus = async (next: ProposalStatus) => {
+    if (!proposal) return;
+    const nowIso = new Date().toISOString();
+    const updates: Record<string, any> = { status: next };
+    // Only stamp timestamps if not already set, to preserve the original event time.
+    if (next === "sent" && !proposal.sent_at) updates.sent_at = nowIso;
+    if (next === "viewed" && !proposal.viewed_at) updates.viewed_at = nowIso;
+    if (next === "accepted" && !proposal.accepted_at) updates.accepted_at = nowIso;
+    if (next === "rejected" && !proposal.rejected_at) updates.rejected_at = nowIso;
+
+    const previous = proposal;
+    setProposal({ ...proposal, ...updates });
+    const { error } = await supabase.from("proposals").update(updates).eq("id", proposal.id);
+    if (error) {
+      setProposal(previous);
+      toast({ title: "Status update failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    const labels: Record<ProposalStatus, string> = {
+      draft: "Draft", sent: "Sent", viewed: "Viewed", accepted: "Accepted", rejected: "Rejected",
+    };
+    toast({ title: `Marked as ${labels[next]}` });
+  };
     const fullText = [editedProposal, editedPricing, editedInvoice].filter(Boolean).join("\n\n---\n\n");
     await navigator.clipboard.writeText(fullText);
     setCopied(true);
