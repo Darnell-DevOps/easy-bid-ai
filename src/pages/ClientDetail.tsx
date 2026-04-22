@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -32,6 +32,12 @@ import {
   MessageSquare,
   Gauge,
   Lightbulb,
+  ArrowRight,
+  MoreVertical,
+  Send,
+  Receipt,
+  CreditCard,
+  AlertCircle,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -44,6 +50,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
 
 interface ClientInfo {
@@ -95,6 +108,38 @@ const statusStyle = (s: string) => {
   }
 };
 
+const proposalStatusStyle = (status: string, paid: boolean) => {
+  if (paid) return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+  switch (status?.toLowerCase()) {
+    case "draft":
+      return "bg-muted text-muted-foreground border-border";
+    case "sent":
+      return "bg-blue-500/10 text-blue-400 border-blue-500/20";
+    case "accepted":
+      return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+    case "rejected":
+      return "bg-destructive/10 text-destructive border-destructive/20";
+    default:
+      return "bg-accent/10 text-accent border-accent/20";
+  }
+};
+
+const descriptiveProposalStatus = (status: string, paid: boolean) => {
+  if (paid) return "Paid";
+  switch (status?.toLowerCase()) {
+    case "draft":
+      return "Draft • Not sent";
+    case "sent":
+      return "Sent • Awaiting response";
+    case "accepted":
+      return "Accepted • Awaiting payment";
+    case "rejected":
+      return "Rejected";
+    default:
+      return status;
+  }
+};
+
 export default function ClientDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -104,6 +149,7 @@ export default function ClientDetail() {
   const [editing, setEditing] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [edit, setEdit] = useState<Partial<ClientInfo>>({});
 
   useEffect(() => {
@@ -211,6 +257,67 @@ export default function ClientDetail() {
 
   const invoiceCount = proposals.filter((p) => p.invoice_content).length;
 
+  // Dynamic CTA based on proposal state
+  const heroAction = useMemo(() => {
+    if (!client) return null;
+    const draft = proposals.find((p) => p.status?.toLowerCase() === "draft");
+    const acceptedUnpaid = proposals.find(
+      (p) => p.status?.toLowerCase() === "accepted" && !p.client_paid,
+    );
+    const paid = proposals.find((p) => p.client_paid && p.invoice_content);
+
+    if (paid) {
+      return {
+        label: "View Invoice",
+        Icon: Receipt,
+        onClick: () => navigate(`/dashboard/proposal/${paid.id}`),
+        title: "Deal closed — payment received",
+        subtitle: "View the invoice or download a copy for your records",
+        variant: "success" as const,
+      };
+    }
+    if (acceptedUnpaid) {
+      return {
+        label: "Request Payment",
+        Icon: CreditCard,
+        onClick: () => navigate(`/dashboard/proposal/${acceptedUnpaid.id}`),
+        title: "Proposal accepted — request payment now",
+        subtitle: "Send the invoice and get paid faster",
+        variant: "primary" as const,
+      };
+    }
+    if (draft) {
+      return {
+        label: "Finish & Send Proposal",
+        Icon: Send,
+        onClick: () => navigate(`/dashboard/proposal/${draft.id}`),
+        title: "You have a draft ready to send",
+        subtitle: "Finish and send it to close the deal",
+        variant: "primary" as const,
+      };
+    }
+    return {
+      label: "Generate Proposal → Close Deal",
+      Icon: Sparkles,
+      onClick: generateProposal,
+      title: "Ready to close this client?",
+      subtitle: "Generate and send a proposal in minutes to secure the deal",
+      variant: "primary" as const,
+    };
+  }, [client, proposals]);
+
+  // Detect missing intake details
+  const intakeMissing = useMemo(() => {
+    if (!client) return false;
+    const filled = [
+      client.service_requested,
+      client.budget,
+      client.timeline,
+      client.project_description,
+    ].filter((v) => v && v.toString().trim().length > 0).length;
+    return filled < 2;
+  }, [client]);
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -230,6 +337,8 @@ export default function ClientDetail() {
       </DashboardLayout>
     );
   }
+
+  const isLowQuality = client.lead_quality === "Low";
 
   return (
     <DashboardLayout>
@@ -284,39 +393,63 @@ export default function ClientDetail() {
                 ))}
               </SelectContent>
             </Select>
-            <Badge variant="outline" className={`${statusStyle(client.status)} text-xs`}>
-              {client.status}
-            </Badge>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="h-10 w-10" aria-label="More actions">
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={startEdit} className="gap-2">
+                  <Pencil className="w-3.5 h-3.5" /> Edit details
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setDeleteOpen(true)}
+                  className="gap-2 text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Delete client
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
-        {/* Primary CTA */}
-        <Card className="relative overflow-hidden border-accent/30 bg-gradient-to-br from-accent/10 via-card to-purple/10">
-          <CardContent className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1">
-              {client.lead_quality === "High" && (
-                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-500 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5" /> Recommended next step
-                </p>
-              )}
-              <p className="text-base font-semibold text-foreground">
-                {client.lead_quality === "High"
-                  ? "This client is ready for a proposal"
-                  : "Ready to win this client?"}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Generate a proposal pre-filled with their intake details — send it to get paid.
-              </p>
-            </div>
-            <Button
-              onClick={generateProposal}
-              size="lg"
-              className="bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 gap-2 h-12 px-6 shadow-lg shadow-accent/20"
-            >
-              <Sparkles className="w-4 h-4" /> Generate Proposal
-            </Button>
-          </CardContent>
-        </Card>
+        {/* HERO — Primary CTA */}
+        {heroAction && (
+          <Card
+            className={`relative overflow-hidden ${
+              heroAction.variant === "success"
+                ? "border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-card to-emerald-500/5"
+                : "border-accent/30 bg-gradient-to-br from-accent/15 via-card to-purple/15"
+            }`}
+          >
+            <CardContent className="p-7 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+              <div className="space-y-1.5 max-w-xl">
+                {client.lead_quality === "High" && heroAction.variant === "primary" && (
+                  <p className="text-xs font-semibold uppercase tracking-wider text-emerald-500 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5" /> High-quality lead — act now
+                  </p>
+                )}
+                <h2 className="text-xl sm:text-2xl font-bold text-foreground">
+                  {heroAction.title}
+                </h2>
+                <p className="text-sm text-muted-foreground">{heroAction.subtitle}</p>
+              </div>
+              <Button
+                onClick={heroAction.onClick}
+                size="lg"
+                className={`gap-2 h-14 px-7 text-base font-semibold flex-shrink-0 ${
+                  heroAction.variant === "success"
+                    ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:brightness-110 shadow-lg shadow-emerald-500/25"
+                    : "bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 shadow-lg shadow-accent/30"
+                }`}
+              >
+                <heroAction.Icon className="w-5 h-5" /> {heroAction.label}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
@@ -348,6 +481,70 @@ export default function ClientDetail() {
           </Card>
         </div>
 
+        {/* Proposals list — moved higher */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold text-foreground">Proposals</h2>
+            <Button size="sm" variant="outline" onClick={generateProposal} className="gap-2">
+              <Plus className="w-4 h-4" /> New Proposal
+            </Button>
+          </div>
+
+          {proposals.length === 0 ? (
+            <Card className="border-dashed">
+              <CardContent className="p-8 text-center">
+                <FileText className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+                <p className="text-sm font-medium text-foreground mb-1">No proposals yet</p>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Generate your first proposal to start closing this deal.
+                </p>
+                <Button
+                  onClick={generateProposal}
+                  size="sm"
+                  className="gap-2 bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 shadow-sm shadow-accent/20"
+                >
+                  <Sparkles className="w-3.5 h-3.5" /> Generate Proposal
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {proposals.map((p) => (
+                <Card
+                  key={p.id}
+                  className="group cursor-pointer transition-all duration-200 hover:border-accent/40 hover:shadow-lg hover:shadow-accent/10 hover:-translate-y-0.5"
+                  onClick={() => navigate(`/dashboard/proposal/${p.id}`)}
+                >
+                  <CardContent className="p-5 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
+                        <FileText className="w-5 h-5 text-accent" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-foreground truncate">
+                          {p.service_type}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {new Date(p.created_at).toLocaleDateString()} · {p.budget || "No budget"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      <Badge
+                        variant="outline"
+                        className={`${proposalStatusStyle(p.status, p.client_paid)} text-xs whitespace-nowrap`}
+                      >
+                        {descriptiveProposalStatus(p.status, p.client_paid)}
+                      </Badge>
+                      <ArrowRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-accent group-hover:translate-x-0.5 transition-all" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Lead Summary — only if this client came through the Lead Assistant */}
         {(client.original_lead_message || client.lead_quality || client.ai_recommendation || client.lead_source) && (
           <Card className="glass-card border-accent/20">
@@ -363,6 +560,31 @@ export default function ClientDetail() {
                 )}
               </div>
               <div className="h-px bg-border" />
+
+              {/* Low-quality lead CTA */}
+              {isLowQuality && (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">
+                        This lead looks low quality
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Add more details or qualify the lead before sending a proposal.
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={startEdit}
+                    className="gap-2 flex-shrink-0 border-amber-500/40 text-amber-600 hover:bg-amber-500/10"
+                  >
+                    <Pencil className="w-3.5 h-3.5" /> Qualify this lead
+                  </Button>
+                </div>
+              )}
 
               {client.original_lead_message && (
                 <div className="space-y-2">
@@ -519,6 +741,23 @@ export default function ClientDetail() {
                   />
                 </div>
               </div>
+            ) : intakeMissing ? (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-dashed border-border bg-muted/20 p-5">
+                <div className="flex items-start gap-3">
+                  <Lightbulb className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      Add project details to improve proposal quality
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      The more we know about scope, budget, and timeline, the stronger the proposal.
+                    </p>
+                  </div>
+                </div>
+                <Button size="sm" onClick={startEdit} className="gap-2 flex-shrink-0">
+                  <Pencil className="w-3.5 h-3.5" /> Edit Details
+                </Button>
+              </div>
             ) : (
               <div className="space-y-5 text-sm">
                 <DetailRow label="Service Requested" value={client.service_requested} />
@@ -535,93 +774,28 @@ export default function ClientDetail() {
           </CardContent>
         </Card>
 
-        {/* Proposals list */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold text-foreground">Proposals</h2>
-            <Button size="sm" variant="outline" onClick={generateProposal} className="gap-2">
-              <Plus className="w-4 h-4" /> New Proposal
-            </Button>
-          </div>
-
-          {proposals.length === 0 ? (
-            <Card>
-              <CardContent className="p-6 text-center text-muted-foreground text-sm">
-                No proposals yet for this client.
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-2">
-              {proposals.map((p) => (
-                <Card
-                  key={p.id}
-                  className="hover:border-accent/20 transition-colors cursor-pointer"
-                  onClick={() => navigate(`/dashboard/proposal/${p.id}`)}
-                >
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{p.service_type}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(p.created_at).toLocaleDateString()} · {p.budget}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {p.client_paid && (
-                        <Badge
-                          variant="outline"
-                          className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-xs"
-                        >
-                          Paid
-                        </Badge>
-                      )}
-                      <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 text-xs">
-                        {p.status}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Danger zone */}
-        <Card className="border-destructive/20">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-foreground">Delete client</p>
-              <p className="text-xs text-muted-foreground">
-                Permanently removes this client and all their proposals.
-              </p>
-            </div>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm" className="gap-2">
-                  <Trash2 className="w-4 h-4" /> Delete
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete {client.name}?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will permanently delete this client and all associated proposals
-                    and invoices. This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={deleteClient}
-                    disabled={deleting}
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  >
-                    {deleting ? "Deleting…" : "Delete permanently"}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </CardContent>
-        </Card>
+        {/* Delete confirmation (triggered from dropdown menu in header) */}
+        <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete {client.name}?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete this client and all associated proposals
+                and invoices. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={deleteClient}
+                disabled={deleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleting ? "Deleting…" : "Delete permanently"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );
