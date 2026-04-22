@@ -230,6 +230,8 @@ export default function Clients() {
                       <TableHead className="hidden lg:table-cell">Service</TableHead>
                       <TableHead className="hidden lg:table-cell">Budget</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead className="hidden md:table-cell">Lead Quality</TableHead>
+                      <TableHead className="hidden xl:table-cell">Source</TableHead>
                       <TableHead className="hidden md:table-cell">Created</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
