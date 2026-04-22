@@ -640,9 +640,23 @@ export default function ProposalView() {
           return (
             <div className="rounded-xl border border-border bg-card p-4 sm:p-5 mb-6 overflow-hidden">
               <div className="flex flex-col gap-4 mb-4">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <h3 className="text-sm font-semibold text-foreground">Proposal Status</h3>
-                  <StatusBadge status={currentStatus} />
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <h3 className="text-sm font-semibold text-foreground">Proposal Status</h3>
+                    <StatusBadge status={currentStatus} />
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      const url = `${window.location.origin}/proposal/view/${proposal.id}`;
+                      await navigator.clipboard.writeText(url);
+                      toast({ title: "Client link copied", description: "Share this link with your client." });
+                    }}
+                    className="gap-1.5 h-9 text-xs"
+                  >
+                    <Copy className="w-3 h-3 shrink-0" /> <span className="truncate">Copy Client Link</span>
+                  </Button>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full">
                   <Button
