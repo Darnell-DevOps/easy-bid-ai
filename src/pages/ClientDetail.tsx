@@ -281,8 +281,8 @@ export default function ClientDetail() {
         label: "Request Payment",
         Icon: CreditCard,
         onClick: () => navigate(`/dashboard/proposal/${acceptedUnpaid.id}`),
-        title: "Proposal accepted — request payment now",
-        subtitle: "Send the invoice and get paid faster",
+        title: "Proposal accepted — get paid now",
+        subtitle: "Send the invoice and collect payment in minutes",
         variant: "primary" as const,
       };
     }
