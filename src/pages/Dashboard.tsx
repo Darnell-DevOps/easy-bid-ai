@@ -84,12 +84,12 @@ export default function Dashboard() {
 
         <OnboardingHighlight />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-          {/* LEFT: Hero + Saved Proposals */}
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+          {/* LEFT: Hero + Saved Proposals (~62%) */}
+          <div className="lg:col-span-7 xl:col-span-8 space-y-6">
             {/* Hero */}
             <Card className="relative overflow-hidden border-accent/20 bg-gradient-to-br from-accent/10 via-card to-purple/10">
-              <CardContent className="p-6 sm:p-8 space-y-5">
+              <CardContent className="p-8 sm:p-10 space-y-6">
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wider text-accent flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5" /> Start here
@@ -137,10 +137,10 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* RIGHT: Side panel */}
-          <aside className="space-y-6">
+          {/* RIGHT: Unified side panel (~38%) */}
+          <aside className="lg:col-span-5 xl:col-span-4 lg:border-l lg:border-border/50 lg:pl-6 xl:pl-8 space-y-6">
             <div>
-              <h2 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wider text-muted-foreground/80">
+              <h2 className="text-sm font-semibold mb-3 uppercase tracking-wider text-muted-foreground/80">
                 Overview
               </h2>
               <StatsCards
@@ -165,7 +165,7 @@ export default function Dashboard() {
             </Card>
 
             <div>
-              <h2 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wider text-muted-foreground/80">
+              <h2 className="text-sm font-semibold mb-3 uppercase tracking-wider text-muted-foreground/80">
                 Recent Activity
               </h2>
               <RecentActivity proposals={proposals} />
