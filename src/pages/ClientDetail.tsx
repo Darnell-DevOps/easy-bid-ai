@@ -461,28 +461,32 @@ export default function ClientDetail() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
           <Card>
-            <CardContent className="p-4 text-center">
+            <CardContent className="p-3.5 text-center">
               <FileText className="w-5 h-5 text-accent mx-auto mb-1" />
-              <p className="text-2xl font-bold text-foreground">{proposals.length}</p>
-              <p className="text-xs text-muted-foreground">Proposals</p>
+              <p className="text-2xl font-bold text-foreground leading-tight">{proposals.length}</p>
+              <p className="text-xs text-muted-foreground">
+                Proposals{acceptedCount > 0 && ` (${acceptedCount} accepted)`}
+              </p>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4 text-center">
+            <CardContent className="p-3.5 text-center">
               <DollarSign className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-2xl font-bold text-foreground leading-tight">
                 $
                 {totalRevenue >= 1000
                   ? `${(totalRevenue / 1000).toFixed(1)}k`
                   : totalRevenue.toLocaleString()}
               </p>
-              <p className="text-xs text-muted-foreground">Revenue</p>
+              <p className="text-xs text-muted-foreground">
+                {hasAcceptedUnpaid ? "Revenue · collect payment" : "Revenue collected"}
+              </p>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4 text-center">
+            <CardContent className="p-3.5 text-center">
               <FileText className="w-5 h-5 text-amber-400 mx-auto mb-1" />
-              <p className="text-2xl font-bold text-foreground">{invoiceCount}</p>
+              <p className="text-2xl font-bold text-foreground leading-tight">{invoiceCount}</p>
               <p className="text-xs text-muted-foreground">Invoices</p>
             </CardContent>
           </Card>
@@ -492,7 +496,7 @@ export default function ClientDetail() {
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-semibold text-foreground">Proposals</h2>
-            <Button size="sm" variant="outline" onClick={generateProposal} className="gap-2">
+            <Button size="sm" variant="ghost" onClick={generateProposal} className="gap-2 text-muted-foreground hover:text-foreground">
               <Plus className="w-4 h-4" /> New Proposal
             </Button>
           </div>
