@@ -25,6 +25,7 @@ import Policies from "./pages/Policies";
 import NewPolicy from "./pages/NewPolicy";
 import PolicyView from "./pages/PolicyView";
 import ClientPortal from "./pages/ClientPortal";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
@@ -43,6 +44,7 @@ const App = () => (
           <Route path="/signup" element={<Signup />} />
           <Route path="/sample" element={<SampleProposal />} />
           <Route path="/proposal/view/:id" element={<ClientPortal />} />
+          <Route path="/onboarding" element={<AuthGuard><Onboarding /></AuthGuard>} />
           <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
           <Route path="/dashboard/new" element={<AuthGuard><NewProposal /></AuthGuard>} />
           <Route path="/dashboard/proposal/:id" element={<AuthGuard><ProposalView /></AuthGuard>} />
