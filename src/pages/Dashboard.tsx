@@ -22,6 +22,7 @@ interface FullProposal {
   invoice_content: string | null;
   budget: string;
   client_paid: boolean;
+  status?: string | null;
 }
 
 export default function Dashboard() {
@@ -64,11 +65,29 @@ export default function Dashboard() {
     return { total: proposals.length, revenue, clients: uniqueClients, timeSaved };
   }, [proposals]);
 
-  const guidance = proposals.length === 0
-    ? "Add a client and create your first proposal to start getting paid."
-    : stats.revenue === 0
-    ? "Next step: Send your proposal to your client to get paid."
-    : "Keep going — follow up on open proposals to close more deals.";
+  // Dynamic insight based on real data
+  const insight = useMemo(() => {
+    const drafts = proposals.filter((p) => !p.status || p.status === "draft").length;
+    const acceptedUnpaid = proposals.filter((p) => p.status === "accepted" && !p.client_paid).length;
+    const sent = proposals.filter((p) => p.status === "sent" || p.status === "viewed").length;
+    if (acceptedUnpaid > 0) return `${acceptedUnpaid} proposal${acceptedUnpaid > 1 ? "s" : ""} accepted — request payment now`;
+    if (drafts > 0) return `You have ${drafts} draft proposal${drafts > 1 ? "s" : ""} — send one to get paid`;
+    if (sent > 0) return `${sent} proposal${sent > 1 ? "s" : ""} awaiting client response — follow up to close`;
+    if (proposals.length === 0) return "Create your first proposal to start earning";
+    return "All caught up — create a new proposal to keep momentum";
+  }, [proposals]);
+
+  // Dynamic tip based on user state
+  const tip = useMemo(() => {
+    if (proposals.length === 0) return { title: "Get started", body: "Add your first client, then generate a proposal in under 2 minutes." };
+    const acceptedUnpaid = proposals.filter((p) => p.status === "accepted" && !p.client_paid).length;
+    if (acceptedUnpaid > 0) return { title: "Request payment", body: "A client said yes. Open the proposal and send the payment link to close the deal." };
+    const drafts = proposals.filter((p) => !p.status || p.status === "draft").length;
+    if (drafts > 0) return { title: "Send your draft", body: "Drafts don't get paid. Share your draft proposal with the client today." };
+    const sent = proposals.filter((p) => p.status === "sent" || p.status === "viewed").length;
+    if (sent > 0) return { title: "Follow up", body: "Most deals close after a follow-up. Nudge clients who haven't responded yet." };
+    return { title: "Keep growing", body: "Add more clients to your pipeline and generate proposals to scale revenue." };
+  }, [proposals]);
 
   return (
     <DashboardLayout>
