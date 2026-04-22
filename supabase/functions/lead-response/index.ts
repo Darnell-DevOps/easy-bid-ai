@@ -117,13 +117,6 @@ ${message}
         tool_choice: { type: "function", function: { name: "draft_lead_reply" } },
       }),
     });
-              },
-            },
-          },
-        ],
-        tool_choice: { type: "function", function: { name: "draft_lead_reply" } },
-      }),
-    });
 
     if (response.status === 429) {
       return new Response(JSON.stringify({ error: "Rate limit reached. Please try again in a moment." }), {
