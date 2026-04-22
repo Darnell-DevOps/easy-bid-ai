@@ -599,30 +599,33 @@ export default function NewProposal() {
                       <FieldStatusIcon field="budget" value={form.budget} />
                     </div>
                   </div>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {BUDGET_PRESETS.map((p) => (
-                      <button
-                        key={p}
-                        type="button"
-                        onClick={() => { update("budget", String(p)); markTouched("budget"); }}
-                        className={`text-xs px-3 py-1.5 rounded-md border transition-colors ${
-                          form.budget === String(p)
-                            ? "border-accent/50 bg-accent/10 text-accent"
-                            : "border-border/60 text-muted-foreground hover:border-accent/40 hover:text-foreground"
-                        }`}
-                      >
-                        {getCurrency(currency).symbol}{p.toLocaleString(getCurrency(currency).locale)}
-                      </button>
-                    ))}
+                  <div className="flex flex-wrap gap-2.5 mt-3">
+                    {BUDGET_PRESETS.map((p) => {
+                      const selected = form.budget === String(p);
+                      return (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => { update("budget", String(p)); markTouched("budget"); }}
+                          className={`text-xs px-3 py-1.5 rounded-md border transition-all ${
+                            selected
+                              ? "border-accent bg-accent/15 text-accent shadow-sm shadow-accent/20 ring-1 ring-accent/30"
+                              : "border-border/60 text-muted-foreground hover:border-accent/50 hover:bg-accent/5 hover:text-foreground hover:-translate-y-0.5"
+                          }`}
+                        >
+                          {getCurrency(currency).symbol}{p.toLocaleString(getCurrency(currency).locale)}
+                        </button>
+                      );
+                    })}
                     <button
                       type="button"
                       onClick={() => { update("budget", ""); markTouched("budget"); setTimeout(() => budgetInputRef.current?.focus(), 0); }}
-                      className="text-xs px-3 py-1.5 rounded-md border border-dashed border-border/60 text-muted-foreground hover:border-accent/40 hover:text-foreground transition-colors"
+                      className="text-xs px-3 py-1.5 rounded-md border border-dashed border-border/60 text-muted-foreground hover:border-accent/50 hover:bg-accent/5 hover:text-foreground hover:-translate-y-0.5 transition-all"
                     >
                       + Custom
                     </button>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1.5">
+                  <p className="text-[11px] text-muted-foreground/70 mt-2">
                     Typical projects: {getCurrency(currency).symbol}1,000–{getCurrency(currency).symbol}10,000
                   </p>
                   <FieldError field="budget" />
@@ -656,7 +659,7 @@ export default function NewProposal() {
                       value={form.project_scope}
                       onChange={(e) => update("project_scope", e.target.value)}
                       onBlur={() => markTouched("project_scope")}
-                      placeholder="Describe the project and what the client needs"
+                      placeholder="e.g. Build a 5-page website for a fitness brand to increase online leads"
                       required
                       rows={4}
                       className={`pl-10 ${inputStateClass("project_scope", form.project_scope)}`}
@@ -701,83 +704,47 @@ export default function NewProposal() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => { setTimelineCustom(true); setTimelineCustomText(form.timeline); }}
-                        className="text-xs text-muted-foreground"
-                      >
-                        Custom
-                      </Button>
                     </div>
                   ) : null}
 
                   {/* Optional additional duration */}
-                  {!timelineCustom && (
-                    <div className="mt-3">
-                      <label className="flex items-center gap-2 cursor-pointer select-none">
-                        <Switch
-                          checked={extraTimelineEnabled}
-                          onCheckedChange={(v) => setExtraTimelineEnabled(!!v)}
-                        />
-                        <span className="text-xs text-muted-foreground">Add additional time unit</span>
-                      </label>
-                      {extraTimelineEnabled && (
-                        <div className="flex gap-2 mt-2">
-                          <div className="relative flex-1">
-                            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <Input
-                              type="text"
-                              inputMode="numeric"
-                              value={extraTimelineQty}
-                              onChange={(e) => setExtraTimelineQty(e.target.value.replace(/[^0-9]/g, "").slice(0, 3))}
-                              placeholder="e.g. 2"
-                              className="pl-10"
-                            />
-                          </div>
-                          <Select
-                            value={extraTimelineUnit}
-                            onValueChange={(v) => setExtraTimelineUnit(v as TimelineUnit)}
-                          >
-                            <SelectTrigger className="w-[130px]">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {TIMELINE_UNITS.map((u) => (
-                                <SelectItem key={u} value={u}>{u}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                  <div className="mt-3">
+                    <button
+                      type="button"
+                      onClick={() => setExtraTimelineEnabled((v) => !v)}
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
+                    >
+                      {extraTimelineEnabled ? "− Remove additional time unit" : "+ Add additional time unit"}
+                    </button>
+                    {extraTimelineEnabled && (
+                      <div className="flex gap-2 mt-2">
+                        <div className="relative flex-1">
+                          <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            type="text"
+                            inputMode="numeric"
+                            value={extraTimelineQty}
+                            onChange={(e) => setExtraTimelineQty(e.target.value.replace(/[^0-9]/g, "").slice(0, 3))}
+                            placeholder="e.g. 2"
+                            className="pl-10"
+                          />
                         </div>
-                      )}
-                    </div>
-                  )}
-
-                  {timelineCustom && (
-                    <div className="flex gap-2 mt-2">
-                      <div className="relative flex-1">
-                        <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                          id="timeline"
-                          value={timelineCustomText}
-                          onChange={(e) => setTimelineCustomText(e.target.value)}
-                          onBlur={() => markTouched("timeline")}
-                          placeholder="e.g. 6–8 weeks, by end of Q2"
-                          className={`pl-10 ${inputStateClass("timeline", form.timeline)}`}
-                        />
+                        <Select
+                          value={extraTimelineUnit}
+                          onValueChange={(v) => setExtraTimelineUnit(v as TimelineUnit)}
+                        >
+                          <SelectTrigger className="w-[130px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {TIMELINE_UNITS.map((u) => (
+                              <SelectItem key={u} value={u}>{u}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => { setTimelineCustom(false); setTimelineCustomText(""); }}
-                        className="text-xs text-muted-foreground"
-                      >
-                        Use preset
-                      </Button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                   <FieldError field="timeline" />
                 </div>
 
@@ -877,17 +844,22 @@ export default function NewProposal() {
                         : "To improve your proposal quality, add the items below"}
                     </p>
                   </div>
-                  <ul className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {checks.map((c) => (
-                      <li key={c.label} className="flex items-center gap-2 text-xs">
+                      <li
+                        key={c.label}
+                        className={`flex items-center gap-2 text-xs px-2.5 py-1.5 rounded-md border transition-colors ${
+                          c.done
+                            ? "border-emerald-500/30 bg-emerald-500/5 text-foreground"
+                            : "border-border/50 bg-background/40 text-muted-foreground"
+                        }`}
+                      >
                         {c.done ? (
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                         ) : (
-                          <Circle className="w-3.5 h-3.5 text-muted-foreground/60 flex-shrink-0" />
+                          <Circle className="w-4 h-4 text-muted-foreground/50 flex-shrink-0" />
                         )}
-                        <span className={c.done ? "text-foreground" : "text-muted-foreground"}>
-                          {c.label}
-                        </span>
+                        <span className="font-medium">{c.label}</span>
                       </li>
                     ))}
                   </ul>
@@ -904,7 +876,10 @@ export default function NewProposal() {
                 <Progress value={progress} className="w-full max-w-xs h-2" />
               </div>
             ) : (
-              <div className="pt-4 mt-2 border-t border-border/40">
+              <div className="pt-8 mt-4 border-t border-border/40">
+                <p className="text-xs text-muted-foreground text-center sm:text-right mb-3">
+                  AI will generate a polished, client-ready proposal instantly.
+                </p>
                 <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3">
                   <Button
                     type="button"
@@ -913,7 +888,7 @@ export default function NewProposal() {
                     onClick={() => prefilledClientId
                       ? navigate(`/dashboard/clients/${prefilledClientId}`)
                       : navigate(-1)}
-                    className="gap-2 text-muted-foreground hover:text-foreground"
+                    className="gap-2 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <ArrowLeft className="w-4 h-4" />
                     {prefilledClientId ? "Back to Client" : "Back"}
@@ -925,10 +900,10 @@ export default function NewProposal() {
                           <Button
                             type="submit"
                             disabled={!isValid}
-                            className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-90 gap-2 w-full sm:w-auto sm:min-w-[300px] h-12 text-base font-semibold shadow-xl shadow-accent/25 hover:shadow-accent/40 hover:scale-[1.02] transition-all group"
+                            className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-95 gap-2 w-full sm:w-auto sm:min-w-[300px] h-12 text-base font-semibold shadow-xl shadow-accent/30 hover:shadow-2xl hover:shadow-accent/50 hover:-translate-y-0.5 hover:scale-[1.02] active:scale-[0.99] transition-all duration-200 group"
                             size="lg"
                           >
-                            <Sparkles className="w-5 h-5" />
+                            <Sparkles className="w-5 h-5 transition-transform group-hover:rotate-12" />
                             Generate Proposal with AI
                             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                           </Button>
