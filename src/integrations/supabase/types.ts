@@ -133,6 +133,7 @@ export type Database = {
       }
       proposals: {
         Row: {
+          accepted_at: string | null
           budget: string
           client_id: string | null
           client_name: string
@@ -145,13 +146,17 @@ export type Database = {
           pricing_breakdown: string | null
           project_scope: string
           proposal_content: string | null
+          rejected_at: string | null
+          sent_at: string | null
           service_type: string
           status: string
           timeline: string
           updated_at: string
           user_id: string
+          viewed_at: string | null
         }
         Insert: {
+          accepted_at?: string | null
           budget?: string
           client_id?: string | null
           client_name: string
@@ -164,13 +169,17 @@ export type Database = {
           pricing_breakdown?: string | null
           project_scope?: string
           proposal_content?: string | null
+          rejected_at?: string | null
+          sent_at?: string | null
           service_type: string
           status?: string
           timeline?: string
           updated_at?: string
           user_id: string
+          viewed_at?: string | null
         }
         Update: {
+          accepted_at?: string | null
           budget?: string
           client_id?: string | null
           client_name?: string
@@ -183,11 +192,14 @@ export type Database = {
           pricing_breakdown?: string | null
           project_scope?: string
           proposal_content?: string | null
+          rejected_at?: string | null
+          sent_at?: string | null
           service_type?: string
           status?: string
           timeline?: string
           updated_at?: string
           user_id?: string
+          viewed_at?: string | null
         }
         Relationships: [
           {

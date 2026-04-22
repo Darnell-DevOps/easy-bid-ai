@@ -9,11 +9,12 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Save, Loader2, Pencil, Eye, Copy, Check, DollarSign, Sparkles, RefreshCw, Wand2, Zap } from "lucide-react";
+import { Download, Save, Loader2, Pencil, Eye, Copy, Check, DollarSign, Sparkles, RefreshCw, Wand2, Zap, Send, XCircle, CheckCircle2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import ReactMarkdown from "react-markdown";
 import PremiumProposalRenderer from "@/components/proposal/PremiumProposalRenderer";
 import ProposalHeader from "@/components/proposal/ProposalHeader";
+import StatusBadge, { normalizeStatus, type ProposalStatus } from "@/components/proposal/StatusBadge";
 
 interface ProposalData {
   id: string;
@@ -30,6 +31,11 @@ interface ProposalData {
   timeline: string;
   notes: string | null;
   client_id: string | null;
+  status: string | null;
+  sent_at: string | null;
+  viewed_at: string | null;
+  accepted_at: string | null;
+  rejected_at: string | null;
 }
 
 const SECTION_HEADINGS = [
@@ -143,6 +149,30 @@ export default function ProposalView() {
     } finally {
       setRegenerating(null);
     }
+  };
+
+  const updateStatus = async (next: ProposalStatus) => {
+    if (!proposal) return;
+    const nowIso = new Date().toISOString();
+    const updates: { status: string; sent_at?: string; viewed_at?: string; accepted_at?: string; rejected_at?: string } = { status: next };
+    // Only stamp timestamps if not already set, to preserve the original event time.
+    if (next === "sent" && !proposal.sent_at) updates.sent_at = nowIso;
+    if (next === "viewed" && !proposal.viewed_at) updates.viewed_at = nowIso;
+    if (next === "accepted" && !proposal.accepted_at) updates.accepted_at = nowIso;
+    if (next === "rejected" && !proposal.rejected_at) updates.rejected_at = nowIso;
+
+    const previous = proposal;
+    setProposal({ ...proposal, ...updates });
+    const { error } = await supabase.from("proposals").update(updates).eq("id", proposal.id);
+    if (error) {
+      setProposal(previous);
+      toast({ title: "Status update failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    const labels: Record<ProposalStatus, string> = {
+      draft: "Draft", sent: "Sent", viewed: "Viewed", accepted: "Accepted", rejected: "Rejected",
+    };
+    toast({ title: `Marked as ${labels[next]}` });
   };
 
   const handleCopyProposal = async () => {
@@ -588,6 +618,71 @@ export default function ProposalView() {
             </div>
           </div>
         </div>
+
+        {/* Proposal Status */}
+        {(() => {
+          const currentStatus = normalizeStatus(proposal.status);
+          const fmt = (iso: string | null) =>
+            iso ? new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "—";
+          const stages: { key: ProposalStatus; label: string; at: string | null }[] = [
+            { key: "sent",     label: "Sent",     at: proposal.sent_at },
+            { key: "viewed",   label: "Viewed",   at: proposal.viewed_at },
+            { key: "accepted", label: "Accepted", at: proposal.accepted_at },
+            { key: "rejected", label: "Rejected", at: proposal.rejected_at },
+          ];
+          return (
+            <div className="rounded-xl border border-border bg-card p-5 mb-6">
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-sm font-semibold text-foreground">Proposal Status</h3>
+                  <StatusBadge status={currentStatus} />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant={currentStatus === "sent" ? "default" : "outline"}
+                    onClick={() => updateStatus("sent")}
+                    className="gap-2 h-8 text-xs"
+                  >
+                    <Send className="w-3 h-3" /> Mark as Sent
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={currentStatus === "viewed" ? "default" : "outline"}
+                    onClick={() => updateStatus("viewed")}
+                    className="gap-2 h-8 text-xs"
+                  >
+                    <Eye className="w-3 h-3" /> Mark as Viewed
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => updateStatus("accepted")}
+                    className="gap-2 h-8 text-xs border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-500"
+                  >
+                    <CheckCircle2 className="w-3 h-3" /> Accepted
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => updateStatus("rejected")}
+                    className="gap-2 h-8 text-xs border-rose-500/30 text-rose-500 hover:bg-rose-500/10 hover:text-rose-500"
+                  >
+                    <XCircle className="w-3 h-3" /> Rejected
+                  </Button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                {stages.map((s) => (
+                  <div key={s.key} className="rounded-lg border border-border bg-background/40 p-3">
+                    <p className="text-muted-foreground uppercase tracking-wide text-[10px] font-semibold">{s.label}</p>
+                    <p className={`mt-1 ${s.at ? "text-foreground" : "text-muted-foreground"}`}>{fmt(s.at)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Action bar */}
         <div className="rounded-xl border border-border bg-card p-5 mb-8">
