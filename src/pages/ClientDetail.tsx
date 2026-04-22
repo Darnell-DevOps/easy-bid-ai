@@ -349,7 +349,7 @@ export default function ClientDetail() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-5">
         <button
           onClick={() => navigate("/dashboard/clients")}
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
