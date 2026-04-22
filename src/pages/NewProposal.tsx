@@ -277,20 +277,22 @@ export default function NewProposal() {
       )}
 
       {savedClients.length > 0 && !prefilledClientId && (
-        <Card className="mb-6 border-accent/20 bg-accent/5">
-          <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
-                <Users className="w-4 h-4 text-accent" />
+        <Card className="mb-6 border-accent/30 bg-gradient-to-br from-accent/10 via-accent/5 to-transparent shadow-lg shadow-accent/5">
+          <CardContent className="p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent to-purple flex items-center justify-center flex-shrink-0 shadow-md shadow-accent/30">
+                <Wand2 className="w-5 h-5 text-accent-foreground" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-foreground">Generate from a saved client</p>
-                <p className="text-xs text-muted-foreground">Skip the typing — prefill with their saved details.</p>
+                <p className="text-base font-semibold text-foreground">Generate from existing client</p>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Instantly pre-fill this proposal using saved client details.
+                </p>
               </div>
             </div>
             <Select onValueChange={handleGenerateFromClient}>
-              <SelectTrigger className="w-full sm:w-[240px]">
-                <SelectValue placeholder="Choose a client…" />
+              <SelectTrigger className="w-full md:w-[260px] bg-background border-accent/30 hover:border-accent/50 transition-colors">
+                <SelectValue placeholder="Select Client" />
               </SelectTrigger>
               <SelectContent>
                 {savedClients.map((c) => (
