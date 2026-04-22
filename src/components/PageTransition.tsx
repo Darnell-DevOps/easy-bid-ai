@@ -1,39 +1,37 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 
 /**
- * Wraps route content and replays a subtle fade/slide animation on each
- * pathname change, plus a thin top progress bar for a premium feel.
+ * Wraps route content and replays a smooth fade-in on each pathname change.
+ * A thin top progress bar briefly appears on navigation for a premium feel.
  */
 export function PageTransition({ children }: { children: React.ReactNode }) {
   const location = useLocation();
-  const [displayKey, setDisplayKey] = useState(location.pathname);
   const [loading, setLoading] = useState(false);
+  const firstRender = useRef(true);
 
   useEffect(() => {
-    if (location.pathname === displayKey) return;
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
     setLoading(true);
-    // Brief delay so the bar is perceptible even on instant navigations
-    const t = setTimeout(() => {
-      setDisplayKey(location.pathname);
-      setLoading(false);
-    }, 180);
+    const t = setTimeout(() => setLoading(false), 400);
     return () => clearTimeout(t);
-  }, [location.pathname, displayKey]);
+  }, [location.pathname]);
 
   return (
     <>
-      {/* Top progress bar */}
       <div
         aria-hidden
-        className={`fixed top-0 left-0 right-0 z-[100] h-0.5 overflow-hidden pointer-events-none transition-opacity duration-200 ${
+        className={`fixed top-0 left-0 right-0 z-[100] h-0.5 overflow-hidden pointer-events-none transition-opacity duration-300 ${
           loading ? "opacity-100" : "opacity-0"
         }`}
       >
         <div className="h-full w-full bg-accent/80 origin-left animate-progress-indeterminate" />
       </div>
 
-      <div key={displayKey} className="animate-page-in">
+      <div key={location.pathname} className="animate-page-in">
         {children}
       </div>
     </>
