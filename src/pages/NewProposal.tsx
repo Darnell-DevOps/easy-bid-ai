@@ -809,7 +809,7 @@ export default function NewProposal() {
                   </Button>
                   <Button
                     type="submit"
-                    disabled={!form.service_type}
+                    disabled={!isValid}
                     className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-90 gap-2 w-full sm:w-auto sm:min-w-[300px] h-12 text-base font-semibold shadow-xl shadow-accent/25 hover:shadow-accent/40 hover:scale-[1.02] transition-all group"
                     size="lg"
                   >
