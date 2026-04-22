@@ -214,11 +214,28 @@ export default function NewProposal() {
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Final validation gate — mark all touched so errors render
+    if (!isValid) {
+      setTouched({
+        client_name: true, company_name: true, service_type: true,
+        budget: true, timeline: true, project_scope: true, goals: true, deliverables: true,
+      });
+      toast({
+        title: "Check the highlighted fields",
+        description: "A few details need fixing before we can generate your proposal.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
+
+    const payload = { ...form, budget: formatBudget(form.budget) };
 
     try {
       const { data: aiData, error: aiError } = await supabase.functions.invoke("generate-proposal", {
-        body: { ...form, original_lead_message: originalLeadMessage },
+        body: { ...payload, original_lead_message: originalLeadMessage },
       });
 
       if (aiError) throw aiError;
@@ -252,13 +269,13 @@ export default function NewProposal() {
         .from("proposals")
         .insert({
           user_id: user.id,
-          client_name: form.client_name,
-          company_name: form.company_name,
-          service_type: form.service_type,
-          project_scope: form.project_scope,
-          budget: form.budget,
-          timeline: form.timeline,
-          notes: form.notes,
+          client_name: payload.client_name,
+          company_name: payload.company_name,
+          service_type: payload.service_type,
+          project_scope: payload.project_scope,
+          budget: payload.budget,
+          timeline: payload.timeline,
+          notes: payload.notes,
           proposal_content: aiData.proposal,
           pricing_breakdown: aiData.pricing,
           invoice_content: aiData.invoice,
