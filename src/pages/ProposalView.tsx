@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Save, Loader2, Pencil, Eye, Copy, Check, DollarSign, Sparkles, RefreshCw, Wand2, Zap, Send, XCircle, CheckCircle2 } from "lucide-react";
+import { Download, Save, Loader2, Pencil, Eye, Copy, Check, DollarSign, Sparkles, RefreshCw, Wand2, Zap, Send, XCircle, CheckCircle2, Mail, ExternalLink, AlertTriangle, Banknote, FileText, Circle } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import ReactMarkdown from "react-markdown";
 import PremiumProposalRenderer from "@/components/proposal/PremiumProposalRenderer";
@@ -95,6 +95,8 @@ export default function ProposalView() {
   const [editedInvoice, setEditedInvoice] = useState("");
   const [copied, setCopied] = useState(false);
   const [clientPaid, setClientPaid] = useState(false);
+  const [clientEmail, setClientEmail] = useState<string | null>(null);
+  const [autoFillingPrice, setAutoFillingPrice] = useState(false);
 
   const buildSourcePayload = () => {
     if (!proposal) return null;
