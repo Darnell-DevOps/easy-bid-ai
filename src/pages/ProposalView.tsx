@@ -9,7 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Save, Loader2, Pencil, Eye, Copy, Check, DollarSign } from "lucide-react";
+import { Download, Save, Loader2, Pencil, Eye, Copy, Check, DollarSign, Sparkles, RefreshCw, Wand2, Zap } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import ReactMarkdown from "react-markdown";
 import PremiumProposalRenderer from "@/components/proposal/PremiumProposalRenderer";
 import ProposalHeader from "@/components/proposal/ProposalHeader";
@@ -25,6 +26,34 @@ interface ProposalData {
   created_at: string;
   client_paid: boolean;
   budget: string;
+  project_scope: string;
+  timeline: string;
+  notes: string | null;
+  client_id: string | null;
+}
+
+const SECTION_HEADINGS = [
+  "Introduction",
+  "Understanding of Your Needs",
+  "Proposed Solution",
+  "Scope of Work",
+  "Deliverables",
+  "Timeline",
+  "Expected Outcomes",
+  "Why Choose Us",
+  "Next Steps",
+];
+
+// Replace the markdown of a single "## Section" block within a proposal document.
+function replaceSection(fullMarkdown: string, sectionTitle: string, newSectionMarkdown: string): string {
+  const escaped = sectionTitle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp(`(^|\\n)##\\s+${escaped}\\b[\\s\\S]*?(?=\\n##\\s+|$)`, "i");
+  const trimmed = newSectionMarkdown.trim();
+  if (re.test(fullMarkdown)) {
+    return fullMarkdown.replace(re, (match, leading) => `${leading}${trimmed}\n`);
+  }
+  // Section missing — append at end
+  return `${fullMarkdown.trimEnd()}\n\n${trimmed}\n`;
 }
 
 function MarkdownPreview({ content, isPremium }: { content: string; isPremium?: boolean }) {
@@ -45,12 +74,76 @@ export default function ProposalView() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editMode, setEditMode] = useState<Record<string, boolean>>({});
+  const [regenerating, setRegenerating] = useState<string | null>(null);
 
   const [editedProposal, setEditedProposal] = useState("");
   const [editedPricing, setEditedPricing] = useState("");
   const [editedInvoice, setEditedInvoice] = useState("");
   const [copied, setCopied] = useState(false);
   const [clientPaid, setClientPaid] = useState(false);
+
+  const buildSourcePayload = () => {
+    if (!proposal) return null;
+    return {
+      client_name: proposal.client_name,
+      company_name: proposal.company_name,
+      service_type: proposal.service_type,
+      project_scope: proposal.project_scope || "",
+      budget: proposal.budget || "",
+      timeline: proposal.timeline || "",
+      notes: proposal.notes || "",
+    };
+  };
+
+  const handleRegenerateFull = async (tone?: "concise" | "persuasive" | "alternative") => {
+    const source = buildSourcePayload();
+    if (!source) return;
+    const key = tone || "full";
+    setRegenerating(key);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-proposal", {
+        body: { ...source, tone },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.proposal) setEditedProposal(data.proposal);
+      if (data?.pricing) setEditedPricing(data.pricing);
+      if (data?.invoice) setEditedInvoice(data.invoice);
+      await supabase.from("proposals").update({
+        proposal_content: data.proposal,
+        pricing_breakdown: data.pricing,
+        invoice_content: data.invoice,
+      }).eq("id", id);
+      toast({ title: tone ? `Regenerated (${tone})` : "Proposal regenerated" });
+    } catch (e: any) {
+      toast({ title: "Regeneration failed", description: e.message || "Try again.", variant: "destructive" });
+    } finally {
+      setRegenerating(null);
+    }
+  };
+
+  const handleRegenerateSection = async (section: string) => {
+    const source = buildSourcePayload();
+    if (!source) return;
+    setRegenerating(section);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-proposal", {
+        body: { ...source, section, existing_proposal: editedProposal },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const newSection = (data?.section || "").trim();
+      if (!newSection) throw new Error("Empty section returned");
+      const updated = replaceSection(editedProposal, section, newSection);
+      setEditedProposal(updated);
+      await supabase.from("proposals").update({ proposal_content: updated }).eq("id", id);
+      toast({ title: `${section} regenerated` });
+    } catch (e: any) {
+      toast({ title: "Regeneration failed", description: e.message || "Try again.", variant: "destructive" });
+    } finally {
+      setRegenerating(null);
+    }
+  };
 
   const handleCopyProposal = async () => {
     const fullText = [editedProposal, editedPricing, editedInvoice].filter(Boolean).join("\n\n---\n\n");
@@ -509,6 +602,34 @@ export default function ProposalView() {
                 <Download className="w-4 h-4" /> Export Proposal
               </Button>
               <div className="flex gap-3 sm:flex-1 lg:flex-none">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" disabled={!!regenerating} className="gap-2 hover:brightness-125 transition-all h-10 flex-1 lg:px-6">
+                      {regenerating === "full" || regenerating === "concise" || regenerating === "persuasive" || regenerating === "alternative" ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Sparkles className="w-4 h-4" />
+                      )}
+                      Regenerate
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>AI Variations</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => handleRegenerateFull()} className="gap-2">
+                      <RefreshCw className="w-4 h-4" /> Regenerate full proposal
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => handleRegenerateFull("concise")} className="gap-2">
+                      <Zap className="w-4 h-4" /> Make more concise
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleRegenerateFull("persuasive")} className="gap-2">
+                      <Wand2 className="w-4 h-4" /> Make more persuasive
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleRegenerateFull("alternative")} className="gap-2">
+                      <Sparkles className="w-4 h-4" /> Alternative version
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Button variant="outline" onClick={handleSave} disabled={saving} className="gap-2 hover:brightness-125 transition-all h-10 flex-1 lg:px-6">
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                   Save
@@ -564,6 +685,36 @@ export default function ProposalView() {
                   <div className={t.key === "proposal" ? "mt-6" : ""}>
                     <MarkdownPreview content={t.content} isPremium={t.key === "proposal"} />
                   </div>
+                  {t.key === "proposal" && (
+                    <div className="mt-8 rounded-xl border border-border bg-card/50 p-5">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Sparkles className="w-4 h-4 text-accent" />
+                        <h3 className="text-sm font-semibold text-foreground">Regenerate a section</h3>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-4">
+                        Don't love a part? Regenerate just that section — the rest stays untouched.
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {SECTION_HEADINGS.map((s) => (
+                          <Button
+                            key={s}
+                            variant="outline"
+                            size="sm"
+                            disabled={!!regenerating}
+                            onClick={() => handleRegenerateSection(s)}
+                            className="gap-2 h-8 text-xs"
+                          >
+                            {regenerating === s ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <RefreshCw className="w-3 h-3" />
+                            )}
+                            {s}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </TabsContent>

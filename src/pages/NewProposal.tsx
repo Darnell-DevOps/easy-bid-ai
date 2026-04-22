@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Sparkles, User, Building2, Briefcase, PoundSterling, FileText, Clock, StickyNote } from "lucide-react";
+import { Loader2, Sparkles, User, Building2, Briefcase, PoundSterling, FileText, Clock, StickyNote, Target, ListChecks } from "lucide-react";
 
 const serviceTypes = [
   "Marketing Strategy",
@@ -68,8 +68,11 @@ export default function NewProposal() {
     budget: clientPrefill?.budget || templateData?.prefill?.budget || "",
     timeline: clientPrefill?.timeline || templateData?.prefill?.timeline || "",
     notes: clientPrefill?.notes || templateData?.prefill?.notes || "",
+    goals: clientPrefill?.goals || "",
+    deliverables: clientPrefill?.deliverables || "",
   });
   const prefilledClientId: string | undefined = clientPrefill?.client_id;
+  const originalLeadMessage: string | undefined = clientPrefill?.original_lead_message;
 
   const update = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
 
@@ -80,7 +83,7 @@ export default function NewProposal() {
     try {
       // Call edge function to generate proposal content via AI
       const { data: aiData, error: aiError } = await supabase.functions.invoke("generate-proposal", {
-        body: form,
+        body: { ...form, original_lead_message: originalLeadMessage },
       });
 
       if (aiError) throw aiError;
@@ -247,6 +250,37 @@ export default function NewProposal() {
                   required
                   className="pl-10"
                 />
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8">
+              <div>
+                <Label htmlFor="goals">Client Goals / Outcomes <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                <div className="relative mt-2">
+                  <Target className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                  <Textarea
+                    id="goals"
+                    value={form.goals}
+                    onChange={(e) => update("goals", e.target.value)}
+                    placeholder="What does the client want to achieve?"
+                    rows={2}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="deliverables">Confirmed Deliverables <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                <div className="relative mt-2">
+                  <ListChecks className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                  <Textarea
+                    id="deliverables"
+                    value={form.deliverables}
+                    onChange={(e) => update("deliverables", e.target.value)}
+                    placeholder="e.g. 3 logo concepts, brand guide, social templates"
+                    rows={2}
+                    className="pl-10"
+                  />
+                </div>
               </div>
             </div>
 
