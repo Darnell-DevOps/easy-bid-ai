@@ -3,12 +3,13 @@ import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, CheckCircle, Clock, XCircle, TrendingUp, Plus, ArrowLeft } from "lucide-react";
+import { FileText, CheckCircle, Send, Eye, XCircle, TrendingUp, Plus, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { normalizeStatus } from "@/components/proposal/StatusBadge";
 
 interface Proposal {
   id: string;
-  status: string;
+  status: string | null;
   created_at: string;
 }
 
@@ -30,10 +31,13 @@ export default function ProposalsDashboard() {
 
   const stats = useMemo(() => {
     const total = proposals.length;
-    const accepted = proposals.filter(p => p.status === "accepted").length;
-    const pending = proposals.filter(p => p.status === "pending").length;
-    const rejected = proposals.filter(p => p.status === "rejected").length;
-    const conversionRate = total > 0 ? ((accepted / total) * 100).toFixed(1) : "0";
+    const byStatus = proposals.map((p) => normalizeStatus(p.status));
+    const sent = byStatus.filter((s) => s === "sent" || s === "viewed" || s === "accepted" || s === "rejected").length;
+    const viewed = byStatus.filter((s) => s === "viewed" || s === "accepted" || s === "rejected").length;
+    const accepted = byStatus.filter((s) => s === "accepted").length;
+    const rejected = byStatus.filter((s) => s === "rejected").length;
+    // Conversion rate = accepted / sent (everything that's been pushed out the door)
+    const conversionRate = sent > 0 ? ((accepted / sent) * 100).toFixed(1) : "0";
 
     const now = new Date();
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -50,13 +54,14 @@ export default function ProposalsDashboard() {
     else if (thisWeek < lastWeek) trend = "Down from last week";
     else trend = "No proposals yet";
 
-    return { total, accepted, pending, rejected, conversionRate, thisWeek, trend };
+    return { total, sent, viewed, accepted, rejected, conversionRate, thisWeek, trend };
   }, [proposals]);
 
   const breakdownCards = [
+    { label: "Sent",     value: stats.sent,     icon: Send,        accent: "text-blue-400",    bg: "bg-blue-400/10" },
+    { label: "Viewed",   value: stats.viewed,   icon: Eye,         accent: "text-amber-400",   bg: "bg-amber-400/10" },
     { label: "Accepted", value: stats.accepted, icon: CheckCircle, accent: "text-emerald-400", bg: "bg-emerald-400/10" },
-    { label: "Pending", value: stats.pending, icon: Clock, accent: "text-amber-400", bg: "bg-amber-400/10" },
-    { label: "Rejected", value: stats.rejected, icon: XCircle, accent: "text-red-400", bg: "bg-red-400/10" },
+    { label: "Rejected", value: stats.rejected, icon: XCircle,     accent: "text-rose-400",    bg: "bg-rose-400/10" },
   ];
 
   if (loading) {
@@ -109,7 +114,7 @@ export default function ProposalsDashboard() {
         </Card>
 
         {/* Breakdown */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {breakdownCards.map(c => (
             <Card key={c.label} className="hover:shadow-lg transition-all duration-300">
               <CardContent className="p-4 text-center">
@@ -131,7 +136,7 @@ export default function ProposalsDashboard() {
           <CardContent className="pb-5">
             <div className="flex items-end gap-3">
               <p className="text-4xl font-bold text-foreground">{stats.conversionRate}%</p>
-              <p className="text-sm text-muted-foreground pb-1">of proposals accepted</p>
+              <p className="text-sm text-muted-foreground pb-1">of sent proposals accepted</p>
             </div>
             <div className="w-full bg-muted rounded-full h-2.5 mt-4">
               <div
