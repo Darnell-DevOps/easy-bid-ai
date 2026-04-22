@@ -31,6 +31,18 @@ Deno.serve(async (req) => {
 
 Also extract any qualification info already mentioned in the lead's message.
 
+Then assess lead quality based on:
+- Message clarity (is the request specific?)
+- Budget (mentioned and realistic?)
+- Urgency / timeline
+- Service fit (sounds like a fit for a freelancer/agency?)
+
+Pick exactly one quality: "High", "Medium", or "Low".
+Pick exactly one recommendation:
+- "High" -> "Recommend generating proposal"
+- "Medium" -> "Recommend asking more questions"
+- "Low" -> "May not be worth pursuing"
+
 Respond ONLY by calling the provided tool.`;
 
     const userPrompt = `Lead name: ${leadName || "(not provided)"}
