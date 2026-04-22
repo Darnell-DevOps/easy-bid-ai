@@ -844,17 +844,22 @@ export default function NewProposal() {
                         : "To improve your proposal quality, add the items below"}
                     </p>
                   </div>
-                  <ul className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {checks.map((c) => (
-                      <li key={c.label} className="flex items-center gap-2 text-xs">
+                      <li
+                        key={c.label}
+                        className={`flex items-center gap-2 text-xs px-2.5 py-1.5 rounded-md border transition-colors ${
+                          c.done
+                            ? "border-emerald-500/30 bg-emerald-500/5 text-foreground"
+                            : "border-border/50 bg-background/40 text-muted-foreground"
+                        }`}
+                      >
                         {c.done ? (
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                         ) : (
-                          <Circle className="w-3.5 h-3.5 text-muted-foreground/60 flex-shrink-0" />
+                          <Circle className="w-4 h-4 text-muted-foreground/50 flex-shrink-0" />
                         )}
-                        <span className={c.done ? "text-foreground" : "text-muted-foreground"}>
-                          {c.label}
-                        </span>
+                        <span className="font-medium">{c.label}</span>
                       </li>
                     ))}
                   </ul>
