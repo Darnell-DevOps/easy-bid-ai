@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Download, Save, Loader2, Pencil, Eye, Copy, Check, DollarSign, Sparkles, RefreshCw, Wand2, Zap, Send, XCircle, CheckCircle2 } from "lucide-react";
@@ -36,6 +37,9 @@ interface ProposalData {
   viewed_at: string | null;
   accepted_at: string | null;
   rejected_at: string | null;
+  amount_cents: number | null;
+  currency: string | null;
+  paid_at: string | null;
 }
 
 const SECTION_HEADINGS = [
