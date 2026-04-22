@@ -134,6 +134,7 @@ export type Database = {
       proposals: {
         Row: {
           accepted_at: string | null
+          amount_cents: number | null
           budget: string
           client_id: string | null
           client_name: string
@@ -141,9 +142,12 @@ export type Database = {
           client_response_message: string | null
           company_name: string
           created_at: string
+          currency: string | null
           id: string
           invoice_content: string | null
           notes: string | null
+          paddle_transaction_id: string | null
+          paid_at: string | null
           pricing_breakdown: string | null
           project_scope: string
           proposal_content: string | null
@@ -158,6 +162,7 @@ export type Database = {
         }
         Insert: {
           accepted_at?: string | null
+          amount_cents?: number | null
           budget?: string
           client_id?: string | null
           client_name: string
@@ -165,9 +170,12 @@ export type Database = {
           client_response_message?: string | null
           company_name: string
           created_at?: string
+          currency?: string | null
           id?: string
           invoice_content?: string | null
           notes?: string | null
+          paddle_transaction_id?: string | null
+          paid_at?: string | null
           pricing_breakdown?: string | null
           project_scope?: string
           proposal_content?: string | null
@@ -182,6 +190,7 @@ export type Database = {
         }
         Update: {
           accepted_at?: string | null
+          amount_cents?: number | null
           budget?: string
           client_id?: string | null
           client_name?: string
@@ -189,9 +198,12 @@ export type Database = {
           client_response_message?: string | null
           company_name?: string
           created_at?: string
+          currency?: string | null
           id?: string
           invoice_content?: string | null
           notes?: string | null
+          paddle_transaction_id?: string | null
+          paid_at?: string | null
           pricing_breakdown?: string | null
           project_scope?: string
           proposal_content?: string | null
@@ -221,6 +233,10 @@ export type Database = {
     Functions: {
       client_portal_respond: {
         Args: { _action: string; _message?: string; _proposal_id: string }
+        Returns: undefined
+      }
+      mark_proposal_paid: {
+        Args: { _proposal_id: string; _txn_id: string }
         Returns: undefined
       }
     }
