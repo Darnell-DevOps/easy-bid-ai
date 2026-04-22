@@ -9,7 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Save, Loader2, Pencil, Eye, Copy, Check, DollarSign } from "lucide-react";
+import { Download, Save, Loader2, Pencil, Eye, Copy, Check, DollarSign, Sparkles, RefreshCw, Wand2, Zap } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import ReactMarkdown from "react-markdown";
 import PremiumProposalRenderer from "@/components/proposal/PremiumProposalRenderer";
 import ProposalHeader from "@/components/proposal/ProposalHeader";
@@ -25,6 +26,34 @@ interface ProposalData {
   created_at: string;
   client_paid: boolean;
   budget: string;
+  project_scope: string;
+  timeline: string;
+  notes: string | null;
+  client_id: string | null;
+}
+
+const SECTION_HEADINGS = [
+  "Introduction",
+  "Understanding of Your Needs",
+  "Proposed Solution",
+  "Scope of Work",
+  "Deliverables",
+  "Timeline",
+  "Expected Outcomes",
+  "Why Choose Us",
+  "Next Steps",
+];
+
+// Replace the markdown of a single "## Section" block within a proposal document.
+function replaceSection(fullMarkdown: string, sectionTitle: string, newSectionMarkdown: string): string {
+  const escaped = sectionTitle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp(`(^|\\n)##\\s+${escaped}\\b[\\s\\S]*?(?=\\n##\\s+|$)`, "i");
+  const trimmed = newSectionMarkdown.trim();
+  if (re.test(fullMarkdown)) {
+    return fullMarkdown.replace(re, (match, leading) => `${leading}${trimmed}\n`);
+  }
+  // Section missing — append at end
+  return `${fullMarkdown.trimEnd()}\n\n${trimmed}\n`;
 }
 
 function MarkdownPreview({ content, isPremium }: { content: string; isPremium?: boolean }) {
