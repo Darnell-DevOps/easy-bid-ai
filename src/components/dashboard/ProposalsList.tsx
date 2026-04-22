@@ -24,6 +24,7 @@ interface Proposal {
   service_type: string;
   created_at: string;
   status?: string | null;
+  client_paid?: boolean;
 }
 
 const SERVICE_TYPES = [
@@ -166,7 +167,7 @@ export default function ProposalsList({ proposals, loading, onRefresh }: Proposa
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0 ml-3">
-                  <StatusBadge status={p.status} className="hidden sm:inline-flex" />
+                  <StatusBadge status={p.status} paid={p.client_paid} descriptive className="hidden sm:inline-flex" />
                   <span className="text-xs text-muted-foreground hidden md:block">{new Date(p.created_at).toLocaleDateString()}</span>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>

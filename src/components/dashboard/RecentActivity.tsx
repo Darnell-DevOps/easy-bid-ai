@@ -1,5 +1,6 @@
+import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText, Receipt, Pencil } from "lucide-react";
+import { FileText, Receipt, ArrowRight } from "lucide-react";
 
 interface Proposal {
   id: string;
@@ -20,7 +21,6 @@ function timeAgo(date: string) {
 }
 
 export default function RecentActivity({ proposals }: { proposals: Proposal[] }) {
-  // Build activity items from proposals
   const activities = proposals.slice(0, 8).flatMap((p) => {
     const items = [
       { icon: FileText, text: `Proposal created for ${p.client_name}`, time: p.created_at, accent: "text-accent" },
@@ -53,6 +53,12 @@ export default function RecentActivity({ proposals }: { proposals: Proposal[] })
             <span className="text-xs text-muted-foreground flex-shrink-0">{timeAgo(a.time)}</span>
           </div>
         ))}
+        <Link
+          to="/dashboard/proposals"
+          className="flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-medium text-muted-foreground hover:text-accent hover:bg-muted/30 transition-colors"
+        >
+          View all activity <ArrowRight className="w-3 h-3" />
+        </Link>
       </CardContent>
     </Card>
   );
