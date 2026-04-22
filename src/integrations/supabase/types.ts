@@ -219,7 +219,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      client_portal_respond: {
+        Args: { _action: string; _message?: string; _proposal_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
