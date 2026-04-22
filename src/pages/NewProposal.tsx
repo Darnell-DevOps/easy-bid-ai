@@ -560,37 +560,71 @@ export default function NewProposal() {
                 </div>
                 <div>
                   <Label htmlFor="budget">Budget</Label>
-                  <div className="relative mt-2">
-                    <PoundSterling className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="budget"
-                      type="text"
-                      inputMode="numeric"
-                      value={form.budget ? formatBudget(form.budget) : ""}
-                      onChange={(e) => update("budget", parseBudgetDigits(e.target.value))}
-                      onBlur={() => markTouched("budget")}
-                      placeholder="e.g. £5,000"
-                      required
-                      className={`pl-10 pr-10 ${inputStateClass("budget", form.budget)}`}
-                    />
-                    <FieldStatusIcon field="budget" value={form.budget} />
+                  <div className="relative mt-2 flex">
+                    {/* Currency selector */}
+                    <Select
+                      value={currency}
+                      onValueChange={(v) => setCurrency(v as CurrencyCode)}
+                    >
+                      <SelectTrigger
+                        className="w-[88px] rounded-r-none border-r-0 focus:ring-0 focus:ring-offset-0"
+                        aria-label="Currency"
+                      >
+                        <SelectValue>
+                          <span className="font-medium">{getCurrency(currency).symbol}</span>
+                          <span className="ml-1 text-xs text-muted-foreground">{currency}</span>
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CURRENCIES.map((c) => (
+                          <SelectItem key={c.code} value={c.code}>
+                            <span className="font-medium mr-2">{c.symbol}</span>{c.code}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <div className="relative flex-1">
+                      <Input
+                        id="budget"
+                        ref={budgetInputRef}
+                        type="text"
+                        inputMode="numeric"
+                        value={form.budget ? formatBudget(form.budget, currency) : ""}
+                        onChange={(e) => update("budget", parseBudgetDigits(e.target.value))}
+                        onBlur={() => markTouched("budget")}
+                        placeholder={`e.g. ${getCurrency(currency).symbol}5,000`}
+                        required
+                        className={`rounded-l-none pr-10 ${inputStateClass("budget", form.budget)}`}
+                      />
+                      <FieldStatusIcon field="budget" value={form.budget} />
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-1.5 mt-2">
+                  <div className="flex flex-wrap gap-2 mt-2">
                     {BUDGET_PRESETS.map((p) => (
                       <button
                         key={p}
                         type="button"
                         onClick={() => { update("budget", String(p)); markTouched("budget"); }}
-                        className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                        className={`text-xs px-3 py-1.5 rounded-md border transition-colors ${
                           form.budget === String(p)
                             ? "border-accent/50 bg-accent/10 text-accent"
                             : "border-border/60 text-muted-foreground hover:border-accent/40 hover:text-foreground"
                         }`}
                       >
-                        £{p.toLocaleString("en-GB")}
+                        {getCurrency(currency).symbol}{p.toLocaleString(getCurrency(currency).locale)}
                       </button>
                     ))}
+                    <button
+                      type="button"
+                      onClick={() => { update("budget", ""); markTouched("budget"); setTimeout(() => budgetInputRef.current?.focus(), 0); }}
+                      className="text-xs px-3 py-1.5 rounded-md border border-dashed border-border/60 text-muted-foreground hover:border-accent/40 hover:text-foreground transition-colors"
+                    >
+                      + Custom
+                    </button>
                   </div>
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    Typical projects: {getCurrency(currency).symbol}1,000–{getCurrency(currency).symbol}10,000
+                  </p>
                   <FieldError field="budget" />
                 </div>
               </div>
