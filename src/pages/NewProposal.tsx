@@ -345,6 +345,33 @@ export default function NewProposal() {
 
   const optionalLabel = "text-[10px] uppercase tracking-wider text-muted-foreground/70 font-normal ml-1";
 
+  // Helpers for field state visuals
+  const showError = (field: string) => touched[field] && !!errors[field];
+  const showSuccess = (field: string, hasContent: boolean) =>
+    touched[field] && hasContent && !errors[field];
+
+  const inputStateClass = (field: string, value: string) =>
+    showError(field)
+      ? "border-destructive/60 focus-visible:ring-destructive/40"
+      : showSuccess(field, !!value)
+        ? "border-emerald-500/50 focus-visible:ring-emerald-500/30"
+        : "";
+
+  const FieldStatusIcon = ({ field, value }: { field: string; value: string }) => {
+    if (showError(field))
+      return <AlertTriangle className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-destructive pointer-events-none" />;
+    if (showSuccess(field, !!value))
+      return <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500 pointer-events-none" />;
+    return null;
+  };
+
+  const FieldError = ({ field }: { field: string }) =>
+    showError(field) ? (
+      <p className="text-xs text-destructive mt-1.5 flex items-center gap-1">
+        <AlertTriangle className="w-3 h-3" /> {errors[field]}
+      </p>
+    ) : null;
+
   return (
     <DashboardLayout>
       <div className="mb-6">
