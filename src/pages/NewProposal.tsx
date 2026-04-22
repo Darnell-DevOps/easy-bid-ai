@@ -587,12 +587,14 @@ export default function NewProposal() {
                       id="project_scope"
                       value={form.project_scope}
                       onChange={(e) => update("project_scope", e.target.value)}
+                      onBlur={() => markTouched("project_scope")}
                       placeholder="Describe the project and what the client needs"
                       required
                       rows={4}
-                      className="pl-10"
+                      className={`pl-10 ${inputStateClass("project_scope", form.project_scope)}`}
                     />
                   </div>
+                  <FieldError field="project_scope" />
                   <p className="text-xs text-muted-foreground mt-1.5">
                     In 1–2 sentences, describe what the client needs. Don't worry if this isn't perfect — AI will refine it.
                   </p>
@@ -600,17 +602,72 @@ export default function NewProposal() {
 
                 <div>
                   <Label htmlFor="timeline">Timeline</Label>
-                  <div className="relative mt-2">
-                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="timeline"
-                      value={form.timeline}
-                      onChange={(e) => update("timeline", e.target.value)}
-                      placeholder="e.g. 4 weeks"
-                      required
-                      className="pl-10"
-                    />
-                  </div>
+                  {!timelineCustom ? (
+                    <div className="flex gap-2 mt-2">
+                      <div className="relative flex-1">
+                        <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="timeline"
+                          type="text"
+                          inputMode="numeric"
+                          value={timelineQty}
+                          onChange={(e) => {
+                            const v = e.target.value.replace(/[^0-9]/g, "").slice(0, 3);
+                            setTimelineQty(v);
+                          }}
+                          onBlur={() => markTouched("timeline")}
+                          placeholder="e.g. 4"
+                          className={`pl-10 ${inputStateClass("timeline", form.timeline)}`}
+                        />
+                      </div>
+                      <Select
+                        value={timelineUnit}
+                        onValueChange={(v) => { setTimelineUnit(v as TimelineUnit); markTouched("timeline"); }}
+                      >
+                        <SelectTrigger className="w-[130px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {TIMELINE_UNITS.map((u) => (
+                            <SelectItem key={u} value={u}>{u}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => { setTimelineCustom(true); setTimelineCustomText(form.timeline); }}
+                        className="text-xs text-muted-foreground"
+                      >
+                        Custom
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2 mt-2">
+                      <div className="relative flex-1">
+                        <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="timeline"
+                          value={timelineCustomText}
+                          onChange={(e) => setTimelineCustomText(e.target.value)}
+                          onBlur={() => markTouched("timeline")}
+                          placeholder="e.g. 6–8 weeks, by end of Q2"
+                          className={`pl-10 ${inputStateClass("timeline", form.timeline)}`}
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => { setTimelineCustom(false); setTimelineCustomText(""); }}
+                        className="text-xs text-muted-foreground"
+                      >
+                        Use preset
+                      </Button>
+                    </div>
+                  )}
+                  <FieldError field="timeline" />
                 </div>
 
                 <div>
@@ -624,11 +681,13 @@ export default function NewProposal() {
                       id="goals"
                       value={form.goals}
                       onChange={(e) => update("goals", e.target.value)}
+                      onBlur={() => markTouched("goals")}
                       placeholder="What outcome does the client want?"
                       rows={2}
-                      className="pl-10"
+                      className={`pl-10 ${inputStateClass("goals", form.goals)}`}
                     />
                   </div>
+                  <FieldError field="goals" />
                   <p className="text-xs text-muted-foreground mt-1.5">
                     What result does the client want from this project?
                   </p>
@@ -645,11 +704,13 @@ export default function NewProposal() {
                       id="deliverables"
                       value={form.deliverables}
                       onChange={(e) => update("deliverables", e.target.value)}
+                      onBlur={() => markTouched("deliverables")}
                       placeholder="e.g. 3 logo concepts, brand guide, social templates"
                       rows={2}
-                      className="pl-10"
+                      className={`pl-10 ${inputStateClass("deliverables", form.deliverables)}`}
                     />
                   </div>
+                  <FieldError field="deliverables" />
                   <p className="text-xs text-muted-foreground mt-1.5">
                     List the items you expect to include in the proposal.
                   </p>
