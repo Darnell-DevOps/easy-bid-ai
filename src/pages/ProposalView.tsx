@@ -568,12 +568,102 @@ export default function ProposalView() {
   const currentStatus = normalizeStatus(proposal.status);
   const fmt = (iso: string | null) =>
     iso ? new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "—";
-  const stages: { key: ProposalStatus; label: string; at: string | null }[] = [
-    { key: "sent",     label: "Sent",     at: proposal.sent_at },
-    { key: "viewed",   label: "Viewed",   at: proposal.viewed_at },
-    { key: "accepted", label: "Accepted", at: proposal.accepted_at },
-    { key: "rejected", label: "Rejected", at: proposal.rejected_at },
-  ];
+
+  // Linear progress: Draft → Sent → Viewed → Accepted → Paid
+  type StageKey = "draft" | "sent" | "viewed" | "accepted" | "paid";
+  const stageOrder: StageKey[] = ["draft", "sent", "viewed", "accepted", "paid"];
+  const stageMeta: Record<StageKey, { label: string; at: string | null; icon: typeof Send }> = {
+    draft:    { label: "Draft",    at: proposal.created_at,  icon: FileText },
+    sent:     { label: "Sent",     at: proposal.sent_at,     icon: Send },
+    viewed:   { label: "Viewed",   at: proposal.viewed_at,   icon: Eye },
+    accepted: { label: "Accepted", at: proposal.accepted_at, icon: CheckCircle2 },
+    paid:     { label: "Paid",     at: proposal.paid_at,     icon: Banknote },
+  };
+  const currentStageIndex: number = clientPaid
+    ? 4
+    : (() => {
+        let last = 0;
+        stageOrder.forEach((s, idx) => {
+          if (idx === 0) return;
+          if (stageMeta[s].at) last = idx;
+        });
+        if (currentStatus === "accepted" && last < 3) last = 3;
+        return last;
+      })();
+  const isRejected = currentStatus === "rejected";
+
+  // Smart alerts (priority order)
+  const alerts: { tone: "warning" | "info" | "success"; icon: typeof AlertTriangle; text: string }[] = [];
+  if (isRejected) {
+    alerts.push({ tone: "warning", icon: XCircle, text: "Client rejected this proposal. Consider following up or revising." });
+  } else if (clientPaid) {
+    alerts.push({ tone: "success", icon: CheckCircle2, text: "Payment received in full. You're all set." });
+  } else if (currentStatus === "accepted") {
+    alerts.push({ tone: "success", icon: Banknote, text: "Accepted — request payment now to close the deal." });
+  } else if (currentStatus === "draft") {
+    alerts.push({ tone: "warning", icon: AlertTriangle, text: "Proposal not sent yet. Send to client to start the clock." });
+  } else if (currentStatus === "sent") {
+    const daysSent = proposal.sent_at ? Math.floor((Date.now() - new Date(proposal.sent_at).getTime()) / 86400000) : 0;
+    if (daysSent >= 2) {
+      alerts.push({ tone: "info", icon: Eye, text: `Sent ${daysSent} day${daysSent === 1 ? "" : "s"} ago — client hasn't viewed yet. Consider a follow-up.` });
+    } else {
+      alerts.push({ tone: "info", icon: Eye, text: "Sent — waiting for the client to view it." });
+    }
+  } else if (currentStatus === "viewed") {
+    alerts.push({ tone: "info", icon: Sparkles, text: "Client has viewed the proposal. Now's a great time to follow up." });
+  }
+
+  const clientUrl = `${window.location.origin}/proposal/view/${proposal.id}`;
+
+  const handleSendCopy = async () => {
+    await navigator.clipboard.writeText(clientUrl);
+    if (currentStatus === "draft") await updateStatus("sent");
+    toast({ title: "Link copied", description: "Share this with your client." });
+  };
+  const handleSendEmail = () => {
+    const subject = encodeURIComponent(`Your proposal from StriveSync`);
+    const body = encodeURIComponent(
+      `Hi ${proposal.client_name},\n\nYour proposal is ready. You can review it here:\n${clientUrl}\n\nLet me know if you have any questions.`,
+    );
+    const to = clientEmail ? encodeURIComponent(clientEmail) : "";
+    window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
+    if (currentStatus === "draft") void updateStatus("sent");
+  };
+  const handlePreview = () => window.open(clientUrl, "_blank", "noopener,noreferrer");
+
+  // Auto-fill price by parsing pricing/proposal markdown for a Total
+  const handleAutoFillPrice = async () => {
+    setAutoFillingPrice(true);
+    try {
+      const text = (editedPricing || "") + "\n" + (editedProposal || "");
+      const totalMatch = text.match(/total[^\n|]*\|\s*([£$€]\s*[\d,]+(?:\.\d+)?)/i)
+        || text.match(/\*\*\s*total[^*]*\*\*\s*[:\s]*([£$€]\s*[\d,]+(?:\.\d+)?)/i)
+        || text.match(/\*\*\s*([£$€]\s*[\d,]+(?:\.\d+)?)\s*\*\*/);
+      if (!totalMatch) {
+        toast({ title: "No price found", description: "Couldn't detect a total in the proposal pricing.", variant: "destructive" });
+        return;
+      }
+      const symbol = totalMatch[1].match(/[£$€]/)?.[0] || "£";
+      const num = parseFloat(totalMatch[1].replace(/[^\d.]/g, ""));
+      if (!Number.isFinite(num) || num <= 0) {
+        toast({ title: "Couldn't parse amount", variant: "destructive" });
+        return;
+      }
+      const currency = symbol === "£" ? "GBP" : symbol === "€" ? "EUR" : "USD";
+      const cents = Math.round(num * 100);
+      const { error } = await supabase
+        .from("proposals")
+        .update({ amount_cents: cents, currency })
+        .eq("id", proposal.id);
+      if (error) throw error;
+      setProposal({ ...proposal, amount_cents: cents, currency });
+      toast({ title: "Price filled from proposal", description: `${symbol}${num.toLocaleString()} (${currency})` });
+    } catch (e: any) {
+      toast({ title: "Couldn't auto-fill", description: e.message || "Try again.", variant: "destructive" });
+    } finally {
+      setAutoFillingPrice(false);
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -586,35 +676,39 @@ export default function ProposalView() {
               <span className="mx-2 text-muted-foreground/50">·</span>
               {proposal.company_name}
             </p>
-            <StatusBadge status={currentStatus} />
-          </div>
-          <div className="flex items-center gap-2">
-            <DollarSign className={`w-3.5 h-3.5 ${clientPaid ? "text-emerald-400" : "text-muted-foreground"}`} />
-            <Label htmlFor="client-paid" className="text-xs font-medium text-muted-foreground cursor-pointer">
-              Paid
-            </Label>
-            <Switch
-              id="client-paid"
-              checked={clientPaid}
-              onCheckedChange={async (checked) => {
-                setClientPaid(checked);
-                const { error } = await supabase
-                  .from("proposals")
-                  .update({ client_paid: checked })
-                  .eq("id", id);
-                if (error) {
-                  setClientPaid(!checked);
-                  toast({ title: "Failed to update", description: error.message, variant: "destructive" });
-                } else {
-                  toast({ title: checked ? "Marked as paid" : "Marked as unpaid" });
-                }
-              }}
-            />
+            <StatusBadge status={currentStatus} paid={clientPaid} descriptive />
           </div>
         </div>
 
-        {/* Unified Proposal Controls — collapsible */}
-        <details className="group mb-8 rounded-xl border border-border/60 bg-card/40 overflow-hidden">
+        {/* Smart alerts */}
+        {alerts.length > 0 && (
+          <div className="mb-5 space-y-2">
+            {alerts.map((a, i) => {
+              const Icon = a.icon;
+              const toneCls =
+                a.tone === "warning"
+                  ? "border-amber-500/30 bg-amber-500/5"
+                  : a.tone === "success"
+                    ? "border-emerald-500/30 bg-emerald-500/5"
+                    : "border-blue-500/30 bg-blue-500/5";
+              const iconCls =
+                a.tone === "warning"
+                  ? "text-amber-500"
+                  : a.tone === "success"
+                    ? "text-emerald-500"
+                    : "text-blue-500";
+              return (
+                <div key={i} className={`flex items-center gap-3 rounded-lg border px-4 py-2.5 ${toneCls}`}>
+                  <Icon className={`w-4 h-4 shrink-0 ${iconCls}`} />
+                  <p className="text-sm flex-1 text-foreground/90">{a.text}</p>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Unified Proposal Controls */}
+        <details open className="group mb-8 rounded-xl border border-border/60 bg-card/40 overflow-hidden">
           <summary className="flex items-center justify-between gap-3 px-4 py-3 cursor-pointer list-none hover:bg-card/60 transition-colors">
             <div className="flex items-center gap-2">
               <Sparkles className="w-3.5 h-3.5 text-muted-foreground" />
@@ -623,78 +717,152 @@ export default function ProposalView() {
             </div>
             <span className="text-xs text-muted-foreground transition-transform group-open:rotate-180">▾</span>
           </summary>
-          <div className="px-4 pb-4 pt-1 space-y-5 border-t border-border/60">
-            {/* Status stages + actions */}
-            <div className="pt-4">
-              <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
-                <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Status</p>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={async () => {
-                    const url = `${window.location.origin}/proposal/view/${proposal.id}`;
-                    await navigator.clipboard.writeText(url);
-                    toast({ title: "Client link copied", description: "Share this link with your client." });
-                  }}
-                  className="gap-1.5 h-8 text-xs"
-                >
-                  <Copy className="w-3 h-3 shrink-0" /> Copy Client Link
-                </Button>
+          <div className="px-4 pb-5 pt-1 space-y-6 border-t border-border/60">
+            {/* === PROPOSAL PROGRESS === */}
+            <div className="pt-5">
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-4">Proposal Progress</p>
+              <div className="flex items-center gap-1 sm:gap-2">
+                {stageOrder.map((key, idx) => {
+                  const stage = stageMeta[key];
+                  const Icon = stage.icon;
+                  const isActive = idx === currentStageIndex && !isRejected;
+                  const isComplete = idx < currentStageIndex || (idx === currentStageIndex && idx === 4 && clientPaid);
+                  const isFuture = idx > currentStageIndex;
+                  const isClickable = !isFuture || idx === currentStageIndex + 1;
+
+                  const handleStageClick = () => {
+                    if (!isClickable) return;
+                    if (key === "draft") return;
+                    if (key === "paid") {
+                      const next = !clientPaid;
+                      setClientPaid(next);
+                      void supabase
+                        .from("proposals")
+                        .update({ client_paid: next, paid_at: next ? new Date().toISOString() : null })
+                        .eq("id", proposal.id);
+                      toast({ title: next ? "Marked as paid" : "Marked as unpaid" });
+                      return;
+                    }
+                    void updateStatus(key as ProposalStatus);
+                  };
+
+                  return (
+                    <div key={key} className="flex items-center flex-1 min-w-0">
+                      <button
+                        type="button"
+                        onClick={handleStageClick}
+                        disabled={!isClickable}
+                        className={`flex flex-col items-center gap-1.5 flex-1 min-w-0 transition-all ${
+                          !isClickable ? "cursor-not-allowed opacity-40" : "cursor-pointer hover:opacity-90"
+                        }`}
+                        title={stage.at ? `${stage.label} · ${fmt(stage.at)}` : stage.label}
+                      >
+                        <div
+                          className={`flex h-9 w-9 items-center justify-center rounded-full border-2 transition-all ${
+                            isComplete
+                              ? "border-purple bg-gradient-to-br from-purple to-accent text-accent-foreground shadow-md shadow-purple/20"
+                              : isActive
+                                ? "border-purple bg-purple/15 text-purple ring-4 ring-purple/10"
+                                : "border-border bg-background/40 text-muted-foreground"
+                          }`}
+                        >
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <p className={`text-[10px] sm:text-xs font-medium truncate w-full text-center ${
+                          isComplete || isActive ? "text-foreground" : "text-muted-foreground"
+                        }`}>
+                          {stage.label}
+                        </p>
+                      </button>
+                      {idx < stageOrder.length - 1 && (
+                        <div className={`h-0.5 flex-1 min-w-[12px] -mt-5 transition-colors ${
+                          idx < currentStageIndex ? "bg-gradient-to-r from-purple to-accent" : "bg-border"
+                        }`} />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
-                <Button size="sm" variant={currentStatus === "sent" ? "default" : "outline"} onClick={() => updateStatus("sent")} className="gap-1.5 h-8 text-xs w-full min-w-0">
-                  <Send className="w-3 h-3 shrink-0" /> <span className="truncate">Mark Sent</span>
-                </Button>
-                <Button size="sm" variant={currentStatus === "viewed" ? "default" : "outline"} onClick={() => updateStatus("viewed")} className="gap-1.5 h-8 text-xs w-full min-w-0">
-                  <Eye className="w-3 h-3 shrink-0" /> <span className="truncate">Mark Viewed</span>
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => updateStatus("accepted")} className="gap-1.5 h-8 text-xs w-full min-w-0 border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-500">
-                  <CheckCircle2 className="w-3 h-3 shrink-0" /> <span className="truncate">Accepted</span>
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => updateStatus("rejected")} className="gap-1.5 h-8 text-xs w-full min-w-0 border-rose-500/30 text-rose-500 hover:bg-rose-500/10 hover:text-rose-500">
-                  <XCircle className="w-3 h-3 shrink-0" /> <span className="truncate">Rejected</span>
-                </Button>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                {stages.map((s) => (
-                  <div key={s.key} className="rounded-lg border border-border/60 bg-background/40 p-2.5 min-w-0">
-                    <p className="text-muted-foreground uppercase tracking-wide text-[10px] font-semibold">{s.label}</p>
-                    <p className={`mt-0.5 truncate text-[11px] ${s.at ? "text-foreground" : "text-muted-foreground"}`}>{fmt(s.at)}</p>
-                  </div>
-                ))}
+              {isRejected && (
+                <p className="text-xs text-rose-500 mt-3 text-center">
+                  Marked as rejected · {fmt(proposal.rejected_at)}
+                </p>
+              )}
+              <div className="mt-4 flex justify-center gap-2">
+                {!isRejected && currentStatus !== "draft" && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => updateStatus("rejected")}
+                    className="gap-1.5 h-7 text-[11px] border-rose-500/30 text-rose-500 hover:bg-rose-500/10 hover:text-rose-500"
+                  >
+                    <XCircle className="w-3 h-3 shrink-0" /> Mark as rejected
+                  </Button>
+                )}
+                {isRejected && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => updateStatus("sent")}
+                    className="gap-1.5 h-7 text-[11px]"
+                  >
+                    Reopen proposal
+                  </Button>
+                )}
               </div>
             </div>
 
-            {/* Payment amount */}
-            <div className="pt-4 border-t border-border/60">
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">Payment Amount</p>
-              <div className="flex items-center gap-2 max-w-xs">
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  inputMode="decimal"
-                  placeholder="0.00"
-                  value={proposal.amount_cents != null ? (proposal.amount_cents / 100).toString() : ""}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    const cents = v === "" ? null : Math.round(parseFloat(v) * 100);
-                    setProposal({ ...proposal, amount_cents: Number.isFinite(cents as number) ? (cents as number) : null });
-                  }}
-                  onBlur={async () => {
-                    const cents = proposal.amount_cents;
-                    const { error } = await supabase
-                      .from("proposals")
-                      .update({ amount_cents: cents, currency: proposal.currency || "USD" })
-                      .eq("id", proposal.id);
-                    if (error) {
-                      toast({ title: "Couldn't save amount", description: error.message, variant: "destructive" });
-                    } else {
-                      toast({ title: "Amount saved" });
-                    }
-                  }}
-                  className="h-9"
-                />
+            {/* === PAYMENT SETUP === */}
+            <div className="pt-5 border-t border-border/60">
+              <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Payment Setup</p>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleAutoFillPrice}
+                  disabled={autoFillingPrice}
+                  className="gap-1.5 h-7 text-[11px] text-purple hover:text-purple hover:bg-purple/10"
+                >
+                  {autoFillingPrice ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                  Auto-fill from proposal
+                </Button>
+              </div>
+              <div className="flex items-stretch gap-2 max-w-md">
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base text-muted-foreground pointer-events-none">
+                    {proposal.currency === "EUR" ? "€" : proposal.currency === "GBP" ? "£" : "$"}
+                  </span>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    inputMode="decimal"
+                    placeholder="0.00"
+                    value={proposal.amount_cents != null ? (proposal.amount_cents / 100).toString() : ""}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      const cents = v === "" ? null : Math.round(parseFloat(v) * 100);
+                      setProposal({ ...proposal, amount_cents: Number.isFinite(cents as number) ? (cents as number) : null });
+                    }}
+                    onBlur={async () => {
+                      const cents = proposal.amount_cents;
+                      const { error } = await supabase
+                        .from("proposals")
+                        .update({ amount_cents: cents, currency: proposal.currency || "USD" })
+                        .eq("id", proposal.id);
+                      if (error) {
+                        toast({ title: "Couldn't save amount", description: error.message, variant: "destructive" });
+                      } else {
+                        toast({ title: "Amount saved" });
+                      }
+                    }}
+                    className={`h-12 pl-8 text-lg font-semibold ${
+                      proposal.amount_cents == null
+                        ? "border-amber-500/40 focus-visible:ring-amber-500/30"
+                        : ""
+                    }`}
+                  />
+                </div>
                 <select
                   value={proposal.currency || "USD"}
                   onChange={async (e) => {
@@ -702,7 +870,7 @@ export default function ProposalView() {
                     setProposal({ ...proposal, currency });
                     await supabase.from("proposals").update({ currency }).eq("id", proposal.id);
                   }}
-                  className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+                  className="h-12 rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground"
                 >
                   <option value="USD">USD</option>
                   <option value="EUR">EUR</option>
@@ -711,21 +879,54 @@ export default function ProposalView() {
                   <option value="AUD">AUD</option>
                 </select>
               </div>
-              <p className="text-[11px] text-muted-foreground mt-2">
-                {proposal.client_paid
-                  ? "Paid in full ✓"
+              <p className={`text-xs mt-2 ${
+                proposal.amount_cents == null ? "text-amber-500" : "text-muted-foreground"
+              }`}>
+                {clientPaid
+                  ? "✓ Paid in full"
                   : proposal.amount_cents
-                    ? "Pay Now button is live on the client portal"
-                    : "No amount set — Pay Now is hidden"}
+                    ? "This is the amount your client will pay"
+                    : "Set a payment amount to enable client payment"}
               </p>
             </div>
 
-            {/* Actions */}
-            <div className="pt-4 border-t border-border/60">
+            {/* === ACTIONS === */}
+            <div className="pt-5 border-t border-border/60">
               <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-3">Actions</p>
-              <div className="flex flex-wrap gap-2">
-                <Button onClick={() => handleExportPDF("proposal")} size="sm" className="gap-1.5 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold hover:brightness-110 transition-all h-9">
+
+              {/* Primary: Send to Client */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="lg"
+                    className="w-full sm:w-auto gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg shadow-purple/20 hover:brightness-110 hover:shadow-purple/30 transition-all h-11 px-6"
+                  >
+                    <Send className="w-4 h-4 shrink-0" />
+                    Send to Client
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  <DropdownMenuLabel>Send proposal</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={handleSendCopy} className="gap-2">
+                    <Copy className="w-4 h-4" /> Copy client link
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleSendEmail} className="gap-2">
+                    <Mail className="w-4 h-4" /> Email {clientEmail ? "client" : "(no client email)"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handlePreview} className="gap-2">
+                    <ExternalLink className="w-4 h-4" /> Open client preview
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Secondary actions */}
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button onClick={() => handleExportPDF("proposal")} variant="outline" size="sm" className="gap-1.5 h-9">
                   <Download className="w-3.5 h-3.5 shrink-0" /> Export Proposal
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleSave} disabled={saving} className="gap-1.5 h-9">
+                  {saving ? <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" /> : <Save className="w-3.5 h-3.5 shrink-0" />}
+                  Save
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -755,17 +956,39 @@ export default function ProposalView() {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <Button variant="outline" size="sm" onClick={handleSave} disabled={saving} className="gap-1.5 h-9">
-                  {saving ? <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" /> : <Save className="w-3.5 h-3.5 shrink-0" />}
-                  Save
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => handleExportPDF("invoice")} className="gap-1.5 h-9">
-                  <Download className="w-3.5 h-3.5 shrink-0" /> Invoice
-                </Button>
-                <Button variant="outline" size="sm" onClick={handleCopyProposal} className="gap-1.5 h-9">
-                  {copied ? <Check className="w-3.5 h-3.5 shrink-0" /> : <Copy className="w-3.5 h-3.5 shrink-0" />}
-                  {copied ? "Copied!" : "Copy"}
-                </Button>
+              </div>
+
+              {/* Tertiary actions */}
+              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 pt-3 border-t border-border/40">
+                <button
+                  type="button"
+                  onClick={handlePreview}
+                  className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Eye className="w-3 h-3" /> Preview Client View
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSendCopy}
+                  className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Copy className="w-3 h-3" /> Copy Link
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleExportPDF("invoice")}
+                  className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <FileText className="w-3 h-3" /> Generate Invoice
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCopyProposal}
+                  className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                  {copied ? "Copied!" : "Copy Markdown"}
+                </button>
               </div>
             </div>
           </div>
