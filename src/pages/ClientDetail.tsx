@@ -336,6 +336,70 @@ export default function ClientDetail() {
           </Card>
         </div>
 
+        {/* Lead Summary — only if this client came through the Lead Assistant */}
+        {(client.original_lead_message || client.lead_quality || client.ai_recommendation || client.lead_source) && (
+          <Card className="glass-card border-accent/20">
+            <CardContent className="p-6 space-y-5">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-accent" /> Lead Summary
+                </h2>
+                {client.lead_source && (
+                  <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 text-xs">
+                    Source: {client.lead_source}
+                  </Badge>
+                )}
+              </div>
+              <div className="h-px bg-border" />
+
+              {client.original_lead_message && (
+                <div className="space-y-2">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                    <MessageSquare className="w-3 h-3" /> Original lead message
+                  </div>
+                  <div className="rounded-lg bg-muted/40 border border-border/50 p-3 text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                    {client.original_lead_message}
+                  </div>
+                </div>
+              )}
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                {client.lead_quality && (
+                  <div className="rounded-lg border border-border/60 bg-muted/30 p-4 space-y-2">
+                    <div className="text-xs uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+                      <Gauge className="w-3 h-3" /> AI lead quality
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className={
+                        client.lead_quality === "High"
+                          ? "bg-emerald-500/15 text-emerald-600 border-emerald-500/30"
+                          : client.lead_quality === "Medium"
+                          ? "bg-amber-500/15 text-amber-600 border-amber-500/30"
+                          : "bg-rose-500/15 text-rose-600 border-rose-500/30"
+                      }
+                    >
+                      {client.lead_quality} Quality Lead
+                    </Badge>
+                  </div>
+                )}
+                {client.ai_recommendation && (
+                  <div className="rounded-lg border border-border/60 bg-muted/30 p-4 space-y-2">
+                    <div className="text-xs uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+                      <Lightbulb className="w-3 h-3" /> AI recommendation
+                    </div>
+                    <p className="text-sm font-medium text-foreground">{client.ai_recommendation}</p>
+                  </div>
+                )}
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                Captured {new Date(client.created_at).toLocaleDateString()}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Intake details / edit form */}
         <Card className="glass-card">
           <CardContent className="p-6 space-y-5">
