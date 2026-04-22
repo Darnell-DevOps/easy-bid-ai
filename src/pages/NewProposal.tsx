@@ -46,12 +46,30 @@ function looksUnclear(text: string | undefined | null): boolean {
 
 // Extract numeric value from a budget string like "£5,000" => "5000"
 const parseBudgetDigits = (raw: string) => (raw || "").replace(/[^0-9]/g, "");
-const formatBudget = (digits: string) => {
+
+const CURRENCIES = [
+  { code: "GBP", symbol: "£", locale: "en-GB" },
+  { code: "USD", symbol: "$", locale: "en-US" },
+  { code: "EUR", symbol: "€", locale: "en-IE" },
+] as const;
+type CurrencyCode = typeof CURRENCIES[number]["code"];
+const getCurrency = (code: CurrencyCode) => CURRENCIES.find((c) => c.code === code) || CURRENCIES[0];
+
+const formatBudget = (digits: string, currency: CurrencyCode = "GBP") => {
   if (!digits) return "";
   const n = parseInt(digits, 10);
   if (isNaN(n)) return "";
-  return `£${n.toLocaleString("en-GB")}`;
+  const c = getCurrency(currency);
+  return `${c.symbol}${n.toLocaleString(c.locale)}`;
 };
+
+// Detect currency from a prefilled string like "$5,000" or "€2000"
+function detectCurrency(raw: string | undefined | null): CurrencyCode {
+  if (!raw) return "GBP";
+  if (raw.includes("$")) return "USD";
+  if (raw.includes("€")) return "EUR";
+  return "GBP";
+}
 
 const TIMELINE_UNITS = ["days", "weeks", "months"] as const;
 type TimelineUnit = typeof TIMELINE_UNITS[number];
@@ -71,7 +89,7 @@ function parseTimeline(raw: string): { qty: string; unit: TimelineUnit; custom: 
 
 const NAME_REGEX = /^[A-Za-zÀ-ÿ' \-.]{2,}$/;
 const COMPANY_REGEX = /^(?=.*[A-Za-z0-9])[A-Za-zÀ-ÿ0-9 .,&'\-]+$/;
-const BUDGET_PRESETS = [500, 1000, 5000, 10000];
+const BUDGET_PRESETS = [500, 1000, 2000, 5000, 10000];
 
 export default function NewProposal() {
   const navigate = useNavigate();
