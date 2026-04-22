@@ -53,6 +53,9 @@ export default function LeadAssistant() {
       setBudget(data.budget || "");
       setTimeline(data.timeline || "");
       setNotes(data.notes || "");
+      setLeadQuality((data.lead_quality as "High" | "Medium" | "Low") || "");
+      setQualityReason(data.quality_reason || "");
+      setAiRecommendation(data.ai_recommendation || "");
       setHasResponse(true);
       setSavedClientId(null);
     } catch (e: any) {
