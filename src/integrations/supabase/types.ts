@@ -74,6 +74,57 @@ export type Database = {
         }
         Relationships: []
       }
+      policies: {
+        Row: {
+          business_name: string
+          business_type: string
+          content: string
+          country: string
+          created_at: string
+          data_collection: string | null
+          id: string
+          payment_methods: string | null
+          policy_type: string
+          refund_rules: string | null
+          services_offered: string | null
+          special_requirements: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_name: string
+          business_type: string
+          content?: string
+          country: string
+          created_at?: string
+          data_collection?: string | null
+          id?: string
+          payment_methods?: string | null
+          policy_type: string
+          refund_rules?: string | null
+          services_offered?: string | null
+          special_requirements?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_name?: string
+          business_type?: string
+          content?: string
+          country?: string
+          created_at?: string
+          data_collection?: string | null
+          id?: string
+          payment_methods?: string | null
+          policy_type?: string
+          refund_rules?: string | null
+          services_offered?: string | null
+          special_requirements?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       proposals: {
         Row: {
           budget: string
