@@ -24,57 +24,75 @@ export default function PremiumProposalRenderer({ content }: PremiumProposalRend
   const sections = content.split(/(?=^## )/m).filter(Boolean);
 
   return (
-    <div className="space-y-6 lg:space-y-8">
+    <div className="divide-y divide-border/60">
       {sections.map((section, i) => {
         const lines = section.trim().split("\n");
         const titleLine = lines[0]?.replace(/^##\s*/, "") || "";
         const body = lines.slice(1).join("\n").trim();
         const sectionType = classifySection(titleLine);
 
+        const SectionShell = ({ children }: { children: React.ReactNode }) => (
+          <section className="py-8 lg:py-10">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="h-1 w-8 rounded-full bg-gradient-to-r from-purple to-accent" />
+              <h2 className="text-xl lg:text-2xl font-bold text-foreground tracking-tight">{titleLine}</h2>
+            </div>
+            {children}
+          </section>
+        );
+
         if (sectionType === "cta") {
           return (
-            <div
-              key={i}
-              className="relative overflow-hidden rounded-xl border border-purple/30 bg-gradient-to-br from-purple/10 via-accent/5 to-transparent p-6 lg:p-10"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-purple/5 to-accent/5 opacity-50" />
-              <div className="relative">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple/20">
-                    <ArrowRight className="h-5 w-5 text-purple" />
-                  </div>
-                  <h2 className="text-xl lg:text-2xl font-bold text-foreground">{titleLine}</h2>
+            <section key={i} className="py-10 lg:py-12">
+              <div className="rounded-xl border border-purple/30 bg-gradient-to-br from-purple/10 via-accent/5 to-transparent p-6 lg:p-10 text-center">
+                <div className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-purple/20 mb-4">
+                  <ArrowRight className="h-5 w-5 text-purple" />
                 </div>
-              <div className="prose-content text-muted-foreground leading-relaxed max-w-none lg:max-w-[70ch]">
-                  <ReactMarkdown>{body}</ReactMarkdown>
-                </div>
-                <div className="mt-6 inline-flex items-center gap-2 rounded-lg bg-purple/20 border border-purple/30 px-5 py-3 text-sm font-semibold text-purple">
+                <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-3 tracking-tight">
+                  Ready to get started?
+                </h2>
+                <p className="text-muted-foreground max-w-md mx-auto mb-6 leading-relaxed">
+                  Three simple steps to begin — no friction, no delays.
+                </p>
+                <ol className="max-w-sm mx-auto space-y-3 text-left mb-8">
+                  {[
+                    "Accept this proposal",
+                    "Make payment securely online",
+                    "Work begins immediately",
+                  ].map((step, idx) => (
+                    <li key={idx} className="flex items-start gap-3">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-purple/20 text-xs font-bold text-purple">
+                        {idx + 1}
+                      </span>
+                      <span className="text-sm text-foreground leading-relaxed pt-0.5">{step}</span>
+                    </li>
+                  ))}
+                </ol>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple to-accent px-7 py-3 text-sm font-semibold text-accent-foreground shadow-lg shadow-purple/20 hover:brightness-110 hover:shadow-purple/30 transition-all"
+                >
                   <Sparkles className="h-4 w-4" />
-                  Ready to get started? Confirm and we'll begin immediately.
-                </div>
+                  Accept &amp; Get Started
+                </button>
+                {body && (
+                  <div className="prose-content text-muted-foreground leading-relaxed max-w-xl mx-auto mt-6 text-sm">
+                    <ReactMarkdown>{body}</ReactMarkdown>
+                  </div>
+                )}
               </div>
-            </div>
+            </section>
           );
         }
 
         if (sectionType === "pricing") {
           return (
-            <div
-              key={i}
-              className="relative overflow-hidden rounded-xl border border-purple/30 bg-card p-6 lg:p-10 shadow-lg shadow-purple/5"
-            >
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple to-accent" />
-              <div className="flex items-center gap-3 mb-6">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple/20">
-                  <span className="text-lg font-bold text-purple">£</span>
-                </div>
-                <h2 className="text-xl lg:text-2xl font-bold text-foreground">{titleLine}</h2>
-              </div>
+            <SectionShell key={i}>
               <div className="pricing-section text-muted-foreground leading-relaxed">
                 <ReactMarkdown
                   components={{
                     table: ({ children }) => (
-                      <div className="overflow-hidden rounded-lg border border-border my-4">
+                      <div className="overflow-hidden rounded-lg border border-border my-2">
                         <table className="w-full text-sm">{children}</table>
                       </div>
                     ),
@@ -112,12 +130,11 @@ export default function PremiumProposalRenderer({ content }: PremiumProposalRend
                   {body}
                 </ReactMarkdown>
               </div>
-            </div>
+            </SectionShell>
           );
         }
 
         if (sectionType === "timeline") {
-          // Parse timeline items from markdown
           const timelineItems: { title: string; desc: string }[] = [];
           const itemRegex = /\*\*(.+?)\*\*[:\s]*(.+)/g;
           let match;
@@ -126,41 +143,51 @@ export default function PremiumProposalRenderer({ content }: PremiumProposalRend
           }
 
           return (
-            <div key={i} className="rounded-xl border border-border bg-card p-6 lg:p-10">
-              <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-6">{titleLine}</h2>
+            <SectionShell key={i}>
               {timelineItems.length > 0 ? (
-                <div className="relative pl-8 space-y-6">
+                <div className="relative pl-8 space-y-5">
                   <div className="absolute left-3 top-2 bottom-2 w-px bg-gradient-to-b from-purple via-accent to-purple/20" />
                   {timelineItems.map((item, j) => (
                     <div key={j} className="relative">
                       <div className="absolute -left-5 top-1.5 h-3 w-3 rounded-full border-2 border-purple bg-background" />
                       <div>
                         <p className="text-sm font-semibold text-foreground">{item.title}</p>
-                        <p className="text-sm text-muted-foreground mt-0.5">{item.desc}</p>
+                        <p className="text-sm text-muted-foreground mt-0.5 leading-relaxed">{item.desc}</p>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="prose-content text-muted-foreground leading-relaxed max-w-none lg:max-w-[70ch]">
+                <div className="prose-content text-muted-foreground leading-relaxed max-w-[70ch]">
                   <ReactMarkdown>{body}</ReactMarkdown>
                 </div>
               )}
-            </div>
+            </SectionShell>
           );
         }
 
         if (sectionType === "scope" || sectionType === "why") {
+          let processedBody = body;
+          if (sectionType === "why" && !/^\s*[-*]\s+/m.test(body)) {
+            const sentences = body
+              .replace(/\n+/g, " ")
+              .split(/(?<=[.!?])\s+(?=[A-Z])/)
+              .map((s) => s.trim())
+              .filter((s) => s.length > 8);
+            if (sentences.length >= 2) {
+              processedBody = sentences.map((s) => `- ${s}`).join("\n");
+            }
+          }
+
           return (
-            <div key={i} className="rounded-xl border border-border bg-card p-6 lg:p-10">
-              <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-5">{titleLine}</h2>
-              <div className="scope-content text-muted-foreground leading-relaxed max-w-none lg:max-w-[70ch]">
+            <SectionShell key={i}>
+              <div className="scope-content text-muted-foreground leading-relaxed max-w-[70ch]">
                 <ReactMarkdown
                   components={{
                     li: ({ children }) => (
                       <li className="flex items-start gap-3 py-1.5">
                         <CheckCircle2 className="h-4 w-4 text-purple mt-0.5 shrink-0" />
-                        <span>{children}</span>
+                        <span className="text-foreground/90">{children}</span>
                       </li>
                     ),
                     ul: ({ children }) => (
@@ -168,21 +195,20 @@ export default function PremiumProposalRenderer({ content }: PremiumProposalRend
                     ),
                   }}
                 >
-                  {body}
+                  {processedBody}
                 </ReactMarkdown>
               </div>
-            </div>
+            </SectionShell>
           );
         }
 
-        // Default section card
+        // Default section — no card, continuous flow
         return (
-          <div key={i} className="rounded-xl border border-border bg-card p-6 lg:p-10">
-            <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-4">{titleLine}</h2>
-            <div className="prose-content text-muted-foreground leading-relaxed max-w-none lg:max-w-[70ch]">
+          <SectionShell key={i}>
+            <div className="prose-content text-muted-foreground leading-relaxed max-w-[70ch] space-y-3">
               <ReactMarkdown>{body}</ReactMarkdown>
             </div>
-          </div>
+          </SectionShell>
         );
       })}
     </div>
