@@ -222,9 +222,9 @@ export default function NewProposal() {
     }
 
     const scope = form.project_scope.trim();
-    if (!scope) e.project_scope = "Project scope is required";
+    if (!scope) e.project_scope = "Add a short description so AI can generate a strong proposal";
     else if (scope.length < 20)
-      e.project_scope = "Add more detail so AI can generate a better proposal";
+      e.project_scope = "Add a little more detail so AI can generate a stronger proposal";
 
     if (form.goals.trim() && form.goals.trim().length < 10)
       e.goals = "Add a bit more detail (10+ characters)";
