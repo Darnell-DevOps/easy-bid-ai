@@ -6,14 +6,15 @@ const corsHeaders = {
 };
 
 const SECTION_HEADINGS = [
-  "Project Proposal",
+  "What You'll Get",
   "Introduction",
-  "Understanding of Your Needs",
-  "Proposed Solution",
+  "Your Current Challenge",
+  "How We'll Solve This",
   "Scope of Work",
   "Deliverables",
   "Timeline",
   "Expected Outcomes",
+  "Investment",
   "Why Choose Us",
   "Next Steps",
 ];
@@ -69,39 +70,53 @@ ${buildClientContext(p)}
 
 ${tone ? tone + "\n\n" : ""}Return valid JSON with exactly three keys: "proposal", "pricing", "invoice".
 
-"proposal" must be a Markdown document with these sections IN THIS EXACT ORDER. Every section is mandatory and uses "## " heading:
+"proposal" must be a Markdown document with these sections IN THIS EXACT ORDER. Every section is mandatory and uses "## " heading. DO NOT include a "Project Proposal" or generic title section — the page already shows a hero.
 
-## Project Proposal
-A one-line subtitle with the client name and company.
+## What You'll Get
+A bullet list of 3-4 short, outcome-driven statements describing what the client will walk away with. Each bullet starts with a strong verb or tangible result (e.g. "A conversion-optimised website that turns visitors into leads"). Keep each bullet to one line.
 
 ## Introduction
-Open with a strong, outcome-focused statement specific to this project. State what you will deliver and why it matters. 2-3 sentences max. No generic greetings.
+2-3 lines maximum. Direct and outcome-focused. State the goal of this engagement and the result the client can expect. No greetings, no filler.
 
-## Understanding of Your Needs
-Demonstrate genuine understanding of the client's situation, challenges, and objectives. Reference specifics from their goals or original enquiry where available. 2-3 short paragraphs.
+## Your Current Challenge
+A bullet list of 3-5 specific pain points, problems, or missed opportunities the client is facing. Reference details from their goals or original enquiry where available. Each bullet is one short sentence — concrete and recognisable.
 
-## Proposed Solution
-Describe your recommended strategy clearly. Explain approach, methodology, and key decisions. Connect every recommendation back to the client's goals. 2-3 focused paragraphs.
+## How We'll Solve This
+A bullet list of 3-5 short bullet points describing your approach. Each bullet starts with an action verb (e.g. "Audit your current funnel to find drop-off points"). No long paragraphs.
 
 ## Scope of Work
-List every specific deliverable and activity as bullet points. Be concrete — name actual outputs (e.g. "12 branded social media templates" not "content creation"). Group related items logically.
+A clean bullet list of every specific deliverable and activity. Be concrete — name actual outputs (e.g. "12 branded social media templates" not "content creation"). Group related items logically. No prose explanation between bullets.
 
 ## Deliverables
-A clean bullet list of the final tangible assets the client will receive. Different from Scope of Work — these are the artefacts handed over (files, accounts, reports, designs, code, training).
+A bullet list of the final tangible assets the client will receive. Different from Scope of Work — these are the artefacts handed over (files, accounts, reports, designs, code, training). One line each, no extra explanation.
 
 ## Timeline
-Break the project into clear phases with durations. Use a structured format (Phase 1: Discovery — Week 1-2). Be realistic and specific to the stated timeline.
+Break the project into clear phases with durations. Use bold phase names with hyphenated descriptions (e.g. **Phase 1: Discovery** — Week 1-2: Stakeholder interviews and audit). Be realistic and specific to the stated timeline.
 
 ## Expected Outcomes
-List 4-6 specific, measurable outcomes the client can expect. Each tailored to this project — no generic filler. Frame as tangible results (e.g. "30% increase in engagement within 90 days").
+List 4-6 specific, measurable outcomes as bullets. Each tailored to this project — no generic filler. Frame as tangible results (e.g. "30% increase in engagement within 90 days").
+
+## Investment
+Format EXACTLY as follows:
+
+**[Total price with £ symbol and comma formatting]**
+
+A 1-2 sentence description of what's included at this price, framed in terms of value and ROI.
+
+**Payment terms:** 50% deposit to start, 50% on completion. Invoice payable within 14 days.
+
+The total must align with the stated budget.
 
 ## Why Choose Us
-3-4 bullet points. Each one sentence. Cover relevant expertise, results focus, delivery quality, communication.
+3-4 bullet points. Each one short sentence. Cover relevant expertise, results focus, delivery quality, and communication.
 
 ## Next Steps
-2-3 sentences explaining how to proceed. Include a clear call to action.
+Exactly these three bullets in this order:
+- Accept this proposal
+- Make payment
+- Work begins immediately
 
-"pricing" — Start with a 2-3 sentence paragraph framing the investment in terms of ROI and long-term value. Then a Markdown table with columns: Item | Description | Cost. Add subtotal, VAT (20%), and total. Costs must align with the stated budget.
+"pricing" — A Markdown table with columns: Item | Description | Cost. Add subtotal, VAT (20%), and total rows. Costs must align with the stated budget. No prose before or after the table.
 
 "invoice" — A professional Markdown invoice with:
 - Invoice number: INV-2026-001
@@ -114,9 +129,10 @@ List 4-6 specific, measurable outcomes the client can expect. Each tailored to t
 QUALITY CHECKLIST:
 - Every section references this client's specific project, never generic templates
 - No repeated phrases or sentence patterns across sections
-- Bullet points are concrete and actionable
+- Bullet points are concrete, scannable, and actionable
 - Numbers and timelines are realistic for the stated budget
 - Reads as ready to send — no placeholder text
+- DO NOT add a top-level title or "Project Proposal" heading
 
 Return ONLY the JSON object. No markdown code fences. No extra text.`;
 }
