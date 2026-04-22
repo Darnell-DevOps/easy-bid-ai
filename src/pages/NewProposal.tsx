@@ -68,8 +68,11 @@ export default function NewProposal() {
     budget: clientPrefill?.budget || templateData?.prefill?.budget || "",
     timeline: clientPrefill?.timeline || templateData?.prefill?.timeline || "",
     notes: clientPrefill?.notes || templateData?.prefill?.notes || "",
+    goals: clientPrefill?.goals || "",
+    deliverables: clientPrefill?.deliverables || "",
   });
   const prefilledClientId: string | undefined = clientPrefill?.client_id;
+  const originalLeadMessage: string | undefined = clientPrefill?.original_lead_message;
 
   const update = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
 
