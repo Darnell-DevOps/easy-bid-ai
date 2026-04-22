@@ -431,9 +431,9 @@ export default function ClientDetail() {
                 : "border-accent/30 bg-gradient-to-br from-accent/15 via-card to-purple/15"
             }`}
           >
-            <CardContent className="p-7 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-              <div className="space-y-1.5 max-w-xl">
-                {client.lead_quality === "High" && heroAction.variant === "primary" && (
+            <CardContent className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1 max-w-xl">
+                {client.lead_quality === "High" && heroAction.variant === "primary" && !hasAcceptedUnpaid && (
                   <p className="text-xs font-semibold uppercase tracking-wider text-emerald-500 flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5" /> High-quality lead — act now
                   </p>
@@ -446,7 +446,7 @@ export default function ClientDetail() {
               <Button
                 onClick={heroAction.onClick}
                 size="lg"
-                className={`gap-2 h-14 px-7 text-base font-semibold flex-shrink-0 ${
+                className={`gap-2 h-13 px-6 text-base font-semibold flex-shrink-0 ${
                   heroAction.variant === "success"
                     ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:brightness-110 shadow-lg shadow-emerald-500/25"
                     : "bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 shadow-lg shadow-accent/30"
