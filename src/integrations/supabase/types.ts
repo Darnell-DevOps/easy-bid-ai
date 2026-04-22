@@ -138,6 +138,7 @@ export type Database = {
           client_id: string | null
           client_name: string
           client_paid: boolean
+          client_response_message: string | null
           company_name: string
           created_at: string
           id: string
@@ -161,6 +162,7 @@ export type Database = {
           client_id?: string | null
           client_name: string
           client_paid?: boolean
+          client_response_message?: string | null
           company_name: string
           created_at?: string
           id?: string
@@ -184,6 +186,7 @@ export type Database = {
           client_id?: string | null
           client_name?: string
           client_paid?: boolean
+          client_response_message?: string | null
           company_name?: string
           created_at?: string
           id?: string
@@ -216,7 +219,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      client_portal_respond: {
+        Args: { _action: string; _message?: string; _proposal_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
