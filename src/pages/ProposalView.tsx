@@ -14,6 +14,8 @@ import { Download, Save, Loader2, Pencil, Eye, Copy, Check, DollarSign, Sparkles
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import ReactMarkdown from "react-markdown";
 import PremiumProposalRenderer from "@/components/proposal/PremiumProposalRenderer";
+import PremiumPricingRenderer from "@/components/proposal/PremiumPricingRenderer";
+import PremiumInvoiceRenderer from "@/components/proposal/PremiumInvoiceRenderer";
 import ProposalHeader from "@/components/proposal/ProposalHeader";
 import StatusBadge, { normalizeStatus, type ProposalStatus } from "@/components/proposal/StatusBadge";
 
@@ -796,6 +798,18 @@ export default function ProposalView() {
                         createdAt={proposal.created_at}
                       />
                       <MarkdownPreview content={t.content} isPremium />
+                    </div>
+                  ) : t.key === "pricing" ? (
+                    <div className="rounded-2xl border border-border/60 bg-card/40 px-6 sm:px-10 lg:px-14 py-8 lg:py-10 shadow-sm">
+                      <PremiumPricingRenderer content={t.content} />
+                    </div>
+                  ) : t.key === "invoice" ? (
+                    <div className="rounded-2xl border border-border/60 bg-card/40 px-6 sm:px-10 lg:px-14 py-8 lg:py-10 shadow-sm">
+                      <PremiumInvoiceRenderer
+                        content={t.content}
+                        clientName={proposal.client_name}
+                        companyName={proposal.company_name}
+                      />
                     </div>
                   ) : (
                     <div className="rounded-2xl border border-border/60 bg-card/40 px-6 sm:px-10 lg:px-14 py-8 lg:py-10 shadow-sm">
