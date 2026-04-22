@@ -147,6 +147,10 @@ export default function NewProposal() {
     deliverables: clientPrefill?.deliverables || "",
   });
 
+  // Currency state
+  const [currency, setCurrency] = useState<CurrencyCode>(initialCurrency);
+  const budgetInputRef = useRef<HTMLInputElement>(null);
+
   // Structured timeline state
   const [timelineQty, setTimelineQty] = useState<string>(initialTimeline.qty);
   const [timelineUnit, setTimelineUnit] = useState<TimelineUnit>(initialTimeline.unit);
@@ -155,19 +159,29 @@ export default function NewProposal() {
     initialTimeline.custom ? initialTimelineRaw : "",
   );
 
+  // Optional additional timeline duration ("3 months + 2 weeks")
+  const [extraTimelineEnabled, setExtraTimelineEnabled] = useState(false);
+  const [extraTimelineQty, setExtraTimelineQty] = useState("");
+  const [extraTimelineUnit, setExtraTimelineUnit] = useState<TimelineUnit>("weeks");
+
   // Track which fields the user has interacted with (for showing errors)
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const markTouched = (field: string) => setTouched((t) => ({ ...t, [field]: true }));
 
   // Sync structured timeline → form.timeline
   useEffect(() => {
-    const value = timelineCustom
+    const base = timelineCustom
       ? timelineCustomText.trim()
       : timelineQty
         ? `${timelineQty} ${timelineUnit}`
         : "";
+    const extra =
+      !timelineCustom && extraTimelineEnabled && extraTimelineQty
+        ? ` + ${extraTimelineQty} ${extraTimelineUnit}`
+        : "";
+    const value = base ? `${base}${extra}` : "";
     setForm((prev) => (prev.timeline === value ? prev : { ...prev, timeline: value }));
-  }, [timelineQty, timelineUnit, timelineCustom, timelineCustomText]);
+  }, [timelineQty, timelineUnit, timelineCustom, timelineCustomText, extraTimelineEnabled, extraTimelineQty, extraTimelineUnit]);
 
   const prefilledClientId: string | undefined = clientPrefill?.client_id;
   const originalLeadMessage: string | undefined = clientPrefill?.original_lead_message;
