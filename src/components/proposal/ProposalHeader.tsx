@@ -13,10 +13,10 @@ export default function ProposalHeader({ clientName, companyName, serviceType, c
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-purple to-accent">
-            <span className="text-sm font-bold text-accent-foreground">CS</span>
+            <span className="text-sm font-bold text-accent-foreground">SS</span>
           </div>
           <div>
-            <p className="text-sm font-semibold text-foreground">CloseSync AI</p>
+            <p className="text-sm font-semibold text-foreground">StriveSync</p>
             <p className="text-xs text-muted-foreground">Professional Proposal</p>
           </div>
         </div>
