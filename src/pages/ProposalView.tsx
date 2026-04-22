@@ -43,13 +43,15 @@ interface ProposalData {
 }
 
 const SECTION_HEADINGS = [
+  "What You'll Get",
   "Introduction",
-  "Understanding of Your Needs",
-  "Proposed Solution",
+  "Your Current Challenge",
+  "How We'll Solve This",
   "Scope of Work",
   "Deliverables",
   "Timeline",
   "Expected Outcomes",
+  "Investment",
   "Why Choose Us",
   "Next Steps",
 ];
