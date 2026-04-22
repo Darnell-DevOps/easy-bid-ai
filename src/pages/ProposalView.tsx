@@ -154,16 +154,23 @@ export default function ProposalView() {
   const updateStatus = async (next: ProposalStatus) => {
     if (!proposal) return;
     const nowIso = new Date().toISOString();
-    const updates: { status: string; sent_at?: string; viewed_at?: string; accepted_at?: string; rejected_at?: string } = { status: next };
-    // Only stamp timestamps if not already set, to preserve the original event time.
+    const updates: Record<string, string | null> = { status: next };
+    // Stamp timestamps once, preserving original event time.
     if (next === "sent" && !proposal.sent_at) updates.sent_at = nowIso;
     if (next === "viewed" && !proposal.viewed_at) updates.viewed_at = nowIso;
-    if (next === "accepted" && !proposal.accepted_at) updates.accepted_at = nowIso;
-    if (next === "rejected" && !proposal.rejected_at) updates.rejected_at = nowIso;
+    if (next === "accepted") {
+      if (!proposal.accepted_at) updates.accepted_at = nowIso;
+      // Accepted and rejected are mutually exclusive — clear the opposite stamp.
+      updates.rejected_at = null;
+    }
+    if (next === "rejected") {
+      if (!proposal.rejected_at) updates.rejected_at = nowIso;
+      updates.accepted_at = null;
+    }
 
     const previous = proposal;
-    setProposal({ ...proposal, ...updates });
-    const { error } = await supabase.from("proposals").update(updates).eq("id", proposal.id);
+    setProposal({ ...proposal, ...(updates as Partial<ProposalData>) });
+    const { error } = await supabase.from("proposals").update(updates as never).eq("id", proposal.id);
     if (error) {
       setProposal(previous);
       toast({ title: "Status update failed", description: error.message, variant: "destructive" });
@@ -631,52 +638,52 @@ export default function ProposalView() {
             { key: "rejected", label: "Rejected", at: proposal.rejected_at },
           ];
           return (
-            <div className="rounded-xl border border-border bg-card p-5 mb-6">
-              <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-                <div className="flex items-center gap-3">
+            <div className="rounded-xl border border-border bg-card p-4 sm:p-5 mb-6 overflow-hidden">
+              <div className="flex flex-col gap-4 mb-4">
+                <div className="flex items-center gap-3 flex-wrap">
                   <h3 className="text-sm font-semibold text-foreground">Proposal Status</h3>
                   <StatusBadge status={currentStatus} />
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full">
                   <Button
                     size="sm"
                     variant={currentStatus === "sent" ? "default" : "outline"}
                     onClick={() => updateStatus("sent")}
-                    className="gap-2 h-8 text-xs"
+                    className="gap-1.5 h-9 text-xs w-full min-w-0"
                   >
-                    <Send className="w-3 h-3" /> Mark as Sent
+                    <Send className="w-3 h-3 shrink-0" /> <span className="truncate">Mark Sent</span>
                   </Button>
                   <Button
                     size="sm"
                     variant={currentStatus === "viewed" ? "default" : "outline"}
                     onClick={() => updateStatus("viewed")}
-                    className="gap-2 h-8 text-xs"
+                    className="gap-1.5 h-9 text-xs w-full min-w-0"
                   >
-                    <Eye className="w-3 h-3" /> Mark as Viewed
+                    <Eye className="w-3 h-3 shrink-0" /> <span className="truncate">Mark Viewed</span>
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => updateStatus("accepted")}
-                    className="gap-2 h-8 text-xs border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-500"
+                    className="gap-1.5 h-9 text-xs w-full min-w-0 border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-500"
                   >
-                    <CheckCircle2 className="w-3 h-3" /> Accepted
+                    <CheckCircle2 className="w-3 h-3 shrink-0" /> <span className="truncate">Accepted</span>
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => updateStatus("rejected")}
-                    className="gap-2 h-8 text-xs border-rose-500/30 text-rose-500 hover:bg-rose-500/10 hover:text-rose-500"
+                    className="gap-1.5 h-9 text-xs w-full min-w-0 border-rose-500/30 text-rose-500 hover:bg-rose-500/10 hover:text-rose-500"
                   >
-                    <XCircle className="w-3 h-3" /> Rejected
+                    <XCircle className="w-3 h-3 shrink-0" /> <span className="truncate">Rejected</span>
                   </Button>
                 </div>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 text-xs">
                 {stages.map((s) => (
-                  <div key={s.key} className="rounded-lg border border-border bg-background/40 p-3">
+                  <div key={s.key} className="rounded-lg border border-border bg-background/40 p-3 min-w-0">
                     <p className="text-muted-foreground uppercase tracking-wide text-[10px] font-semibold">{s.label}</p>
-                    <p className={`mt-1 ${s.at ? "text-foreground" : "text-muted-foreground"}`}>{fmt(s.at)}</p>
+                    <p className={`mt-1 truncate ${s.at ? "text-foreground" : "text-muted-foreground"}`}>{fmt(s.at)}</p>
                   </div>
                 ))}
               </div>
@@ -685,27 +692,27 @@ export default function ProposalView() {
         })()}
 
         {/* Action bar */}
-        <div className="rounded-xl border border-border bg-card p-5 mb-8">
+        <div className="rounded-xl border border-border bg-card p-4 sm:p-5 mb-8 overflow-hidden">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <p className="text-xs text-muted-foreground">Your proposal is ready</p>
-            <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+            <div className="flex flex-col gap-3 w-full lg:w-auto lg:flex-row">
               <Button
                 onClick={() => handleExportPDF("proposal")}
                 size="lg"
-                className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 hover:shadow-purple/30 transition-all h-11 sm:flex-1 lg:flex-none lg:px-8"
+                className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 hover:shadow-purple/30 transition-all h-11 w-full lg:w-auto lg:px-8"
               >
-                <Download className="w-4 h-4" /> Export Proposal
+                <Download className="w-4 h-4 shrink-0" /> <span className="truncate">Export Proposal</span>
               </Button>
-              <div className="flex gap-3 sm:flex-1 lg:flex-none">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:flex lg:gap-3 w-full lg:w-auto">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" disabled={!!regenerating} className="gap-2 hover:brightness-125 transition-all h-10 flex-1 lg:px-6">
+                    <Button variant="outline" disabled={!!regenerating} className="gap-2 hover:brightness-125 transition-all h-10 w-full min-w-0 lg:w-auto lg:px-6">
                       {regenerating === "full" || regenerating === "concise" || regenerating === "persuasive" || regenerating === "alternative" ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
                       ) : (
-                        <Sparkles className="w-4 h-4" />
+                        <Sparkles className="w-4 h-4 shrink-0" />
                       )}
-                      Regenerate
+                      <span className="truncate">Regenerate</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
@@ -725,16 +732,16 @@ export default function ProposalView() {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <Button variant="outline" onClick={handleSave} disabled={saving} className="gap-2 hover:brightness-125 transition-all h-10 flex-1 lg:px-6">
-                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                  Save
+                <Button variant="outline" onClick={handleSave} disabled={saving} className="gap-2 hover:brightness-125 transition-all h-10 w-full min-w-0 lg:w-auto lg:px-6">
+                  {saving ? <Loader2 className="w-4 h-4 shrink-0 animate-spin" /> : <Save className="w-4 h-4 shrink-0" />}
+                  <span className="truncate">Save</span>
                 </Button>
-                <Button variant="outline" onClick={() => handleExportPDF("invoice")} className="gap-2 hover:brightness-125 transition-all h-10 flex-1 lg:px-6">
-                  <Download className="w-4 h-4" /> Invoice
+                <Button variant="outline" onClick={() => handleExportPDF("invoice")} className="gap-2 hover:brightness-125 transition-all h-10 w-full min-w-0 lg:w-auto lg:px-6">
+                  <Download className="w-4 h-4 shrink-0" /> <span className="truncate">Invoice</span>
                 </Button>
-                <Button variant="outline" onClick={handleCopyProposal} className="gap-2 hover:brightness-125 transition-all h-10 flex-1 lg:px-6">
-                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  {copied ? "Copied!" : "Copy"}
+                <Button variant="outline" onClick={handleCopyProposal} className="gap-2 hover:brightness-125 transition-all h-10 w-full min-w-0 lg:w-auto lg:px-6">
+                  {copied ? <Check className="w-4 h-4 shrink-0" /> : <Copy className="w-4 h-4 shrink-0" />}
+                  <span className="truncate">{copied ? "Copied!" : "Copy"}</span>
                 </Button>
               </div>
             </div>
