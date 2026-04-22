@@ -185,7 +185,9 @@ export default function LeadAssistant() {
           project_scope: notes || message,
           budget,
           timeline,
-          notes: goals ? `Client goals: ${goals}` : "",
+          notes: "",
+          goals,
+          original_lead_message: message,
         },
       },
     });
