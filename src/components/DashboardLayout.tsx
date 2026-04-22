@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, Plus, CreditCard, Settings, LogOut, Menu, X, LayoutTemplate, Users } from "lucide-react";
+import { FileText, Plus, CreditCard, Settings, LogOut, Menu, X, LayoutTemplate, Users, Sparkles } from "lucide-react";
 
 const navItems = [
   { label: "New Proposal", icon: Plus, href: "/dashboard/new" },
   { label: "Saved Proposals", icon: FileText, href: "/dashboard" },
   { label: "Clients", icon: Users, href: "/dashboard/clients" },
+  { label: "Lead Assistant", icon: Sparkles, href: "/dashboard/leads" },
   { label: "Templates", icon: LayoutTemplate, href: "/dashboard/templates" },
   { label: "Billing", icon: CreditCard, href: "/dashboard/billing" },
   { label: "Settings", icon: Settings, href: "/dashboard/settings" },
