@@ -54,7 +54,7 @@ export default function StatsCards({ totalProposals, revenueGenerated, activeCli
 
   const wrapperClass =
     layout === "stacked"
-      ? "grid grid-cols-2 lg:grid-cols-1 gap-3"
+      ? "grid grid-cols-2 gap-3"
       : "grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4";
 
   return (
