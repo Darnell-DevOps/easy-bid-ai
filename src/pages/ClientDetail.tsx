@@ -29,6 +29,9 @@ import {
   Pencil,
   Save,
   X,
+  MessageSquare,
+  Gauge,
+  Lightbulb,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -56,6 +59,11 @@ interface ClientInfo {
   goals: string | null;
   status: string;
   is_active: boolean;
+  lead_quality: string | null;
+  ai_recommendation: string | null;
+  lead_source: string | null;
+  original_lead_message: string | null;
+  created_at: string;
 }
 
 interface Proposal {
