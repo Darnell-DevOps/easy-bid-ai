@@ -26,6 +26,7 @@ import NewPolicy from "./pages/NewPolicy";
 import PolicyView from "./pages/PolicyView";
 import ClientPortal from "./pages/ClientPortal";
 import NotFound from "./pages/NotFound";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <PaymentTestModeBanner />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
