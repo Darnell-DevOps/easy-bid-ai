@@ -237,10 +237,10 @@ export default function ProposalView() {
     setEditMode((prev) => ({ ...prev, [tab]: !prev[tab] }));
   };
 
-  const LOGO_BASE64 = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSI4MCIgdmlld0JveD0iMCAwIDgwIDgwIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZyIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiM2YzVjZTciLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjojYTI5YmZlIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iODAiIHJ4PSIxNiIgZmlsbD0idXJsKCNnKSIvPgogIDx0ZXh0IHg9IjQwIiB5PSI1MiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSI3MDAiIGZvbnQtc2l6ZT0iMzYiIGZpbGw9IndoaXRlIj5DUzwvdGV4dD4KPC9zdmc+";
+  const LOGO_BASE64 = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSI4MCIgdmlld0JveD0iMCAwIDgwIDgwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiM2YzVjZTciLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNhMjliZmUiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iODAiIHJ4PSIxNiIgZmlsbD0idXJsKCNnKSIvPjx0ZXh0IHg9IjQwIiB5PSI1MiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSI3MDAiIGZvbnQtc2l6ZT0iMzAiIGZpbGw9IndoaXRlIj5TUzwvdGV4dD48L3N2Zz4=";
 
   const handleExportPDF = (type: "proposal" | "invoice") => {
-    const content = type === "proposal" ? editedProposal + "\n\n---\n\n" + editedPricing : editedInvoice;
+    const rawContent = type === "proposal" ? editedProposal + "\n\n## Pricing\n\n" + editedPricing : editedInvoice;
     const docTitle = type === "proposal" ? "Project Proposal" : "Invoice";
     const title = type === "proposal"
       ? `Proposal - ${proposal?.client_name}`
@@ -249,324 +249,282 @@ export default function ProposalView() {
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
 
-    // Convert markdown to structured HTML
-    let htmlContent = content
-      .replace(/^## (.+)$/gm, '</div><div class="section"><div class="section-title-wrap"><h2>$1</h2><div class="section-accent"></div></div>')
-      .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/^- (.+)$/gm, '<li><span class="bullet"></span><span class="li-text">$1</span></li>')
-      .replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>')
-      .replace(/\|(.+)\|/g, (match) => {
-        const cells = match.split('|').filter(Boolean).map(c => c.trim());
-        if (cells.every(c => /^[-:]+$/.test(c))) return '';
-        return '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
-      })
-      .replace(/(<tr>.*<\/tr>\n?)+/g, '<div class="pricing-card"><table><tbody>$&</tbody></table></div>')
-      .replace(/\n{2,}/g, '</p><p>')
-      .replace(/^(?!<[hultdops])(.+)$/gm, '<p>$1</p>')
-      .replace(/---/g, '');
+    // Markdown → structured HTML, section-wrapped
+    const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-    // Style table header and total rows
-    htmlContent = htmlContent.replace(
-      /<tbody>([\s\S]*?)<\/tbody>/g,
-      (match) => {
-        const rows = match.match(/<tr>[\s\S]*?<\/tr>/g);
-        if (!rows || rows.length < 2) return match;
-        const firstRow = rows[0];
-        const headerRow = firstRow.replace(/<td>/g, '<td class="th">');
-        let result = match.replace(firstRow, headerRow);
-        const lastRow = rows[rows.length - 1];
-        const totalRow = lastRow.replace(/<tr>/, '<tr class="total-row">');
-        result = result.replace(lastRow, totalRow);
-        return result;
+    const renderInline = (s: string) =>
+      escapeHtml(s)
+        .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+        .replace(/\*(.+?)\*/g, "<em>$1</em>");
+
+    const lines = rawContent.replace(/\r\n/g, "\n").split("\n");
+    const sections: { title: string; html: string }[] = [];
+    let current: { title: string; buffer: string[] } | null = { title: docTitle === "Invoice" ? "Invoice" : "Overview", buffer: [] };
+
+    const flushBuffer = (buf: string[]): string => {
+      const out: string[] = [];
+      let i = 0;
+      while (i < buf.length) {
+        const line = buf[i];
+        if (/^---+$/.test(line.trim())) { i++; continue; }
+        // Table
+        if (/^\s*\|.+\|\s*$/.test(line)) {
+          const rows: string[][] = [];
+          while (i < buf.length && /^\s*\|.+\|\s*$/.test(buf[i])) {
+            const cells = buf[i].trim().split("|").slice(1, -1).map(c => c.trim());
+            if (!cells.every(c => /^[-:]+$/.test(c))) rows.push(cells);
+            i++;
+          }
+          if (rows.length) {
+            const header = rows[0];
+            const body = rows.slice(1);
+            const totalIdx = body.findIndex(r => /total/i.test(r[0] || ""));
+            out.push('<div class="pricing-card"><table><thead><tr>' +
+              header.map(h => `<th>${renderInline(h)}</th>`).join("") +
+              '</tr></thead><tbody>' +
+              body.map((r, ri) => {
+                const cls = ri === totalIdx ? ' class="total-row"' : '';
+                return `<tr${cls}>` + r.map((c, ci) => `<td${ci === r.length - 1 ? ' class="num"' : ''}>${renderInline(c)}</td>`).join("") + '</tr>';
+              }).join("") +
+              '</tbody></table></div>');
+          }
+          continue;
+        }
+        // List
+        if (/^\s*[-*]\s+/.test(line)) {
+          const items: string[] = [];
+          while (i < buf.length && /^\s*[-*]\s+/.test(buf[i])) {
+            items.push(buf[i].replace(/^\s*[-*]\s+/, ""));
+            i++;
+          }
+          out.push('<ul>' + items.map(it => `<li><span class="bullet"></span><span>${renderInline(it)}</span></li>`).join("") + '</ul>');
+          continue;
+        }
+        // H3
+        const h3 = line.match(/^###\s+(.+)$/);
+        if (h3) { out.push(`<h3>${renderInline(h3[1])}</h3>`); i++; continue; }
+        // Blank → paragraph break
+        if (!line.trim()) { i++; continue; }
+        // Paragraph (consume consecutive non-special lines)
+        const paraLines: string[] = [];
+        while (
+          i < buf.length &&
+          buf[i].trim() &&
+          !/^###\s+/.test(buf[i]) &&
+          !/^\s*[-*]\s+/.test(buf[i]) &&
+          !/^\s*\|.+\|\s*$/.test(buf[i]) &&
+          !/^---+$/.test(buf[i].trim())
+        ) {
+          paraLines.push(buf[i]);
+          i++;
+        }
+        if (paraLines.length) out.push(`<p>${renderInline(paraLines.join(" "))}</p>`);
       }
-    );
+      return out.join("\n");
+    };
 
-    // Remove leading empty div
-    htmlContent = htmlContent.replace(/^<\/div>/, '');
-    htmlContent += '</div>';
+    for (const line of lines) {
+      const h2 = line.match(/^##\s+(.+)$/);
+      if (h2) {
+        if (current && current.buffer.length) sections.push({ title: current.title, html: flushBuffer(current.buffer) });
+        current = { title: h2[1].trim(), buffer: [] };
+      } else {
+        current!.buffer.push(line);
+      }
+    }
+    if (current && current.buffer.length) sections.push({ title: current.title, html: flushBuffer(current.buffer) });
+
+    const sectionsHtml = sections
+      .filter(s => s.html.trim())
+      .map(s => `<section class="section"><h2>${escapeHtml(s.title)}</h2><div class="section-body">${s.html}</div></section>`)
+      .join("");
 
     const dateStr = new Date(proposal?.created_at || '').toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
 
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>${title}</title>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-        <style>
-          @page { size: A4; margin: 0; }
-          *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    printWindow.document.write(`<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>${title}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #ffffff; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #1f2937;
+    line-height: 1.65;
+    font-size: 11pt;
+    -webkit-font-smoothing: antialiased;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .doc { max-width: 780px; margin: 0 auto; padding: 32px 28px 56px; }
 
-          body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            color: #cbd5e1;
-            line-height: 1.75;
-            font-size: 14px;
-            background: #0a0e1a;
-            -webkit-font-smoothing: antialiased;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
+  /* COVER */
+  .cover {
+    border: 1px solid #e5e7eb;
+    border-top: 4px solid #6c5ce7;
+    border-radius: 6px;
+    padding: 28px 32px 32px;
+    margin-bottom: 32px;
+    background: #ffffff;
+  }
+  .cover-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+  .cover-brand img { width: 28px; height: 28px; border-radius: 6px; }
+  .cover-brand-name { font-size: 11pt; font-weight: 700; color: #111827; letter-spacing: -0.2px; }
+  .cover-brand-tag { font-size: 8.5pt; color: #6b7280; margin-left: auto; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
+  .cover-eyebrow { font-size: 9pt; color: #6c5ce7; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
+  .cover-title { font-family: 'Fraunces', 'Inter', serif; font-size: 28pt; font-weight: 700; color: #0f172a; letter-spacing: -0.8px; line-height: 1.1; margin-bottom: 22px; }
+  .cover-meta { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px 32px; padding-top: 20px; border-top: 1px solid #f1f5f9; }
+  .meta-label { font-size: 8pt; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 4px; }
+  .meta-value { font-size: 11pt; color: #0f172a; font-weight: 600; }
 
-          .page-wrap {
-            max-width: 760px;
-            margin: 0 auto;
-            padding: 48px 40px 0 40px;
-          }
+  /* SECTIONS */
+  .section { padding: 22px 0 8px; border-top: 1px solid #f1f5f9; }
+  .section:first-of-type { border-top: none; padding-top: 8px; }
+  .section h2 {
+    font-family: 'Fraunces', 'Inter', serif;
+    font-size: 16pt;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: -0.3px;
+    margin-bottom: 14px;
+    position: relative;
+    padding-left: 14px;
+  }
+  .section h2::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 8px; bottom: 8px;
+    width: 3px;
+    background: #6c5ce7;
+    border-radius: 2px;
+  }
+  .section-body h3 {
+    font-size: 11pt;
+    font-weight: 700;
+    color: #111827;
+    margin: 18px 0 6px;
+    letter-spacing: -0.1px;
+  }
+  .section-body p {
+    margin: 8px 0;
+    color: #374151;
+    font-size: 11pt;
+    line-height: 1.7;
+  }
+  .section-body strong { color: #0f172a; font-weight: 600; }
+  .section-body em { color: #4b5563; }
 
-          /* ═══════════ HERO / COVER ═══════════ */
-          .hero {
-            background: linear-gradient(160deg, #0f172a 0%, #1a1340 40%, #0f172a 100%);
-            padding: 64px 0 56px 0;
-            position: relative;
-            overflow: hidden;
-          }
-          .hero-inner {
-            max-width: 760px;
-            margin: 0 auto;
-            padding: 0 40px;
-            position: relative;
-            z-index: 1;
-          }
-          .hero::before {
-            content: '';
-            position: absolute;
-            top: -40%;
-            right: -10%;
-            width: 500px;
-            height: 500px;
-            background: radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%);
-            pointer-events: none;
-          }
-          .hero::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, transparent 10%, #6c5ce7 30%, #a78bfa 50%, #6c5ce7 70%, transparent 90%);
-          }
-          .hero-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 48px;
-          }
-          .hero-logo {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-          }
-          .hero-brand-name {
-            font-size: 13px;
-            font-weight: 700;
-            color: #a78bfa;
-            letter-spacing: 0.3px;
-          }
-          .hero-title {
-            font-size: 40px;
-            font-weight: 900;
-            color: #f8fafc;
-            letter-spacing: -1.5px;
-            line-height: 1.1;
-            margin-bottom: 28px;
-          }
-          .hero-meta {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 24px;
-          }
-          .hero-meta-item {
-            font-size: 10px;
-            color: #64748b;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-          }
-          .hero-meta-item span {
-            display: block;
-            font-size: 15px;
-            font-weight: 600;
-            color: #e2e8f0;
-            margin-top: 6px;
-            text-transform: none;
-            letter-spacing: -0.2px;
-          }
+  /* LISTS */
+  .section-body ul { list-style: none; margin: 10px 0 14px; padding: 0; }
+  .section-body li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 5px 0;
+    color: #374151;
+    font-size: 11pt;
+    line-height: 1.6;
+  }
+  .bullet {
+    flex-shrink: 0;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #6c5ce7;
+    margin-top: 8px;
+  }
 
-          /* ═══════════ SECTIONS ═══════════ */
-          .section {
-            margin-top: 40px;
-            padding: 0 0 32px 0;
-            border-bottom: 1px solid rgba(148, 163, 184, 0.08);
-          }
-          .section:last-of-type {
-            border-bottom: none;
-            margin-top: 40px;
-            padding: 32px;
-            background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(99,102,241,0.04));
-            border: 1px solid rgba(139, 92, 246, 0.2);
-            border-radius: 12px;
-          }
-          .section-title-wrap {
-            margin-bottom: 20px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid rgba(139,92,246,0.2);
-            display: inline-block;
-          }
-          h2 {
-            font-size: 12px;
-            font-weight: 800;
-            color: #a78bfa;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin: 0;
-          }
-          .section-accent {
-            display: none;
-          }
-          h3 {
-            font-size: 16px;
-            font-weight: 700;
-            color: #e2e8f0;
-            margin: 24px 0 8px 0;
-          }
-          p {
-            margin: 10px 0;
-            color: #94a3b8;
-            font-size: 14px;
-            line-height: 1.75;
-          }
-          strong { color: #e2e8f0; font-weight: 600; }
+  /* PRICING */
+  .pricing-card {
+    margin: 14px 0 18px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 10.5pt; }
+  thead th {
+    background: #f8fafc;
+    text-align: left;
+    padding: 10px 16px;
+    font-size: 8.5pt;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #374151;
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; color: #0f172a; }
+  tr.total-row td {
+    background: #faf9ff;
+    border-top: 2px solid #6c5ce7;
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 11.5pt;
+    padding: 14px 16px;
+  }
 
-          /* ═══════════ LISTS ═══════════ */
-          ul {
-            padding: 0;
-            margin: 16px 0;
-            list-style: none;
-          }
-          li {
-            display: flex;
-            align-items: flex-start;
-            gap: 14px;
-            padding: 12px 0;
-            color: #94a3b8;
-            line-height: 1.65;
-            border-bottom: 1px solid rgba(148, 163, 184, 0.06);
-            font-size: 14px;
-          }
-          li:last-child { border-bottom: none; }
-          .bullet {
-            flex-shrink: 0;
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #a78bfa;
-            margin-top: 8px;
-          }
-          .li-text { flex: 1; }
+  /* FOOTER */
+  .doc-footer {
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 8.5pt;
+    color: #94a3b8;
+  }
+  .footer-brand { font-weight: 700; color: #6c5ce7; }
 
-          /* ═══════════ PRICING ═══════════ */
-          .pricing-card {
-            margin: 20px 0;
-            border: 1px solid rgba(139, 92, 246, 0.15);
-            border-radius: 10px;
-            overflow: hidden;
-            background: rgba(15, 23, 42, 0.4);
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-          }
-          td {
-            padding: 14px 28px;
-            border-bottom: 1px solid rgba(148, 163, 184, 0.06);
-            color: #94a3b8;
-          }
-          td.th {
-            background: rgba(139, 92, 246, 0.06);
-            font-weight: 700;
-            color: #a78bfa;
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            border-bottom: 1px solid rgba(139, 92, 246, 0.12);
-            padding: 12px 28px;
-          }
-          .total-row td {
-            background: linear-gradient(135deg, rgba(139,92,246,0.12), rgba(99,102,241,0.08));
-            border-top: 2px solid rgba(139, 92, 246, 0.3);
-            border-bottom: none;
-            font-weight: 800;
-            color: #f1f5f9;
-            font-size: 16px;
-            padding: 20px 28px;
-          }
-          tr:last-child td:not(.th) {
-            border-bottom: none;
-          }
+  /* PRINT */
+  @media print {
+    .doc { padding: 0; max-width: none; }
+    .cover { break-after: avoid; page-break-after: avoid; }
+    .section { break-inside: avoid-page; page-break-inside: avoid; }
+    .pricing-card, table, tr { break-inside: avoid; page-break-inside: avoid; }
+    h2, h3 { break-after: avoid; page-break-after: avoid; }
+  }
+</style>
+</head>
+<body>
+  <div class="doc">
+    <div class="cover">
+      <div class="cover-brand">
+        <img src="${LOGO_BASE64}" alt="StriveSync" />
+        <div class="cover-brand-name">StriveSync</div>
+        <div class="cover-brand-tag">${type === "proposal" ? "Proposal" : "Invoice"}</div>
+      </div>
+      <div class="cover-eyebrow">Prepared for ${escapeHtml(proposal?.client_name || "")}</div>
+      <div class="cover-title">${escapeHtml(docTitle)}</div>
+      <div class="cover-meta">
+        <div><div class="meta-label">Client</div><div class="meta-value">${escapeHtml(proposal?.client_name || "")}</div></div>
+        <div><div class="meta-label">Company</div><div class="meta-value">${escapeHtml(proposal?.company_name || "")}</div></div>
+        <div><div class="meta-label">Service</div><div class="meta-value">${escapeHtml(proposal?.service_type || "")}</div></div>
+        <div><div class="meta-label">Date</div><div class="meta-value">${dateStr}</div></div>
+      </div>
+    </div>
 
-          /* ═══════════ FOOTER ═══════════ */
-          .doc-footer {
-            max-width: 760px;
-            margin: 56px auto 40px auto;
-            padding: 20px 40px 0 40px;
-            border-top: 1px solid rgba(148, 163, 184, 0.08);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 11px;
-            color: #475569;
-          }
-          .footer-brand {
-            font-weight: 700;
-            color: #a78bfa;
-          }
+    ${sectionsHtml}
 
-          /* ═══════════ PRINT ═══════════ */
-          @media print {
-            body { padding: 0; background: #0a0e1a; }
-            .hero { break-after: avoid; }
-            h2 { break-after: avoid; }
-            .pricing-card, table { break-inside: avoid; }
-            .section { break-inside: avoid; }
-          }
-        </style>
-      </head>
-      <body>
-
-        <div class="hero">
-          <div class="hero-inner">
-            <div class="hero-brand">
-              <img src="${LOGO_BASE64}" alt="CloseSync AI" class="hero-logo" />
-              <div class="hero-brand-name">CloseSync AI</div>
-            </div>
-            <div class="hero-title">${docTitle}</div>
-            <div class="hero-meta">
-              <div class="hero-meta-item">Prepared for<span>${proposal?.client_name}</span></div>
-              <div class="hero-meta-item">Company<span>${proposal?.company_name}</span></div>
-              <div class="hero-meta-item">Service<span>${proposal?.service_type}</span></div>
-              <div class="hero-meta-item">Date<span>${dateStr}</span></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="page-wrap">
-          ${htmlContent}
-        </div>
-
-        <div class="doc-footer">
-          <div>Prepared by <span class="footer-brand">CloseSync AI</span></div>
-          <div>Confidential · All rights reserved</div>
-        </div>
-
-      </body>
-      </html>
-    `);
+    <div class="doc-footer">
+      <div>Prepared by <span class="footer-brand">StriveSync</span></div>
+      <div>Confidential · ${dateStr}</div>
+    </div>
+  </div>
+</body>
+</html>`);
     printWindow.document.close();
-    printWindow.print();
+    setTimeout(() => printWindow.print(), 350);
   };
 
   if (loading) {
