@@ -314,6 +314,22 @@ export default function NewProposal() {
               <SectionHeader title="Essentials" subtitle="The basics needed to draft your proposal." />
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
+                  <Label htmlFor="service_type">Service Type</Label>
+                  <div className="relative mt-2">
+                    <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
+                    <Select value={form.service_type} onValueChange={(v) => update("service_type", v)}>
+                      <SelectTrigger className="pl-10">
+                        <SelectValue placeholder="What service are you offering?" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {serviceTypes.map((s) => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
                   <Label htmlFor="client_name">Client Name</Label>
                   <div className="relative mt-2">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -339,22 +355,6 @@ export default function NewProposal() {
                       required
                       className="pl-10"
                     />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="service_type">Service Type</Label>
-                  <div className="relative mt-2">
-                    <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
-                    <Select value={form.service_type} onValueChange={(v) => update("service_type", v)}>
-                      <SelectTrigger className="pl-10">
-                        <SelectValue placeholder="What service are you offering?" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {serviceTypes.map((s) => (
-                          <SelectItem key={s} value={s}>{s}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
                   </div>
                 </div>
                 <div>
