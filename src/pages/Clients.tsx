@@ -38,7 +38,17 @@ interface Client {
   goals: string | null;
   timeline: string | null;
   phone: string | null;
+  lead_quality: string | null;
+  lead_source: string | null;
+  ai_recommendation: string | null;
 }
+
+const qualityBadgeStyle = (q: string | null) => {
+  if (q === "High") return "bg-emerald-500/15 text-emerald-600 border-emerald-500/30";
+  if (q === "Medium") return "bg-amber-500/15 text-amber-600 border-amber-500/30";
+  if (q === "Low") return "bg-rose-500/15 text-rose-600 border-rose-500/30";
+  return "";
+};
 
 const STATUS_OPTIONS = ["All", "New", "Qualified", "Proposal Sent", "Won", "Lost"];
 
