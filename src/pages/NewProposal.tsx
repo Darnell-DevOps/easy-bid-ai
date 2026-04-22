@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Sparkles, User, Building2, Briefcase, PoundSterling, FileText, Clock, StickyNote, Target, ListChecks, Users } from "lucide-react";
+import {
+  Loader2, Sparkles, User, Building2, Briefcase, PoundSterling, FileText, Clock,
+  StickyNote, Target, ListChecks, Users, AlertTriangle, Info, ArrowLeft, Pencil,
+} from "lucide-react";
 
 const serviceTypes = [
   "Marketing Strategy",
@@ -22,6 +25,24 @@ const serviceTypes = [
   "Consulting",
   "Other",
 ];
+
+// Detect if a string looks like gibberish / unclear input
+function looksUnclear(text: string | undefined | null): boolean {
+  if (!text) return false;
+  const t = text.trim();
+  if (t.length < 12) return true;
+  // No spaces in long string => likely keyboard mash
+  if (t.length > 10 && !/\s/.test(t)) return true;
+  // Very low vowel ratio
+  const letters = t.replace(/[^a-zA-Z]/g, "");
+  if (letters.length > 6) {
+    const vowels = (letters.match(/[aeiouAEIOU]/g) || []).length;
+    if (vowels / letters.length < 0.18) return true;
+  }
+  // Long run of same char repeating
+  if (/(.)\1{3,}/.test(t)) return true;
+  return false;
+}
 
 export default function NewProposal() {
   const navigate = useNavigate();
@@ -73,26 +94,39 @@ export default function NewProposal() {
   });
   const prefilledClientId: string | undefined = clientPrefill?.client_id;
   const originalLeadMessage: string | undefined = clientPrefill?.original_lead_message;
+  const leadQuality: string | undefined = clientPrefill?.lead_quality;
+  const aiRecommendation: string | undefined = clientPrefill?.ai_recommendation;
 
   const update = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
+
+  const scopeUnclear = useMemo(
+    () => looksUnclear(form.project_scope) || looksUnclear(originalLeadMessage),
+    [form.project_scope, originalLeadMessage],
+  );
+
+  const missingFields = useMemo(() => {
+    const missing: string[] = [];
+    if (!form.service_type) missing.push("service type");
+    if (!form.timeline) missing.push("timeline");
+    if (!form.goals) missing.push("goals");
+    if (!form.project_scope || form.project_scope.length < 20) missing.push("project scope");
+    return missing;
+  }, [form]);
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Call edge function to generate proposal content via AI
       const { data: aiData, error: aiError } = await supabase.functions.invoke("generate-proposal", {
         body: { ...form, original_lead_message: originalLeadMessage },
       });
 
       if (aiError) throw aiError;
 
-      // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Auto-create or find client (skip lookup if we already have one from intake)
       let clientId: string | null = prefilledClientId || null;
       const clientNameNorm = form.client_name.trim().toLowerCase();
       if (!clientId && clientNameNorm) {
@@ -115,7 +149,6 @@ export default function NewProposal() {
         }
       }
 
-      // Save proposal to database
       const { data: proposal, error: saveError } = await supabase
         .from("proposals")
         .insert({
@@ -176,17 +209,71 @@ export default function NewProposal() {
     toast({ title: "Loaded from client", description: `Prefilled with ${c.name}'s details.` });
   };
 
+  const qualityLower = leadQuality?.toLowerCase();
+  const qualityColor =
+    qualityLower === "high" ? "text-emerald-500" :
+    qualityLower === "medium" ? "text-amber-500" :
+    qualityLower === "low" ? "text-destructive" : "text-muted-foreground";
+
+  const SectionHeader = ({ title, subtitle }: { title: string; subtitle?: string }) => (
+    <div className="mb-4">
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-foreground">{title}</h2>
+      {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+    </div>
+  );
+
+  const optionalLabel = "text-[10px] uppercase tracking-wider text-muted-foreground/70 font-normal ml-1";
+
   return (
     <DashboardLayout>
       <div className="mb-6">
         <p className="text-xs font-semibold uppercase tracking-wider text-accent flex items-center gap-1.5 mb-2">
-          <Sparkles className="w-3.5 h-3.5" /> Tell us about the project
+          <Sparkles className="w-3.5 h-3.5" /> AI-powered proposal builder
         </p>
-        <h1 className="text-2xl font-bold text-foreground">Create a new proposal</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Fill in the basics — AI will draft a polished, ready-to-send proposal in seconds.
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Create a proposal in minutes</h1>
+        <p className="text-sm text-muted-foreground mt-1.5 max-w-2xl">
+          Review the key project details below and let AI draft a polished, client-ready proposal.
         </p>
       </div>
+
+      {/* Client context banner */}
+      {prefilledClientId && (
+        <Card className="mb-4 border-accent/20 bg-accent/5">
+          <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
+                <User className="w-4 h-4 text-accent" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm text-foreground">
+                  <span className="font-semibold">Client:</span> {form.client_name || "—"}
+                  {leadQuality && (
+                    <>
+                      <span className="mx-1.5 text-muted-foreground">•</span>
+                      <span className="text-muted-foreground">Lead quality:</span>{" "}
+                      <span className={`font-medium ${qualityColor}`}>{leadQuality}</span>
+                    </>
+                  )}
+                </p>
+                {aiRecommendation && (
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                    <span className="font-medium text-foreground/80">Recommendation:</span> {aiRecommendation}
+                  </p>
+                )}
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs gap-1.5 self-start sm:self-center flex-shrink-0"
+              onClick={() => navigate(`/dashboard/clients/${prefilledClientId}`)}
+              type="button"
+            >
+              <Pencil className="w-3 h-3" /> Edit client details
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {savedClients.length > 0 && !prefilledClientId && (
         <Card className="mb-6 border-accent/20 bg-accent/5">
@@ -218,147 +305,205 @@ export default function NewProposal() {
 
       <Card className="glass-card">
         <CardContent className="p-6 md:p-8">
-          <form onSubmit={handleGenerate} className="space-y-8">
-            <div className="grid md:grid-cols-2 gap-8">
-              <div>
-                <Label htmlFor="client_name">Client Name</Label>
-                <div className="relative mt-2">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="client_name"
-                    value={form.client_name}
-                    onChange={(e) => update("client_name", e.target.value)}
-                    placeholder="Who is your client?"
-                    required
-                    className="pl-10"
-                  />
+          <form onSubmit={handleGenerate} className="space-y-10">
+            {/* ESSENTIALS */}
+            <section>
+              <SectionHeader title="Essentials" subtitle="The basics needed to draft your proposal." />
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="client_name">Client Name</Label>
+                  <div className="relative mt-2">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="client_name"
+                      value={form.client_name}
+                      onChange={(e) => update("client_name", e.target.value)}
+                      placeholder="Who is your client?"
+                      required
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="company_name">Company Name</Label>
+                  <div className="relative mt-2">
+                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="company_name"
+                      value={form.company_name}
+                      onChange={(e) => update("company_name", e.target.value)}
+                      placeholder="Their company or organisation"
+                      required
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="service_type">Service Type</Label>
+                  <div className="relative mt-2">
+                    <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
+                    <Select value={form.service_type} onValueChange={(v) => update("service_type", v)}>
+                      <SelectTrigger className="pl-10">
+                        <SelectValue placeholder="What service are you offering?" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {serviceTypes.map((s) => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="budget">Budget</Label>
+                  <div className="relative mt-2">
+                    <PoundSterling className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="budget"
+                      value={form.budget}
+                      onChange={(e) => update("budget", e.target.value)}
+                      placeholder="e.g. £5,000"
+                      required
+                      className="pl-10"
+                    />
+                  </div>
                 </div>
               </div>
-              <div>
-                <Label htmlFor="company_name">Company Name</Label>
-                <div className="relative mt-2">
-                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="company_name"
-                    value={form.company_name}
-                    onChange={(e) => update("company_name", e.target.value)}
-                    placeholder="Their company or organisation"
-                    required
-                    className="pl-10"
-                  />
+            </section>
+
+            {/* PROJECT DETAILS */}
+            <section>
+              <SectionHeader title="Project Details" subtitle="The more detail, the sharper the proposal." />
+
+              {scopeUnclear && (
+                <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 flex gap-3">
+                  <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Project details need attention</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      The original lead message was unclear. Add a clearer project scope before generating a proposal.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-6">
+                <div>
+                  <Label htmlFor="project_scope">Project Scope</Label>
+                  <div className="relative mt-2">
+                    <FileText className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                    <Textarea
+                      id="project_scope"
+                      value={form.project_scope}
+                      onChange={(e) => update("project_scope", e.target.value)}
+                      placeholder="Describe the project and what the client needs"
+                      required
+                      rows={4}
+                      className="pl-10"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    Describe what the client needs, the problem being solved, and what is being delivered.
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="timeline">Timeline</Label>
+                  <div className="relative mt-2">
+                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="timeline"
+                      value={form.timeline}
+                      onChange={(e) => update("timeline", e.target.value)}
+                      placeholder="e.g. 4 weeks"
+                      required
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="goals">
+                    Client Goals / Outcomes
+                    <span className={optionalLabel}>Optional</span>
+                  </Label>
+                  <div className="relative mt-2">
+                    <Target className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                    <Textarea
+                      id="goals"
+                      value={form.goals}
+                      onChange={(e) => update("goals", e.target.value)}
+                      placeholder="What outcome does the client want?"
+                      rows={2}
+                      className="pl-10"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    What result does the client want from this project?
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="deliverables">
+                    Confirmed Deliverables
+                    <span className={optionalLabel}>Optional</span>
+                  </Label>
+                  <div className="relative mt-2">
+                    <ListChecks className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                    <Textarea
+                      id="deliverables"
+                      value={form.deliverables}
+                      onChange={(e) => update("deliverables", e.target.value)}
+                      placeholder="e.g. 3 logo concepts, brand guide, social templates"
+                      rows={2}
+                      className="pl-10"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    List the items you expect to include in the proposal.
+                  </p>
                 </div>
               </div>
-            </div>
+            </section>
 
-            <div className="grid md:grid-cols-2 gap-8">
+            {/* EXTRA CONTEXT */}
+            <section>
+              <SectionHeader title="Extra Context" subtitle="Anything else that helps shape the proposal." />
               <div>
-                <Label htmlFor="service_type">Service Type</Label>
+                <Label htmlFor="notes">
+                  Extra Notes
+                  <span className={optionalLabel}>Optional</span>
+                </Label>
                 <div className="relative mt-2">
-                  <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
-                  <Select value={form.service_type} onValueChange={(v) => update("service_type", v)}>
-                    <SelectTrigger className="pl-10">
-                      <SelectValue placeholder="What service are you offering?" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {serviceTypes.map((s) => (
-                        <SelectItem key={s} value={s}>{s}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="budget">Budget</Label>
-                <div className="relative mt-2">
-                  <PoundSterling className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="budget"
-                    value={form.budget}
-                    onChange={(e) => update("budget", e.target.value)}
-                    placeholder="e.g. £5,000"
-                    required
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="project_scope">Project Scope</Label>
-              <div className="relative mt-2">
-                <FileText className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                <Textarea
-                  id="project_scope"
-                  value={form.project_scope}
-                  onChange={(e) => update("project_scope", e.target.value)}
-                  placeholder="Describe the project and what the client needs"
-                  required
-                  rows={3}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="timeline">Timeline</Label>
-              <div className="relative mt-2">
-                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="timeline"
-                  value={form.timeline}
-                  onChange={(e) => update("timeline", e.target.value)}
-                  placeholder="e.g. 4 weeks"
-                  required
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-8">
-              <div>
-                <Label htmlFor="goals">Client Goals / Outcomes <span className="text-muted-foreground font-normal">(optional)</span></Label>
-                <div className="relative mt-2">
-                  <Target className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                  <StickyNote className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                   <Textarea
-                    id="goals"
-                    value={form.goals}
-                    onChange={(e) => update("goals", e.target.value)}
-                    placeholder="What outcome does the client want?"
+                    id="notes"
+                    value={form.notes}
+                    onChange={(e) => update("notes", e.target.value)}
+                    placeholder="Any additional context…"
                     rows={2}
                     className="pl-10"
                   />
                 </div>
               </div>
-              <div>
-                <Label htmlFor="deliverables">Confirmed Deliverables <span className="text-muted-foreground font-normal">(optional)</span></Label>
-                <div className="relative mt-2">
-                  <ListChecks className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                  <Textarea
-                    id="deliverables"
-                    value={form.deliverables}
-                    onChange={(e) => update("deliverables", e.target.value)}
-                    placeholder="e.g. 3 logo concepts, brand guide, social templates"
-                    rows={2}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-            </div>
+            </section>
 
-            <div>
-              <Label htmlFor="notes">Extra Notes (optional)</Label>
-              <div className="relative mt-2">
-                <StickyNote className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                <Textarea
-                  id="notes"
-                  value={form.notes}
-                  onChange={(e) => update("notes", e.target.value)}
-                  placeholder="Any additional context…"
-                  rows={2}
-                  className="pl-10"
-                />
+            {/* READINESS GUIDANCE + CTA */}
+            {!loading && (
+              <div className="flex items-start gap-2 rounded-lg border border-border/60 bg-muted/30 p-3">
+                <Info className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-muted-foreground">
+                  {missingFields.length > 0 ? (
+                    <>
+                      <span className="font-medium text-foreground">Missing:</span>{" "}
+                      {missingFields.join(", ")}. Filling these in will improve proposal quality.
+                    </>
+                  ) : (
+                    <span>All key details look good — your proposal is ready to generate.</span>
+                  )}
+                </p>
               </div>
-            </div>
+            )}
 
             {loading ? (
               <div className="flex flex-col items-center gap-4 py-6">
@@ -369,14 +514,28 @@ export default function NewProposal() {
                 <Progress value={progress} className="w-full max-w-xs h-2" />
               </div>
             ) : (
-              <Button
-                type="submit"
-                disabled={!form.service_type}
-                className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-90 gap-2 w-full md:w-auto"
-                size="lg"
-              >
-                <Sparkles className="w-4 h-4" /> Generate Proposal
-              </Button>
+              <div className="flex flex-col-reverse sm:flex-row sm:items-center gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  onClick={() => prefilledClientId
+                    ? navigate(`/dashboard/clients/${prefilledClientId}`)
+                    : navigate(-1)}
+                  className="gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  {prefilledClientId ? "Back to Client" : "Back"}
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={!form.service_type}
+                  className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-90 gap-2 flex-1 sm:flex-initial sm:min-w-[280px] shadow-lg shadow-accent/20 hover:shadow-accent/30"
+                  size="lg"
+                >
+                  <Sparkles className="w-5 h-5" /> Generate Proposal with AI
+                </Button>
+              </div>
             )}
           </form>
         </CardContent>
