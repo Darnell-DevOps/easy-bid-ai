@@ -31,6 +31,18 @@ Deno.serve(async (req) => {
 
 Also extract any qualification info already mentioned in the lead's message.
 
+Then assess lead quality based on:
+- Message clarity (is the request specific?)
+- Budget (mentioned and realistic?)
+- Urgency / timeline
+- Service fit (sounds like a fit for a freelancer/agency?)
+
+Pick exactly one quality: "High", "Medium", or "Low".
+Pick exactly one recommendation:
+- "High" -> "Recommend generating proposal"
+- "Medium" -> "Recommend asking more questions"
+- "Low" -> "May not be worth pursuing"
+
 Respond ONLY by calling the provided tool.`;
 
     const userPrompt = `Lead name: ${leadName || "(not provided)"}
@@ -82,9 +94,29 @@ ${message}
                     type: "string",
                     description: "Short summary of key context, goals, or anything notable",
                   },
+                  lead_quality: {
+                    type: "string",
+                    enum: ["High", "Medium", "Low"],
+                    description: "Overall lead quality rating",
+                  },
+                  quality_reason: {
+                    type: "string",
+                    description: "One short sentence explaining the quality rating",
+                  },
+                  ai_recommendation: {
+                    type: "string",
+                    description: "Recommended next action based on lead quality",
+                  },
                 },
-                required: ["reply", "service_requested", "budget", "timeline", "notes"],
+                required: ["reply", "service_requested", "budget", "timeline", "notes", "lead_quality", "quality_reason", "ai_recommendation"],
                 additionalProperties: false,
+              },
+            },
+          },
+        ],
+        tool_choice: { type: "function", function: { name: "draft_lead_reply" } },
+      }),
+    });
               },
             },
           },

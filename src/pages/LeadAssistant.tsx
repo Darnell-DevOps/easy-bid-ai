@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Sparkles, MessageSquare, Bot, UserPlus, FileText, Copy, Check } from "lucide-react";
+import { Loader2, Sparkles, MessageSquare, Bot, UserPlus, FileText, Copy, Check, Gauge, Lightbulb } from "lucide-react";
 
 export default function LeadAssistant() {
   const navigate = useNavigate();
@@ -26,6 +27,9 @@ export default function LeadAssistant() {
   const [budget, setBudget] = useState("");
   const [timeline, setTimeline] = useState("");
   const [notes, setNotes] = useState("");
+  const [leadQuality, setLeadQuality] = useState<"High" | "Medium" | "Low" | "">("");
+  const [qualityReason, setQualityReason] = useState("");
+  const [aiRecommendation, setAiRecommendation] = useState("");
 
   const [saving, setSaving] = useState(false);
   const [savedClientId, setSavedClientId] = useState<string | null>(null);
@@ -49,6 +53,9 @@ export default function LeadAssistant() {
       setBudget(data.budget || "");
       setTimeline(data.timeline || "");
       setNotes(data.notes || "");
+      setLeadQuality((data.lead_quality as "High" | "Medium" | "Low") || "");
+      setQualityReason(data.quality_reason || "");
+      setAiRecommendation(data.ai_recommendation || "");
       setHasResponse(true);
       setSavedClientId(null);
     } catch (e: any) {
@@ -90,6 +97,8 @@ export default function LeadAssistant() {
           timeline: timeline || null,
           goals: notes || null,
           status: "Qualified",
+          lead_quality: leadQuality || null,
+          ai_recommendation: aiRecommendation || null,
         })
         .select()
         .single();
@@ -214,6 +223,48 @@ export default function LeadAssistant() {
                 </Button>
               </CardContent>
             </Card>
+
+            {/* Step 2b: Lead Quality */}
+            {leadQuality && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Gauge className="w-4 h-4 text-primary" />
+                    Lead quality assessment
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="rounded-lg border border-border/60 bg-muted/30 p-4 space-y-2">
+                      <div className="text-xs uppercase tracking-wide text-muted-foreground">Lead score</div>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          className={
+                            leadQuality === "High"
+                              ? "bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/15 border-emerald-500/30"
+                              : leadQuality === "Medium"
+                              ? "bg-amber-500/15 text-amber-600 hover:bg-amber-500/15 border-amber-500/30"
+                              : "bg-rose-500/15 text-rose-600 hover:bg-rose-500/15 border-rose-500/30"
+                          }
+                          variant="outline"
+                        >
+                          {leadQuality} Quality Lead
+                        </Badge>
+                      </div>
+                      {qualityReason && (
+                        <p className="text-sm text-muted-foreground leading-relaxed">{qualityReason}</p>
+                      )}
+                    </div>
+                    <div className="rounded-lg border border-border/60 bg-muted/30 p-4 space-y-2">
+                      <div className="text-xs uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+                        <Lightbulb className="w-3 h-3" /> Recommended action
+                      </div>
+                      <p className="text-sm font-medium">{aiRecommendation}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Step 3: Qualification */}
             <Card>

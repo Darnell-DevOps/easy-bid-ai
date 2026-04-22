@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       clients: {
         Row: {
+          ai_recommendation: string | null
           budget: string | null
           company: string | null
           created_at: string
@@ -23,6 +24,7 @@ export type Database = {
           goals: string | null
           id: string
           is_active: boolean
+          lead_quality: string | null
           name: string
           phone: string | null
           project_description: string | null
@@ -33,6 +35,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ai_recommendation?: string | null
           budget?: string | null
           company?: string | null
           created_at?: string
@@ -40,6 +43,7 @@ export type Database = {
           goals?: string | null
           id?: string
           is_active?: boolean
+          lead_quality?: string | null
           name: string
           phone?: string | null
           project_description?: string | null
@@ -50,6 +54,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ai_recommendation?: string | null
           budget?: string | null
           company?: string | null
           created_at?: string
@@ -57,6 +62,7 @@ export type Database = {
           goals?: string | null
           id?: string
           is_active?: boolean
+          lead_quality?: string | null
           name?: string
           phone?: string | null
           project_description?: string | null
