@@ -32,18 +32,44 @@ function looksUnclear(text: string | undefined | null): boolean {
   if (!text) return false;
   const t = text.trim();
   if (t.length < 12) return true;
-  // No spaces in long string => likely keyboard mash
   if (t.length > 10 && !/\s/.test(t)) return true;
-  // Very low vowel ratio
   const letters = t.replace(/[^a-zA-Z]/g, "");
   if (letters.length > 6) {
     const vowels = (letters.match(/[aeiouAEIOU]/g) || []).length;
     if (vowels / letters.length < 0.18) return true;
   }
-  // Long run of same char repeating
   if (/(.)\1{3,}/.test(t)) return true;
   return false;
 }
+
+// Extract numeric value from a budget string like "£5,000" => "5000"
+const parseBudgetDigits = (raw: string) => (raw || "").replace(/[^0-9]/g, "");
+const formatBudget = (digits: string) => {
+  if (!digits) return "";
+  const n = parseInt(digits, 10);
+  if (isNaN(n)) return "";
+  return `£${n.toLocaleString("en-GB")}`;
+};
+
+const TIMELINE_UNITS = ["days", "weeks", "months"] as const;
+type TimelineUnit = typeof TIMELINE_UNITS[number];
+
+// Try to parse an existing timeline string like "4 weeks" / "1 month"
+function parseTimeline(raw: string): { qty: string; unit: TimelineUnit; custom: boolean } {
+  if (!raw) return { qty: "", unit: "weeks", custom: false };
+  const m = raw.trim().match(/^(\d+)\s*(day|days|week|weeks|month|months)$/i);
+  if (m) {
+    const n = m[1];
+    const u = m[2].toLowerCase();
+    const unit: TimelineUnit = u.startsWith("day") ? "days" : u.startsWith("month") ? "months" : "weeks";
+    return { qty: n, unit, custom: false };
+  }
+  return { qty: "", unit: "weeks", custom: true };
+}
+
+const NAME_REGEX = /^[A-Za-zÀ-ÿ' \-.]{2,}$/;
+const COMPANY_REGEX = /^(?=.*[A-Za-z0-9])[A-Za-zÀ-ÿ0-9 .,&'\-]+$/;
+const BUDGET_PRESETS = [500, 1000, 5000, 10000];
 
 export default function NewProposal() {
   const navigate = useNavigate();
