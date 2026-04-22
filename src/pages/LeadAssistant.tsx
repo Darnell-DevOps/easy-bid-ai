@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Sparkles, MessageSquare, Bot, UserPlus, FileText, Copy, Check } from "lucide-react";
+import { Loader2, Sparkles, MessageSquare, Bot, UserPlus, FileText, Copy, Check, Gauge, Lightbulb } from "lucide-react";
 
 export default function LeadAssistant() {
   const navigate = useNavigate();
