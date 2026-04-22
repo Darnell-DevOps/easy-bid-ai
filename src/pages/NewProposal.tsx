@@ -253,6 +253,37 @@ export default function NewProposal() {
               </div>
             </div>
 
+            <div className="grid md:grid-cols-2 gap-8">
+              <div>
+                <Label htmlFor="goals">Client Goals / Outcomes <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                <div className="relative mt-2">
+                  <Target className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                  <Textarea
+                    id="goals"
+                    value={form.goals}
+                    onChange={(e) => update("goals", e.target.value)}
+                    placeholder="What does the client want to achieve?"
+                    rows={2}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="deliverables">Confirmed Deliverables <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                <div className="relative mt-2">
+                  <ListChecks className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                  <Textarea
+                    id="deliverables"
+                    value={form.deliverables}
+                    onChange={(e) => update("deliverables", e.target.value)}
+                    placeholder="e.g. 3 logo concepts, brand guide, social templates"
+                    rows={2}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+            </div>
+
             <div>
               <Label htmlFor="notes">Extra Notes (optional)</Label>
               <div className="relative mt-2">
