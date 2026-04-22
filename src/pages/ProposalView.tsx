@@ -602,6 +602,34 @@ export default function ProposalView() {
                 <Download className="w-4 h-4" /> Export Proposal
               </Button>
               <div className="flex gap-3 sm:flex-1 lg:flex-none">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" disabled={!!regenerating} className="gap-2 hover:brightness-125 transition-all h-10 flex-1 lg:px-6">
+                      {regenerating === "full" || regenerating === "concise" || regenerating === "persuasive" || regenerating === "alternative" ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Sparkles className="w-4 h-4" />
+                      )}
+                      Regenerate
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>AI Variations</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => handleRegenerateFull()} className="gap-2">
+                      <RefreshCw className="w-4 h-4" /> Regenerate full proposal
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => handleRegenerateFull("concise")} className="gap-2">
+                      <Zap className="w-4 h-4" /> Make more concise
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleRegenerateFull("persuasive")} className="gap-2">
+                      <Wand2 className="w-4 h-4" /> Make more persuasive
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleRegenerateFull("alternative")} className="gap-2">
+                      <Sparkles className="w-4 h-4" /> Alternative version
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Button variant="outline" onClick={handleSave} disabled={saving} className="gap-2 hover:brightness-125 transition-all h-10 flex-1 lg:px-6">
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                   Save
