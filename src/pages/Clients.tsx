@@ -244,7 +244,7 @@ export default function Clients() {
                           className="hover:bg-transparent bg-muted/30 scroll-mt-20"
                         >
                           <TableCell
-                            colSpan={7}
+                            colSpan={9}
                             className="py-2 text-xs font-semibold text-accent uppercase tracking-wider"
                           >
                             {letter}
@@ -288,6 +288,21 @@ export default function Clients() {
                               <Badge variant="outline" className={`${statusStyle(c.status)} text-xs`}>
                                 {c.status}
                               </Badge>
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell">
+                              {c.lead_quality ? (
+                                <Badge
+                                  variant="outline"
+                                  className={`${qualityBadgeStyle(c.lead_quality)} text-xs`}
+                                >
+                                  {c.lead_quality}
+                                </Badge>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">—</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="hidden xl:table-cell text-xs text-muted-foreground">
+                              {c.lead_source || "—"}
                             </TableCell>
                             <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
                               {new Date(c.created_at).toLocaleDateString()}
