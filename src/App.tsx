@@ -21,6 +21,9 @@ import NewClient from "./pages/NewClient";
 import ClientDetail from "./pages/ClientDetail";
 import TimeSavedDashboard from "./pages/TimeSavedDashboard";
 import LeadAssistant from "./pages/LeadAssistant";
+import Policies from "./pages/Policies";
+import NewPolicy from "./pages/NewPolicy";
+import PolicyView from "./pages/PolicyView";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -49,6 +52,9 @@ const App = () => (
           <Route path="/dashboard/clients/:id" element={<AuthGuard><ClientDetail /></AuthGuard>} />
           <Route path="/dashboard/time-saved" element={<AuthGuard><TimeSavedDashboard /></AuthGuard>} />
           <Route path="/dashboard/leads" element={<AuthGuard><LeadAssistant /></AuthGuard>} />
+          <Route path="/dashboard/policies" element={<AuthGuard><Policies /></AuthGuard>} />
+          <Route path="/dashboard/policies/new" element={<AuthGuard><NewPolicy /></AuthGuard>} />
+          <Route path="/dashboard/policies/:id" element={<AuthGuard><PolicyView /></AuthGuard>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
