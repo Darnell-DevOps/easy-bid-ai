@@ -96,29 +96,29 @@ export default function ProposalPayNow({
   };
 
   return (
-    <div className="rounded-xl border border-purple/30 bg-card p-6 lg:p-8 shadow-lg shadow-purple/5">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
-        <div>
-          <p className="text-xs uppercase tracking-wider text-purple font-semibold mb-1">Total due</p>
-          <p className="text-3xl lg:text-4xl font-bold text-foreground">
+    <div className="rounded-lg border border-border bg-card/60 px-5 py-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex items-baseline gap-3">
+          <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">Total due</p>
+          <p className="text-xl font-semibold text-foreground">
             {formatAmount(amountCents, currency || "USD")}
           </p>
         </div>
         <Button
-          size="lg"
+          size="sm"
           onClick={handlePay}
           disabled={loading}
-          className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 hover:shadow-purple/30 transition-all h-12 px-6"
+          className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold hover:brightness-110 transition-all h-9 px-4"
         >
           {loading ? (
-            <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
+            <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" />
           ) : (
-            <CreditCard className="w-4 h-4 shrink-0" />
+            <CreditCard className="w-3.5 h-3.5 shrink-0" />
           )}
           Pay Now
         </Button>
       </div>
-      <p className="text-[11px] text-muted-foreground text-center sm:text-left">
+      <p className="text-[10px] text-muted-foreground mt-2">
         Secure checkout · Card details are never stored on this site.
       </p>
     </div>
