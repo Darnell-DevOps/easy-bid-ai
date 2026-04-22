@@ -98,12 +98,12 @@ export default function Templates() {
         {templates.map((t) => (
           <Card
             key={t.id}
-            className="group hover:shadow-lg hover:border-accent/20 transition-all duration-300"
+            className="group hover:shadow-lg hover:border-accent/20 transition-all duration-300 flex flex-col"
           >
             <CardContent className="p-6 flex flex-col h-full">
-              <div className="flex items-start gap-4 mb-4">
+              <div className="flex items-start gap-4 mb-5">
                 <div
-                  className={`w-11 h-11 rounded-lg bg-gradient-to-br ${t.accent} flex items-center justify-center flex-shrink-0 opacity-90 group-hover:opacity-100 transition-opacity`}
+                  className={`w-11 h-11 rounded-lg bg-gradient-to-br ${t.accent} flex items-center justify-center flex-shrink-0 opacity-90 group-hover:opacity-100 transition-opacity shadow-md`}
                 >
                   <t.icon className="w-5 h-5 text-white" />
                 </div>
@@ -111,17 +111,15 @@ export default function Templates() {
                   <h3 className="font-semibold text-foreground text-sm leading-tight">
                     {t.name}
                   </h3>
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                  <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
                     {t.description}
                   </p>
                 </div>
               </div>
-              <div className="mt-auto pt-4">
+              <div className="mt-auto">
                 <Button
                   onClick={() => handleUseTemplate(t)}
-                  variant="outline"
-                  size="sm"
-                  className="w-full gap-2 group-hover:border-accent/40 group-hover:text-accent transition-colors"
+                  className="w-full gap-2 bg-gradient-to-r from-accent to-purple text-white hover:brightness-110"
                 >
                   Use Template <ArrowRight className="w-3.5 h-3.5" />
                 </Button>

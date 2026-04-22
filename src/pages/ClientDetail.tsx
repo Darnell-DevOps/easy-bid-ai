@@ -291,17 +291,27 @@ export default function ClientDetail() {
         </div>
 
         {/* Primary CTA */}
-        <Card className="glass-card border-accent/20">
-          <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-semibold text-foreground">Ready to win this client?</p>
+        <Card className="relative overflow-hidden border-accent/30 bg-gradient-to-br from-accent/10 via-card to-purple/10">
+          <CardContent className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              {client.lead_quality === "High" && (
+                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-500 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" /> Recommended next step
+                </p>
+              )}
+              <p className="text-base font-semibold text-foreground">
+                {client.lead_quality === "High"
+                  ? "This client is ready for a proposal"
+                  : "Ready to win this client?"}
+              </p>
               <p className="text-xs text-muted-foreground">
-                Generate a proposal pre-filled with their intake details.
+                Generate a proposal pre-filled with their intake details — send it to get paid.
               </p>
             </div>
             <Button
               onClick={generateProposal}
-              className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-90 gap-2"
+              size="lg"
+              className="bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 gap-2 h-12 px-6 shadow-lg shadow-accent/20"
             >
               <Sparkles className="w-4 h-4" /> Generate Proposal
             </Button>
