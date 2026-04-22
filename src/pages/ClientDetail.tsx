@@ -519,39 +519,60 @@ export default function ClientDetail() {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-3">
-              {proposals.map((p) => (
-                <Card
-                  key={p.id}
-                  className="group cursor-pointer transition-all duration-200 hover:border-accent/40 hover:shadow-lg hover:shadow-accent/10 hover:-translate-y-0.5"
-                  onClick={() => navigate(`/dashboard/proposal/${p.id}`)}
-                >
-                  <CardContent className="p-5 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-4 min-w-0">
-                      <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
-                        <FileText className="w-5 h-5 text-accent" />
+            <div className="space-y-2.5">
+              {proposals.map((p) => {
+                const status = p.status?.toLowerCase();
+                const quickAction =
+                  status === "draft"
+                    ? { label: "Finish & Send", Icon: Send }
+                    : status === "accepted" && !p.client_paid
+                    ? { label: "Request Payment", Icon: CreditCard }
+                    : null;
+                return (
+                  <Card
+                    key={p.id}
+                    className="group cursor-pointer transition-all duration-200 hover:border-accent/50 hover:shadow-xl hover:shadow-accent/15 hover:-translate-y-0.5 hover:bg-accent/[0.04]"
+                    onClick={() => navigate(`/dashboard/proposal/${p.id}`)}
+                  >
+                    <CardContent className="p-4 flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0 group-hover:bg-accent/20 transition-colors">
+                          <FileText className="w-5 h-5 text-accent" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-foreground truncate">
+                            {p.service_type}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {new Date(p.created_at).toLocaleDateString()} · {p.budget || "No budget"}
+                          </p>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-foreground truncate">
-                          {p.service_type}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {new Date(p.created_at).toLocaleDateString()} · {p.budget || "No budget"}
-                        </p>
+                      <div className="flex items-center gap-2.5 flex-shrink-0">
+                        <Badge
+                          variant="outline"
+                          className={`${proposalStatusStyle(p.status, p.client_paid)} text-xs whitespace-nowrap`}
+                        >
+                          {descriptiveProposalStatus(p.status, p.client_paid)}
+                        </Badge>
+                        {quickAction && (
+                          <Button
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/dashboard/proposal/${p.id}`);
+                            }}
+                            className="h-8 px-3 text-xs gap-1.5 bg-gradient-to-r from-accent to-purple text-white hover:brightness-110"
+                          >
+                            <quickAction.Icon className="w-3.5 h-3.5" /> {quickAction.label}
+                          </Button>
+                        )}
+                        <ArrowRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-accent group-hover:translate-x-1 transition-all" />
                       </div>
-                    </div>
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                      <Badge
-                        variant="outline"
-                        className={`${proposalStatusStyle(p.status, p.client_paid)} text-xs whitespace-nowrap`}
-                      >
-                        {descriptiveProposalStatus(p.status, p.client_paid)}
-                      </Badge>
-                      <ArrowRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-accent group-hover:translate-x-0.5 transition-all" />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </div>
