@@ -296,11 +296,31 @@ export default function Clients() {
                 </TableHeader>
                 <TableBody>
                   {filtered.map((c) => {
-                    const subtext = c.company || c.service_requested;
+                    const subtext = c.service_requested || "No service selected";
+                    // Contextual row action
+                    let actionLabel = "Create Proposal";
+                    let ActionIcon = Sparkles;
+                    let onAction = (e: React.MouseEvent) => goGenerate(c, e);
+                    if (c.lead_quality === "Low") {
+                      actionLabel = "Qualify Lead";
+                      ActionIcon = UserCheck;
+                      onAction = (e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        navigate(`/dashboard/clients/${c.id}`);
+                      };
+                    } else if (c.status === "Won" || c.status === "Proposal Sent") {
+                      actionLabel = "View Client";
+                      ActionIcon = Eye;
+                      onAction = (e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        navigate(`/dashboard/clients/${c.id}`);
+                      };
+                    }
+                    const isPrimary = actionLabel === "Create Proposal";
                     return (
                       <TableRow
                         key={c.id}
-                        className="cursor-pointer transition-colors hover:bg-accent/5"
+                        className="cursor-pointer transition-all duration-200 hover:bg-accent/[0.07] hover:shadow-[inset_3px_0_0_0_hsl(var(--accent))]"
                         onClick={() => navigate(`/dashboard/clients/${c.id}`)}
                       >
                         <TableCell>
@@ -312,9 +332,9 @@ export default function Clients() {
                             </div>
                             <div className="min-w-0">
                               <p className="text-sm font-medium text-foreground truncate">{c.name}</p>
-                              {subtext && (
-                                <p className="text-xs text-muted-foreground truncate">{subtext}</p>
-                              )}
+                              <p className="text-xs text-muted-foreground truncate">
+                                {c.company ? `${c.company} · ${subtext}` : subtext}
+                              </p>
                             </div>
                           </div>
                         </TableCell>
@@ -341,11 +361,16 @@ export default function Clients() {
                         <TableCell className="text-right">
                           <Button
                             size="sm"
-                            onClick={(e) => goGenerate(c, e)}
-                            className="gap-1.5 bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 shadow-sm shadow-accent/20"
+                            variant={isPrimary ? "default" : "outline"}
+                            onClick={onAction}
+                            className={
+                              isPrimary
+                                ? "gap-1.5 bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 shadow-sm shadow-accent/20"
+                                : "gap-1.5"
+                            }
                           >
-                            <Sparkles className="w-3.5 h-3.5" />
-                            Create Proposal
+                            <ActionIcon className="w-3.5 h-3.5" />
+                            {actionLabel}
                           </Button>
                         </TableCell>
                       </TableRow>
