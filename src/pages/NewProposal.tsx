@@ -711,7 +711,50 @@ export default function NewProposal() {
                         Custom
                       </Button>
                     </div>
-                  ) : (
+                  ) : null}
+
+                  {/* Optional additional duration */}
+                  {!timelineCustom && (
+                    <div className="mt-3">
+                      <label className="flex items-center gap-2 cursor-pointer select-none">
+                        <Switch
+                          checked={extraTimelineEnabled}
+                          onCheckedChange={(v) => setExtraTimelineEnabled(!!v)}
+                        />
+                        <span className="text-xs text-muted-foreground">Add additional time unit</span>
+                      </label>
+                      {extraTimelineEnabled && (
+                        <div className="flex gap-2 mt-2">
+                          <div className="relative flex-1">
+                            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input
+                              type="text"
+                              inputMode="numeric"
+                              value={extraTimelineQty}
+                              onChange={(e) => setExtraTimelineQty(e.target.value.replace(/[^0-9]/g, "").slice(0, 3))}
+                              placeholder="e.g. 2"
+                              className="pl-10"
+                            />
+                          </div>
+                          <Select
+                            value={extraTimelineUnit}
+                            onValueChange={(v) => setExtraTimelineUnit(v as TimelineUnit)}
+                          >
+                            <SelectTrigger className="w-[130px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {TIMELINE_UNITS.map((u) => (
+                                <SelectItem key={u} value={u}>{u}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {timelineCustom && (
                     <div className="flex gap-2 mt-2">
                       <div className="relative flex-1">
                         <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
