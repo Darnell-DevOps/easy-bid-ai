@@ -32,18 +32,44 @@ function looksUnclear(text: string | undefined | null): boolean {
   if (!text) return false;
   const t = text.trim();
   if (t.length < 12) return true;
-  // No spaces in long string => likely keyboard mash
   if (t.length > 10 && !/\s/.test(t)) return true;
-  // Very low vowel ratio
   const letters = t.replace(/[^a-zA-Z]/g, "");
   if (letters.length > 6) {
     const vowels = (letters.match(/[aeiouAEIOU]/g) || []).length;
     if (vowels / letters.length < 0.18) return true;
   }
-  // Long run of same char repeating
   if (/(.)\1{3,}/.test(t)) return true;
   return false;
 }
+
+// Extract numeric value from a budget string like "£5,000" => "5000"
+const parseBudgetDigits = (raw: string) => (raw || "").replace(/[^0-9]/g, "");
+const formatBudget = (digits: string) => {
+  if (!digits) return "";
+  const n = parseInt(digits, 10);
+  if (isNaN(n)) return "";
+  return `£${n.toLocaleString("en-GB")}`;
+};
+
+const TIMELINE_UNITS = ["days", "weeks", "months"] as const;
+type TimelineUnit = typeof TIMELINE_UNITS[number];
+
+// Try to parse an existing timeline string like "4 weeks" / "1 month"
+function parseTimeline(raw: string): { qty: string; unit: TimelineUnit; custom: boolean } {
+  if (!raw) return { qty: "", unit: "weeks", custom: false };
+  const m = raw.trim().match(/^(\d+)\s*(day|days|week|weeks|month|months)$/i);
+  if (m) {
+    const n = m[1];
+    const u = m[2].toLowerCase();
+    const unit: TimelineUnit = u.startsWith("day") ? "days" : u.startsWith("month") ? "months" : "weeks";
+    return { qty: n, unit, custom: false };
+  }
+  return { qty: "", unit: "weeks", custom: true };
+}
+
+const NAME_REGEX = /^[A-Za-zÀ-ÿ' \-.]{2,}$/;
+const COMPANY_REGEX = /^(?=.*[A-Za-z0-9])[A-Za-zÀ-ÿ0-9 .,&'\-]+$/;
+const BUDGET_PRESETS = [500, 1000, 5000, 10000];
 
 export default function NewProposal() {
   const navigate = useNavigate();
@@ -81,18 +107,48 @@ export default function NewProposal() {
   const templateData = (location.state as any)?.template;
   const clientPrefill = (location.state as any)?.prefillFromClient;
 
+  // Initial budget normalisation: parse digits from prefill so we store digits and display formatted
+  const initialBudgetDigits = parseBudgetDigits(
+    clientPrefill?.budget || templateData?.prefill?.budget || "",
+  );
+  const initialTimelineRaw = clientPrefill?.timeline || templateData?.prefill?.timeline || "";
+  const initialTimeline = parseTimeline(initialTimelineRaw);
+
   const [form, setForm] = useState({
     client_name: clientPrefill?.client_name || "",
     company_name: clientPrefill?.company_name || "",
     service_type: clientPrefill?.service_type || templateData?.serviceType || "",
     project_scope:
       clientPrefill?.project_scope || templateData?.prefill?.project_scope || "",
-    budget: clientPrefill?.budget || templateData?.prefill?.budget || "",
-    timeline: clientPrefill?.timeline || templateData?.prefill?.timeline || "",
+    budget: initialBudgetDigits, // stored as plain digits, displayed formatted
+    timeline: initialTimelineRaw,
     notes: clientPrefill?.notes || templateData?.prefill?.notes || "",
     goals: clientPrefill?.goals || "",
     deliverables: clientPrefill?.deliverables || "",
   });
+
+  // Structured timeline state
+  const [timelineQty, setTimelineQty] = useState<string>(initialTimeline.qty);
+  const [timelineUnit, setTimelineUnit] = useState<TimelineUnit>(initialTimeline.unit);
+  const [timelineCustom, setTimelineCustom] = useState<boolean>(initialTimeline.custom);
+  const [timelineCustomText, setTimelineCustomText] = useState<string>(
+    initialTimeline.custom ? initialTimelineRaw : "",
+  );
+
+  // Track which fields the user has interacted with (for showing errors)
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const markTouched = (field: string) => setTouched((t) => ({ ...t, [field]: true }));
+
+  // Sync structured timeline → form.timeline
+  useEffect(() => {
+    const value = timelineCustom
+      ? timelineCustomText.trim()
+      : timelineQty
+        ? `${timelineQty} ${timelineUnit}`
+        : "";
+    setForm((prev) => (prev.timeline === value ? prev : { ...prev, timeline: value }));
+  }, [timelineQty, timelineUnit, timelineCustom, timelineCustomText]);
+
   const prefilledClientId: string | undefined = clientPrefill?.client_id;
   const originalLeadMessage: string | undefined = clientPrefill?.original_lead_message;
   const leadQuality: string | undefined = clientPrefill?.lead_quality;
@@ -105,22 +161,81 @@ export default function NewProposal() {
     [form.project_scope, originalLeadMessage],
   );
 
+  // Field-level validation
+  const errors = useMemo(() => {
+    const e: Record<string, string> = {};
+    const name = form.client_name.trim();
+    if (!name) e.client_name = "Client name is required";
+    else if (name.length < 2 || !NAME_REGEX.test(name)) e.client_name = "Enter a valid client name";
+
+    const company = form.company_name.trim();
+    if (!company) e.company_name = "Company name is required";
+    else if (!COMPANY_REGEX.test(company)) e.company_name = "Enter a valid company name";
+
+    if (!form.service_type) e.service_type = "Select a service type";
+
+    const budgetDigits = form.budget;
+    const budgetN = parseInt(budgetDigits, 10);
+    if (!budgetDigits) e.budget = "Enter a budget amount";
+    else if (isNaN(budgetN) || budgetN <= 0) e.budget = "Enter a valid budget amount";
+
+    if (!form.timeline.trim()) {
+      e.timeline = "Set a project timeline";
+    } else if (timelineCustom && form.timeline.trim().length < 3) {
+      e.timeline = "Enter a valid timeline";
+    } else if (!timelineCustom && (!timelineQty || parseInt(timelineQty, 10) <= 0)) {
+      e.timeline = "Enter a valid timeline";
+    }
+
+    const scope = form.project_scope.trim();
+    if (!scope) e.project_scope = "Project scope is required";
+    else if (scope.length < 20)
+      e.project_scope = "Add more detail so AI can generate a better proposal";
+
+    if (form.goals.trim() && form.goals.trim().length < 10)
+      e.goals = "Add a bit more detail (10+ characters)";
+
+    if (form.deliverables.trim() && form.deliverables.trim().length < 10)
+      e.deliverables = "Add a bit more detail (10+ characters)";
+
+    return e;
+  }, [form, timelineCustom, timelineQty]);
+
+  const isValid = Object.keys(errors).length === 0;
+
   const missingFields = useMemo(() => {
     const missing: string[] = [];
-    if (!form.service_type) missing.push("service type");
-    if (!form.timeline) missing.push("timeline");
-    if (!form.goals) missing.push("goals");
-    if (!form.project_scope || form.project_scope.length < 20) missing.push("project scope");
+    if (errors.service_type) missing.push("service type");
+    if (errors.timeline) missing.push("timeline");
+    if (!form.goals.trim()) missing.push("goals");
+    if (errors.project_scope) missing.push("project scope");
     return missing;
-  }, [form]);
+  }, [errors, form.goals]);
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Final validation gate — mark all touched so errors render
+    if (!isValid) {
+      setTouched({
+        client_name: true, company_name: true, service_type: true,
+        budget: true, timeline: true, project_scope: true, goals: true, deliverables: true,
+      });
+      toast({
+        title: "Check the highlighted fields",
+        description: "A few details need fixing before we can generate your proposal.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
+
+    const payload = { ...form, budget: formatBudget(form.budget) };
 
     try {
       const { data: aiData, error: aiError } = await supabase.functions.invoke("generate-proposal", {
-        body: { ...form, original_lead_message: originalLeadMessage },
+        body: { ...payload, original_lead_message: originalLeadMessage },
       });
 
       if (aiError) throw aiError;
@@ -154,13 +269,13 @@ export default function NewProposal() {
         .from("proposals")
         .insert({
           user_id: user.id,
-          client_name: form.client_name,
-          company_name: form.company_name,
-          service_type: form.service_type,
-          project_scope: form.project_scope,
-          budget: form.budget,
-          timeline: form.timeline,
-          notes: form.notes,
+          client_name: payload.client_name,
+          company_name: payload.company_name,
+          service_type: payload.service_type,
+          project_scope: payload.project_scope,
+          budget: payload.budget,
+          timeline: payload.timeline,
+          notes: payload.notes,
           proposal_content: aiData.proposal,
           pricing_breakdown: aiData.pricing,
           invoice_content: aiData.invoice,
@@ -196,17 +311,22 @@ export default function NewProposal() {
   const handleGenerateFromClient = (clientId: string) => {
     const c = savedClients.find((x) => x.id === clientId);
     if (!c) return;
+    const tParsed = parseTimeline(c.timeline || "");
     setForm({
       client_name: c.name,
       company_name: c.company || "",
       service_type: c.service_requested || "",
       project_scope: c.project_description || "",
-      budget: c.budget || "",
+      budget: parseBudgetDigits(c.budget || ""),
       timeline: c.timeline || "",
       notes: "",
       goals: c.goals || "",
       deliverables: "",
     });
+    setTimelineQty(tParsed.qty);
+    setTimelineUnit(tParsed.unit);
+    setTimelineCustom(tParsed.custom);
+    setTimelineCustomText(tParsed.custom ? (c.timeline || "") : "");
     toast({ title: "Loaded from client", description: `Prefilled with ${c.name}'s details.` });
   };
 
@@ -224,6 +344,33 @@ export default function NewProposal() {
   );
 
   const optionalLabel = "text-[10px] uppercase tracking-wider text-muted-foreground/70 font-normal ml-1";
+
+  // Helpers for field state visuals
+  const showError = (field: string) => touched[field] && !!errors[field];
+  const showSuccess = (field: string, hasContent: boolean) =>
+    touched[field] && hasContent && !errors[field];
+
+  const inputStateClass = (field: string, value: string) =>
+    showError(field)
+      ? "border-destructive/60 focus-visible:ring-destructive/40"
+      : showSuccess(field, !!value)
+        ? "border-emerald-500/50 focus-visible:ring-emerald-500/30"
+        : "";
+
+  const FieldStatusIcon = ({ field, value }: { field: string; value: string }) => {
+    if (showError(field))
+      return <AlertTriangle className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-destructive pointer-events-none" />;
+    if (showSuccess(field, !!value))
+      return <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500 pointer-events-none" />;
+    return null;
+  };
+
+  const FieldError = ({ field }: { field: string }) =>
+    showError(field) ? (
+      <p className="text-xs text-destructive mt-1.5 flex items-center gap-1">
+        <AlertTriangle className="w-3 h-3" /> {errors[field]}
+      </p>
+    ) : null;
 
   return (
     <DashboardLayout>
@@ -317,8 +464,14 @@ export default function NewProposal() {
                   <Label htmlFor="service_type">Service Type</Label>
                   <div className="relative mt-2">
                     <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
-                    <Select value={form.service_type} onValueChange={(v) => update("service_type", v)}>
-                      <SelectTrigger className="pl-10">
+                    <Select
+                      value={form.service_type}
+                      onValueChange={(v) => { update("service_type", v); markTouched("service_type"); }}
+                    >
+                      <SelectTrigger
+                        className={`pl-10 ${inputStateClass("service_type", form.service_type)}`}
+                        onBlur={() => markTouched("service_type")}
+                      >
                         <SelectValue placeholder="What service are you offering?" />
                       </SelectTrigger>
                       <SelectContent>
@@ -328,6 +481,7 @@ export default function NewProposal() {
                       </SelectContent>
                     </Select>
                   </div>
+                  <FieldError field="service_type" />
                 </div>
                 <div>
                   <Label htmlFor="client_name">Client Name</Label>
@@ -336,12 +490,19 @@ export default function NewProposal() {
                     <Input
                       id="client_name"
                       value={form.client_name}
-                      onChange={(e) => update("client_name", e.target.value)}
+                      onChange={(e) => {
+                        // Letters/spaces/hyphens/apostrophes only
+                        const cleaned = e.target.value.replace(/[^A-Za-zÀ-ÿ' \-.]/g, "");
+                        update("client_name", cleaned);
+                      }}
+                      onBlur={() => markTouched("client_name")}
                       placeholder="Who is your client?"
                       required
-                      className="pl-10"
+                      className={`pl-10 pr-10 ${inputStateClass("client_name", form.client_name)}`}
                     />
+                    <FieldStatusIcon field="client_name" value={form.client_name} />
                   </div>
+                  <FieldError field="client_name" />
                 </div>
                 <div>
                   <Label htmlFor="company_name">Company Name</Label>
@@ -350,12 +511,18 @@ export default function NewProposal() {
                     <Input
                       id="company_name"
                       value={form.company_name}
-                      onChange={(e) => update("company_name", e.target.value)}
+                      onChange={(e) => {
+                        const cleaned = e.target.value.replace(/[^A-Za-zÀ-ÿ0-9 .,&'\-]/g, "");
+                        update("company_name", cleaned);
+                      }}
+                      onBlur={() => markTouched("company_name")}
                       placeholder="Their company or organisation"
                       required
-                      className="pl-10"
+                      className={`pl-10 pr-10 ${inputStateClass("company_name", form.company_name)}`}
                     />
+                    <FieldStatusIcon field="company_name" value={form.company_name} />
                   </div>
+                  <FieldError field="company_name" />
                 </div>
                 <div>
                   <Label htmlFor="budget">Budget</Label>
@@ -363,13 +530,34 @@ export default function NewProposal() {
                     <PoundSterling className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       id="budget"
-                      value={form.budget}
-                      onChange={(e) => update("budget", e.target.value)}
+                      type="text"
+                      inputMode="numeric"
+                      value={form.budget ? formatBudget(form.budget) : ""}
+                      onChange={(e) => update("budget", parseBudgetDigits(e.target.value))}
+                      onBlur={() => markTouched("budget")}
                       placeholder="e.g. £5,000"
                       required
-                      className="pl-10"
+                      className={`pl-10 pr-10 ${inputStateClass("budget", form.budget)}`}
                     />
+                    <FieldStatusIcon field="budget" value={form.budget} />
                   </div>
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {BUDGET_PRESETS.map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => { update("budget", String(p)); markTouched("budget"); }}
+                        className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                          form.budget === String(p)
+                            ? "border-accent/50 bg-accent/10 text-accent"
+                            : "border-border/60 text-muted-foreground hover:border-accent/40 hover:text-foreground"
+                        }`}
+                      >
+                        £{p.toLocaleString("en-GB")}
+                      </button>
+                    ))}
+                  </div>
+                  <FieldError field="budget" />
                 </div>
               </div>
             </section>
@@ -399,12 +587,14 @@ export default function NewProposal() {
                       id="project_scope"
                       value={form.project_scope}
                       onChange={(e) => update("project_scope", e.target.value)}
+                      onBlur={() => markTouched("project_scope")}
                       placeholder="Describe the project and what the client needs"
                       required
                       rows={4}
-                      className="pl-10"
+                      className={`pl-10 ${inputStateClass("project_scope", form.project_scope)}`}
                     />
                   </div>
+                  <FieldError field="project_scope" />
                   <p className="text-xs text-muted-foreground mt-1.5">
                     In 1–2 sentences, describe what the client needs. Don't worry if this isn't perfect — AI will refine it.
                   </p>
@@ -412,17 +602,72 @@ export default function NewProposal() {
 
                 <div>
                   <Label htmlFor="timeline">Timeline</Label>
-                  <div className="relative mt-2">
-                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="timeline"
-                      value={form.timeline}
-                      onChange={(e) => update("timeline", e.target.value)}
-                      placeholder="e.g. 4 weeks"
-                      required
-                      className="pl-10"
-                    />
-                  </div>
+                  {!timelineCustom ? (
+                    <div className="flex gap-2 mt-2">
+                      <div className="relative flex-1">
+                        <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="timeline"
+                          type="text"
+                          inputMode="numeric"
+                          value={timelineQty}
+                          onChange={(e) => {
+                            const v = e.target.value.replace(/[^0-9]/g, "").slice(0, 3);
+                            setTimelineQty(v);
+                          }}
+                          onBlur={() => markTouched("timeline")}
+                          placeholder="e.g. 4"
+                          className={`pl-10 ${inputStateClass("timeline", form.timeline)}`}
+                        />
+                      </div>
+                      <Select
+                        value={timelineUnit}
+                        onValueChange={(v) => { setTimelineUnit(v as TimelineUnit); markTouched("timeline"); }}
+                      >
+                        <SelectTrigger className="w-[130px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {TIMELINE_UNITS.map((u) => (
+                            <SelectItem key={u} value={u}>{u}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => { setTimelineCustom(true); setTimelineCustomText(form.timeline); }}
+                        className="text-xs text-muted-foreground"
+                      >
+                        Custom
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2 mt-2">
+                      <div className="relative flex-1">
+                        <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="timeline"
+                          value={timelineCustomText}
+                          onChange={(e) => setTimelineCustomText(e.target.value)}
+                          onBlur={() => markTouched("timeline")}
+                          placeholder="e.g. 6–8 weeks, by end of Q2"
+                          className={`pl-10 ${inputStateClass("timeline", form.timeline)}`}
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => { setTimelineCustom(false); setTimelineCustomText(""); }}
+                        className="text-xs text-muted-foreground"
+                      >
+                        Use preset
+                      </Button>
+                    </div>
+                  )}
+                  <FieldError field="timeline" />
                 </div>
 
                 <div>
@@ -436,11 +681,13 @@ export default function NewProposal() {
                       id="goals"
                       value={form.goals}
                       onChange={(e) => update("goals", e.target.value)}
+                      onBlur={() => markTouched("goals")}
                       placeholder="What outcome does the client want?"
                       rows={2}
-                      className="pl-10"
+                      className={`pl-10 ${inputStateClass("goals", form.goals)}`}
                     />
                   </div>
+                  <FieldError field="goals" />
                   <p className="text-xs text-muted-foreground mt-1.5">
                     What result does the client want from this project?
                   </p>
@@ -457,11 +704,13 @@ export default function NewProposal() {
                       id="deliverables"
                       value={form.deliverables}
                       onChange={(e) => update("deliverables", e.target.value)}
+                      onBlur={() => markTouched("deliverables")}
                       placeholder="e.g. 3 logo concepts, brand guide, social templates"
                       rows={2}
-                      className="pl-10"
+                      className={`pl-10 ${inputStateClass("deliverables", form.deliverables)}`}
                     />
                   </div>
+                  <FieldError field="deliverables" />
                   <p className="text-xs text-muted-foreground mt-1.5">
                     List the items you expect to include in the proposal.
                   </p>
@@ -560,7 +809,7 @@ export default function NewProposal() {
                   </Button>
                   <Button
                     type="submit"
-                    disabled={!form.service_type}
+                    disabled={!isValid}
                     className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-90 gap-2 w-full sm:w-auto sm:min-w-[300px] h-12 text-base font-semibold shadow-xl shadow-accent/25 hover:shadow-accent/40 hover:scale-[1.02] transition-all group"
                     size="lg"
                   >
