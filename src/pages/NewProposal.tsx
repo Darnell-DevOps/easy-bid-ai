@@ -659,7 +659,7 @@ export default function NewProposal() {
                       value={form.project_scope}
                       onChange={(e) => update("project_scope", e.target.value)}
                       onBlur={() => markTouched("project_scope")}
-                      placeholder="Describe the project and what the client needs"
+                      placeholder="e.g. Build a 5-page website for a fitness brand to increase online leads"
                       required
                       rows={4}
                       className={`pl-10 ${inputStateClass("project_scope", form.project_scope)}`}
