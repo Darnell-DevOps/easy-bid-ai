@@ -24,6 +24,7 @@ import LeadAssistant from "./pages/LeadAssistant";
 import Policies from "./pages/Policies";
 import NewPolicy from "./pages/NewPolicy";
 import PolicyView from "./pages/PolicyView";
+import ClientPortal from "./pages/ClientPortal";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/sample" element={<SampleProposal />} />
+          <Route path="/proposal/view/:id" element={<ClientPortal />} />
           <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
           <Route path="/dashboard/new" element={<AuthGuard><NewProposal /></AuthGuard>} />
           <Route path="/dashboard/proposal/:id" element={<AuthGuard><ProposalView /></AuthGuard>} />
