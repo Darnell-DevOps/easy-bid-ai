@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Sparkles, User, Building2, Briefcase, PoundSterling, FileText, Clock, StickyNote, Target, ListChecks } from "lucide-react";
+import { Loader2, Sparkles, User, Building2, Briefcase, PoundSterling, FileText, Clock, StickyNote, Target, ListChecks, Users } from "lucide-react";
 
 const serviceTypes = [
   "Marketing Strategy",
@@ -148,12 +148,73 @@ export default function NewProposal() {
     }
   };
 
+  const [savedClients, setSavedClients] = useState<Array<{ id: string; name: string; company: string | null; service_requested: string | null; project_description: string | null; budget: string | null; timeline: string | null; goals: string | null; }>>([]);
+
+  useEffect(() => {
+    supabase
+      .from("clients")
+      .select("id, name, company, service_requested, project_description, budget, timeline, goals")
+      .order("created_at", { ascending: false })
+      .limit(50)
+      .then(({ data }) => setSavedClients((data as any) || []));
+  }, []);
+
+  const handleGenerateFromClient = (clientId: string) => {
+    const c = savedClients.find((x) => x.id === clientId);
+    if (!c) return;
+    setForm({
+      client_name: c.name,
+      company_name: c.company || "",
+      service_type: c.service_requested || "",
+      project_scope: c.project_description || "",
+      budget: c.budget || "",
+      timeline: c.timeline || "",
+      notes: "",
+      goals: c.goals || "",
+      deliverables: "",
+    });
+    toast({ title: "Loaded from client", description: `Prefilled with ${c.name}'s details.` });
+  };
+
   return (
     <DashboardLayout>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-foreground">New Proposal</h1>
-        <p className="text-sm text-muted-foreground mt-1">Fill in the lead details and let AI generate your proposal</p>
+      <div className="mb-6">
+        <p className="text-xs font-semibold uppercase tracking-wider text-accent flex items-center gap-1.5 mb-2">
+          <Sparkles className="w-3.5 h-3.5" /> Tell us about the project
+        </p>
+        <h1 className="text-2xl font-bold text-foreground">Create a new proposal</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Fill in the basics — AI will draft a polished, ready-to-send proposal in seconds.
+        </p>
       </div>
+
+      {savedClients.length > 0 && !prefilledClientId && (
+        <Card className="mb-6 border-accent/20 bg-accent/5">
+          <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
+                <Users className="w-4 h-4 text-accent" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Generate from a saved client</p>
+                <p className="text-xs text-muted-foreground">Skip the typing — prefill with their saved details.</p>
+              </div>
+            </div>
+            <Select onValueChange={handleGenerateFromClient}>
+              <SelectTrigger className="w-full sm:w-[240px]">
+                <SelectValue placeholder="Choose a client…" />
+              </SelectTrigger>
+              <SelectContent>
+                {savedClients.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}{c.company ? ` · ${c.company}` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="glass-card">
         <CardContent className="p-6 md:p-8">
