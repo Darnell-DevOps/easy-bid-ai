@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Sparkles, User, Building2, Briefcase, PoundSterling, FileText, Clock, StickyNote } from "lucide-react";
+import { Loader2, Sparkles, User, Building2, Briefcase, PoundSterling, FileText, Clock, StickyNote, Target, ListChecks } from "lucide-react";
 
 const serviceTypes = [
   "Marketing Strategy",
