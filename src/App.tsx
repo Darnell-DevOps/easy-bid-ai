@@ -20,6 +20,7 @@ import Clients from "./pages/Clients";
 import NewClient from "./pages/NewClient";
 import ClientDetail from "./pages/ClientDetail";
 import TimeSavedDashboard from "./pages/TimeSavedDashboard";
+import LeadAssistant from "./pages/LeadAssistant";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,6 +48,7 @@ const App = () => (
           <Route path="/dashboard/clients/new" element={<AuthGuard><NewClient /></AuthGuard>} />
           <Route path="/dashboard/clients/:id" element={<AuthGuard><ClientDetail /></AuthGuard>} />
           <Route path="/dashboard/time-saved" element={<AuthGuard><TimeSavedDashboard /></AuthGuard>} />
+          <Route path="/dashboard/leads" element={<AuthGuard><LeadAssistant /></AuthGuard>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
