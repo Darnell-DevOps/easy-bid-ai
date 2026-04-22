@@ -311,17 +311,22 @@ export default function NewProposal() {
   const handleGenerateFromClient = (clientId: string) => {
     const c = savedClients.find((x) => x.id === clientId);
     if (!c) return;
+    const tParsed = parseTimeline(c.timeline || "");
     setForm({
       client_name: c.name,
       company_name: c.company || "",
       service_type: c.service_requested || "",
       project_scope: c.project_description || "",
-      budget: c.budget || "",
+      budget: parseBudgetDigits(c.budget || ""),
       timeline: c.timeline || "",
       notes: "",
       goals: c.goals || "",
       deliverables: "",
     });
+    setTimelineQty(tParsed.qty);
+    setTimelineUnit(tParsed.unit);
+    setTimelineCustom(tParsed.custom);
+    setTimelineCustomText(tParsed.custom ? (c.timeline || "") : "");
     toast({ title: "Loaded from client", description: `Prefilled with ${c.name}'s details.` });
   };
 
