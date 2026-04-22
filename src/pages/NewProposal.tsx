@@ -701,15 +701,6 @@ export default function NewProposal() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => { setTimelineCustom(true); setTimelineCustomText(form.timeline); }}
-                        className="text-xs text-muted-foreground"
-                      >
-                        Custom
-                      </Button>
                     </div>
                   ) : null}
 
