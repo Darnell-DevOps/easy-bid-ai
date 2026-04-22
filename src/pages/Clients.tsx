@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Users, Plus, Search, Sparkles, Lightbulb } from "lucide-react";
+import { Users, Plus, Search, Sparkles, Lightbulb, Activity, ArrowRight } from "lucide-react";
 
 interface Client {
   id: string;
@@ -73,6 +73,18 @@ const Empty = ({ children }: { children?: React.ReactNode }) => (
   <span className="text-muted-foreground/60">{children ?? "—"}</span>
 );
 
+const timeAgo = (date: string) => {
+  const diff = Date.now() - new Date(date).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  return new Date(date).toLocaleDateString();
+};
+
 export default function Clients() {
   const navigate = useNavigate();
   const [clients, setClients] = useState<Client[]>([]);
@@ -105,6 +117,17 @@ export default function Clients() {
     });
   }, [clients, search, statusFilter]);
 
+  // Best candidate for "Create Proposal" CTA on the banner
+  const topCandidate = useMemo(() => {
+    if (clients.length === 0) return null;
+    return (
+      clients.find((c) => c.lead_quality === "High" && c.status !== "Won" && c.status !== "Lost") ||
+      clients.find((c) => c.status === "Qualified") ||
+      clients.find((c) => c.status === "New") ||
+      null
+    );
+  }, [clients]);
+
   // Dynamic insight based on data
   const insight = useMemo(() => {
     if (clients.length === 0) return null;
@@ -115,7 +138,7 @@ export default function Clients() {
     const lowQuality = clients.filter((c) => c.lead_quality === "Low").length;
 
     if (highQuality > 0) {
-      return `${highQuality} high-quality ${highQuality === 1 ? "lead" : "leads"} ready for a proposal`;
+      return `${highQuality} high-quality ${highQuality === 1 ? "lead" : "leads"} ready for a proposal — send one to get paid`;
     }
     if (readyForProposal > 0) {
       return `${readyForProposal} ${readyForProposal === 1 ? "client" : "clients"} ready for a proposal — send one to get paid`;
@@ -126,8 +149,8 @@ export default function Clients() {
     return "Select a client to create a proposal and get paid faster";
   }, [clients]);
 
-  const goGenerate = (c: Client, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const goGenerate = (c: Client, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     navigate("/dashboard/new", {
       state: {
         prefillFromClient: {
@@ -144,13 +167,20 @@ export default function Clients() {
     });
   };
 
+  // Recent activity = 5 most recent clients
+  const recentActivity = useMemo(() => clients.slice(0, 5), [clients]);
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Clients</h1>
+            <h1 className="text-2xl font-bold text-foreground">
+              Clients{!loading && clients.length > 0 && (
+                <span className="text-muted-foreground font-medium"> ({clients.length})</span>
+              )}
+            </h1>
             <p className="text-sm text-muted-foreground mt-1">
               Manage leads and clients in one place. Click a row to open their profile.
             </p>
@@ -158,20 +188,32 @@ export default function Clients() {
           <Button
             onClick={() => navigate("/dashboard/clients/new")}
             size="lg"
-            className="gap-2 bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 shadow-lg shadow-accent/20"
+            className="gap-2 h-12 px-6 text-base bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 shadow-lg shadow-accent/25"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-5 h-5" />
             Add New Client
           </Button>
         </div>
 
         {/* Guidance / insight banner */}
         {!loading && insight && (
-          <div className="flex items-center gap-3 rounded-xl border border-accent/20 bg-accent/5 px-4 py-3">
-            <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
-              <Lightbulb className="w-4 h-4 text-accent" />
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border border-accent/20 bg-gradient-to-r from-accent/10 to-purple/5 px-4 py-3.5">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="w-9 h-9 rounded-lg bg-accent/15 flex items-center justify-center flex-shrink-0">
+                <Lightbulb className="w-4 h-4 text-accent" />
+              </div>
+              <p className="text-sm text-foreground/90">{insight}</p>
             </div>
-            <p className="text-sm text-foreground/90">{insight}</p>
+            {topCandidate && (
+              <Button
+                size="sm"
+                onClick={() => goGenerate(topCandidate)}
+                className="gap-1.5 bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 shadow-sm shadow-accent/20 flex-shrink-0"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                Create Proposal
+              </Button>
+            )}
           </div>
         )}
 
@@ -246,66 +288,108 @@ export default function Clients() {
                     <TableHead>Status</TableHead>
                     <TableHead className="hidden md:table-cell">Lead Quality</TableHead>
                     <TableHead className="hidden md:table-cell">Created</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-right">
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map((c) => (
-                    <TableRow
-                      key={c.id}
-                      className="cursor-pointer transition-colors hover:bg-accent/5"
-                      onClick={() => navigate(`/dashboard/clients/${c.id}`)}
-                    >
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-                            <span className="text-sm font-semibold text-accent">
-                              {c.name.charAt(0).toUpperCase()}
-                            </span>
+                  {filtered.map((c) => {
+                    const subtext = c.company || c.service_requested;
+                    return (
+                      <TableRow
+                        key={c.id}
+                        className="cursor-pointer transition-colors hover:bg-accent/5"
+                        onClick={() => navigate(`/dashboard/clients/${c.id}`)}
+                      >
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
+                              <span className="text-sm font-semibold text-accent">
+                                {c.name.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-foreground truncate">{c.name}</p>
+                              {subtext && (
+                                <p className="text-xs text-muted-foreground truncate">{subtext}</p>
+                              )}
+                            </div>
                           </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">{c.name}</p>
-                            {c.company && (
-                              <p className="text-xs text-muted-foreground truncate">{c.company}</p>
-                            )}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={`${statusStyle(c.status)} text-xs`}>
-                          {c.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {c.lead_quality ? (
-                          <Badge
-                            variant="outline"
-                            className={`${qualityBadgeStyle(c.lead_quality)} text-xs`}
-                          >
-                            {c.lead_quality}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={`${statusStyle(c.status)} text-xs`}>
+                            {c.status}
                           </Badge>
-                        ) : (
-                          <Empty />
-                        )}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
-                        {new Date(c.created_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          onClick={(e) => goGenerate(c, e)}
-                          className="gap-1.5 bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 shadow-sm shadow-accent/20"
-                        >
-                          <Sparkles className="w-3.5 h-3.5" />
-                          Create Proposal
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {c.lead_quality ? (
+                            <Badge
+                              variant="outline"
+                              className={`${qualityBadgeStyle(c.lead_quality)} text-xs`}
+                            >
+                              {c.lead_quality}
+                            </Badge>
+                          ) : (
+                            <Empty />
+                          )}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
+                          {new Date(c.created_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            size="sm"
+                            onClick={(e) => goGenerate(c, e)}
+                            className="gap-1.5 bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 shadow-sm shadow-accent/20"
+                          >
+                            <Sparkles className="w-3.5 h-3.5" />
+                            Create Proposal
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
+          </Card>
+        )}
+
+        {/* Recent client activity */}
+        {!loading && recentActivity.length > 0 && (
+          <Card>
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-accent" />
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Recent Client Activity
+                  </h3>
+                </div>
+              </div>
+              <div className="space-y-3">
+                {recentActivity.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => navigate(`/dashboard/clients/${c.id}`)}
+                    className="w-full flex items-center justify-between gap-3 py-2 px-3 -mx-3 rounded-lg hover:bg-accent/5 transition-colors text-left group"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-2 h-2 rounded-full bg-accent flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-sm text-foreground truncate">
+                          <span className="font-medium">{c.name}</span>
+                          <span className="text-muted-foreground"> added as a client</span>
+                        </p>
+                        <p className="text-xs text-muted-foreground">{timeAgo(c.created_at)}</p>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-accent group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                  </button>
+                ))}
+              </div>
+            </CardContent>
           </Card>
         )}
       </div>
