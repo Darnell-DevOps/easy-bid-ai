@@ -599,30 +599,33 @@ export default function NewProposal() {
                       <FieldStatusIcon field="budget" value={form.budget} />
                     </div>
                   </div>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {BUDGET_PRESETS.map((p) => (
-                      <button
-                        key={p}
-                        type="button"
-                        onClick={() => { update("budget", String(p)); markTouched("budget"); }}
-                        className={`text-xs px-3 py-1.5 rounded-md border transition-colors ${
-                          form.budget === String(p)
-                            ? "border-accent/50 bg-accent/10 text-accent"
-                            : "border-border/60 text-muted-foreground hover:border-accent/40 hover:text-foreground"
-                        }`}
-                      >
-                        {getCurrency(currency).symbol}{p.toLocaleString(getCurrency(currency).locale)}
-                      </button>
-                    ))}
+                  <div className="flex flex-wrap gap-2.5 mt-3">
+                    {BUDGET_PRESETS.map((p) => {
+                      const selected = form.budget === String(p);
+                      return (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => { update("budget", String(p)); markTouched("budget"); }}
+                          className={`text-xs px-3 py-1.5 rounded-md border transition-all ${
+                            selected
+                              ? "border-accent bg-accent/15 text-accent shadow-sm shadow-accent/20 ring-1 ring-accent/30"
+                              : "border-border/60 text-muted-foreground hover:border-accent/50 hover:bg-accent/5 hover:text-foreground hover:-translate-y-0.5"
+                          }`}
+                        >
+                          {getCurrency(currency).symbol}{p.toLocaleString(getCurrency(currency).locale)}
+                        </button>
+                      );
+                    })}
                     <button
                       type="button"
                       onClick={() => { update("budget", ""); markTouched("budget"); setTimeout(() => budgetInputRef.current?.focus(), 0); }}
-                      className="text-xs px-3 py-1.5 rounded-md border border-dashed border-border/60 text-muted-foreground hover:border-accent/40 hover:text-foreground transition-colors"
+                      className="text-xs px-3 py-1.5 rounded-md border border-dashed border-border/60 text-muted-foreground hover:border-accent/50 hover:bg-accent/5 hover:text-foreground hover:-translate-y-0.5 transition-all"
                     >
                       + Custom
                     </button>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1.5">
+                  <p className="text-[11px] text-muted-foreground/70 mt-2">
                     Typical projects: {getCurrency(currency).symbol}1,000–{getCurrency(currency).symbol}10,000
                   </p>
                   <FieldError field="budget" />
