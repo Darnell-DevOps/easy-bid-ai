@@ -57,16 +57,19 @@ export default function NewProposal() {
 
   const location = useLocation();
   const templateData = (location.state as any)?.template;
+  const clientPrefill = (location.state as any)?.prefillFromClient;
 
   const [form, setForm] = useState({
-    client_name: "",
-    company_name: "",
-    service_type: templateData?.serviceType || "",
-    project_scope: templateData?.prefill?.project_scope || "",
-    budget: templateData?.prefill?.budget || "",
-    timeline: templateData?.prefill?.timeline || "",
-    notes: templateData?.prefill?.notes || "",
+    client_name: clientPrefill?.client_name || "",
+    company_name: clientPrefill?.company_name || "",
+    service_type: clientPrefill?.service_type || templateData?.serviceType || "",
+    project_scope:
+      clientPrefill?.project_scope || templateData?.prefill?.project_scope || "",
+    budget: clientPrefill?.budget || templateData?.prefill?.budget || "",
+    timeline: clientPrefill?.timeline || templateData?.prefill?.timeline || "",
+    notes: clientPrefill?.notes || templateData?.prefill?.notes || "",
   });
+  const prefilledClientId: string | undefined = clientPrefill?.client_id;
 
   const update = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
 
@@ -86,10 +89,10 @@ export default function NewProposal() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Auto-create or find client
-      let clientId: string | null = null;
+      // Auto-create or find client (skip lookup if we already have one from intake)
+      let clientId: string | null = prefilledClientId || null;
       const clientNameNorm = form.client_name.trim().toLowerCase();
-      if (clientNameNorm) {
+      if (!clientId && clientNameNorm) {
         const { data: existing } = await supabase
           .from("clients")
           .select("id")
