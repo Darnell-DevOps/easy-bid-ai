@@ -406,7 +406,7 @@ export default function NewProposal() {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground mt-1.5">
-                    Describe what the client needs, the problem being solved, and what is being delivered.
+                    In 1–2 sentences, describe what the client needs. Don't worry if this isn't perfect — AI will refine it.
                   </p>
                 </div>
 
