@@ -1,5 +1,5 @@
 import ReactMarkdown from "react-markdown";
-import { CheckCircle2, ArrowRight, Sparkles } from "lucide-react";
+import { CheckCircle2, ArrowRight, Sparkles, AlertCircle, Wrench } from "lucide-react";
 
 interface PremiumProposalRendererProps {
   content: string;
@@ -7,15 +7,19 @@ interface PremiumProposalRendererProps {
 
 function classifySection(text: string): string {
   const lower = text.toLowerCase();
+  if (lower.includes("project proposal")) return "skip";
+  if (lower.includes("what you'll get") || lower.includes("what you will get")) return "whatyouget";
   if (lower.includes("introduction")) return "intro";
-  if (lower.includes("understanding")) return "understanding";
-  if (lower.includes("proposed solution")) return "solution";
+  if (lower.includes("your current challenge") || lower.includes("understanding")) return "challenge";
+  if (lower.includes("how we'll solve") || lower.includes("how we will solve") || lower.includes("proposed solution")) return "solution";
   if (lower.includes("scope of work")) return "scope";
+  if (lower.includes("deliverable")) return "deliverables";
   if (lower.includes("timeline")) return "timeline";
   if (lower.includes("expected outcome")) return "outcomes";
+  if (lower.includes("investment")) return "investment";
   if (lower.includes("why choose")) return "why";
   if (lower.includes("next step")) return "cta";
-  if (lower.includes("pricing") || lower.includes("investment")) return "pricing";
+  if (lower.includes("pricing")) return "pricing";
   return "default";
 }
 
