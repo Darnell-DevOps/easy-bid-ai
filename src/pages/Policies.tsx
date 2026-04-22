@@ -17,7 +17,14 @@ interface Policy {
   created_at: string;
 }
 
+const SUGGESTED = [
+  { type: "Terms & Conditions", description: "Set the rules customers agree to when using your service.", icon: FileText, accent: "from-accent to-purple" },
+  { type: "Privacy Policy", description: "Be transparent about how you collect and handle data.", icon: Lock, accent: "from-blue-500 to-cyan-500" },
+  { type: "Refund Policy", description: "Make refund expectations clear and reduce disputes.", icon: RotateCcw, accent: "from-emerald-500 to-teal-500" },
+];
+
 export default function Policies() {
+  const navigate = useNavigate();
   const [policies, setPolicies] = useState<Policy[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -53,7 +60,7 @@ export default function Policies() {
             Generate professional business policies with AI.
           </p>
         </div>
-        <Button asChild>
+        <Button asChild variant={policies.length === 0 ? "outline" : "default"}>
           <Link to="/dashboard/policies/new">
             <Plus className="w-4 h-4 mr-2" />
             Generate New Policy
@@ -64,18 +71,41 @@ export default function Policies() {
       {loading ? (
         <p className="text-muted-foreground">Loading…</p>
       ) : policies.length === 0 ? (
-        <Card>
-          <CardContent className="py-16 text-center">
-            <FileText className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground mb-4">No policies yet.</p>
-            <Button asChild>
-              <Link to="/dashboard/policies/new">
-                <Plus className="w-4 h-4 mr-2" />
-                Generate your first policy
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="space-y-6">
+          <div className="text-center max-w-lg mx-auto">
+            <div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
+              <Shield className="w-7 h-7 text-accent" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-1">Pick a policy to generate</h3>
+            <p className="text-sm text-muted-foreground">
+              Pre-built starting points — fully customised by AI for your business.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-4">
+            {SUGGESTED.map((s) => (
+              <Card
+                key={s.type}
+                className="group hover:shadow-lg hover:border-accent/30 transition-all cursor-pointer"
+                onClick={() => navigate(`/dashboard/policies/new?type=${encodeURIComponent(s.type)}`)}
+              >
+                <CardContent className="p-5 flex flex-col h-full">
+                  <div className={`w-11 h-11 rounded-lg bg-gradient-to-br ${s.accent} flex items-center justify-center mb-4 shadow-md`}>
+                    <s.icon className="w-5 h-5 text-white" />
+                  </div>
+                  <h4 className="font-semibold text-foreground text-sm mb-1">{s.type}</h4>
+                  <p className="text-xs text-muted-foreground mb-4 flex-1">{s.description}</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-2 group-hover:border-accent/40 group-hover:text-accent transition-colors"
+                  >
+                    Generate <ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       ) : (
         <div className="grid gap-3">
           {policies.map((p) => (
