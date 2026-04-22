@@ -154,7 +154,7 @@ export default function ProposalView() {
   const updateStatus = async (next: ProposalStatus) => {
     if (!proposal) return;
     const nowIso = new Date().toISOString();
-    const updates: Record<string, any> = { status: next };
+    const updates: { status: string; sent_at?: string; viewed_at?: string; accepted_at?: string; rejected_at?: string } = { status: next };
     // Only stamp timestamps if not already set, to preserve the original event time.
     if (next === "sent" && !proposal.sent_at) updates.sent_at = nowIso;
     if (next === "viewed" && !proposal.viewed_at) updates.viewed_at = nowIso;
