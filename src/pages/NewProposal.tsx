@@ -291,7 +291,7 @@ export default function NewProposal() {
                   id="project_scope"
                   value={form.project_scope}
                   onChange={(e) => update("project_scope", e.target.value)}
-                  placeholder="What problem are you solving?"
+                  placeholder="Describe the project and what the client needs"
                   required
                   rows={3}
                   className="pl-10"
