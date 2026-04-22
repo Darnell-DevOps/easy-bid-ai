@@ -26,7 +26,7 @@ export default function ProposalHeader({ clientName, companyName, serviceType, c
         Proposal for {clientName}
       </h1>
       <p className="text-base lg:text-lg text-muted-foreground mt-4 max-w-2xl leading-relaxed">
-        Here's how we'll help you achieve real results with{" "}
+        A clear plan to help you grow with{" "}
         <span className="text-foreground font-medium">{serviceType.toLowerCase()}</span> — built around your goals,
         delivered with care.
       </p>
