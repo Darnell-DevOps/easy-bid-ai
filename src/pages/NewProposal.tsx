@@ -464,8 +464,14 @@ export default function NewProposal() {
                   <Label htmlFor="service_type">Service Type</Label>
                   <div className="relative mt-2">
                     <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
-                    <Select value={form.service_type} onValueChange={(v) => update("service_type", v)}>
-                      <SelectTrigger className="pl-10">
+                    <Select
+                      value={form.service_type}
+                      onValueChange={(v) => { update("service_type", v); markTouched("service_type"); }}
+                    >
+                      <SelectTrigger
+                        className={`pl-10 ${inputStateClass("service_type", form.service_type)}`}
+                        onBlur={() => markTouched("service_type")}
+                      >
                         <SelectValue placeholder="What service are you offering?" />
                       </SelectTrigger>
                       <SelectContent>
@@ -475,6 +481,7 @@ export default function NewProposal() {
                       </SelectContent>
                     </Select>
                   </div>
+                  <FieldError field="service_type" />
                 </div>
                 <div>
                   <Label htmlFor="client_name">Client Name</Label>
@@ -483,12 +490,19 @@ export default function NewProposal() {
                     <Input
                       id="client_name"
                       value={form.client_name}
-                      onChange={(e) => update("client_name", e.target.value)}
+                      onChange={(e) => {
+                        // Letters/spaces/hyphens/apostrophes only
+                        const cleaned = e.target.value.replace(/[^A-Za-zÀ-ÿ' \-.]/g, "");
+                        update("client_name", cleaned);
+                      }}
+                      onBlur={() => markTouched("client_name")}
                       placeholder="Who is your client?"
                       required
-                      className="pl-10"
+                      className={`pl-10 pr-10 ${inputStateClass("client_name", form.client_name)}`}
                     />
+                    <FieldStatusIcon field="client_name" value={form.client_name} />
                   </div>
+                  <FieldError field="client_name" />
                 </div>
                 <div>
                   <Label htmlFor="company_name">Company Name</Label>
@@ -497,12 +511,18 @@ export default function NewProposal() {
                     <Input
                       id="company_name"
                       value={form.company_name}
-                      onChange={(e) => update("company_name", e.target.value)}
+                      onChange={(e) => {
+                        const cleaned = e.target.value.replace(/[^A-Za-zÀ-ÿ0-9 .,&'\-]/g, "");
+                        update("company_name", cleaned);
+                      }}
+                      onBlur={() => markTouched("company_name")}
                       placeholder="Their company or organisation"
                       required
-                      className="pl-10"
+                      className={`pl-10 pr-10 ${inputStateClass("company_name", form.company_name)}`}
                     />
+                    <FieldStatusIcon field="company_name" value={form.company_name} />
                   </div>
+                  <FieldError field="company_name" />
                 </div>
                 <div>
                   <Label htmlFor="budget">Budget</Label>
@@ -510,13 +530,34 @@ export default function NewProposal() {
                     <PoundSterling className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       id="budget"
-                      value={form.budget}
-                      onChange={(e) => update("budget", e.target.value)}
+                      type="text"
+                      inputMode="numeric"
+                      value={form.budget ? formatBudget(form.budget) : ""}
+                      onChange={(e) => update("budget", parseBudgetDigits(e.target.value))}
+                      onBlur={() => markTouched("budget")}
                       placeholder="e.g. £5,000"
                       required
-                      className="pl-10"
+                      className={`pl-10 pr-10 ${inputStateClass("budget", form.budget)}`}
                     />
+                    <FieldStatusIcon field="budget" value={form.budget} />
                   </div>
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {BUDGET_PRESETS.map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => { update("budget", String(p)); markTouched("budget"); }}
+                        className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                          form.budget === String(p)
+                            ? "border-accent/50 bg-accent/10 text-accent"
+                            : "border-border/60 text-muted-foreground hover:border-accent/40 hover:text-foreground"
+                        }`}
+                      >
+                        £{p.toLocaleString("en-GB")}
+                      </button>
+                    ))}
+                  </div>
+                  <FieldError field="budget" />
                 </div>
               </div>
             </section>
