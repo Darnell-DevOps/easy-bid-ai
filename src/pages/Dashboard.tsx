@@ -5,7 +5,9 @@ import StatsCards from "@/components/dashboard/StatsCards";
 import QuickActions from "@/components/dashboard/QuickActions";
 import RecentActivity from "@/components/dashboard/RecentActivity";
 import ProposalsList from "@/components/dashboard/ProposalsList";
+import OnboardingHighlight from "@/components/dashboard/OnboardingHighlight";
 import { supabase } from "@/integrations/supabase/client";
+import { getOnboardingKey } from "@/pages/Onboarding";
 
 interface FullProposal {
   id: string;
@@ -35,6 +37,18 @@ export default function Dashboard() {
 
   useEffect(() => { fetchProposals(); }, []);
 
+  // Redirect first-time users to onboarding
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      const done = localStorage.getItem(getOnboardingKey(user.id));
+      const params = new URLSearchParams(window.location.search);
+      if (!done && params.get("onboarded") !== "1") {
+        navigate("/onboarding", { replace: true });
+      }
+    });
+  }, [navigate]);
+
   const stats = useMemo(() => {
     const uniqueClients = new Set(proposals.map((p) => p.client_name.toLowerCase().trim())).size;
     const timeSaved = proposals.length * 55;
@@ -54,6 +68,8 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-1">Welcome back. Here's your overview.</p>
         </div>
+
+        <OnboardingHighlight />
 
         <StatsCards
           totalProposals={stats.total}
