@@ -124,6 +124,11 @@ export const templates: TemplateData[] = [
     bestFor: "Consultants & Agencies",
     dealSize: "£2K–£8K",
     timeSaved: "~60 min",
+    tone: "professional",
+    defaultGoals:
+      "A clear, data-backed marketing roadmap that aligns spend with revenue goals, reduces wasted budget, and unlocks measurable growth across priority channels.",
+    defaultDeliverables:
+      "Competitor & market analysis, audience segmentation, channel recommendations (paid + organic), 90-day campaign roadmap, KPI framework, budget allocation plan, executive summary deck.",
     prefill: {
       project_scope:
         "Comprehensive marketing strategy: competitor analysis, audience segmentation, channel recommendations (paid & organic), 90-day campaign roadmap, KPI framework, and budget allocation plan.",
@@ -138,7 +143,7 @@ export default function Templates() {
   const navigate = useNavigate();
 
   const handleUseTemplate = (template: TemplateData) => {
-    navigate("/dashboard/new", { state: { template } });
+    navigate("/dashboard/new", { state: { template, autoGenerate: true } });
   };
 
   const handleAIGenerate = () => {
