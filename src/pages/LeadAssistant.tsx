@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,12 @@ import {
   TrendingUp,
   Users,
   CheckCircle2,
+  Wand2,
+  ArrowRight,
 } from "lucide-react";
+import { smartSelectTemplate, type SmartSelectResult } from "@/lib/smart-template";
+import type { TemplateData } from "@/pages/Templates";
+import { templates } from "@/pages/Templates";
 
 const emptyState = {
   leadName: "",
@@ -223,20 +228,71 @@ export default function LeadAssistant() {
     }
   };
 
-  const handleGenerateProposal = () => {
+  // ─── Smart Template Selection ─────────────────────────────────
+  const [smartPick, setSmartPick] = useState<SmartSelectResult | null>(null);
+  const [smartLoading, setSmartLoading] = useState(false);
+  const [smartStep, setSmartStep] = useState(0);
+  const smartLoadingSteps = [
+    "Analyzing lead…",
+    "Identifying project type…",
+    "Selecting best template…",
+  ];
+
+  // Re-run smart selection whenever the relevant inputs change after extraction
+  useEffect(() => {
+    if (!hasResponse) {
+      setSmartPick(null);
+      return;
+    }
+    setSmartPick(
+      smartSelectTemplate({
+        message,
+        service,
+        budget,
+        timeline,
+        goals,
+      }),
+    );
+  }, [hasResponse, message, service, budget, timeline, goals]);
+
+  // Adjust budget hint text based on detected complexity (used in confirm card)
+  const complexityLabel = useMemo(() => {
+    if (!smartPick) return "";
+    return (
+      smartPick.complexity[0].toUpperCase() + smartPick.complexity.slice(1)
+    );
+  }, [smartPick]);
+
+  // Run staged loading then navigate to the proposal builder with autoGenerate.
+  const startProposalFromTemplate = async (chosen: TemplateData) => {
+    setSmartLoading(true);
+    setSmartStep(0);
+    // Stage 1
+    await new Promise((r) => setTimeout(r, 700));
+    setSmartStep(1);
+    await new Promise((r) => setTimeout(r, 700));
+    setSmartStep(2);
+    await new Promise((r) => setTimeout(r, 600));
+
     navigate("/dashboard/new", {
       state: {
+        template: chosen,
+        autoGenerate: true,
         prefillFromClient: {
-          client_id: savedClientId,
+          client_id: savedClientId || undefined,
           client_name: leadName,
           company_name: "",
-          service_type: service,
+          // Lead-derived values take priority over template defaults
+          service_type: chosen.serviceType,
           project_scope: notes || message,
-          budget,
-          timeline,
+          budget: budget || chosen.prefill.budget,
+          timeline: timeline || chosen.prefill.timeline,
           notes: "",
-          goals,
+          goals: goals || chosen.defaultGoals || "",
+          deliverables: chosen.defaultDeliverables || "",
           original_lead_message: message,
+          lead_quality: leadQuality,
+          ai_recommendation: aiRecommendation,
         },
       },
     });
@@ -551,6 +607,138 @@ export default function LeadAssistant() {
               </Card>
             )}
 
+            {/* Section 4.5: Smart Template Match */}
+            {smartPick && (
+              <Card className="border-accent/30 bg-gradient-to-br from-accent/5 via-purple/5 to-transparent">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Wand2 className="w-4 h-4 text-accent" />
+                    Smart Template Match
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground">
+                    Based on the lead's wording, we picked the best-fit proposal template.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Confidence + reasoning chips */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge
+                      variant="outline"
+                      className={
+                        smartPick.confidence === "high"
+                          ? "bg-emerald-500/15 text-emerald-600 border-emerald-500/30"
+                          : smartPick.confidence === "medium"
+                          ? "bg-amber-500/15 text-amber-600 border-amber-500/30"
+                          : "bg-muted text-muted-foreground border-border"
+                      }
+                    >
+                      {smartPick.confidence === "high"
+                        ? "High confidence"
+                        : smartPick.confidence === "medium"
+                        ? "Suggested match"
+                        : "Pick manually"}
+                    </Badge>
+                    {smartPick.budgetTier !== "unknown" && (
+                      <Badge variant="outline" className="text-muted-foreground capitalize">
+                        {smartPick.budgetTier} budget
+                      </Badge>
+                    )}
+                    <Badge variant="outline" className="text-muted-foreground">
+                      {complexityLabel} project
+                    </Badge>
+                    {smartPick.urgency === "urgent" && (
+                      <Badge
+                        variant="outline"
+                        className="bg-rose-500/15 text-rose-600 border-rose-500/30"
+                      >
+                        Urgent
+                      </Badge>
+                    )}
+                  </div>
+
+                  {smartPick.confidence !== "low" ? (
+                    <div className="rounded-lg border border-accent/30 bg-background/60 p-4 flex flex-col sm:flex-row sm:items-center gap-4">
+                      <div
+                        className={`w-11 h-11 rounded-lg bg-gradient-to-br ${smartPick.template.accent} flex items-center justify-center flex-shrink-0 shadow-md`}
+                      >
+                        <smartPick.template.icon className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-foreground text-sm">
+                          {smartPick.template.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {smartPick.reasoning}
+                        </p>
+                      </div>
+                      <Button
+                        onClick={() => startProposalFromTemplate(smartPick.template)}
+                        disabled={smartLoading}
+                        className="w-full sm:w-auto gap-2"
+                      >
+                        {smartLoading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            {smartLoadingSteps[smartStep]}
+                          </>
+                        ) : (
+                          <>
+                            {smartPick.confidence === "high"
+                              ? "Generate proposal"
+                              : "Use this template"}
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Couldn't confidently match a template. Pick the best fit below:
+                    </p>
+                  )}
+
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground mb-2">
+                      {smartPick.confidence === "low" ? "Choose a template" : "Or change template"}
+                    </p>
+                    <div className="grid sm:grid-cols-2 gap-2">
+                      {(smartPick.confidence === "low"
+                        ? templates
+                        : smartPick.alternatives
+                      ).map((t) => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => startProposalFromTemplate(t)}
+                          disabled={smartLoading}
+                          className="text-left rounded-lg border border-border/60 bg-background/40 p-3 hover:border-accent/50 hover:bg-accent/5 transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center gap-3"
+                        >
+                          <div
+                            className={`w-8 h-8 rounded-md bg-gradient-to-br ${t.accent} flex items-center justify-center flex-shrink-0 shadow-sm`}
+                          >
+                            <t.icon className="w-4 h-4 text-white" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-semibold text-foreground truncate">
+                              {t.name}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground truncate">
+                              {t.serviceType}
+                            </p>
+                          </div>
+                          <ArrowRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-muted-foreground">
+                    You can edit the generated proposal freely.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Section 5: Actions */}
             <Card className={savedClientId ? "border-emerald-500/30 bg-emerald-500/5" : ""}>
               <CardContent className="p-6 space-y-4">
@@ -567,9 +755,18 @@ export default function LeadAssistant() {
                       <Button onClick={handleViewClient} variant="outline">
                         <Eye className="w-4 h-4" /> View Client
                       </Button>
-                      <Button onClick={handleGenerateProposal}>
-                        <FileText className="w-4 h-4" /> Generate Proposal
-                      </Button>
+                      {smartPick && (
+                        <Button
+                          onClick={() => startProposalFromTemplate(smartPick.template)}
+                          disabled={smartLoading}
+                        >
+                          {smartLoading ? (
+                            <><Loader2 className="w-4 h-4 animate-spin" /> {smartLoadingSteps[smartStep]}</>
+                          ) : (
+                            <><Wand2 className="w-4 h-4" /> Generate Proposal</>
+                          )}
+                        </Button>
+                      )}
                       <Button onClick={reset} variant="ghost">
                         <RotateCcw className="w-4 h-4" /> Add Another Lead
                       </Button>
