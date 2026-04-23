@@ -76,11 +76,16 @@ export const templates: TemplateData[] = [
     bestFor: "Agencies & Solo Marketers",
     dealSize: "£500–£2K/mo",
     timeSaved: "~30 min",
+    tone: "professional",
+    defaultGoals:
+      "Build a consistent, engaged audience that drives brand awareness, qualified inbound enquiries, and measurable ROI from organic social channels.",
+    defaultDeliverables:
+      "Monthly content calendar, 12 branded posts (graphics + copy), 4 short-form video concepts, community management (Mon–Fri), monthly analytics report with insights.",
     prefill: {
       project_scope:
         "Monthly social media management across Instagram, LinkedIn, and TikTok. Includes content strategy, 12 posts per month, community engagement, and a monthly analytics report.",
       budget: "£800/month",
-      timeline: "Ongoing (3-month minimum)",
+      timeline: "3 months",
       notes: "First month includes brand audit and content pillar development.",
     },
   },
