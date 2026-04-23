@@ -23,6 +23,11 @@ import {
   Eye,
   RotateCcw,
   ClipboardList,
+  Target,
+  Send,
+  TrendingUp,
+  Users,
+  CheckCircle2,
 } from "lucide-react";
 
 const emptyState = {
@@ -41,6 +46,31 @@ const emptyState = {
   aiRecommendation: "",
 };
 
+const EXAMPLE_MESSAGES = [
+  {
+    label: "Shopify ads enquiry",
+    name: "Jane Smith",
+    email: "jane@brightstore.com",
+    message:
+      "Hi, I run a Shopify store doing about £40k/month and we're looking for help scaling our paid ads (Meta + Google). Budget is around £3-5k/month for management. Hoping to start within the next 2 weeks. Can you help?",
+  },
+  {
+    label: "Website redesign",
+    name: "Marcus Lee",
+    email: "marcus@northwave.co",
+    message:
+      "We need a full website redesign for our consulting firm. Around 8-10 pages, with a CMS so the team can update content. Budget up to £8k. Need it live before our Q3 launch in ~10 weeks.",
+  },
+  {
+    label: "Vague enquiry",
+    name: "Sam",
+    email: "",
+    message: "hey just wondering how much you charge for marketing stuff. thanks",
+  },
+];
+
+const isValidEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+
 export default function LeadAssistant() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -49,11 +79,12 @@ export default function LeadAssistant() {
   const [leadEmail, setLeadEmail] = useState("");
   const [message, setMessage] = useState("");
 
+  const [errors, setErrors] = useState<{ name?: string; email?: string; message?: string }>({});
+
   const [generating, setGenerating] = useState(false);
   const [reply, setReply] = useState("");
   const [hasResponse, setHasResponse] = useState(false);
 
-  // Extracted client intake fields
   const [service, setService] = useState("");
   const [phone, setPhone] = useState("");
   const [budget, setBudget] = useState("");
@@ -61,7 +92,6 @@ export default function LeadAssistant() {
   const [goals, setGoals] = useState("");
   const [notes, setNotes] = useState("");
 
-  // Qualification
   const [leadQuality, setLeadQuality] = useState<"High" | "Medium" | "Low" | "">("");
   const [qualityReason, setQualityReason] = useState("");
   const [aiRecommendation, setAiRecommendation] = useState("");
@@ -69,6 +99,8 @@ export default function LeadAssistant() {
   const [saving, setSaving] = useState(false);
   const [savedClientId, setSavedClientId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  const currentStep = hasResponse ? (savedClientId ? 3 : 2) : 1;
 
   const reset = () => {
     setLeadName(emptyState.leadName);
@@ -86,14 +118,31 @@ export default function LeadAssistant() {
     setAiRecommendation(emptyState.aiRecommendation);
     setHasResponse(false);
     setSavedClientId(null);
+    setErrors({});
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const fillExample = (ex: typeof EXAMPLE_MESSAGES[number]) => {
+    setLeadName(ex.name);
+    setLeadEmail(ex.email);
+    setMessage(ex.message);
+    setErrors({});
+  };
+
+  const validate = () => {
+    const next: typeof errors = {};
+    if (!leadName.trim()) next.name = "Lead name is required";
+    if (leadEmail.trim() && !isValidEmail(leadEmail.trim()))
+      next.email = "Enter a valid email address";
+    if (!message.trim()) next.message = "Paste the lead's message";
+    else if (message.trim().length < 20)
+      next.message = "Add a bit more context (at least 20 characters)";
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
   const handleGenerate = async () => {
-    if (!message.trim()) {
-      toast({ title: "Add the lead's message first", variant: "destructive" });
-      return;
-    }
+    if (!validate()) return;
     setGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke("lead-response", {
@@ -204,18 +253,65 @@ export default function LeadAssistant() {
       ? "bg-amber-500/15 text-amber-600 hover:bg-amber-500/15 border-amber-500/30"
       : "bg-rose-500/15 text-rose-600 hover:bg-rose-500/15 border-rose-500/30";
 
+  const steps = [
+    { n: 1, label: "Understand the lead", icon: MessageSquare },
+    { n: 2, label: "Generate response", icon: Bot },
+    { n: 3, label: "Send & convert", icon: Send },
+  ];
+
   return (
     <DashboardLayout>
-      <div className="space-y-8">
-        <div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+      <div className="space-y-8 max-w-4xl mx-auto">
+        {/* Hero */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Sparkles className="w-4 h-4 text-primary" />
-            AI Assistant
+            AI Sales Assistant
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">Lead Response Assistant</h1>
-          <p className="text-muted-foreground mt-2">
-            Turn an incoming lead into a qualified client and proposal — in one flow.
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight leading-tight">
+            Turn cold leads into paying clients — instantly
+          </h1>
+          <p className="text-muted-foreground text-base sm:text-lg max-w-2xl">
+            Generate high-converting replies that qualify, position your offer, and move leads
+            toward a sale.
           </p>
+        </div>
+
+        {/* Step indicator */}
+        <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto pb-1">
+          {steps.map((s, i) => {
+            const active = currentStep === s.n;
+            const done = currentStep > s.n;
+            const Icon = s.icon;
+            return (
+              <div key={s.n} className="flex items-center gap-2 sm:gap-4 shrink-0">
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold border transition-colors ${
+                      done
+                        ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-600"
+                        : active
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-muted border-border text-muted-foreground"
+                    }`}
+                  >
+                    {done ? <Check className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
+                  </div>
+                  <div className="text-xs sm:text-sm">
+                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                      Step {s.n}
+                    </div>
+                    <div className={active ? "font-semibold" : "text-muted-foreground"}>
+                      {s.label}
+                    </div>
+                  </div>
+                </div>
+                {i < steps.length - 1 && (
+                  <div className="w-6 sm:w-12 h-px bg-border" />
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* Section 1: Incoming Lead */}
@@ -223,19 +319,28 @@ export default function LeadAssistant() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <MessageSquare className="w-4 h-4 text-primary" />
-              1. Incoming lead
+              Tell us about the lead
             </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Paste their enquiry — we'll qualify them and draft a reply that sells.
+            </p>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Lead name</Label>
+                <Label htmlFor="name">Lead name *</Label>
                 <Input
                   id="name"
                   placeholder="Jane Smith"
                   value={leadName}
-                  onChange={(e) => setLeadName(e.target.value)}
+                  onChange={(e) => {
+                    setLeadName(e.target.value);
+                    if (errors.name) setErrors({ ...errors, name: undefined });
+                  }}
+                  aria-invalid={!!errors.name}
+                  className={errors.name ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
+                {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Lead email</Label>
@@ -244,30 +349,95 @@ export default function LeadAssistant() {
                   type="email"
                   placeholder="jane@company.com"
                   value={leadEmail}
-                  onChange={(e) => setLeadEmail(e.target.value)}
+                  onChange={(e) => {
+                    setLeadEmail(e.target.value);
+                    if (errors.email) setErrors({ ...errors, email: undefined });
+                  }}
+                  aria-invalid={!!errors.email}
+                  className={errors.email ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
+                {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="msg">Their message *</Label>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <Label htmlFor="msg">Their message *</Label>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[11px] text-muted-foreground mr-1">Try an example:</span>
+                  {EXAMPLE_MESSAGES.map((ex) => (
+                    <Button
+                      key={ex.label}
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-2 text-xs"
+                      onClick={() => fillExample(ex)}
+                    >
+                      {ex.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
               <Textarea
                 id="msg"
                 rows={6}
-                placeholder="Hi, I run a Shopify store and we're looking for help with paid ads..."
+                placeholder="Hi, I run a Shopify store doing £40k/month and we'd like help scaling our paid ads. Budget around £3-5k/month, hoping to start within 2 weeks..."
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                className="resize-none"
+                onChange={(e) => {
+                  setMessage(e.target.value);
+                  if (errors.message) setErrors({ ...errors, message: undefined });
+                }}
+                aria-invalid={!!errors.message}
+                className={`resize-none ${
+                  errors.message ? "border-destructive focus-visible:ring-destructive" : ""
+                }`}
               />
+              {errors.message && <p className="text-xs text-destructive">{errors.message}</p>}
             </div>
-            <Button onClick={handleGenerate} disabled={generating} className="w-full sm:w-auto">
-              {generating ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</>
-              ) : (
-                <><Sparkles className="w-4 h-4" /> Generate AI Response</>
-              )}
-            </Button>
+
+            <div className="space-y-3 pt-1">
+              <Button
+                onClick={handleGenerate}
+                disabled={generating}
+                size="lg"
+                className="w-full sm:w-auto"
+              >
+                {generating ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</>
+                ) : (
+                  <><Sparkles className="w-4 h-4" /> Generate Reply That Converts</>
+                )}
+              </Button>
+
+              <ul className="space-y-1.5 text-sm text-muted-foreground">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                  Qualifies the lead automatically
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                  Positions your service clearly
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                  Moves the conversation toward closing
+                </li>
+              </ul>
+
+              <div className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm">
+                <FileText className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                <span>This response can be turned into a full proposal in one click.</span>
+              </div>
+            </div>
           </CardContent>
         </Card>
+
+        {!hasResponse && (
+          <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-2">
+            <Users className="w-3.5 h-3.5" />
+            Used by freelancers & agencies to close leads faster
+          </p>
+        )}
 
         {hasResponse && (
           <>
@@ -276,7 +446,7 @@ export default function LeadAssistant() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Bot className="w-4 h-4 text-primary" />
-                  2. AI-drafted reply
+                  AI-drafted reply
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -300,7 +470,7 @@ export default function LeadAssistant() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <ClipboardList className="w-4 h-4 text-primary" />
-                  3. Extracted client details
+                  Extracted client details
                 </CardTitle>
                 <p className="text-xs text-muted-foreground">
                   Prefilled from the lead message — edit anything before saving.
@@ -354,13 +524,15 @@ export default function LeadAssistant() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Gauge className="w-4 h-4 text-primary" />
-                    4. Qualification
+                    Qualification
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="rounded-lg border border-border/60 bg-muted/30 p-4 space-y-2">
-                      <div className="text-xs uppercase tracking-wide text-muted-foreground">Lead score</div>
+                      <div className="text-xs uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+                        <Target className="w-3 h-3" /> Lead score
+                      </div>
                       <Badge className={qualityClass} variant="outline">
                         {leadQuality} Quality Lead
                       </Badge>
@@ -405,7 +577,10 @@ export default function LeadAssistant() {
                   </>
                 ) : (
                   <>
-                    <p className="text-sm font-medium">5. Save & take action</p>
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-primary" />
+                      <p className="text-sm font-medium">Save & take action</p>
+                    </div>
                     <div className="flex flex-col sm:flex-row gap-3">
                       <Button onClick={handleSaveClient} disabled={saving}>
                         {saving ? (
