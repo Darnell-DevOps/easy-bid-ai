@@ -253,9 +253,8 @@ export default function ClientPortal() {
           <h1 className="text-2xl lg:text-4xl font-bold text-foreground mb-4">
             {proposal.service_type}
           </h1>
-          <p className="text-base text-muted-foreground leading-relaxed max-w-2xl mb-5">
-            A clear, focused plan for {proposal.company_name || proposal.client_name} — built to
-            deliver real results, fast.
+          <p className="text-base lg:text-lg text-foreground/90 leading-relaxed max-w-2xl mb-5">
+            Win more clients, grow visibility, and unlock new revenue — fast.
           </p>
           <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
@@ -287,6 +286,26 @@ export default function ClientPortal() {
             id="pricing"
             className="rounded-xl border border-purple/30 bg-card p-6 lg:p-10 shadow-lg shadow-purple/5"
           >
+            {/* What you're getting */}
+            <div className="mb-8 pb-8 border-b border-border/60">
+              <p className="text-xs uppercase tracking-[0.2em] text-purple font-semibold mb-3">
+                What you're getting
+              </p>
+              <ul className="space-y-2">
+                {[
+                  "A clear plan tailored to your goals",
+                  "Hands-on delivery from start to finish",
+                  "Measurable results you can track",
+                  "Direct support throughout the project",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2 text-sm text-foreground">
+                    <CheckCircle2 className="w-4 h-4 text-purple shrink-0 mt-0.5" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
             <PremiumPricingRenderer
               content={proposal.pricing_breakdown}
               showPayCta={isAccepted && !isPaid}
@@ -304,36 +323,45 @@ export default function ClientPortal() {
                     {formattedTotal}
                   </p>
                   <p className="text-xs text-muted-foreground mt-2 max-w-sm">
-                    Secure payment via card or bank transfer. Work begins as soon as payment is
-                    confirmed.
+                    Work begins as soon as payment is confirmed.
                   </p>
                 </div>
                 {!isPaid && (
-                  <Button
-                    size="lg"
-                    onClick={isAccepted ? scrollToPay : scrollToAccept}
-                    className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 hover:shadow-purple/30 transition-all"
-                  >
-                    {isAccepted ? (
-                      <>
-                        <CreditCard className="w-4 h-4" />
-                        Pay Now
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle2 className="w-4 h-4" />
-                        Accept & Pay
-                      </>
-                    )}
-                  </Button>
+                  <div className="flex flex-col items-stretch sm:items-end gap-2">
+                    <Button
+                      size="lg"
+                      onClick={isAccepted ? scrollToPay : scrollToAccept}
+                      className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 hover:shadow-purple/30 transition-all"
+                    >
+                      {isAccepted ? (
+                        <>
+                          <CreditCard className="w-4 h-4" />
+                          Pay {formattedTotal} to Start
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="w-4 h-4" />
+                          Accept & Pay {formattedTotal}
+                        </>
+                      )}
+                    </Button>
+                    <p className="text-[11px] text-muted-foreground sm:text-right">
+                      Secure checkout · Instant confirmation · Card payments
+                    </p>
+                  </div>
                 )}
+              </div>
+            )}
+
+            {/* Urgency note */}
+            {!isPaid && (
+              <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs text-amber-600 dark:text-amber-400 font-medium">
+                <Calendar className="w-3.5 h-3.5" />
+                This proposal is valid for 7 days
               </div>
             )}
           </section>
         )}
-
-        {/* 7. CTA #2 — after pricing */}
-        <InlineCTA variant="primary" />
 
         {/* 8. Trust section */}
         {!isRejected && (
@@ -348,18 +376,18 @@ export default function ClientPortal() {
               {[
                 {
                   icon: ShieldCheck,
-                  title: "Proven results",
-                  desc: "Track record of delivering measurable outcomes.",
+                  title: "Avg. 3× more leads",
+                  desc: "Clients see measurable growth within the first 90 days.",
                 },
                 {
                   icon: Zap,
-                  title: "Reliable delivery",
-                  desc: "On time, on scope, every time.",
+                  title: "Delivered in days, not months",
+                  desc: "Fast turnaround without cutting corners on quality.",
                 },
                 {
                   icon: MessageCircle,
-                  title: "Clear communication",
-                  desc: "Direct updates, no jargon, no surprises.",
+                  title: "One point of contact",
+                  desc: "Direct updates from the person doing the work.",
                 },
               ].map(({ icon: Icon, title, desc }) => (
                 <div
@@ -512,7 +540,7 @@ export default function ClientPortal() {
             {isAccepted ? (
               <>
                 <CreditCard className="w-4 h-4" />
-                Pay Now {formattedTotal ? `— ${formattedTotal}` : ""}
+                Pay {formattedTotal || ""} to Start
               </>
             ) : (
               <>
