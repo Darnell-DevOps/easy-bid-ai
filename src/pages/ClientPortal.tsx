@@ -376,18 +376,18 @@ export default function ClientPortal() {
               {[
                 {
                   icon: ShieldCheck,
-                  title: "Proven results",
-                  desc: "Track record of delivering measurable outcomes.",
+                  title: "Avg. 3× more leads",
+                  desc: "Clients see measurable growth within the first 90 days.",
                 },
                 {
                   icon: Zap,
-                  title: "Reliable delivery",
-                  desc: "On time, on scope, every time.",
+                  title: "Delivered in days, not months",
+                  desc: "Fast turnaround without cutting corners on quality.",
                 },
                 {
                   icon: MessageCircle,
-                  title: "Clear communication",
-                  desc: "Direct updates, no jargon, no surprises.",
+                  title: "One point of contact",
+                  desc: "Direct updates from the person doing the work.",
                 },
               ].map(({ icon: Icon, title, desc }) => (
                 <div
