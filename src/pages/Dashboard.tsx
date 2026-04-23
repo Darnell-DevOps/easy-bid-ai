@@ -8,9 +8,10 @@ import ProposalsList from "@/components/dashboard/ProposalsList";
 import OnboardingHighlight from "@/components/dashboard/OnboardingHighlight";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, ArrowRight, UserPlus, Lightbulb } from "lucide-react";
+import { Sparkles, ArrowRight, UserPlus, Lightbulb, Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getOnboardingKey } from "@/pages/Onboarding";
+import { getFollowUpScenario, FOLLOW_UP_META } from "@/lib/follow-up";
 
 interface FullProposal {
   id: string;
@@ -23,6 +24,10 @@ interface FullProposal {
   budget: string;
   client_paid: boolean;
   status?: string | null;
+  sent_at?: string | null;
+  viewed_at?: string | null;
+  accepted_at?: string | null;
+  paid_at?: string | null;
 }
 
 export default function Dashboard() {
@@ -33,7 +38,7 @@ export default function Dashboard() {
   const fetchProposals = async () => {
     const { data } = await supabase
       .from("proposals")
-      .select("id, client_name, company_name, service_type, created_at, proposal_content, invoice_content, budget, client_paid, status")
+      .select("id, client_name, company_name, service_type, created_at, proposal_content, invoice_content, budget, client_paid, status, sent_at, viewed_at, accepted_at, paid_at")
       .order("created_at", { ascending: false });
     setProposals(data || []);
     setLoading(false);
@@ -87,6 +92,13 @@ export default function Dashboard() {
     const sent = proposals.filter((p) => p.status === "sent" || p.status === "viewed").length;
     if (sent > 0) return { title: "Follow up", body: "Most deals close after a follow-up. Nudge clients who haven't responded yet." };
     return { title: "Keep growing", body: "Add more clients to your pipeline and generate proposals to scale revenue." };
+  }, [proposals]);
+
+  const followUps = useMemo(() => {
+    return proposals
+      .map((p) => ({ p, scenario: getFollowUpScenario(p) }))
+      .filter((x) => x.scenario !== "none")
+      .slice(0, 4);
   }, [proposals]);
 
   return (
@@ -174,6 +186,37 @@ export default function Dashboard() {
                 layout="stacked"
               />
             </div>
+
+            {followUps.length > 0 && (
+              <Card className="border-amber-500/30 bg-amber-500/5">
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Bell className="w-4 h-4 text-amber-500" />
+                    <p className="text-sm font-semibold text-foreground">Needs follow-up</p>
+                    <span className="text-xs text-muted-foreground">({followUps.length})</span>
+                  </div>
+                  <ul className="space-y-2">
+                    {followUps.map(({ p, scenario }) => {
+                      const meta = FOLLOW_UP_META[scenario as Exclude<typeof scenario, "none">];
+                      return (
+                        <li key={p.id}>
+                          <Link
+                            to={`/dashboard/proposal/${p.id}`}
+                            className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 -mx-2 hover:bg-amber-500/10 transition-colors"
+                          >
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-foreground truncate">{p.client_name}</p>
+                              <p className="text-[11px] text-muted-foreground truncate">{meta.headline}</p>
+                            </div>
+                            <ArrowRight className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
 
             <Card className="border-accent/20 bg-gradient-to-br from-accent/5 to-transparent">
               <CardContent className="p-4 flex gap-3">

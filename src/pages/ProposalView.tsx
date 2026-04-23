@@ -15,6 +15,8 @@ import PremiumPricingRenderer from "@/components/proposal/PremiumPricingRenderer
 import PremiumInvoiceRenderer from "@/components/proposal/PremiumInvoiceRenderer";
 import ProposalHeader from "@/components/proposal/ProposalHeader";
 import StatusBadge, { normalizeStatus, type ProposalStatus } from "@/components/proposal/StatusBadge";
+import FollowUpDialog from "@/components/proposal/FollowUpDialog";
+import { getFollowUpScenario, FOLLOW_UP_META } from "@/lib/follow-up";
 
 interface ProposalData {
   id: string;
@@ -94,6 +96,7 @@ export default function ProposalView() {
   const [clientPaid, setClientPaid] = useState(false);
   const [clientEmail, setClientEmail] = useState<string | null>(null);
   const [autoFillingPrice, setAutoFillingPrice] = useState(false);
+  const [followUpOpen, setFollowUpOpen] = useState(false);
 
   const buildSourcePayload = () => {
     if (!proposal) return null;
@@ -589,23 +592,31 @@ export default function ProposalView() {
       })();
   const isRejected = currentStatus === "rejected";
 
+  // Auto follow-up scenario (timestamp-based)
+  const followUpScenario = getFollowUpScenario({
+    status: currentStatus,
+    client_paid: clientPaid,
+    sent_at: proposal.sent_at,
+    viewed_at: proposal.viewed_at,
+    accepted_at: proposal.accepted_at,
+    paid_at: proposal.paid_at,
+  });
+
   // Smart alerts (priority order)
   const alerts: { tone: "warning" | "info" | "success"; icon: typeof AlertTriangle; text: string }[] = [];
   if (isRejected) {
     alerts.push({ tone: "warning", icon: XCircle, text: "Client rejected this proposal. Consider following up or revising." });
   } else if (clientPaid) {
     alerts.push({ tone: "success", icon: CheckCircle2, text: "Payment received in full. You're all set." });
+  } else if (followUpScenario !== "none") {
+    const meta = FOLLOW_UP_META[followUpScenario];
+    alerts.push({ tone: meta.tone, icon: Sparkles, text: `${meta.headline} — ${meta.description}` });
   } else if (currentStatus === "accepted") {
     alerts.push({ tone: "success", icon: Banknote, text: "Accepted — request payment now to close the deal." });
   } else if (currentStatus === "draft") {
     alerts.push({ tone: "warning", icon: AlertTriangle, text: "Proposal not sent yet. Send to client to start the clock." });
   } else if (currentStatus === "sent") {
-    const daysSent = proposal.sent_at ? Math.floor((Date.now() - new Date(proposal.sent_at).getTime()) / 86400000) : 0;
-    if (daysSent >= 2) {
-      alerts.push({ tone: "info", icon: Eye, text: `Sent ${daysSent} day${daysSent === 1 ? "" : "s"} ago — client hasn't viewed yet. Consider a follow-up.` });
-    } else {
-      alerts.push({ tone: "info", icon: Eye, text: "Sent — waiting for the client to view it." });
-    }
+    alerts.push({ tone: "info", icon: Eye, text: "Sent — waiting for the client to view it." });
   } else if (currentStatus === "viewed") {
     alerts.push({ tone: "info", icon: Sparkles, text: "Client has viewed the proposal. Now's a great time to follow up." });
   }
@@ -918,6 +929,15 @@ export default function ProposalView() {
 
               {/* Secondary actions */}
               <div className="mt-3 flex flex-wrap gap-2">
+                {followUpScenario !== "none" && (
+                  <Button
+                    onClick={() => setFollowUpOpen(true)}
+                    size="sm"
+                    className="gap-1.5 h-9 bg-amber-500/15 text-amber-500 border border-amber-500/30 hover:bg-amber-500/25"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 shrink-0" /> Send Follow-Up
+                  </Button>
+                )}
                 <Button onClick={() => handleExportPDF("proposal")} variant="outline" size="sm" className="gap-1.5 h-9">
                   <Download className="w-3.5 h-3.5 shrink-0" /> Export Proposal
                 </Button>
@@ -1082,6 +1102,21 @@ export default function ProposalView() {
           ))}
         </Tabs>
       </div>
+
+      {followUpScenario !== "none" && (
+        <FollowUpDialog
+          open={followUpOpen}
+          onOpenChange={setFollowUpOpen}
+          scenario={followUpScenario}
+          clientEmail={clientEmail}
+          templateInput={{
+            clientName: proposal.client_name,
+            companyName: proposal.company_name,
+            serviceType: proposal.service_type,
+            proposalUrl: clientUrl,
+          }}
+        />
+      )}
     </DashboardLayout>
   );
 }

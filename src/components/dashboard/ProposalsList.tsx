@@ -14,8 +14,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, FileText, Search, MoreVertical, Eye, Pencil, Copy, Trash2, Calendar } from "lucide-react";
+import { Plus, FileText, Search, MoreVertical, Eye, Pencil, Copy, Trash2, Calendar, Bell } from "lucide-react";
 import StatusBadge from "@/components/proposal/StatusBadge";
+import { getFollowUpScenario } from "@/lib/follow-up";
 
 interface Proposal {
   id: string;
@@ -25,6 +26,10 @@ interface Proposal {
   created_at: string;
   status?: string | null;
   client_paid?: boolean;
+  sent_at?: string | null;
+  viewed_at?: string | null;
+  accepted_at?: string | null;
+  paid_at?: string | null;
 }
 
 const SERVICE_TYPES = [
@@ -167,6 +172,14 @@ export default function ProposalsList({ proposals, loading, onRefresh }: Proposa
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0 ml-3">
+                  {getFollowUpScenario(p) !== "none" && (
+                    <span
+                      className="hidden sm:inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-500 text-[10px] font-medium px-2 py-0.5"
+                      title="Follow-up needed"
+                    >
+                      <Bell className="w-3 h-3" /> Follow up
+                    </span>
+                  )}
                   <StatusBadge status={p.status} paid={p.client_paid} descriptive className="hidden sm:inline-flex" />
                   <span className="text-xs text-muted-foreground hidden md:block">{new Date(p.created_at).toLocaleDateString()}</span>
                   <DropdownMenu>
