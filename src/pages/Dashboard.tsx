@@ -187,6 +187,37 @@ export default function Dashboard() {
               />
             </div>
 
+            {followUps.length > 0 && (
+              <Card className="border-amber-500/30 bg-amber-500/5">
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Bell className="w-4 h-4 text-amber-500" />
+                    <p className="text-sm font-semibold text-foreground">Needs follow-up</p>
+                    <span className="text-xs text-muted-foreground">({followUps.length})</span>
+                  </div>
+                  <ul className="space-y-2">
+                    {followUps.map(({ p, scenario }) => {
+                      const meta = FOLLOW_UP_META[scenario as Exclude<typeof scenario, "none">];
+                      return (
+                        <li key={p.id}>
+                          <Link
+                            to={`/dashboard/proposal/${p.id}`}
+                            className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 -mx-2 hover:bg-amber-500/10 transition-colors"
+                          >
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-foreground truncate">{p.client_name}</p>
+                              <p className="text-[11px] text-muted-foreground truncate">{meta.headline}</p>
+                            </div>
+                            <ArrowRight className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="border-accent/20 bg-gradient-to-br from-accent/5 to-transparent">
               <CardContent className="p-4 flex gap-3">
                 <div className="w-9 h-9 rounded-lg bg-accent/15 flex items-center justify-center flex-shrink-0">
