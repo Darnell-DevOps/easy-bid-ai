@@ -8,9 +8,10 @@ import ProposalsList from "@/components/dashboard/ProposalsList";
 import OnboardingHighlight from "@/components/dashboard/OnboardingHighlight";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, ArrowRight, UserPlus, Lightbulb } from "lucide-react";
+import { Sparkles, ArrowRight, UserPlus, Lightbulb, Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getOnboardingKey } from "@/pages/Onboarding";
+import { getFollowUpScenario, FOLLOW_UP_META } from "@/lib/follow-up";
 
 interface FullProposal {
   id: string;
@@ -23,6 +24,10 @@ interface FullProposal {
   budget: string;
   client_paid: boolean;
   status?: string | null;
+  sent_at?: string | null;
+  viewed_at?: string | null;
+  accepted_at?: string | null;
+  paid_at?: string | null;
 }
 
 export default function Dashboard() {
@@ -33,7 +38,7 @@ export default function Dashboard() {
   const fetchProposals = async () => {
     const { data } = await supabase
       .from("proposals")
-      .select("id, client_name, company_name, service_type, created_at, proposal_content, invoice_content, budget, client_paid, status")
+      .select("id, client_name, company_name, service_type, created_at, proposal_content, invoice_content, budget, client_paid, status, sent_at, viewed_at, accepted_at, paid_at")
       .order("created_at", { ascending: false });
     setProposals(data || []);
     setLoading(false);
