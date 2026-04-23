@@ -254,8 +254,8 @@ export default function ClientPortal() {
           </div>
         </section>
 
-        {/* 2. CTA #1 — after intro */}
-        <InlineCTA variant="primary" />
+        {/* 2. CTA #1 — after intro (top Pay Now / Accept) */}
+        <TopCTA />
 
         {/* 3-5. Solution / Scope / Deliverables (proposal content) */}
         {proposal.proposal_content && (
