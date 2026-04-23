@@ -357,7 +357,13 @@ export default function ClientPortal() {
 
         {/* 9. Pay Now panel — visible once accepted (or already paid) */}
         {(isAccepted || isPaid) && (
-          <div ref={payRef}>
+          <div ref={payRef} className="space-y-4">
+            {!isPaid && (
+              <p className="text-center text-sm text-foreground/80 max-w-xl mx-auto">
+                <span className="font-semibold text-foreground">To secure your slot, complete payment today.</span>{" "}
+                This proposal has already been approved — payment secures your project start.
+              </p>
+            )}
             <ProposalPayNow
               proposalId={proposal.id}
               amountCents={proposal.amount_cents}
@@ -365,6 +371,11 @@ export default function ClientPortal() {
               clientPaid={isPaid}
               onPaid={() => setProposal({ ...proposal, client_paid: true })}
             />
+            {!isPaid && (
+              <p className="text-center text-xs text-muted-foreground">
+                Secure overlay checkout · Instant confirmation · No long-term contracts. Cancel anytime.
+              </p>
+            )}
           </div>
         )}
 
@@ -378,7 +389,7 @@ export default function ClientPortal() {
                     <CheckCircle2 className="w-6 h-6 text-emerald-500" />
                   </div>
                   <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-2">
-                    Proposal Accepted
+                    Proposal accepted — you're one step away from getting started
                   </h2>
                   {isPaid ? (
                     <p className="text-muted-foreground text-sm">
@@ -386,9 +397,8 @@ export default function ClientPortal() {
                     </p>
                   ) : (
                     <>
-                      <p className="text-muted-foreground text-sm mb-5">
-                        <span className="font-semibold text-foreground">Next step:</span> complete
-                        payment to begin work immediately.
+                      <p className="text-muted-foreground text-sm mb-5 max-w-md mx-auto">
+                        Complete your payment below and we'll begin immediately.
                       </p>
                       <Button
                         size="lg"
@@ -398,6 +408,9 @@ export default function ClientPortal() {
                         <CreditCard className="w-4 h-4" />
                         Pay Now {formattedTotal ? `— ${formattedTotal}` : ""}
                       </Button>
+                      <p className="mt-3 text-[11px] text-muted-foreground">
+                        No long-term contracts. Cancel anytime.
+                      </p>
                     </>
                   )}
                 </>
