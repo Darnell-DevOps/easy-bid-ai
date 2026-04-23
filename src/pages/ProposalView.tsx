@@ -1078,7 +1078,7 @@ export default function ProposalView() {
               ) : (
                 <>
                   {t.key === "proposal" ? (
-                    <div className="rounded-2xl border border-border/60 bg-card/40 px-6 sm:px-10 lg:px-14 py-8 lg:py-10 shadow-sm">
+                    <div className="relative rounded-2xl border border-border/60 bg-card/40 px-6 sm:px-10 lg:px-14 py-8 lg:py-10 shadow-sm">
                       <ProposalHeader
                         clientName={proposal.client_name}
                         companyName={proposal.company_name}
@@ -1086,6 +1086,7 @@ export default function ProposalView() {
                         createdAt={proposal.created_at}
                       />
                       <MarkdownPreview content={t.content} isPremium />
+                      {watermark && <ProposalWatermark />}
                     </div>
                   ) : t.key === "pricing" ? (
                     <div className="rounded-2xl border border-border/60 bg-card/40 px-6 sm:px-10 lg:px-14 py-8 lg:py-10 shadow-sm">
