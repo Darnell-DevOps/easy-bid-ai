@@ -327,6 +327,13 @@ export default function LeadAssistant() {
 
   return (
     <DashboardLayout>
+      <UpgradeModal
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        requiredPlan="pro"
+        title="Turn leads into clients automatically"
+        description="Unlock AI Lead Response to instantly draft replies, qualify leads, and recommend next steps. Available on the Pro plan."
+      />
       <div className="space-y-8 max-w-4xl mx-auto">
         {/* Hero */}
         <div className="space-y-3">
