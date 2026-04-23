@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,12 @@ import {
   TrendingUp,
   Users,
   CheckCircle2,
+  Wand2,
+  ArrowRight,
 } from "lucide-react";
+import { smartSelectTemplate, type SmartSelectResult } from "@/lib/smart-template";
+import type { TemplateData } from "@/pages/Templates";
+import { templates } from "@/pages/Templates";
 
 const emptyState = {
   leadName: "",
