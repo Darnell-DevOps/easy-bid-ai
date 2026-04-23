@@ -24,6 +24,16 @@ export default function SalesMetrics({
 
   const stats = [
     {
+      label: "Revenue Generated",
+      sub: "Total earned via the platform",
+      value: fmt(revenuePaid),
+      icon: DollarSign,
+      accent: "text-emerald-500",
+      iconWrap: "bg-emerald-500/10",
+      link: "/dashboard/revenue",
+      featured: true,
+    },
+    {
       label: "Proposals Sent",
       sub: "This month",
       value: proposalsSentThisMonth.toString(),
@@ -42,17 +52,8 @@ export default function SalesMetrics({
       link: "/dashboard/proposals",
     },
     {
-      label: "Revenue (Paid)",
-      sub: "All time",
-      value: fmt(revenuePaid),
-      icon: DollarSign,
-      accent: "text-emerald-500",
-      iconWrap: "bg-emerald-500/10",
-      link: "/dashboard/revenue",
-    },
-    {
       label: "Pending Payments",
-      sub: "Awaiting",
+      sub: "Awaiting payment",
       value: fmt(pendingPayments),
       icon: Hourglass,
       accent: "text-amber-500",
