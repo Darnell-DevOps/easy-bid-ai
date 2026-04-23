@@ -547,10 +547,6 @@ export default function NewProposal() {
         description={`Upgrade to ${PLANS[isFree ? "starter" : "pro"].name} to keep generating proposals and close more deals.`}
       />
 
-      {false && (
-        <Card>
-      )}
-
       <Card className="glass-card">
         <CardContent className="p-6 md:p-8">
           <form onSubmit={handleGenerate} className="space-y-10">
