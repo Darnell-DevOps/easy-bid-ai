@@ -493,29 +493,6 @@ export default function ClientPortal() {
           Secure proposal link · Only people with this link can view it
         </p>
       </main>
-
-      {/* Sticky mobile CTA */}
-      {!isRejected && !isPaid && (
-        <div className="lg:hidden fixed bottom-0 inset-x-0 z-20 border-t border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 px-4 py-3 shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.4)]">
-          <Button
-            size="lg"
-            onClick={isAccepted ? scrollToPay : scrollToAccept}
-            className="w-full gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 transition-all h-12"
-          >
-            {isAccepted ? (
-              <>
-                <CreditCard className="w-4 h-4" />
-                Pay {formattedTotal || ""} to Start
-              </>
-            ) : (
-              <>
-                <CheckCircle2 className="w-4 h-4" />
-                Accept & Pay {formattedTotal ? `— ${formattedTotal}` : ""}
-              </>
-            )}
-          </Button>
-        </div>
-      )}
     </div>
   );
 }
