@@ -146,14 +146,34 @@ export default function Policies() {
   const handleCardClick = (type: PolicyKey) => {
     const entry = statusByType.get(type);
     if (entry?.policy) {
+      // Viewing existing policies is always allowed
       navigate(`/dashboard/policies/${entry.policy.id}`);
-    } else {
-      navigate(`/dashboard/policies/new?type=${encodeURIComponent(type)}`);
+      return;
+    }
+    if (!policiesUnlocked) {
+      setUpgradeOpen(true);
+      return;
+    }
+    navigate(`/dashboard/policies/new?type=${encodeURIComponent(type)}`);
+  };
+
+  const handleGenerateClick = (e: React.MouseEvent) => {
+    if (!policiesUnlocked) {
+      e.preventDefault();
+      setUpgradeOpen(true);
     }
   };
 
   return (
     <DashboardLayout>
+      <UpgradeModal
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        requiredPlan="pro"
+        title="Protect your deals with professional policies"
+        description="Generate client-ready Terms, Privacy, and Refund policies and auto-attach them to every proposal. Available on the Pro plan."
+      />
+
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -169,12 +189,23 @@ export default function Policies() {
               Avoid disputes, chargebacks, and unclear agreements — generate client-ready policies in seconds.
             </p>
           </div>
-          <Button asChild size="lg" className="shrink-0">
-            <Link to="/dashboard/policies/new">
-              <Plus className="w-4 h-4 mr-2" />
-              Generate Policy
-            </Link>
-          </Button>
+          {policiesUnlocked ? (
+            <Button asChild size="lg" className="shrink-0">
+              <Link to="/dashboard/policies/new">
+                <Plus className="w-4 h-4 mr-2" />
+                Generate Policy
+              </Link>
+            </Button>
+          ) : (
+            <Button
+              size="lg"
+              onClick={handleGenerateClick}
+              className="shrink-0 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold hover:brightness-110"
+            >
+              <Crown className="w-4 h-4 mr-2" />
+              Unlock with Pro
+            </Button>
+          )}
         </div>
       </div>
 
