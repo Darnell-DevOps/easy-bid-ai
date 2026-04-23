@@ -82,6 +82,9 @@ const isValidEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 export default function LeadAssistant() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { hasFeature } = usePlan();
+  const aiLeadUnlocked = hasFeature("aiLeadResponse");
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const [leadName, setLeadName] = useState("");
   const [leadEmail, setLeadEmail] = useState("");
