@@ -24,6 +24,12 @@ interface ClientLite {
   name: string;
   status: string;
   created_at: string;
+  company?: string | null;
+  service_requested?: string | null;
+  budget?: string | null;
+  timeline?: string | null;
+  goals?: string | null;
+  project_description?: string | null;
 }
 
 interface PriorityActionsProps {
@@ -132,7 +138,22 @@ export default function PriorityActions({ proposals, clients, proposalClientName
         title: `Send proposal to new lead — ${c.name}`,
         subtitle: `Added ${relTime(c.created_at)}. Strike while interest is fresh.`,
         buttonLabel: "Create Proposal",
-        onClick: () => navigate(`/dashboard/new?clientId=${c.id}`),
+        onClick: () =>
+          navigate("/dashboard/new", {
+            state: {
+              prefillFromClient: {
+                client_id: c.id,
+                client_name: c.name,
+                company_name: c.company || "",
+                service_type: c.service_requested || "",
+                project_scope: c.project_description || "",
+                budget: c.budget || "",
+                timeline: c.timeline || "",
+                goals: c.goals || "",
+                notes: "",
+              },
+            },
+          }),
       });
     }
 
