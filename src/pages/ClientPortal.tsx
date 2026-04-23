@@ -292,56 +292,24 @@ export default function ClientPortal() {
 
             <PremiumPricingRenderer
               content={proposal.pricing_breakdown}
-              showPayCta={isAccepted && !isPaid}
-              onPayClick={scrollToPay}
+              showPayCta={false}
             />
 
-            {/* Reinforced total + payment explanation */}
+            {/* Reinforced total */}
             {formattedTotal && (
-              <div className="mt-8 pt-8 border-t border-border/60 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-semibold mb-1">
-                    Total Investment
-                  </p>
-                  <p className="text-3xl lg:text-4xl font-bold text-foreground tracking-tight">
-                    {formattedTotal}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-2 max-w-sm">
-                    Work begins as soon as payment is confirmed.
-                  </p>
-                </div>
-                {!isPaid && (
-                  <div className="flex flex-col items-stretch sm:items-end gap-2">
-                    <Button
-                      size="lg"
-                      onClick={isAccepted ? scrollToPay : scrollToAccept}
-                      className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 hover:shadow-purple/30 transition-all"
-                    >
-                      {isAccepted ? (
-                        <>
-                          <CreditCard className="w-4 h-4" />
-                          Pay {formattedTotal} to Start
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle2 className="w-4 h-4" />
-                          Accept & Pay {formattedTotal}
-                        </>
-                      )}
-                    </Button>
-                    <p className="text-[11px] text-muted-foreground sm:text-right">
-                      Secure checkout · Instant confirmation · Card payments
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Urgency note */}
-            {!isPaid && (
-              <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs text-amber-600 dark:text-amber-400 font-medium">
-                <Calendar className="w-3.5 h-3.5" />
-                This proposal is valid for 7 days
+              <div className="mt-8 pt-8 border-t border-border/60">
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-semibold mb-1">
+                  Total Investment
+                </p>
+                <p className="text-3xl lg:text-4xl font-bold text-foreground tracking-tight">
+                  {formattedTotal}
+                </p>
+                <p className="text-sm text-foreground/80 mt-3 max-w-xl leading-relaxed">
+                  This investment is designed to deliver measurable results within the first 90 days.
+                </p>
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  No long-term contracts. Cancel anytime.
+                </p>
               </div>
             )}
           </section>
