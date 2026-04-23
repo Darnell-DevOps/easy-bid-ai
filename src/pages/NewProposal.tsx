@@ -128,6 +128,7 @@ export default function NewProposal() {
   const location = useLocation();
   const templateData = (location.state as any)?.template;
   const clientPrefill = (location.state as any)?.prefillFromClient;
+  const autoGenerateRequested = (location.state as any)?.autoGenerate === true;
 
   // Initial budget normalisation: parse digits from prefill so we store digits and display formatted
   const initialBudgetRaw = clientPrefill?.budget || templateData?.prefill?.budget || "";
@@ -136,17 +137,21 @@ export default function NewProposal() {
   const initialTimelineRaw = clientPrefill?.timeline || templateData?.prefill?.timeline || "";
   const initialTimeline = parseTimeline(initialTimelineRaw);
 
+  // Smart fallbacks for auto-generation: never reference missing data; use professional placeholders
+  const fallbackClientName = autoGenerateRequested ? "Prospective Client" : "";
+  const fallbackCompanyName = autoGenerateRequested ? "Your Company" : "";
+
   const [form, setForm] = useState({
-    client_name: clientPrefill?.client_name || "",
-    company_name: clientPrefill?.company_name || "",
+    client_name: clientPrefill?.client_name || fallbackClientName,
+    company_name: clientPrefill?.company_name || fallbackCompanyName,
     service_type: clientPrefill?.service_type || templateData?.serviceType || "",
     project_scope:
       clientPrefill?.project_scope || templateData?.prefill?.project_scope || "",
     budget: initialBudgetDigits, // stored as plain digits, displayed formatted
     timeline: initialTimelineRaw,
     notes: clientPrefill?.notes || templateData?.prefill?.notes || "",
-    goals: clientPrefill?.goals || "",
-    deliverables: clientPrefill?.deliverables || "",
+    goals: clientPrefill?.goals || templateData?.defaultGoals || "",
+    deliverables: clientPrefill?.deliverables || templateData?.defaultDeliverables || "",
   });
 
   // Currency state
