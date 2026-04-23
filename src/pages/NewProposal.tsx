@@ -278,6 +278,24 @@ export default function NewProposal() {
       return;
     }
 
+    // Plan limit gate — soft warn first, then block
+    if (plan.features.proposalsPerMonth !== "unlimited") {
+      const limit = plan.features.proposalsPerMonth as number;
+      if (countThisMonth >= limit) {
+        const warnedKey = `plan:warned:limit:${plan.id}`;
+        const alreadyWarned = localStorage.getItem(warnedKey) === "1";
+        if (alreadyWarned) {
+          setUpgradeOpen(true);
+          return;
+        }
+        localStorage.setItem(warnedKey, "1");
+        toast({
+          title: `You're over the ${plan.name} limit`,
+          description: `You've already used ${countThisMonth}/${limit} proposals this month. We'll let this one through — upgrade to keep going.`,
+        });
+      }
+    }
+
     setLoading(true);
 
     const payload = { ...form, budget: formatBudget(form.budget, currency) };
