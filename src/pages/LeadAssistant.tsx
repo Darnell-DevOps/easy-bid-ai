@@ -623,9 +623,18 @@ export default function LeadAssistant() {
                       <Button onClick={handleViewClient} variant="outline">
                         <Eye className="w-4 h-4" /> View Client
                       </Button>
-                      <Button onClick={handleGenerateProposal}>
-                        <FileText className="w-4 h-4" /> Generate Proposal
-                      </Button>
+                      {smartPick && (
+                        <Button
+                          onClick={() => startProposalFromTemplate(smartPick.template)}
+                          disabled={smartLoading}
+                        >
+                          {smartLoading ? (
+                            <><Loader2 className="w-4 h-4 animate-spin" /> {smartLoadingSteps[smartStep]}</>
+                          ) : (
+                            <><Wand2 className="w-4 h-4" /> Generate Proposal</>
+                          )}
+                        </Button>
+                      )}
                       <Button onClick={reset} variant="ghost">
                         <RotateCcw className="w-4 h-4" /> Add Another Lead
                       </Button>
