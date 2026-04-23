@@ -355,6 +355,7 @@ export default function NewProposal() {
 
       toast({ title: "Proposal generated!", description: "Your proposal is ready to review." });
       setProgress(100);
+      await refreshUsage();
       await new Promise(r => setTimeout(r, 500));
       navigate(`/dashboard/proposal/${proposal.id}`);
     } catch (err: any) {
