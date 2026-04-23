@@ -18,9 +18,12 @@ import {
   CheckCircle2,
   Circle,
   Sparkles,
+  Crown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { usePlan } from "@/hooks/use-plan";
+import UpgradeModal from "@/components/plan/UpgradeModal";
 
 interface Policy {
   id: string;
