@@ -230,7 +230,7 @@ export default function ClientPortal() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 lg:py-12 space-y-8 lg:space-y-10 pb-32 lg:pb-12">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 lg:py-12 space-y-8 lg:space-y-10">
         {/* 1. Hero / Summary */}
         <section className="rounded-xl border border-border bg-card p-6 lg:p-10">
           <p className="text-xs uppercase tracking-wider text-purple font-semibold mb-3">Proposal</p>
