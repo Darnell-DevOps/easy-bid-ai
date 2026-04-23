@@ -1,16 +1,24 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, UserPlus, ArrowRight } from "lucide-react";
+import { Sparkles, UserPlus, ArrowRight, Wand2 } from "lucide-react";
 
 export default function QuickActions() {
   const actions = [
     {
-      label: "Create Proposal",
-      description: "AI-generated, ready to send in minutes",
-      icon: Sparkles,
-      href: "/dashboard/new",
+      label: "Generate Proposal from Lead",
+      description: "Paste a lead — AI picks the best template",
+      icon: Wand2,
+      href: "/dashboard/lead-assistant?mode=smart",
       accent: "from-accent to-purple",
       primary: true,
+    },
+    {
+      label: "Create Proposal",
+      description: "Start from scratch or a template",
+      icon: Sparkles,
+      href: "/dashboard/new",
+      accent: "from-blue-500 to-cyan-500",
+      primary: false,
     },
     {
       label: "Add Client",
@@ -23,7 +31,7 @@ export default function QuickActions() {
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
       {actions.map((a) => (
         <Link key={a.label} to={a.href} className="group">
           <Card
