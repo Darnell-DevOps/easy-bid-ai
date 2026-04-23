@@ -14,8 +14,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, FileText, Search, MoreVertical, Eye, Pencil, Copy, Trash2, Calendar } from "lucide-react";
+import { Plus, FileText, Search, MoreVertical, Eye, Pencil, Copy, Trash2, Calendar, Bell } from "lucide-react";
 import StatusBadge from "@/components/proposal/StatusBadge";
+import { getFollowUpScenario } from "@/lib/follow-up";
 
 interface Proposal {
   id: string;
@@ -25,6 +26,10 @@ interface Proposal {
   created_at: string;
   status?: string | null;
   client_paid?: boolean;
+  sent_at?: string | null;
+  viewed_at?: string | null;
+  accepted_at?: string | null;
+  paid_at?: string | null;
 }
 
 const SERVICE_TYPES = [
