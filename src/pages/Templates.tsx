@@ -27,6 +27,10 @@ export interface TemplateData {
   dealSize: string;
   timeSaved: string;
   popular?: boolean;
+  // Intelligence layer — drives auto-fill
+  tone?: "professional" | "persuasive" | "concise";
+  defaultGoals?: string;
+  defaultDeliverables?: string;
   prefill: {
     project_scope: string;
     budget: string;
@@ -48,6 +52,11 @@ export const templates: TemplateData[] = [
     dealSize: "£1K–£5K",
     timeSaved: "~45 min",
     popular: true,
+    tone: "persuasive",
+    defaultGoals:
+      "A modern, conversion-focused website that establishes credibility, attracts qualified leads, and drives measurable business growth within the first 90 days.",
+    defaultDeliverables:
+      "UX audit & sitemap, custom UI design for 5 core pages, mobile-responsive build, on-page SEO setup, analytics integration, browser/device QA, and post-launch support.",
     prefill: {
       project_scope:
         "Full website redesign including UX audit, custom UI design for key pages (Home, About, Services, Contact), mobile-responsive development, SEO optimisation, and browser/device testing.",
@@ -67,11 +76,16 @@ export const templates: TemplateData[] = [
     bestFor: "Agencies & Solo Marketers",
     dealSize: "£500–£2K/mo",
     timeSaved: "~30 min",
+    tone: "professional",
+    defaultGoals:
+      "Build a consistent, engaged audience that drives brand awareness, qualified inbound enquiries, and measurable ROI from organic social channels.",
+    defaultDeliverables:
+      "Monthly content calendar, 12 branded posts (graphics + copy), 4 short-form video concepts, community management (Mon–Fri), monthly analytics report with insights.",
     prefill: {
       project_scope:
         "Monthly social media management across Instagram, LinkedIn, and TikTok. Includes content strategy, 12 posts per month, community engagement, and a monthly analytics report.",
       budget: "£800/month",
-      timeline: "Ongoing (3-month minimum)",
+      timeline: "3 months",
       notes: "First month includes brand audit and content pillar development.",
     },
   },
@@ -86,6 +100,11 @@ export const templates: TemplateData[] = [
     bestFor: "Designers & Studios",
     dealSize: "£1K–£3K",
     timeSaved: "~40 min",
+    tone: "persuasive",
+    defaultGoals:
+      "A distinctive, memorable brand identity that builds instant trust, attracts the right clients, and positions the business as a category leader.",
+    defaultDeliverables:
+      "Discovery workshop, 3 logo concepts (2 revision rounds), full colour palette, typography system, brand guidelines PDF, social media avatar/banner kit, and brand asset pack.",
     prefill: {
       project_scope:
         "Complete brand identity package: logo design (3 concepts, 2 revision rounds), colour palette, typography system, brand guidelines PDF, and social media avatar/banner kit.",
@@ -105,6 +124,11 @@ export const templates: TemplateData[] = [
     bestFor: "Consultants & Agencies",
     dealSize: "£2K–£8K",
     timeSaved: "~60 min",
+    tone: "professional",
+    defaultGoals:
+      "A clear, data-backed marketing roadmap that aligns spend with revenue goals, reduces wasted budget, and unlocks measurable growth across priority channels.",
+    defaultDeliverables:
+      "Competitor & market analysis, audience segmentation, channel recommendations (paid + organic), 90-day campaign roadmap, KPI framework, budget allocation plan, executive summary deck.",
     prefill: {
       project_scope:
         "Comprehensive marketing strategy: competitor analysis, audience segmentation, channel recommendations (paid & organic), 90-day campaign roadmap, KPI framework, and budget allocation plan.",
@@ -119,7 +143,7 @@ export default function Templates() {
   const navigate = useNavigate();
 
   const handleUseTemplate = (template: TemplateData) => {
-    navigate("/dashboard/new", { state: { template } });
+    navigate("/dashboard/new", { state: { template, autoGenerate: true } });
   };
 
   const handleAIGenerate = () => {

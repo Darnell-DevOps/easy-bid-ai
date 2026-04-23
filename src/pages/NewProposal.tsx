@@ -100,20 +100,22 @@ export default function NewProposal() {
   const stepTimers = useRef<NodeJS.Timeout[]>([]);
 
   const loadingSteps = [
-    "Generating your proposal...",
-    "Optimising for conversion...",
-    "Finalising...",
+    "Building your proposal…",
+    "Generating high-converting sections…",
+    "Polishing pricing & deliverables…",
+    "Finalising your client-ready draft…",
   ];
 
   useEffect(() => {
     if (loading) {
       setLoadingStep(0);
-      setProgress(10);
+      setProgress(8);
       stepTimers.current = [];
 
-      const t1 = setTimeout(() => { setLoadingStep(1); setProgress(45); }, 3000);
-      const t2 = setTimeout(() => { setLoadingStep(2); setProgress(75); }, 6000);
-      stepTimers.current = [t1, t2];
+      const t1 = setTimeout(() => { setLoadingStep(1); setProgress(35); }, 2200);
+      const t2 = setTimeout(() => { setLoadingStep(2); setProgress(60); }, 5000);
+      const t3 = setTimeout(() => { setLoadingStep(3); setProgress(82); }, 8000);
+      stepTimers.current = [t1, t2, t3];
     } else {
       stepTimers.current.forEach(clearTimeout);
       stepTimers.current = [];
@@ -126,6 +128,7 @@ export default function NewProposal() {
   const location = useLocation();
   const templateData = (location.state as any)?.template;
   const clientPrefill = (location.state as any)?.prefillFromClient;
+  const autoGenerateRequested = (location.state as any)?.autoGenerate === true;
 
   // Initial budget normalisation: parse digits from prefill so we store digits and display formatted
   const initialBudgetRaw = clientPrefill?.budget || templateData?.prefill?.budget || "";
@@ -134,17 +137,21 @@ export default function NewProposal() {
   const initialTimelineRaw = clientPrefill?.timeline || templateData?.prefill?.timeline || "";
   const initialTimeline = parseTimeline(initialTimelineRaw);
 
+  // Smart fallbacks for auto-generation: never reference missing data; use professional placeholders
+  const fallbackClientName = autoGenerateRequested ? "Prospective Client" : "";
+  const fallbackCompanyName = autoGenerateRequested ? "Your Company" : "";
+
   const [form, setForm] = useState({
-    client_name: clientPrefill?.client_name || "",
-    company_name: clientPrefill?.company_name || "",
+    client_name: clientPrefill?.client_name || fallbackClientName,
+    company_name: clientPrefill?.company_name || fallbackCompanyName,
     service_type: clientPrefill?.service_type || templateData?.serviceType || "",
     project_scope:
       clientPrefill?.project_scope || templateData?.prefill?.project_scope || "",
     budget: initialBudgetDigits, // stored as plain digits, displayed formatted
     timeline: initialTimelineRaw,
     notes: clientPrefill?.notes || templateData?.prefill?.notes || "",
-    goals: clientPrefill?.goals || "",
-    deliverables: clientPrefill?.deliverables || "",
+    goals: clientPrefill?.goals || templateData?.defaultGoals || "",
+    deliverables: clientPrefill?.deliverables || templateData?.defaultDeliverables || "",
   });
 
   // Currency state
@@ -330,6 +337,20 @@ export default function NewProposal() {
       setLoading(false);
     }
   };
+
+  // Auto-trigger generation when arriving from Templates with autoGenerate flag.
+  // Runs once on mount; the form is already pre-filled with template intelligence
+  // and smart fallbacks so validation passes immediately.
+  const autoTriggeredRef = useRef(false);
+  useEffect(() => {
+    if (!autoGenerateRequested || autoTriggeredRef.current) return;
+    if (loading) return;
+    if (!isValid) return; // safety net — if data is somehow incomplete, let user finish manually
+    autoTriggeredRef.current = true;
+    // Synthesize a submit event — handleGenerate only uses preventDefault()
+    handleGenerate({ preventDefault: () => {} } as React.FormEvent);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoGenerateRequested, isValid, loading]);
 
   const [savedClients, setSavedClients] = useState<Array<{ id: string; name: string; company: string | null; service_requested: string | null; project_description: string | null; budget: string | null; timeline: string | null; goals: string | null; }>>([]);
 
