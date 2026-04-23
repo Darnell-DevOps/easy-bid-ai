@@ -27,6 +27,10 @@ export interface TemplateData {
   dealSize: string;
   timeSaved: string;
   popular?: boolean;
+  // Intelligence layer — drives auto-fill
+  tone?: "professional" | "persuasive" | "concise";
+  defaultGoals?: string;
+  defaultDeliverables?: string;
   prefill: {
     project_scope: string;
     budget: string;
