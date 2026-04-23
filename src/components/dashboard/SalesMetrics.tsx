@@ -66,10 +66,15 @@ export default function SalesMetrics({
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       {stats.map((s) => {
         const Icon = s.icon;
+        const isFeatured = (s as any).featured;
         return (
           <Card
             key={s.label}
-            className="group hover:shadow-lg hover:border-accent/20 transition-all duration-300 cursor-pointer"
+            className={`group hover:shadow-lg transition-all duration-300 cursor-pointer ${
+              isFeatured
+                ? "border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 via-card to-card hover:border-emerald-500/40"
+                : "hover:border-accent/20"
+            }`}
             onClick={() => navigate(s.link)}
           >
             <CardContent className="p-4 sm:p-5">
