@@ -1,27 +1,27 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText, Zap, Download, AlertTriangle, Clock, XCircle, UserX, ArrowRight, CheckCircle, Briefcase, ShieldCheck } from "lucide-react";
+import { FileText, Zap, AlertTriangle, Clock, XCircle, UserX, ArrowRight, CheckCircle, Briefcase, ShieldCheck, CreditCard, HandCoins, FileCheck } from "lucide-react";
 import { AnimateIn } from "@/hooks/use-scroll-animation";
 
 const steps = [
-  { number: "1", title: "Enter your client details", description: "Fill in a simple form with the client name, service type, budget, and timeline." },
-  { number: "2", title: "AI generates your proposal and invoice instantly", description: "Our AI creates a polished proposal, pricing breakdown, and invoice in seconds." },
-  { number: "3", title: "Download and send to your client", description: "Export as PDF, review, and send. Done in under two minutes." },
+  { number: "1", title: "Send your proposal", description: "Generate a polished proposal in seconds and share it with one link." },
+  { number: "2", title: "Client accepts it", description: "Your client reviews and accepts the proposal in one click — no email back-and-forth." },
+  { number: "3", title: "Client pays instantly", description: "Payment is collected automatically the moment they accept. No chasing invoices." },
 ];
 
 const painPoints = [
-  { icon: Clock, text: "Losing clients because you reply too late" },
-  { icon: AlertTriangle, text: "Spending hours writing proposals manually" },
-  { icon: XCircle, text: "Looking unprofessional compared to competitors" },
-  { icon: UserX, text: "Can cost you clients" },
+  { icon: UserX, text: "Clients ghost after proposals" },
+  { icon: Clock, text: "You chase invoices manually" },
+  { icon: XCircle, text: "Deals fall through the cracks" },
+  { icon: AlertTriangle, text: "Payments are slow or missed" },
 ];
 
 const deliverables = [
   "A polished, client-ready proposal",
-  "A clear pricing breakdown",
-  "A professional invoice",
-  "Ready to send in minutes",
+  "One-click Accept & Pay flow",
+  "Automatic invoice & receipt",
+  "Money in your account, not chased",
 ];
 
 const plans = [
@@ -29,20 +29,27 @@ const plans = [
     name: "Free",
     price: "£0",
     period: "/month",
-    description: "Get started with no commitment",
-    features: ["3 proposals per month", "AI proposal generation", "Watermark on exports"],
-    cta: "Get Started Free",
+    description: "Try it out — no card required",
+    features: ["2 proposals per month", "Watermarked proposals", "No payment collection"],
+    cta: "Start Free",
     popular: false,
   },
   {
     name: "Pro",
-    price: "£9",
+    price: "£29",
     period: "/month",
-    description: "For freelancers and agencies closing more deals",
-    features: ["Unlimited proposals", "No watermark", "Invoice export", "Custom branding", "Proposal history"],
-    cta: "Upgrade to Pro",
+    description: "Get paid instantly. Turn leads into clients automatically.",
+    features: [
+      "Unlimited proposals",
+      "Accept & Pay flow",
+      "Payment collection (Paddle)",
+      "Policies auto-attach",
+      "AI lead response",
+      "No watermark",
+    ],
+    cta: "Start closing deals",
     popular: true,
-    valueLine: "Less than the cost of 1 client lost",
+    valueLine: "Close just one extra client and it pays for itself.",
   },
 ];
 
@@ -65,25 +72,25 @@ export default function Index() {
               <Button variant="ghost" size="sm">Log in</Button>
             </Link>
             <Link to="/signup">
-              <Button size="sm" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 h-9">Create Your First Proposal Free</Button>
+              <Button size="sm" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 h-9">Start closing deals</Button>
             </Link>
           </div>
         </div>
       </nav>
 
-      {/* Hero — loads immediately with CSS animation */}
+      {/* Hero */}
       <section className="py-16 md:py-24 px-4">
         <div className="container max-w-3xl text-center" style={{ animation: "hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both" }}>
           <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight leading-tight mb-6">
-            Create proposals that win clients — in <span className="bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent font-extrabold">minutes</span>
+            Close deals faster and <span className="bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent font-extrabold">get paid instantly</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed" style={{ animation: "hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both" }}>
-            Stop losing clients because of slow proposals. Generate a professional proposal and invoice in under <span className="text-foreground font-semibold">2 minutes</span>.
+            Send proposals your clients can accept and pay in one simple flow — <span className="text-foreground font-semibold">no chasing, no back-and-forth.</span>
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4" style={{ animation: "hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both" }}>
             <Link to="/signup">
               <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_20px_hsl(var(--accent)/0.4)] px-10 h-14 text-base gap-2 transition-all hover:scale-105">
-                Create Your First Proposal Free
+                Start closing deals
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
@@ -93,10 +100,10 @@ export default function Index() {
               </Button>
             </Link>
           </div>
-          <p className="text-xs text-muted-foreground mt-6" style={{ animation: "hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both" }}>No signup required to try • Generate your first proposal in seconds</p>
+          <p className="text-xs text-muted-foreground mt-6" style={{ animation: "hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both" }}>No signup required to try • Send your first proposal in minutes</p>
           <div className="flex items-center justify-center gap-5 mt-3" style={{ animation: "hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both" }}>
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><Zap className="w-3 h-3 text-accent" />Fast</span>
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><ShieldCheck className="w-3 h-3 text-accent" />Secure</span>
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><ShieldCheck className="w-3 h-3 text-accent" />Secure payments</span>
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><FileText className="w-3 h-3 text-accent" />Professional</span>
           </div>
         </div>
@@ -105,9 +112,9 @@ export default function Index() {
       {/* Pain Section */}
       <section className="py-16 px-4">
         <AnimateIn className="container max-w-3xl text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Still writing proposals manually?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Tired of chasing clients for money?</h2>
           <p className="text-muted-foreground text-lg mb-12 max-w-xl mx-auto">
-            Manual proposals are holding your business back.
+            The gap between "yes" and getting paid is where most freelancers lose revenue.
           </p>
           <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {painPoints.map((p, i) => (
@@ -124,17 +131,56 @@ export default function Index() {
         </AnimateIn>
       </section>
 
-      {/* How it works — unified section */}
-      <section id="how-it-works" className="py-16 px-4">
+      {/* Money Moment Section */}
+      <section className="py-16 px-4">
         <div className="container max-w-4xl">
           <AnimateIn className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">See how it works</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Turn proposals into <span className="bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent">paid deals</span></h2>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              From client details to a ready-to-send proposal in seconds.
+              One link. One flow. From sent to paid — without lifting a finger.
             </p>
           </AnimateIn>
 
-          {/* 3-step process */}
+          <AnimateIn direction="scale">
+            <div className="relative">
+              <div className="absolute -inset-4 bg-purple/20 rounded-3xl blur-2xl pointer-events-none" />
+              <div className="relative rounded-2xl border-2 border-accent/30 bg-card shadow-2xl shadow-accent/10 p-8 md:p-12">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-4">
+                  {[
+                    { icon: FileText, label: "Proposal", sub: "Sent in minutes", color: "accent" },
+                    { icon: FileCheck, label: "Accept", sub: "One click", color: "accent" },
+                    { icon: HandCoins, label: "Payment", sub: "Money in", color: "accent" },
+                  ].map((item, i, arr) => (
+                    <div key={item.label} className="flex flex-col md:flex-row items-center gap-6 md:gap-4 flex-1">
+                      <div className="flex flex-col items-center text-center flex-1">
+                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent/20 to-purple/20 border border-accent/30 flex items-center justify-center mb-3 shadow-lg shadow-accent/10">
+                          <item.icon className="w-7 h-7 text-accent" />
+                        </div>
+                        <p className="font-semibold text-foreground">{item.label}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{item.sub}</p>
+                      </div>
+                      {i < arr.length - 1 && (
+                        <ArrowRight className="w-6 h-6 text-accent rotate-90 md:rotate-0 flex-shrink-0" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </AnimateIn>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section id="how-it-works" className="py-16 px-4">
+        <div className="container max-w-4xl">
+          <AnimateIn className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">How it works</h2>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+              Three steps from proposal to paid.
+            </p>
+          </AnimateIn>
+
           <div className="max-w-3xl mx-auto space-y-6 mb-16">
             {steps.map((s, i) => (
               <AnimateIn key={s.number} delay={i * 150} direction="left">
@@ -150,95 +196,6 @@ export default function Index() {
               </AnimateIn>
             ))}
           </div>
-
-          {/* Live preview demo */}
-          <AnimateIn className="text-center mb-16" direction="scale">
-            <div className="relative">
-              <div className="absolute -inset-4 bg-purple/20 rounded-3xl blur-2xl pointer-events-none" />
-              <div className="relative rounded-2xl border-2 border-accent/30 bg-card shadow-2xl shadow-accent/10 overflow-hidden hover:shadow-accent/20 transition-shadow duration-500">
-                <div className="px-4 py-2 border-b border-border flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-1.5">
-                      <div className="w-3 h-3 rounded-full bg-destructive/60" />
-                      <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
-                      <div className="w-3 h-3 rounded-full bg-green-500/60" />
-                    </div>
-                    <span className="text-xs text-accent font-medium ml-2 uppercase tracking-wider">Live preview</span>
-                  </div>
-                  <span className="text-[10px] text-accent/80 bg-accent/10 px-2 py-0.5 rounded-full font-medium animate-pulse">● Generated just now</span>
-                </div>
-                <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border">
-                  <div className="p-6 text-left space-y-4">
-                    <h3 className="text-sm font-semibold text-foreground mb-4">Client Details</h3>
-                    {[
-                      { label: "Client Name", value: "ABC Company" },
-                      { label: "Service Type", value: "Website Redesign" },
-                      { label: "Budget", value: "£1,200" },
-                    ].map((field) => (
-                      <div key={field.label} className="space-y-1.5">
-                        <span className="text-xs text-muted-foreground">{field.label}</span>
-                        <div className="h-9 rounded-md bg-muted/50 border border-border flex items-center px-3">
-                          <span className="text-xs text-foreground/70">{field.value}</span>
-                        </div>
-                      </div>
-                    ))}
-                    <div className="pt-2">
-                      <div className="h-10 rounded-lg bg-accent/20 border border-accent/30 flex items-center justify-center">
-                        <span className="text-xs font-medium text-accent">Generate Proposal →</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-6 text-left space-y-3 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-accent/5 to-transparent animate-shimmer pointer-events-none" />
-                    <h3 className="text-sm font-semibold text-foreground mb-3">Generated Proposal</h3>
-                    <p className="text-sm font-medium text-foreground/90">Website redesign proposal for ABC Company</p>
-                    <div className="space-y-1.5 text-xs text-foreground/70">
-                      <p>Scope: Landing page + 3 subpages</p>
-                      <p>Timeline: 2 weeks</p>
-                    </div>
-                    <div className="mt-4 pt-3 border-t border-border space-y-1.5">
-                      <p className="text-xs text-muted-foreground">Pricing Breakdown</p>
-                      <div className="flex justify-between text-xs text-foreground/70">
-                        <span>Design & Development</span><span>£900</span>
-                      </div>
-                      <div className="flex justify-between text-xs text-foreground/70">
-                        <span>Content & QA</span><span>£300</span>
-                      </div>
-                      <div className="flex justify-between text-xs font-semibold text-accent pt-1 border-t border-border/50">
-                        <span>Total</span><span>£1,200</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground mt-6">Generated in under 2 minutes</p>
-          </AnimateIn>
-
-          {/* Social proof */}
-          <AnimateIn className="max-w-3xl mx-auto text-center mb-16">
-            <p className="text-muted-foreground text-lg mb-8">Used by freelancers and agencies to close more clients</p>
-            <div className="flex flex-col sm:flex-row justify-center gap-6 mb-12">
-              {[
-                { icon: Clock, text: "Save hours on every proposal" },
-                { icon: Zap, text: "Look more professional instantly" },
-                { icon: ArrowRight, text: "Close deals faster" },
-              ].map((item, i) => (
-                <AnimateIn key={item.text} delay={i * 100} direction="up">
-                  <div className="flex items-center gap-2 text-sm text-foreground">
-                    <item.icon className="w-4 h-4 text-accent flex-shrink-0" />
-                    <span>{item.text}</span>
-                  </div>
-                </AnimateIn>
-              ))}
-            </div>
-            <blockquote className="max-w-lg mx-auto border-l-2 border-accent pl-4 text-left">
-              <p className="text-sm text-foreground/80 italic leading-relaxed">
-                "This tool saved me hours every week and helped me land more clients"
-              </p>
-              <footer className="mt-2 text-xs text-muted-foreground">— Freelance Consultant</footer>
-            </blockquote>
-          </AnimateIn>
 
           {/* What you get */}
           <AnimateIn className="max-w-3xl mx-auto text-center">
@@ -263,18 +220,10 @@ export default function Index() {
           <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-6">
             <Briefcase className="w-6 h-6 text-accent" />
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Built for agencies and consultants</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Built for freelancers and agencies that want to get paid</h2>
           <p className="text-muted-foreground text-lg leading-relaxed max-w-xl mx-auto">
-            Designed for professionals who need to respond to leads quickly and close more deals.
+            Stop sending proposals into the void. Send proposals that close themselves.
           </p>
-          <div className="mt-10">
-            <Link to="/signup">
-              <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_20px_hsl(var(--accent)/0.4)] px-10 h-14 text-base gap-2 transition-all hover:scale-105">
-                Create Your First Proposal Free
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
-          </div>
         </AnimateIn>
       </section>
 
@@ -326,10 +275,33 @@ export default function Index() {
           </div>
           <AnimateIn>
             <p className="text-center text-sm text-muted-foreground mt-12">
-              If this helps you close just one extra client, it pays for itself.
+              Close just one extra client and it pays for itself.
             </p>
           </AnimateIn>
         </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="py-20 px-4">
+        <AnimateIn className="container max-w-3xl text-center">
+          <div className="rounded-3xl border-2 border-accent/30 bg-gradient-to-br from-accent/5 to-purple/5 p-10 md:p-16">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent to-purple flex items-center justify-center mx-auto mb-6 shadow-lg shadow-accent/30">
+              <CreditCard className="w-7 h-7 text-accent-foreground" />
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Stop chasing clients — <span className="bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent">start closing deals</span>
+            </h2>
+            <p className="text-muted-foreground text-lg mb-8 max-w-xl mx-auto">
+              Join freelancers and agencies who turned their proposals into a payment machine.
+            </p>
+            <Link to="/signup">
+              <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_24px_hsl(var(--accent)/0.5)] px-10 h-14 text-base gap-2 transition-all hover:scale-105">
+                Start closing deals
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
+        </AnimateIn>
       </section>
 
       {/* Footer */}
