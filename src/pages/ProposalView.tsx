@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Save, Loader2, Pencil, Eye, Copy, Check, Sparkles, RefreshCw, Wand2, Zap, Send, XCircle, CheckCircle2, Mail, ExternalLink, AlertTriangle, Banknote, FileText } from "lucide-react";
+import { Download, Save, Loader2, Pencil, Eye, Copy, Check, Sparkles, RefreshCw, Wand2, Zap, Send, XCircle, CheckCircle2, Mail, ExternalLink, AlertTriangle, Banknote, FileText, Crown, Lock } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import ReactMarkdown from "react-markdown";
 import PremiumProposalRenderer from "@/components/proposal/PremiumProposalRenderer";
@@ -17,6 +17,9 @@ import ProposalHeader from "@/components/proposal/ProposalHeader";
 import StatusBadge, { normalizeStatus, type ProposalStatus } from "@/components/proposal/StatusBadge";
 import FollowUpDialog from "@/components/proposal/FollowUpDialog";
 import { getFollowUpScenario, FOLLOW_UP_META } from "@/lib/follow-up";
+import { usePlan } from "@/hooks/use-plan";
+import UpgradeModal from "@/components/plan/UpgradeModal";
+import ProposalWatermark from "@/components/plan/ProposalWatermark";
 
 interface ProposalData {
   id: string;
