@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Save, Loader2, Pencil, Eye, Copy, Check, Sparkles, RefreshCw, Wand2, Zap, Send, XCircle, CheckCircle2, Mail, ExternalLink, AlertTriangle, Banknote, FileText } from "lucide-react";
+import { Download, Save, Loader2, Pencil, Eye, Copy, Check, Sparkles, RefreshCw, Wand2, Zap, Send, XCircle, CheckCircle2, Mail, ExternalLink, AlertTriangle, Banknote, FileText, Crown, Lock } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import ReactMarkdown from "react-markdown";
 import PremiumProposalRenderer from "@/components/proposal/PremiumProposalRenderer";
@@ -17,6 +17,9 @@ import ProposalHeader from "@/components/proposal/ProposalHeader";
 import StatusBadge, { normalizeStatus, type ProposalStatus } from "@/components/proposal/StatusBadge";
 import FollowUpDialog from "@/components/proposal/FollowUpDialog";
 import { getFollowUpScenario, FOLLOW_UP_META } from "@/lib/follow-up";
+import { usePlan } from "@/hooks/use-plan";
+import UpgradeModal from "@/components/plan/UpgradeModal";
+import ProposalWatermark from "@/components/plan/ProposalWatermark";
 
 interface ProposalData {
   id: string;
@@ -83,6 +86,10 @@ function MarkdownPreview({ content, isPremium }: { content: string; isPremium?: 
 export default function ProposalView() {
   const { id } = useParams();
   const { toast } = useToast();
+  const { hasFeature, isFree } = usePlan();
+  const paymentsUnlocked = hasFeature("payments");
+  const watermark = !hasFeature("watermark"); // free plan keeps watermark
+  const [paymentsUpgradeOpen, setPaymentsUpgradeOpen] = useState(false);
   const [proposal, setProposal] = useState<ProposalData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -675,6 +682,13 @@ export default function ProposalView() {
 
   return (
     <DashboardLayout>
+      <UpgradeModal
+        open={paymentsUpgradeOpen}
+        onOpenChange={setPaymentsUpgradeOpen}
+        requiredPlan="pro"
+        title="Get paid directly through your proposals"
+        description="Unlock the Accept & Pay flow to collect payments from clients without leaving the proposal. Available on the Pro plan."
+      />
       <div className="max-w-4xl mx-auto px-2 sm:px-4 lg:px-8">
         {/* Compact top meta strip */}
         <div className="mb-5 flex items-center justify-between gap-4 flex-wrap">
@@ -824,78 +838,109 @@ export default function ProposalView() {
             <div className="pt-5 border-t border-border/60">
               <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
                 <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Payment Setup</p>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={handleAutoFillPrice}
-                  disabled={autoFillingPrice}
-                  className="gap-1.5 h-7 text-[11px] text-purple hover:text-purple hover:bg-purple/10"
-                >
-                  {autoFillingPrice ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                  Auto-fill from proposal
-                </Button>
+                {paymentsUnlocked && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleAutoFillPrice}
+                    disabled={autoFillingPrice}
+                    className="gap-1.5 h-7 text-[11px] text-purple hover:text-purple hover:bg-purple/10"
+                  >
+                    {autoFillingPrice ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                    Auto-fill from proposal
+                  </Button>
+                )}
               </div>
-              <div className="flex items-stretch gap-2 max-w-md">
-                <div className="relative flex-1">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base text-muted-foreground pointer-events-none">
-                    {proposal.currency === "EUR" ? "€" : proposal.currency === "GBP" ? "£" : "$"}
-                  </span>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    inputMode="decimal"
-                    placeholder="0.00"
-                    value={proposal.amount_cents != null ? (proposal.amount_cents / 100).toString() : ""}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      const cents = v === "" ? null : Math.round(parseFloat(v) * 100);
-                      setProposal({ ...proposal, amount_cents: Number.isFinite(cents as number) ? (cents as number) : null });
-                    }}
-                    onBlur={async () => {
-                      const cents = proposal.amount_cents;
-                      const { error } = await supabase
-                        .from("proposals")
-                        .update({ amount_cents: cents, currency: proposal.currency || "USD" })
-                        .eq("id", proposal.id);
-                      if (error) {
-                        toast({ title: "Couldn't save amount", description: error.message, variant: "destructive" });
-                      } else {
-                        toast({ title: "Amount saved" });
-                      }
-                    }}
-                    className={`h-12 pl-8 text-lg font-semibold ${
-                      proposal.amount_cents == null
-                        ? "border-amber-500/40 focus-visible:ring-amber-500/30"
-                        : ""
-                    }`}
-                  />
+
+              {!paymentsUnlocked ? (
+                <div className="rounded-lg border border-purple/30 bg-gradient-to-br from-purple/10 via-accent/5 to-transparent p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-purple/15 flex items-center justify-center shrink-0">
+                      <Lock className="w-4 h-4 text-purple" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-foreground">
+                        Get paid directly through your proposals
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5 mb-3">
+                        Upgrade to Pro to collect payments from clients with the Accept &amp; Pay flow — no extra tools needed.
+                      </p>
+                      <Button
+                        size="sm"
+                        onClick={() => setPaymentsUpgradeOpen(true)}
+                        className="gap-1.5 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold hover:brightness-110"
+                      >
+                        <Crown className="w-3.5 h-3.5" />
+                        Unlock Payments with Pro
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-                <select
-                  value={proposal.currency || "USD"}
-                  onChange={async (e) => {
-                    const currency = e.target.value;
-                    setProposal({ ...proposal, currency });
-                    await supabase.from("proposals").update({ currency }).eq("id", proposal.id);
-                  }}
-                  className="h-12 rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground"
-                >
-                  <option value="USD">USD</option>
-                  <option value="EUR">EUR</option>
-                  <option value="GBP">GBP</option>
-                  <option value="CAD">CAD</option>
-                  <option value="AUD">AUD</option>
-                </select>
-              </div>
-              <p className={`text-xs mt-2 ${
-                proposal.amount_cents == null ? "text-amber-500" : "text-muted-foreground"
-              }`}>
-                {clientPaid
-                  ? "✓ Paid in full"
-                  : proposal.amount_cents
-                    ? "This is the amount your client will pay"
-                    : "Set a payment amount to enable client payment"}
-              </p>
+              ) : (
+                <>
+                  <div className="flex items-stretch gap-2 max-w-md">
+                    <div className="relative flex-1">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base text-muted-foreground pointer-events-none">
+                        {proposal.currency === "EUR" ? "€" : proposal.currency === "GBP" ? "£" : "$"}
+                      </span>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        inputMode="decimal"
+                        placeholder="0.00"
+                        value={proposal.amount_cents != null ? (proposal.amount_cents / 100).toString() : ""}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          const cents = v === "" ? null : Math.round(parseFloat(v) * 100);
+                          setProposal({ ...proposal, amount_cents: Number.isFinite(cents as number) ? (cents as number) : null });
+                        }}
+                        onBlur={async () => {
+                          const cents = proposal.amount_cents;
+                          const { error } = await supabase
+                            .from("proposals")
+                            .update({ amount_cents: cents, currency: proposal.currency || "USD" })
+                            .eq("id", proposal.id);
+                          if (error) {
+                            toast({ title: "Couldn't save amount", description: error.message, variant: "destructive" });
+                          } else {
+                            toast({ title: "Amount saved" });
+                          }
+                        }}
+                        className={`h-12 pl-8 text-lg font-semibold ${
+                          proposal.amount_cents == null
+                            ? "border-amber-500/40 focus-visible:ring-amber-500/30"
+                            : ""
+                        }`}
+                      />
+                    </div>
+                    <select
+                      value={proposal.currency || "USD"}
+                      onChange={async (e) => {
+                        const currency = e.target.value;
+                        setProposal({ ...proposal, currency });
+                        await supabase.from("proposals").update({ currency }).eq("id", proposal.id);
+                      }}
+                      className="h-12 rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground"
+                    >
+                      <option value="USD">USD</option>
+                      <option value="EUR">EUR</option>
+                      <option value="GBP">GBP</option>
+                      <option value="CAD">CAD</option>
+                      <option value="AUD">AUD</option>
+                    </select>
+                  </div>
+                  <p className={`text-xs mt-2 ${
+                    proposal.amount_cents == null ? "text-amber-500" : "text-muted-foreground"
+                  }`}>
+                    {clientPaid
+                      ? "✓ Paid in full"
+                      : proposal.amount_cents
+                        ? "This is the amount your client will pay"
+                        : "Set a payment amount to enable client payment"}
+                  </p>
+                </>
+              )}
             </div>
 
             {/* === ACTIONS === */}
@@ -1040,7 +1085,7 @@ export default function ProposalView() {
               ) : (
                 <>
                   {t.key === "proposal" ? (
-                    <div className="rounded-2xl border border-border/60 bg-card/40 px-6 sm:px-10 lg:px-14 py-8 lg:py-10 shadow-sm">
+                    <div className="relative rounded-2xl border border-border/60 bg-card/40 px-6 sm:px-10 lg:px-14 py-8 lg:py-10 shadow-sm">
                       <ProposalHeader
                         clientName={proposal.client_name}
                         companyName={proposal.company_name}
@@ -1048,6 +1093,7 @@ export default function ProposalView() {
                         createdAt={proposal.created_at}
                       />
                       <MarkdownPreview content={t.content} isPremium />
+                      {watermark && <ProposalWatermark />}
                     </div>
                   ) : t.key === "pricing" ? (
                     <div className="rounded-2xl border border-border/60 bg-card/40 px-6 sm:px-10 lg:px-14 py-8 lg:py-10 shadow-sm">

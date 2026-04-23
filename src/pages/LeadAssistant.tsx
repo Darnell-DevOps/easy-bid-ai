@@ -30,10 +30,13 @@ import {
   CheckCircle2,
   Wand2,
   ArrowRight,
+  Crown,
 } from "lucide-react";
 import { smartSelectTemplate, type SmartSelectResult } from "@/lib/smart-template";
 import type { TemplateData } from "@/pages/Templates";
 import { templates } from "@/pages/Templates";
+import { usePlan } from "@/hooks/use-plan";
+import UpgradeModal from "@/components/plan/UpgradeModal";
 
 const emptyState = {
   leadName: "",
@@ -79,6 +82,9 @@ const isValidEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 export default function LeadAssistant() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { hasFeature } = usePlan();
+  const aiLeadUnlocked = hasFeature("aiLeadResponse");
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const [leadName, setLeadName] = useState("");
   const [leadEmail, setLeadEmail] = useState("");
@@ -148,6 +154,10 @@ export default function LeadAssistant() {
 
   const handleGenerate = async () => {
     if (!validate()) return;
+    if (!aiLeadUnlocked) {
+      setUpgradeOpen(true);
+      return;
+    }
     setGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke("lead-response", {
@@ -317,6 +327,13 @@ export default function LeadAssistant() {
 
   return (
     <DashboardLayout>
+      <UpgradeModal
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        requiredPlan="pro"
+        title="Turn leads into clients automatically"
+        description="Unlock AI Lead Response to instantly draft replies, qualify leads, and recommend next steps. Available on the Pro plan."
+      />
       <div className="space-y-8 max-w-4xl mx-auto">
         {/* Hero */}
         <div className="space-y-3">
@@ -456,12 +473,18 @@ export default function LeadAssistant() {
                 onClick={handleGenerate}
                 disabled={generating}
                 size="lg"
-                className="w-full sm:w-auto"
+                className={
+                  aiLeadUnlocked
+                    ? "w-full sm:w-auto"
+                    : "w-full sm:w-auto bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold hover:brightness-110"
+                }
               >
                 {generating ? (
                   <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</>
-                ) : (
+                ) : aiLeadUnlocked ? (
                   <><Sparkles className="w-4 h-4" /> Generate Reply That Converts</>
+                ) : (
+                  <><Crown className="w-4 h-4" /> Unlock AI Reply with Pro</>
                 )}
               </Button>
 
