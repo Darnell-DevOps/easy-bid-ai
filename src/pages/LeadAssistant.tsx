@@ -473,12 +473,18 @@ export default function LeadAssistant() {
                 onClick={handleGenerate}
                 disabled={generating}
                 size="lg"
-                className="w-full sm:w-auto"
+                className={
+                  aiLeadUnlocked
+                    ? "w-full sm:w-auto"
+                    : "w-full sm:w-auto bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold hover:brightness-110"
+                }
               >
                 {generating ? (
                   <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</>
-                ) : (
+                ) : aiLeadUnlocked ? (
                   <><Sparkles className="w-4 h-4" /> Generate Reply That Converts</>
+                ) : (
+                  <><Crown className="w-4 h-4" /> Unlock AI Reply with Pro</>
                 )}
               </Button>
 
