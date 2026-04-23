@@ -540,7 +540,7 @@ export default function ClientPortal() {
             {isAccepted ? (
               <>
                 <CreditCard className="w-4 h-4" />
-                Pay Now {formattedTotal ? `— ${formattedTotal}` : ""}
+                Pay {formattedTotal || ""} to Start
               </>
             ) : (
               <>
