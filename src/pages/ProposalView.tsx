@@ -86,6 +86,10 @@ function MarkdownPreview({ content, isPremium }: { content: string; isPremium?: 
 export default function ProposalView() {
   const { id } = useParams();
   const { toast } = useToast();
+  const { hasFeature, isFree } = usePlan();
+  const paymentsUnlocked = hasFeature("payments");
+  const watermark = !hasFeature("watermark"); // free plan keeps watermark
+  const [paymentsUpgradeOpen, setPaymentsUpgradeOpen] = useState(false);
   const [proposal, setProposal] = useState<ProposalData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
