@@ -37,6 +37,12 @@ interface ClientLite {
   name: string;
   status: string;
   created_at: string;
+  company?: string | null;
+  service_requested?: string | null;
+  budget?: string | null;
+  timeline?: string | null;
+  goals?: string | null;
+  project_description?: string | null;
 }
 
 function parseAmount(s?: string | null): number {
@@ -61,7 +67,7 @@ export default function Dashboard() {
         .order("created_at", { ascending: false }),
       supabase
         .from("clients")
-        .select("id, name, status, created_at")
+        .select("id, name, status, created_at, company, service_requested, budget, timeline, goals, project_description")
         .order("created_at", { ascending: false }),
     ]);
     setProposals(propRes.data || []);
