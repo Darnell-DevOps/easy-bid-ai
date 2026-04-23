@@ -99,9 +99,12 @@ const BUDGET_PRESETS = [500, 1000, 2000, 5000, 10000];
 export default function NewProposal() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { plan, isFree, isStarter } = usePlan();
+  const { countThisMonth, refresh: refreshUsage } = useProposalUsage();
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
   const stepTimers = useRef<NodeJS.Timeout[]>([]);
 
   const loadingSteps = [
