@@ -535,6 +535,22 @@ export default function NewProposal() {
         </Card>
       )}
 
+      <div className="mb-4">
+        <ProposalLimitBanner />
+      </div>
+
+      <UpgradeModal
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        requiredPlan={isFree ? "starter" : "pro"}
+        title={`You've hit the ${plan.name} plan limit`}
+        description={`Upgrade to ${PLANS[isFree ? "starter" : "pro"].name} to keep generating proposals and close more deals.`}
+      />
+
+      {false && (
+        <Card>
+      )}
+
       <Card className="glass-card">
         <CardContent className="p-6 md:p-8">
           <form onSubmit={handleGenerate} className="space-y-10">
