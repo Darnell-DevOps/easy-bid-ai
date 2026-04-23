@@ -154,6 +154,10 @@ export default function LeadAssistant() {
 
   const handleGenerate = async () => {
     if (!validate()) return;
+    if (!aiLeadUnlocked) {
+      setUpgradeOpen(true);
+      return;
+    }
     setGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke("lead-response", {
