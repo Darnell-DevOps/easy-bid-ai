@@ -94,6 +94,13 @@ export default function Dashboard() {
     return { title: "Keep growing", body: "Add more clients to your pipeline and generate proposals to scale revenue." };
   }, [proposals]);
 
+  const followUps = useMemo(() => {
+    return proposals
+      .map((p) => ({ p, scenario: getFollowUpScenario(p) }))
+      .filter((x) => x.scenario !== "none")
+      .slice(0, 4);
+  }, [proposals]);
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
