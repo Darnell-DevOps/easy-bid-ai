@@ -338,6 +338,20 @@ export default function NewProposal() {
     }
   };
 
+  // Auto-trigger generation when arriving from Templates with autoGenerate flag.
+  // Runs once on mount; the form is already pre-filled with template intelligence
+  // and smart fallbacks so validation passes immediately.
+  const autoTriggeredRef = useRef(false);
+  useEffect(() => {
+    if (!autoGenerateRequested || autoTriggeredRef.current) return;
+    if (loading) return;
+    if (!isValid) return; // safety net — if data is somehow incomplete, let user finish manually
+    autoTriggeredRef.current = true;
+    // Synthesize a submit event — handleGenerate only uses preventDefault()
+    handleGenerate({ preventDefault: () => {} } as React.FormEvent);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoGenerateRequested, isValid, loading]);
+
   const [savedClients, setSavedClients] = useState<Array<{ id: string; name: string; company: string | null; service_requested: string | null; project_description: string | null; budget: string | null; timeline: string | null; goals: string | null; }>>([]);
 
   useEffect(() => {
