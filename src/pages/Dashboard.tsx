@@ -1,17 +1,18 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
-import StatsCards from "@/components/dashboard/StatsCards";
-
-import RecentActivity from "@/components/dashboard/RecentActivity";
+import SalesMetrics from "@/components/dashboard/SalesMetrics";
+import PipelineView from "@/components/dashboard/PipelineView";
+import PriorityActions from "@/components/dashboard/PriorityActions";
+import DealActivity from "@/components/dashboard/DealActivity";
 import ProposalsList from "@/components/dashboard/ProposalsList";
 import OnboardingHighlight from "@/components/dashboard/OnboardingHighlight";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, ArrowRight, UserPlus, Lightbulb, Bell } from "lucide-react";
+import { Sparkles, ArrowRight, UserPlus, Lightbulb } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getOnboardingKey } from "@/pages/Onboarding";
-import { getFollowUpScenario, FOLLOW_UP_META } from "@/lib/follow-up";
+import { getFollowUpScenario } from "@/lib/follow-up";
 
 interface FullProposal {
   id: string;
@@ -27,24 +28,56 @@ interface FullProposal {
   sent_at?: string | null;
   viewed_at?: string | null;
   accepted_at?: string | null;
+  rejected_at?: string | null;
   paid_at?: string | null;
+}
+
+interface ClientLite {
+  id: string;
+  name: string;
+  status: string;
+  created_at: string;
+  company?: string | null;
+  service_requested?: string | null;
+  budget?: string | null;
+  timeline?: string | null;
+  goals?: string | null;
+  project_description?: string | null;
+}
+
+function parseAmount(s?: string | null): number {
+  if (!s) return 0;
+  const n = parseFloat(s.replace(/[^0-9.]/g, ""));
+  return Number.isFinite(n) ? n : 0;
 }
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [proposals, setProposals] = useState<FullProposal[]>([]);
+  const [clients, setClients] = useState<ClientLite[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchProposals = async () => {
-    const { data } = await supabase
-      .from("proposals")
-      .select("id, client_name, company_name, service_type, created_at, proposal_content, invoice_content, budget, client_paid, status, sent_at, viewed_at, accepted_at, paid_at")
-      .order("created_at", { ascending: false });
-    setProposals(data || []);
+  const fetchData = async () => {
+    const [propRes, clientRes] = await Promise.all([
+      supabase
+        .from("proposals")
+        .select(
+          "id, client_name, company_name, service_type, created_at, proposal_content, invoice_content, budget, client_paid, status, sent_at, viewed_at, accepted_at, rejected_at, paid_at",
+        )
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("clients")
+        .select("id, name, status, created_at, company, service_requested, budget, timeline, goals, project_description")
+        .order("created_at", { ascending: false }),
+    ]);
+    setProposals(propRes.data || []);
+    setClients(clientRes.data || []);
     setLoading(false);
   };
 
-  useEffect(() => { fetchProposals(); }, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   // Redirect first-time users to onboarding
   useEffect(() => {
@@ -58,65 +91,108 @@ export default function Dashboard() {
     });
   }, [navigate]);
 
-  const stats = useMemo(() => {
-    const uniqueClients = new Set(proposals.map((p) => p.client_name.toLowerCase().trim())).size;
-    const timeSaved = proposals.length * 55;
-    const revenue = proposals
-      .filter((p) => p.client_paid)
-      .reduce((acc, p) => {
-        const num = parseFloat(p.budget?.replace(/[^0-9.]/g, "") || "0");
-        return acc + (isNaN(num) ? 0 : num);
-      }, 0);
-    return { total: proposals.length, revenue, clients: uniqueClients, timeSaved };
-  }, [proposals]);
+  const proposalClientNames = useMemo(
+    () => new Set(proposals.map((p) => p.client_name.toLowerCase().trim())),
+    [proposals],
+  );
 
-  // Dynamic insight based on real data
-  const insight = useMemo(() => {
-    const drafts = proposals.filter((p) => !p.status || p.status === "draft").length;
-    const acceptedUnpaid = proposals.filter((p) => p.status === "accepted" && !p.client_paid).length;
-    const sent = proposals.filter((p) => p.status === "sent" || p.status === "viewed").length;
-    if (acceptedUnpaid > 0) return `${acceptedUnpaid} proposal${acceptedUnpaid > 1 ? "s" : ""} accepted — request payment now`;
-    if (drafts > 0) return `You have ${drafts} draft proposal${drafts > 1 ? "s" : ""} — send one to get paid`;
-    if (sent > 0) return `${sent} proposal${sent > 1 ? "s" : ""} awaiting client response — follow up to close`;
-    if (proposals.length === 0) return "Create your first proposal to start earning";
-    return "All caught up — create a new proposal to keep momentum";
+  const metrics = useMemo(() => {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+
+    const sentThisMonth = proposals.filter((p) => {
+      if (!p.sent_at) return false;
+      return new Date(p.sent_at).getTime() >= monthStart;
+    }).length;
+
+    const accepted = proposals.filter((p) => (p.status || "").toLowerCase() === "accepted" || p.client_paid).length;
+    const revenuePaid = proposals.filter((p) => p.client_paid).reduce((acc, p) => acc + parseAmount(p.budget), 0);
+    const pendingPayments = proposals
+      .filter((p) => (p.status || "").toLowerCase() === "accepted" && !p.client_paid)
+      .reduce((acc, p) => acc + parseAmount(p.budget), 0);
+
+    return { sentThisMonth, accepted, revenuePaid, pendingPayments };
   }, [proposals]);
 
   // Dynamic tip based on user state
   const tip = useMemo(() => {
-    if (proposals.length === 0) return { title: "Get started", body: "Add your first client, then generate a proposal in under 2 minutes." };
-    const acceptedUnpaid = proposals.filter((p) => p.status === "accepted" && !p.client_paid).length;
-    if (acceptedUnpaid > 0) return { title: "Request payment", body: "A client said yes. Open the proposal and send the payment link to close the deal." };
+    if (proposals.length === 0)
+      return {
+        title: "Get started",
+        body: "Add your first client, then generate a proposal in under 2 minutes.",
+      };
+    const acceptedUnpaid = proposals.filter(
+      (p) => (p.status || "").toLowerCase() === "accepted" && !p.client_paid,
+    ).length;
+    if (acceptedUnpaid > 0)
+      return {
+        title: "Request payment",
+        body: "A client said yes. Open the proposal and send the payment link to close the deal.",
+      };
     const drafts = proposals.filter((p) => !p.status || p.status === "draft").length;
-    if (drafts > 0) return { title: "Send your draft", body: "Drafts don't get paid. Share your draft proposal with the client today." };
-    const sent = proposals.filter((p) => p.status === "sent" || p.status === "viewed").length;
-    if (sent > 0) return { title: "Follow up", body: "Most deals close after a follow-up. Nudge clients who haven't responded yet." };
-    return { title: "Keep growing", body: "Add more clients to your pipeline and generate proposals to scale revenue." };
+    if (drafts > 0)
+      return {
+        title: "Send your draft",
+        body: "Drafts don't get paid. Share your draft proposal with the client today.",
+      };
+    const sent = proposals.filter((p) => {
+      const s = (p.status || "").toLowerCase();
+      return s === "sent" || s === "viewed";
+    }).length;
+    if (sent > 0)
+      return {
+        title: "Follow up",
+        body: "Most deals close after a follow-up. Nudge clients who haven't responded yet.",
+      };
+    return {
+      title: "Keep growing",
+      body: "Add more clients to your pipeline and generate proposals to scale revenue.",
+    };
   }, [proposals]);
 
-  const followUps = useMemo(() => {
-    return proposals
-      .map((p) => ({ p, scenario: getFollowUpScenario(p) }))
-      .filter((x) => x.scenario !== "none")
-      .slice(0, 4);
-  }, [proposals]);
+  const priorityCount = useMemo(() => {
+    let n = 0;
+    for (const p of proposals) if (getFollowUpScenario(p) !== "none") n++;
+    for (const c of clients) {
+      if ((c.status || "").toLowerCase() === "new" && !proposalClientNames.has(c.name.toLowerCase().trim())) n++;
+    }
+    return n;
+  }, [proposals, clients, proposalClientNames]);
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+          <h1 className="text-2xl font-bold text-foreground">Sales Command Center</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {proposals.length === 0
-              ? "Start by adding a client or creating your first proposal."
-              : "You're one step away from getting paid — keep momentum going."}
+            {priorityCount > 0
+              ? `${priorityCount} action${priorityCount > 1 ? "s" : ""} need your attention to close more deals.`
+              : "You're caught up. Keep momentum by adding leads or sending new proposals."}
           </p>
         </div>
 
         <OnboardingHighlight />
 
+        {/* PRIORITY ACTIONS — top of the dashboard */}
+        <PriorityActions
+          proposals={proposals}
+          clients={clients}
+          proposalClientNames={proposalClientNames}
+        />
+
+        {/* METRICS */}
+        <SalesMetrics
+          proposalsSentThisMonth={metrics.sentThisMonth}
+          acceptedProposals={metrics.accepted}
+          revenuePaid={metrics.revenuePaid}
+          pendingPayments={metrics.pendingPayments}
+        />
+
+        {/* PIPELINE */}
+        <PipelineView proposals={proposals} clients={clients} />
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-          {/* LEFT: Hero + Saved Proposals (~62%) */}
+          {/* LEFT: Hero + Saved Proposals */}
           <div className="lg:col-span-7 xl:col-span-8 space-y-6">
             {/* Hero */}
             <Card className="relative overflow-hidden border-accent/20 bg-gradient-to-br from-accent/10 via-card to-purple/10">
@@ -129,28 +205,21 @@ export default function Dashboard() {
                     Turn your next lead into a paying client in minutes.
                   </p>
                 </div>
-                <div className="space-y-2">
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Button
-                      asChild
-                      size="lg"
-                      className="bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 gap-2 h-12 px-6 text-base font-semibold shadow-lg shadow-accent/20"
-                    >
-                      <Link to="/dashboard/new">
-                        <Sparkles className="w-4 h-4" /> Create Proposal <ArrowRight className="w-4 h-4" />
-                      </Link>
-                    </Button>
-                    <Button asChild variant="outline" size="lg" className="gap-2 h-12 px-5">
-                      <Link to="/dashboard/clients/new">
-                        <UserPlus className="w-4 h-4" /> Add Client
-                      </Link>
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground/80 pl-1">Turn this into revenue in minutes.</p>
-                </div>
-                <div className="flex items-start gap-2 pt-1 border-t border-border/40 mt-1 pt-3">
-                  <Sparkles className="w-3.5 h-3.5 text-accent mt-0.5 flex-shrink-0" />
-                  <p className="text-xs text-foreground/80 font-medium">{insight}</p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    asChild
+                    size="lg"
+                    className="bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 gap-2 h-12 px-6 text-base font-semibold shadow-lg shadow-accent/20"
+                  >
+                    <Link to="/dashboard/new">
+                      <Sparkles className="w-4 h-4" /> Create Proposal <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" size="lg" className="gap-2 h-12 px-5">
+                    <Link to="/dashboard/clients/new">
+                      <UserPlus className="w-4 h-4" /> Add Client
+                    </Link>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -168,56 +237,12 @@ export default function Dashboard() {
                   <p className="text-xs text-muted-foreground mt-0.5">Pick up where you left off.</p>
                 </div>
               </div>
-              <ProposalsList proposals={proposals} loading={loading} onRefresh={fetchProposals} />
+              <ProposalsList proposals={proposals} loading={loading} onRefresh={fetchData} />
             </div>
           </div>
 
-          {/* RIGHT: Unified side panel (~38%) */}
+          {/* RIGHT: Tip + Deal Activity */}
           <aside className="lg:col-span-5 xl:col-span-4 lg:border-l lg:border-border/50 lg:pl-6 xl:pl-8 space-y-6">
-            <div>
-              <h2 className="text-sm font-semibold mb-3 uppercase tracking-wider text-muted-foreground/80">
-                Overview
-              </h2>
-              <StatsCards
-                totalProposals={stats.total}
-                revenueGenerated={stats.revenue}
-                activeClients={stats.clients}
-                timeSavedMinutes={stats.timeSaved}
-                layout="stacked"
-              />
-            </div>
-
-            {followUps.length > 0 && (
-              <Card className="border-amber-500/30 bg-amber-500/5">
-                <CardContent className="p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Bell className="w-4 h-4 text-amber-500" />
-                    <p className="text-sm font-semibold text-foreground">Needs follow-up</p>
-                    <span className="text-xs text-muted-foreground">({followUps.length})</span>
-                  </div>
-                  <ul className="space-y-2">
-                    {followUps.map(({ p, scenario }) => {
-                      const meta = FOLLOW_UP_META[scenario as Exclude<typeof scenario, "none">];
-                      return (
-                        <li key={p.id}>
-                          <Link
-                            to={`/dashboard/proposal/${p.id}`}
-                            className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 -mx-2 hover:bg-amber-500/10 transition-colors"
-                          >
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium text-foreground truncate">{p.client_name}</p>
-                              <p className="text-[11px] text-muted-foreground truncate">{meta.headline}</p>
-                            </div>
-                            <ArrowRight className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </CardContent>
-              </Card>
-            )}
-
             <Card className="border-accent/20 bg-gradient-to-br from-accent/5 to-transparent">
               <CardContent className="p-4 flex gap-3">
                 <div className="w-9 h-9 rounded-lg bg-accent/15 flex items-center justify-center flex-shrink-0">
@@ -232,9 +257,9 @@ export default function Dashboard() {
 
             <div>
               <h2 className="text-sm font-semibold mb-3 uppercase tracking-wider text-muted-foreground/80">
-                Recent Activity
+                Deal Activity
               </h2>
-              <RecentActivity proposals={proposals} />
+              <DealActivity proposals={proposals} />
             </div>
           </aside>
         </div>

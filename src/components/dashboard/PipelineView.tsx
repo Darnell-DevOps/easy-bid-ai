@@ -1,0 +1,71 @@
+import { Card, CardContent } from "@/components/ui/card";
+import { UserPlus, Send, Eye, CheckCircle2, Banknote, ArrowRight } from "lucide-react";
+
+interface ProposalLite {
+  status?: string | null;
+  client_paid?: boolean;
+}
+
+interface ClientLite {
+  status: string;
+}
+
+interface PipelineViewProps {
+  proposals: ProposalLite[];
+  clients: ClientLite[];
+}
+
+const STAGES = [
+  { key: "lead", label: "New Lead", icon: UserPlus, color: "text-muted-foreground", bg: "bg-muted" },
+  { key: "sent", label: "Sent", icon: Send, color: "text-blue-500", bg: "bg-blue-500/15" },
+  { key: "viewed", label: "Viewed", icon: Eye, color: "text-amber-500", bg: "bg-amber-500/15" },
+  { key: "accepted", label: "Accepted", icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-500/15" },
+  { key: "paid", label: "Paid", icon: Banknote, color: "text-emerald-500", bg: "bg-emerald-500/15" },
+] as const;
+
+export default function PipelineView({ proposals, clients }: PipelineViewProps) {
+  const counts: Record<(typeof STAGES)[number]["key"], number> = {
+    lead: clients.filter((c) => (c.status || "").toLowerCase() === "new").length,
+    sent: proposals.filter((p) => (p.status || "").toLowerCase() === "sent").length,
+    viewed: proposals.filter((p) => (p.status || "").toLowerCase() === "viewed").length,
+    accepted: proposals.filter((p) => (p.status || "").toLowerCase() === "accepted" && !p.client_paid).length,
+    paid: proposals.filter((p) => p.client_paid).length,
+  };
+
+  return (
+    <div>
+      <div className="flex items-end justify-between mb-3">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">Pipeline</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Where your deals stand right now.</p>
+        </div>
+      </div>
+      <Card>
+        <CardContent className="p-4 sm:p-5">
+          <div className="flex items-stretch gap-2 overflow-x-auto">
+            {STAGES.map((stage, i) => {
+              const Icon = stage.icon;
+              const count = counts[stage.key];
+              return (
+                <div key={stage.key} className="flex items-center gap-2 flex-1 min-w-[110px]">
+                  <div className="flex flex-col items-center text-center flex-1">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-2 ${stage.bg}`}>
+                      <Icon className={`w-4 h-4 ${stage.color}`} />
+                    </div>
+                    <p className="text-xl font-bold text-foreground leading-none">{count}</p>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1.5 font-medium">
+                      {stage.label}
+                    </p>
+                  </div>
+                  {i < STAGES.length - 1 && (
+                    <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/40 flex-shrink-0" />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
