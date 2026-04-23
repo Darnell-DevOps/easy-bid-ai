@@ -1102,6 +1102,21 @@ export default function ProposalView() {
           ))}
         </Tabs>
       </div>
+
+      {followUpScenario !== "none" && (
+        <FollowUpDialog
+          open={followUpOpen}
+          onOpenChange={setFollowUpOpen}
+          scenario={followUpScenario}
+          clientEmail={clientEmail}
+          templateInput={{
+            clientName: proposal.client_name,
+            companyName: proposal.company_name,
+            serviceType: proposal.service_type,
+            proposalUrl: clientUrl,
+          }}
+        />
+      )}
     </DashboardLayout>
   );
 }
