@@ -100,6 +100,11 @@ export const templates: TemplateData[] = [
     bestFor: "Designers & Studios",
     dealSize: "£1K–£3K",
     timeSaved: "~40 min",
+    tone: "persuasive",
+    defaultGoals:
+      "A distinctive, memorable brand identity that builds instant trust, attracts the right clients, and positions the business as a category leader.",
+    defaultDeliverables:
+      "Discovery workshop, 3 logo concepts (2 revision rounds), full colour palette, typography system, brand guidelines PDF, social media avatar/banner kit, and brand asset pack.",
     prefill: {
       project_scope:
         "Complete brand identity package: logo design (3 concepts, 2 revision rounds), colour palette, typography system, brand guidelines PDF, and social media avatar/banner kit.",
