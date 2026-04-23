@@ -100,20 +100,22 @@ export default function NewProposal() {
   const stepTimers = useRef<NodeJS.Timeout[]>([]);
 
   const loadingSteps = [
-    "Generating your proposal...",
-    "Optimising for conversion...",
-    "Finalising...",
+    "Building your proposal…",
+    "Generating high-converting sections…",
+    "Polishing pricing & deliverables…",
+    "Finalising your client-ready draft…",
   ];
 
   useEffect(() => {
     if (loading) {
       setLoadingStep(0);
-      setProgress(10);
+      setProgress(8);
       stepTimers.current = [];
 
-      const t1 = setTimeout(() => { setLoadingStep(1); setProgress(45); }, 3000);
-      const t2 = setTimeout(() => { setLoadingStep(2); setProgress(75); }, 6000);
-      stepTimers.current = [t1, t2];
+      const t1 = setTimeout(() => { setLoadingStep(1); setProgress(35); }, 2200);
+      const t2 = setTimeout(() => { setLoadingStep(2); setProgress(60); }, 5000);
+      const t3 = setTimeout(() => { setLoadingStep(3); setProgress(82); }, 8000);
+      stepTimers.current = [t1, t2, t3];
     } else {
       stepTimers.current.forEach(clearTimeout);
       stepTimers.current = [];
