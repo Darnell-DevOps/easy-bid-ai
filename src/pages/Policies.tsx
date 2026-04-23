@@ -82,6 +82,9 @@ const STALE_DAYS = 180;
 
 export default function Policies() {
   const navigate = useNavigate();
+  const { hasFeature } = usePlan();
+  const policiesUnlocked = hasFeature("policies");
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [policies, setPolicies] = useState<Policy[]>([]);
   const [loading, setLoading] = useState(true);
   const [autoAttach, setAutoAttach] = useState<boolean>(() => {
