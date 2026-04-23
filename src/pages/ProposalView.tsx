@@ -682,6 +682,13 @@ export default function ProposalView() {
 
   return (
     <DashboardLayout>
+      <UpgradeModal
+        open={paymentsUpgradeOpen}
+        onOpenChange={setPaymentsUpgradeOpen}
+        requiredPlan="pro"
+        title="Get paid directly through your proposals"
+        description="Unlock the Accept & Pay flow to collect payments from clients without leaving the proposal. Available on the Pro plan."
+      />
       <div className="max-w-4xl mx-auto px-2 sm:px-4 lg:px-8">
         {/* Compact top meta strip */}
         <div className="mb-5 flex items-center justify-between gap-4 flex-wrap">
