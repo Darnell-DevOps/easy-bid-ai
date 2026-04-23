@@ -929,6 +929,15 @@ export default function ProposalView() {
 
               {/* Secondary actions */}
               <div className="mt-3 flex flex-wrap gap-2">
+                {followUpScenario !== "none" && (
+                  <Button
+                    onClick={() => setFollowUpOpen(true)}
+                    size="sm"
+                    className="gap-1.5 h-9 bg-amber-500/15 text-amber-500 border border-amber-500/30 hover:bg-amber-500/25"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 shrink-0" /> Send Follow-Up
+                  </Button>
+                )}
                 <Button onClick={() => handleExportPDF("proposal")} variant="outline" size="sm" className="gap-1.5 h-9">
                   <Download className="w-3.5 h-3.5 shrink-0" /> Export Proposal
                 </Button>
