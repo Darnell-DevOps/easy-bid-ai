@@ -164,28 +164,19 @@ export default function ClientPortal() {
   const isPaid = proposal.client_paid;
   const responded = isAccepted || isRejected;
 
-  /* ---------- Reusable CTA block ---------- */
-  const InlineCTA = ({
-    variant = "primary",
-    label,
-  }: {
-    variant?: "primary" | "soft";
-    label?: string;
-  }) => {
-    if (isRejected) return null;
+  /* ---------- Reusable CTA block (top of page) ---------- */
+  const TopCTA = () => {
+    if (isRejected || isPaid) return null;
 
     // Already accepted → guide to payment
-    if (isAccepted && !isPaid) {
+    if (isAccepted) {
       return (
-        <div
-          className={
-            variant === "primary"
-              ? "rounded-xl border border-purple/30 bg-gradient-to-br from-purple/10 via-accent/5 to-transparent p-5 sm:p-6 text-center"
-              : "rounded-lg border border-border bg-card/60 p-4 sm:p-5 text-center"
-          }
-        >
-          <p className="text-sm text-muted-foreground mb-3">
-            <span className="font-semibold text-foreground">Next step:</span> complete payment to begin.
+        <div className="rounded-xl border border-purple/30 bg-gradient-to-br from-purple/10 via-accent/5 to-transparent p-5 sm:p-6 text-center">
+          <p className="text-xs uppercase tracking-[0.2em] text-purple font-semibold mb-2">
+            To secure your slot, complete payment today
+          </p>
+          <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
+            This proposal has already been approved — payment secures your project start.
           </p>
           <Button
             size="lg"
@@ -195,33 +186,26 @@ export default function ClientPortal() {
             <CreditCard className="w-4 h-4" />
             Pay Now {formattedTotal ? `— ${formattedTotal}` : ""}
           </Button>
+          <p className="mt-3 text-[11px] text-muted-foreground">
+            Secure checkout · Instant confirmation · No long-term contracts
+          </p>
         </div>
       );
     }
 
-    if (isPaid) return null;
-
     // Not yet accepted → drive acceptance
     return (
-      <div
-        className={
-          variant === "primary"
-            ? "rounded-xl border border-purple/30 bg-gradient-to-br from-purple/10 via-accent/5 to-transparent p-5 sm:p-6 text-center"
-            : "rounded-lg border border-border bg-card/60 p-4 sm:p-5 text-center"
-        }
-      >
-        {variant === "primary" && (
-          <p className="text-xs uppercase tracking-[0.2em] text-purple font-semibold mb-2">
-            Ready when you are
-          </p>
-        )}
+      <div className="rounded-xl border border-purple/30 bg-gradient-to-br from-purple/10 via-accent/5 to-transparent p-5 sm:p-6 text-center">
+        <p className="text-xs uppercase tracking-[0.2em] text-purple font-semibold mb-2">
+          To secure your slot, complete payment today
+        </p>
         <Button
           size="lg"
           onClick={scrollToAccept}
           className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 hover:shadow-purple/30 transition-all"
         >
           <CheckCircle2 className="w-4 h-4" />
-          {label || (formattedTotal ? `Accept & Pay — ${formattedTotal}` : "Accept & Get Started")}
+          {formattedTotal ? `Accept & Pay — ${formattedTotal}` : "Accept & Get Started"}
           <ArrowRight className="w-4 h-4" />
         </Button>
         <p className="mt-2 text-[11px] text-muted-foreground">
@@ -246,7 +230,7 @@ export default function ClientPortal() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 lg:py-12 space-y-8 lg:space-y-10 pb-32 lg:pb-12">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 lg:py-12 space-y-8 lg:space-y-10">
         {/* 1. Hero / Summary */}
         <section className="rounded-xl border border-border bg-card p-6 lg:p-10">
           <p className="text-xs uppercase tracking-wider text-purple font-semibold mb-3">Proposal</p>
@@ -270,8 +254,8 @@ export default function ClientPortal() {
           </div>
         </section>
 
-        {/* 2. CTA #1 — after intro */}
-        <InlineCTA variant="primary" />
+        {/* 2. CTA #1 — after intro (top Pay Now / Accept) */}
+        <TopCTA />
 
         {/* 3-5. Solution / Scope / Deliverables (proposal content) */}
         {proposal.proposal_content && (
@@ -308,56 +292,24 @@ export default function ClientPortal() {
 
             <PremiumPricingRenderer
               content={proposal.pricing_breakdown}
-              showPayCta={isAccepted && !isPaid}
-              onPayClick={scrollToPay}
+              showPayCta={false}
             />
 
-            {/* Reinforced total + payment explanation */}
+            {/* Reinforced total */}
             {formattedTotal && (
-              <div className="mt-8 pt-8 border-t border-border/60 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-semibold mb-1">
-                    Total Investment
-                  </p>
-                  <p className="text-3xl lg:text-4xl font-bold text-foreground tracking-tight">
-                    {formattedTotal}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-2 max-w-sm">
-                    Work begins as soon as payment is confirmed.
-                  </p>
-                </div>
-                {!isPaid && (
-                  <div className="flex flex-col items-stretch sm:items-end gap-2">
-                    <Button
-                      size="lg"
-                      onClick={isAccepted ? scrollToPay : scrollToAccept}
-                      className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 hover:shadow-purple/30 transition-all"
-                    >
-                      {isAccepted ? (
-                        <>
-                          <CreditCard className="w-4 h-4" />
-                          Pay {formattedTotal} to Start
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle2 className="w-4 h-4" />
-                          Accept & Pay {formattedTotal}
-                        </>
-                      )}
-                    </Button>
-                    <p className="text-[11px] text-muted-foreground sm:text-right">
-                      Secure checkout · Instant confirmation · Card payments
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Urgency note */}
-            {!isPaid && (
-              <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs text-amber-600 dark:text-amber-400 font-medium">
-                <Calendar className="w-3.5 h-3.5" />
-                This proposal is valid for 7 days
+              <div className="mt-8 pt-8 border-t border-border/60">
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-semibold mb-1">
+                  Total Investment
+                </p>
+                <p className="text-3xl lg:text-4xl font-bold text-foreground tracking-tight">
+                  {formattedTotal}
+                </p>
+                <p className="text-sm text-foreground/80 mt-3 max-w-xl leading-relaxed">
+                  This investment is designed to deliver measurable results within the first 90 days.
+                </p>
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  No long-term contracts. Cancel anytime.
+                </p>
               </div>
             )}
           </section>
@@ -405,7 +357,13 @@ export default function ClientPortal() {
 
         {/* 9. Pay Now panel — visible once accepted (or already paid) */}
         {(isAccepted || isPaid) && (
-          <div ref={payRef}>
+          <div ref={payRef} className="space-y-4">
+            {!isPaid && (
+              <p className="text-center text-sm text-foreground/80 max-w-xl mx-auto">
+                <span className="font-semibold text-foreground">To secure your slot, complete payment today.</span>{" "}
+                This proposal has already been approved — payment secures your project start.
+              </p>
+            )}
             <ProposalPayNow
               proposalId={proposal.id}
               amountCents={proposal.amount_cents}
@@ -413,6 +371,11 @@ export default function ClientPortal() {
               clientPaid={isPaid}
               onPaid={() => setProposal({ ...proposal, client_paid: true })}
             />
+            {!isPaid && (
+              <p className="text-center text-xs text-muted-foreground">
+                Secure overlay checkout · Instant confirmation · No long-term contracts. Cancel anytime.
+              </p>
+            )}
           </div>
         )}
 
@@ -426,7 +389,7 @@ export default function ClientPortal() {
                     <CheckCircle2 className="w-6 h-6 text-emerald-500" />
                   </div>
                   <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-2">
-                    Proposal Accepted
+                    Proposal accepted — you're one step away from getting started
                   </h2>
                   {isPaid ? (
                     <p className="text-muted-foreground text-sm">
@@ -434,9 +397,8 @@ export default function ClientPortal() {
                     </p>
                   ) : (
                     <>
-                      <p className="text-muted-foreground text-sm mb-5">
-                        <span className="font-semibold text-foreground">Next step:</span> complete
-                        payment to begin work immediately.
+                      <p className="text-muted-foreground text-sm mb-5 max-w-md mx-auto">
+                        Complete your payment below and we'll begin immediately.
                       </p>
                       <Button
                         size="lg"
@@ -446,6 +408,9 @@ export default function ClientPortal() {
                         <CreditCard className="w-4 h-4" />
                         Pay Now {formattedTotal ? `— ${formattedTotal}` : ""}
                       </Button>
+                      <p className="mt-3 text-[11px] text-muted-foreground">
+                        No long-term contracts. Cancel anytime.
+                      </p>
                     </>
                   )}
                 </>
@@ -528,29 +493,6 @@ export default function ClientPortal() {
           Secure proposal link · Only people with this link can view it
         </p>
       </main>
-
-      {/* Sticky mobile CTA */}
-      {!isRejected && !isPaid && (
-        <div className="lg:hidden fixed bottom-0 inset-x-0 z-20 border-t border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 px-4 py-3 shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.4)]">
-          <Button
-            size="lg"
-            onClick={isAccepted ? scrollToPay : scrollToAccept}
-            className="w-full gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 transition-all h-12"
-          >
-            {isAccepted ? (
-              <>
-                <CreditCard className="w-4 h-4" />
-                Pay {formattedTotal || ""} to Start
-              </>
-            ) : (
-              <>
-                <CheckCircle2 className="w-4 h-4" />
-                Accept & Pay {formattedTotal ? `— ${formattedTotal}` : ""}
-              </>
-            )}
-          </Button>
-        </div>
-      )}
     </div>
   );
 }
