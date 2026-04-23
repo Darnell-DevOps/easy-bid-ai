@@ -30,10 +30,13 @@ import {
   CheckCircle2,
   Wand2,
   ArrowRight,
+  Crown,
 } from "lucide-react";
 import { smartSelectTemplate, type SmartSelectResult } from "@/lib/smart-template";
 import type { TemplateData } from "@/pages/Templates";
 import { templates } from "@/pages/Templates";
+import { usePlan } from "@/hooks/use-plan";
+import UpgradeModal from "@/components/plan/UpgradeModal";
 
 const emptyState = {
   leadName: "",
