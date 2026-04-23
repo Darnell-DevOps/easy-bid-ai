@@ -228,20 +228,71 @@ export default function LeadAssistant() {
     }
   };
 
-  const handleGenerateProposal = () => {
+  // ─── Smart Template Selection ─────────────────────────────────
+  const [smartPick, setSmartPick] = useState<SmartSelectResult | null>(null);
+  const [smartLoading, setSmartLoading] = useState(false);
+  const [smartStep, setSmartStep] = useState(0);
+  const smartLoadingSteps = [
+    "Analyzing lead…",
+    "Identifying project type…",
+    "Selecting best template…",
+  ];
+
+  // Re-run smart selection whenever the relevant inputs change after extraction
+  useEffect(() => {
+    if (!hasResponse) {
+      setSmartPick(null);
+      return;
+    }
+    setSmartPick(
+      smartSelectTemplate({
+        message,
+        service,
+        budget,
+        timeline,
+        goals,
+      }),
+    );
+  }, [hasResponse, message, service, budget, timeline, goals]);
+
+  // Adjust budget hint text based on detected complexity (used in confirm card)
+  const complexityLabel = useMemo(() => {
+    if (!smartPick) return "";
+    return (
+      smartPick.complexity[0].toUpperCase() + smartPick.complexity.slice(1)
+    );
+  }, [smartPick]);
+
+  // Run staged loading then navigate to the proposal builder with autoGenerate.
+  const startProposalFromTemplate = async (chosen: TemplateData) => {
+    setSmartLoading(true);
+    setSmartStep(0);
+    // Stage 1
+    await new Promise((r) => setTimeout(r, 700));
+    setSmartStep(1);
+    await new Promise((r) => setTimeout(r, 700));
+    setSmartStep(2);
+    await new Promise((r) => setTimeout(r, 600));
+
     navigate("/dashboard/new", {
       state: {
+        template: chosen,
+        autoGenerate: true,
         prefillFromClient: {
-          client_id: savedClientId,
+          client_id: savedClientId || undefined,
           client_name: leadName,
           company_name: "",
-          service_type: service,
+          // Lead-derived values take priority over template defaults
+          service_type: chosen.serviceType,
           project_scope: notes || message,
-          budget,
-          timeline,
+          budget: budget || chosen.prefill.budget,
+          timeline: timeline || chosen.prefill.timeline,
           notes: "",
-          goals,
+          goals: goals || chosen.defaultGoals || "",
+          deliverables: chosen.defaultDeliverables || "",
           original_lead_message: message,
+          lead_quality: leadQuality,
+          ai_recommendation: aiRecommendation,
         },
       },
     });
