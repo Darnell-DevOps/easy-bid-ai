@@ -1,232 +1,204 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
-import {
-  Lock,
-  CheckCircle,
-  CreditCard,
-  FileText,
-  Receipt,
-  Crown,
-  Zap,
-  AlertCircle,
-} from "lucide-react";
+import { Check, Crown, Sparkles, Zap, Lock, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-
-const FREE_LIMIT = 3;
+import { usePlan } from "@/hooks/use-plan";
+import { useProposalUsage } from "@/hooks/use-proposal-usage";
+import { PLANS, type PlanId } from "@/lib/plans";
 
 export default function Billing() {
   const { toast } = useToast();
-  const [proposalCount, setProposalCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const currentPlan = "Free"; // TODO: derive from subscription state
+  const { planId, plan, setPlan } = usePlan();
+  const { countThisMonth, loading } = useProposalUsage();
 
-  useEffect(() => {
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setLoading(false); return; }
-      const startOfMonth = new Date();
-      startOfMonth.setDate(1);
-      startOfMonth.setHours(0, 0, 0, 0);
-      const { count } = await supabase
-        .from("proposals")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .gte("created_at", startOfMonth.toISOString());
-      setProposalCount(count ?? 0);
-      setLoading(false);
-    })();
-  }, []);
+  const limit = plan.features.proposalsPerMonth;
+  const isUnlimited = limit === "unlimited";
+  const usagePct = isUnlimited
+    ? 0
+    : Math.min(100, (countThisMonth / (limit as number)) * 100);
+  const remaining = isUnlimited ? Infinity : Math.max(0, (limit as number) - countThisMonth);
 
-  const remaining = Math.max(0, FREE_LIMIT - proposalCount);
-  const usagePercent = Math.min(100, (proposalCount / FREE_LIMIT) * 100);
-  const isFree = currentPlan === "Free";
+  const tiers: PlanId[] = useMemo(() => ["free", "starter", "pro"], []);
+
+  const handleSelectPlan = (next: PlanId) => {
+    if (next === planId) return;
+    setPlan(next);
+    toast({
+      title: `Switched to ${PLANS[next].name}`,
+      description:
+        next === "free"
+          ? "You're back on the Free plan."
+          : `Welcome to ${PLANS[next].name}! All features unlocked. (Billing not yet collected — preview mode.)`,
+    });
+  };
 
   return (
     <DashboardLayout>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Billing</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Manage your plan and usage
+      <div className="mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+          Plans & Pricing
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1.5">
+          Close deals faster. Get paid instantly. Turn leads into clients automatically.
         </p>
       </div>
 
-      <div className="space-y-6 max-w-3xl">
-        {/* ── Plan Summary ── */}
-        <Card className="glass-card">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="space-y-8 max-w-6xl">
+        {/* Current plan + usage */}
+        <Card className="border-border/60">
+          <CardContent className="p-5 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-3">
-                {isFree ? (
-                  <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center">
-                    <Zap className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                ) : (
-                  <div className="w-9 h-9 rounded-lg bg-accent/20 flex items-center justify-center">
-                    <Crown className="w-4 h-4 text-accent" />
-                  </div>
-                )}
+                <div
+                  className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                    planId === "pro"
+                      ? "bg-accent/15"
+                      : planId === "starter"
+                        ? "bg-purple/15"
+                        : "bg-secondary"
+                  }`}
+                >
+                  {planId === "pro" ? (
+                    <Crown className="w-5 h-5 text-accent" />
+                  ) : planId === "starter" ? (
+                    <Sparkles className="w-5 h-5 text-purple" />
+                  ) : (
+                    <Zap className="w-5 h-5 text-muted-foreground" />
+                  )}
+                </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-foreground">
-                      {currentPlan} Plan
+                      {plan.name} Plan
                     </span>
-                    <Badge
-                      variant="secondary"
-                      className={
-                        isFree
-                          ? "text-xs"
-                          : "text-xs bg-accent/20 text-accent border-accent/30"
-                      }
-                    >
-                      {isFree ? "Current" : "Active"}
+                    <Badge variant="outline" className="text-[10px]">
+                      Current
                     </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {isFree
-                      ? "3 proposals per month · Watermark on exports"
-                      : "Unlimited proposals · No watermark"}
+                    {plan.tagline}
                   </p>
                 </div>
               </div>
-              <Badge variant="outline" className="text-xs">
-                Billing: Inactive
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* ── Usage ── */}
-        <Card className="glass-card">
-          <CardHeader className="pb-3 pt-5 px-5">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <FileText className="w-4 h-4" />
-              Usage This Month
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-5 pb-5 space-y-4">
-            {/* Proposals */}
-            <div>
-              <div className="flex items-center justify-between text-sm mb-1.5">
-                <span className="text-foreground">Proposals created</span>
-                <span className="text-muted-foreground font-medium">
-                  {loading ? "…" : `${proposalCount} / ${isFree ? FREE_LIMIT : "∞"}`}
-                </span>
-              </div>
-              {isFree && (
-                <Progress value={usagePercent} className="h-2" />
-              )}
-              {isFree && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  {remaining} proposal{remaining !== 1 ? "s" : ""} remaining
+              <div className="sm:text-right">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                  Proposals this month
                 </p>
-              )}
+                <p className="text-lg font-semibold text-foreground">
+                  {loading ? "…" : countThisMonth} / {isUnlimited ? "∞" : limit}
+                </p>
+              </div>
             </div>
-
-            <Separator className="bg-border/50" />
-
-            {/* Exports */}
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-foreground">Exports used</span>
-              <span className="text-muted-foreground font-medium">0</span>
-            </div>
-            {isFree && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                <Lock className="w-3 h-3" />
-                Invoice export available on Pro
-              </p>
+            {!isUnlimited && (
+              <div className="mt-4">
+                <Progress value={usagePct} className="h-1.5" />
+                <p className="text-xs text-muted-foreground mt-2">
+                  {remaining === 0
+                    ? `You've used all ${limit} proposals this month.`
+                    : `${remaining} proposal${remaining === 1 ? "" : "s"} left this month`}
+                </p>
+              </div>
             )}
           </CardContent>
         </Card>
 
-        {/* ── Upgrade / Pro card ── */}
-        {isFree && (
-          <Card className="glass-card border-accent/40 shadow-[0_0_20px_hsl(var(--accent)/0.15)]">
-            <CardContent className="p-5">
-              <div className="flex items-start gap-3 mb-4">
-                <div className="w-9 h-9 rounded-lg bg-accent/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Crown className="w-4 h-4 text-accent" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">
-                    Upgrade to Pro — £9/month
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Unlock unlimited proposals, invoice exports, and custom
-                    branding
-                  </p>
-                </div>
-              </div>
+        {/* Pricing tiers */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {tiers.map((tierId) => {
+            const tier = PLANS[tierId];
+            const isCurrent = tierId === planId;
+            const isHighlight = tier.highlight;
 
-              <ul className="space-y-2 mb-5">
-                {[
-                  "Unlimited proposals",
-                  "No watermark on exports",
-                  "PDF & invoice export",
-                  "Custom branding",
-                  "Proposal history",
-                ].map((f) => (
-                  <li
-                    key={f}
-                    className="text-sm text-muted-foreground flex items-center gap-2"
-                  >
-                    <CheckCircle className="w-3.5 h-3.5 text-accent flex-shrink-0" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-
-              <Button
-                className="w-full btn-gradient text-white shadow-[0_0_12px_hsl(var(--accent)/0.4)]"
-                onClick={() =>
-                  toast({
-                    title: "Coming soon",
-                    description:
-                      "Pro plan payments will be available shortly.",
-                  })
-                }
+            return (
+              <Card
+                key={tier.id}
+                className={`relative flex flex-col transition-all ${
+                  isHighlight
+                    ? "border-accent/50 shadow-lg shadow-accent/10 sm:scale-[1.02]"
+                    : "border-border/60"
+                } ${isCurrent ? "ring-1 ring-purple/40" : ""}`}
               >
-                Upgrade to Pro
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* ── Manage Subscription ── */}
-        <Card className="glass-card">
-          <CardHeader className="pb-3 pt-5 px-5">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <CreditCard className="w-4 h-4" />
-              Manage Subscription
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-5 pb-5">
-            <div className="rounded-lg border border-border/50 bg-secondary/30 p-4 text-center space-y-2">
-              <AlertCircle className="w-5 h-5 text-muted-foreground mx-auto" />
-              <p className="text-sm text-muted-foreground">
-                Billing management will appear here once Stripe is connected
-              </p>
-              <div className="flex flex-wrap justify-center gap-3 pt-1">
-                {["Update payment method", "View invoices", "Cancel subscription"].map(
-                  (label) => (
-                    <span
-                      key={label}
-                      className="text-xs text-muted-foreground/50 flex items-center gap-1"
-                    >
-                      <Receipt className="w-3 h-3" />
-                      {label}
-                    </span>
-                  )
+                {isHighlight && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                    <Badge className="bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold border-0 shadow">
+                      Most Popular
+                    </Badge>
+                  </div>
                 )}
-              </div>
+                <CardContent className="p-6 flex flex-col h-full">
+                  <div className="mb-5">
+                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground font-semibold mb-2">
+                      {tier.name}
+                    </p>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl sm:text-4xl font-bold text-foreground">
+                        {tier.currencySymbol}
+                        {tier.priceMonthly}
+                      </span>
+                      {tier.priceMonthly > 0 && (
+                        <span className="text-sm text-muted-foreground">/month</span>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+                      {tier.tagline}
+                    </p>
+                  </div>
+
+                  <ul className="space-y-2.5 mb-6 flex-1">
+                    {tier.bullets.map((b) => (
+                      <li key={b} className="flex items-start gap-2 text-sm text-foreground">
+                        <Check className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+                        <span>{b}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Button
+                    onClick={() => handleSelectPlan(tier.id)}
+                    disabled={isCurrent}
+                    className={`w-full ${
+                      isHighlight && !isCurrent
+                        ? "bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold hover:brightness-110"
+                        : ""
+                    }`}
+                    variant={isCurrent ? "outline" : isHighlight ? "default" : "secondary"}
+                  >
+                    {isCurrent ? (
+                      "Current plan"
+                    ) : tier.id === "free" ? (
+                      "Switch to Free"
+                    ) : (
+                      <>
+                        Choose {tier.name} <ArrowRight className="w-4 h-4 ml-1" />
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* Comparison footnote */}
+        <div className="rounded-lg border border-border/60 bg-card/40 p-5">
+          <div className="flex items-start gap-3">
+            <Lock className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+            <div className="text-sm text-muted-foreground leading-relaxed">
+              <span className="text-foreground font-medium">Pro features:</span>{" "}
+              Accept &amp; Pay checkout, auto-attached policies, AI lead response, and analytics
+              are reserved for Pro. The Free plan adds a "Made with CloseSync" watermark on
+              proposals — Starter and Pro remove it.
             </div>
-          </CardContent>
-        </Card>
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">
+            Billing collection isn't enabled yet — switching plans here updates your access
+            instantly for preview purposes. Payments will be wired up next.
+          </p>
+        </div>
       </div>
     </DashboardLayout>
   );

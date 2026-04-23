@@ -17,6 +17,11 @@ import {
   StickyNote, Target, ListChecks, Users, AlertTriangle, ArrowLeft, Pencil,
   CheckCircle2, Circle, Wand2, ArrowRight,
 } from "lucide-react";
+import { usePlan } from "@/hooks/use-plan";
+import { useProposalUsage } from "@/hooks/use-proposal-usage";
+import UpgradeModal from "@/components/plan/UpgradeModal";
+import ProposalLimitBanner from "@/components/plan/ProposalLimitBanner";
+import { PLANS } from "@/lib/plans";
 
 const serviceTypes = [
   "Marketing Strategy",
@@ -94,9 +99,12 @@ const BUDGET_PRESETS = [500, 1000, 2000, 5000, 10000];
 export default function NewProposal() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { plan, isFree, isStarter } = usePlan();
+  const { countThisMonth, refresh: refreshUsage } = useProposalUsage();
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
   const stepTimers = useRef<NodeJS.Timeout[]>([]);
 
   const loadingSteps = [
@@ -270,6 +278,24 @@ export default function NewProposal() {
       return;
     }
 
+    // Plan limit gate — soft warn first, then block
+    if (plan.features.proposalsPerMonth !== "unlimited") {
+      const limit = plan.features.proposalsPerMonth as number;
+      if (countThisMonth >= limit) {
+        const warnedKey = `plan:warned:limit:${plan.id}`;
+        const alreadyWarned = localStorage.getItem(warnedKey) === "1";
+        if (alreadyWarned) {
+          setUpgradeOpen(true);
+          return;
+        }
+        localStorage.setItem(warnedKey, "1");
+        toast({
+          title: `You're over the ${plan.name} limit`,
+          description: `You've already used ${countThisMonth}/${limit} proposals this month. We'll let this one through — upgrade to keep going.`,
+        });
+      }
+    }
+
     setLoading(true);
 
     const payload = { ...form, budget: formatBudget(form.budget, currency) };
@@ -329,6 +355,7 @@ export default function NewProposal() {
 
       toast({ title: "Proposal generated!", description: "Your proposal is ready to review." });
       setProgress(100);
+      await refreshUsage();
       await new Promise(r => setTimeout(r, 500));
       navigate(`/dashboard/proposal/${proposal.id}`);
     } catch (err: any) {
@@ -507,6 +534,18 @@ export default function NewProposal() {
           </CardContent>
         </Card>
       )}
+
+      <div className="mb-4">
+        <ProposalLimitBanner />
+      </div>
+
+      <UpgradeModal
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        requiredPlan={isFree ? "starter" : "pro"}
+        title={`You've hit the ${plan.name} plan limit`}
+        description={`Upgrade to ${PLANS[isFree ? "starter" : "pro"].name} to keep generating proposals and close more deals.`}
+      />
 
       <Card className="glass-card">
         <CardContent className="p-6 md:p-8">
