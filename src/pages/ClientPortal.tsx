@@ -253,9 +253,8 @@ export default function ClientPortal() {
           <h1 className="text-2xl lg:text-4xl font-bold text-foreground mb-4">
             {proposal.service_type}
           </h1>
-          <p className="text-base text-muted-foreground leading-relaxed max-w-2xl mb-5">
-            A clear, focused plan for {proposal.company_name || proposal.client_name} — built to
-            deliver real results, fast.
+          <p className="text-base lg:text-lg text-foreground/90 leading-relaxed max-w-2xl mb-5">
+            Win more clients, grow visibility, and unlock new revenue — fast.
           </p>
           <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
