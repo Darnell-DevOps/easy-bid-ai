@@ -607,6 +607,138 @@ export default function LeadAssistant() {
               </Card>
             )}
 
+            {/* Section 4.5: Smart Template Match */}
+            {smartPick && (
+              <Card className="border-accent/30 bg-gradient-to-br from-accent/5 via-purple/5 to-transparent">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Wand2 className="w-4 h-4 text-accent" />
+                    Smart Template Match
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground">
+                    Based on the lead's wording, we picked the best-fit proposal template.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Confidence + reasoning chips */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge
+                      variant="outline"
+                      className={
+                        smartPick.confidence === "high"
+                          ? "bg-emerald-500/15 text-emerald-600 border-emerald-500/30"
+                          : smartPick.confidence === "medium"
+                          ? "bg-amber-500/15 text-amber-600 border-amber-500/30"
+                          : "bg-muted text-muted-foreground border-border"
+                      }
+                    >
+                      {smartPick.confidence === "high"
+                        ? "High confidence"
+                        : smartPick.confidence === "medium"
+                        ? "Suggested match"
+                        : "Pick manually"}
+                    </Badge>
+                    {smartPick.budgetTier !== "unknown" && (
+                      <Badge variant="outline" className="text-muted-foreground capitalize">
+                        {smartPick.budgetTier} budget
+                      </Badge>
+                    )}
+                    <Badge variant="outline" className="text-muted-foreground">
+                      {complexityLabel} project
+                    </Badge>
+                    {smartPick.urgency === "urgent" && (
+                      <Badge
+                        variant="outline"
+                        className="bg-rose-500/15 text-rose-600 border-rose-500/30"
+                      >
+                        Urgent
+                      </Badge>
+                    )}
+                  </div>
+
+                  {smartPick.confidence !== "low" ? (
+                    <div className="rounded-lg border border-accent/30 bg-background/60 p-4 flex flex-col sm:flex-row sm:items-center gap-4">
+                      <div
+                        className={`w-11 h-11 rounded-lg bg-gradient-to-br ${smartPick.template.accent} flex items-center justify-center flex-shrink-0 shadow-md`}
+                      >
+                        <smartPick.template.icon className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-foreground text-sm">
+                          {smartPick.template.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {smartPick.reasoning}
+                        </p>
+                      </div>
+                      <Button
+                        onClick={() => startProposalFromTemplate(smartPick.template)}
+                        disabled={smartLoading}
+                        className="w-full sm:w-auto gap-2"
+                      >
+                        {smartLoading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            {smartLoadingSteps[smartStep]}
+                          </>
+                        ) : (
+                          <>
+                            {smartPick.confidence === "high"
+                              ? "Generate proposal"
+                              : "Use this template"}
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Couldn't confidently match a template. Pick the best fit below:
+                    </p>
+                  )}
+
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground mb-2">
+                      {smartPick.confidence === "low" ? "Choose a template" : "Or change template"}
+                    </p>
+                    <div className="grid sm:grid-cols-2 gap-2">
+                      {(smartPick.confidence === "low"
+                        ? templates
+                        : smartPick.alternatives
+                      ).map((t) => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => startProposalFromTemplate(t)}
+                          disabled={smartLoading}
+                          className="text-left rounded-lg border border-border/60 bg-background/40 p-3 hover:border-accent/50 hover:bg-accent/5 transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center gap-3"
+                        >
+                          <div
+                            className={`w-8 h-8 rounded-md bg-gradient-to-br ${t.accent} flex items-center justify-center flex-shrink-0 shadow-sm`}
+                          >
+                            <t.icon className="w-4 h-4 text-white" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-semibold text-foreground truncate">
+                              {t.name}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground truncate">
+                              {t.serviceType}
+                            </p>
+                          </div>
+                          <ArrowRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-muted-foreground">
+                    You can edit the generated proposal freely.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Section 5: Actions */}
             <Card className={savedClientId ? "border-emerald-500/30 bg-emerald-500/5" : ""}>
               <CardContent className="p-6 space-y-4">
