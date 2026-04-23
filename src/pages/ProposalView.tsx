@@ -15,6 +15,8 @@ import PremiumPricingRenderer from "@/components/proposal/PremiumPricingRenderer
 import PremiumInvoiceRenderer from "@/components/proposal/PremiumInvoiceRenderer";
 import ProposalHeader from "@/components/proposal/ProposalHeader";
 import StatusBadge, { normalizeStatus, type ProposalStatus } from "@/components/proposal/StatusBadge";
+import FollowUpDialog from "@/components/proposal/FollowUpDialog";
+import { getFollowUpScenario, FOLLOW_UP_META } from "@/lib/follow-up";
 
 interface ProposalData {
   id: string;
@@ -94,6 +96,7 @@ export default function ProposalView() {
   const [clientPaid, setClientPaid] = useState(false);
   const [clientEmail, setClientEmail] = useState<string | null>(null);
   const [autoFillingPrice, setAutoFillingPrice] = useState(false);
+  const [followUpOpen, setFollowUpOpen] = useState(false);
 
   const buildSourcePayload = () => {
     if (!proposal) return null;
