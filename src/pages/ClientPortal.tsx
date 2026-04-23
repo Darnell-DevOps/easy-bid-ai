@@ -164,28 +164,19 @@ export default function ClientPortal() {
   const isPaid = proposal.client_paid;
   const responded = isAccepted || isRejected;
 
-  /* ---------- Reusable CTA block ---------- */
-  const InlineCTA = ({
-    variant = "primary",
-    label,
-  }: {
-    variant?: "primary" | "soft";
-    label?: string;
-  }) => {
-    if (isRejected) return null;
+  /* ---------- Reusable CTA block (top of page) ---------- */
+  const TopCTA = () => {
+    if (isRejected || isPaid) return null;
 
     // Already accepted → guide to payment
-    if (isAccepted && !isPaid) {
+    if (isAccepted) {
       return (
-        <div
-          className={
-            variant === "primary"
-              ? "rounded-xl border border-purple/30 bg-gradient-to-br from-purple/10 via-accent/5 to-transparent p-5 sm:p-6 text-center"
-              : "rounded-lg border border-border bg-card/60 p-4 sm:p-5 text-center"
-          }
-        >
-          <p className="text-sm text-muted-foreground mb-3">
-            <span className="font-semibold text-foreground">Next step:</span> complete payment to begin.
+        <div className="rounded-xl border border-purple/30 bg-gradient-to-br from-purple/10 via-accent/5 to-transparent p-5 sm:p-6 text-center">
+          <p className="text-xs uppercase tracking-[0.2em] text-purple font-semibold mb-2">
+            To secure your slot, complete payment today
+          </p>
+          <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
+            This proposal has already been approved — payment secures your project start.
           </p>
           <Button
             size="lg"
@@ -195,33 +186,26 @@ export default function ClientPortal() {
             <CreditCard className="w-4 h-4" />
             Pay Now {formattedTotal ? `— ${formattedTotal}` : ""}
           </Button>
+          <p className="mt-3 text-[11px] text-muted-foreground">
+            Secure checkout · Instant confirmation · No long-term contracts
+          </p>
         </div>
       );
     }
 
-    if (isPaid) return null;
-
     // Not yet accepted → drive acceptance
     return (
-      <div
-        className={
-          variant === "primary"
-            ? "rounded-xl border border-purple/30 bg-gradient-to-br from-purple/10 via-accent/5 to-transparent p-5 sm:p-6 text-center"
-            : "rounded-lg border border-border bg-card/60 p-4 sm:p-5 text-center"
-        }
-      >
-        {variant === "primary" && (
-          <p className="text-xs uppercase tracking-[0.2em] text-purple font-semibold mb-2">
-            Ready when you are
-          </p>
-        )}
+      <div className="rounded-xl border border-purple/30 bg-gradient-to-br from-purple/10 via-accent/5 to-transparent p-5 sm:p-6 text-center">
+        <p className="text-xs uppercase tracking-[0.2em] text-purple font-semibold mb-2">
+          To secure your slot, complete payment today
+        </p>
         <Button
           size="lg"
           onClick={scrollToAccept}
           className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 hover:shadow-purple/30 transition-all"
         >
           <CheckCircle2 className="w-4 h-4" />
-          {label || (formattedTotal ? `Accept & Pay — ${formattedTotal}` : "Accept & Get Started")}
+          {formattedTotal ? `Accept & Pay — ${formattedTotal}` : "Accept & Get Started"}
           <ArrowRight className="w-4 h-4" />
         </Button>
         <p className="mt-2 text-[11px] text-muted-foreground">
