@@ -17,6 +17,11 @@ import {
   StickyNote, Target, ListChecks, Users, AlertTriangle, ArrowLeft, Pencil,
   CheckCircle2, Circle, Wand2, ArrowRight,
 } from "lucide-react";
+import { usePlan } from "@/hooks/use-plan";
+import { useProposalUsage } from "@/hooks/use-proposal-usage";
+import UpgradeModal from "@/components/plan/UpgradeModal";
+import ProposalLimitBanner from "@/components/plan/ProposalLimitBanner";
+import { PLANS } from "@/lib/plans";
 
 const serviceTypes = [
   "Marketing Strategy",
