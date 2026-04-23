@@ -52,6 +52,11 @@ export const templates: TemplateData[] = [
     dealSize: "£1K–£5K",
     timeSaved: "~45 min",
     popular: true,
+    tone: "persuasive",
+    defaultGoals:
+      "A modern, conversion-focused website that establishes credibility, attracts qualified leads, and drives measurable business growth within the first 90 days.",
+    defaultDeliverables:
+      "UX audit & sitemap, custom UI design for 5 core pages, mobile-responsive build, on-page SEO setup, analytics integration, browser/device QA, and post-launch support.",
     prefill: {
       project_scope:
         "Full website redesign including UX audit, custom UI design for key pages (Home, About, Services, Contact), mobile-responsive development, SEO optimisation, and browser/device testing.",
