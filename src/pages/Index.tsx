@@ -78,63 +78,182 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Nav */}
-      <nav className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
+      {/* Sticky premium nav */}
+      <nav className="fixed top-0 inset-x-0 z-50 border-b border-white/5 bg-background/40 backdrop-blur-xl supports-[backdrop-filter]:bg-background/30">
         <div className="container flex items-center justify-between h-16 px-4 md:px-8">
-          <span className="text-xl font-semibold text-foreground tracking-tight">
-            Close<span className="text-gradient-sync">Sync</span> <span className="text-foreground">AI</span>
-          </span>
-          <span className="text-xs text-muted-foreground ml-2">by StriveSync</span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-xl font-semibold text-foreground tracking-tight">
+              Close<span className="text-gradient-sync">Sync</span> <span className="text-foreground">AI</span>
+            </span>
+            <span className="hidden sm:inline text-[10px] uppercase tracking-widest text-muted-foreground">by StriveSync</span>
+          </div>
           <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
             <a href="#how-it-works" className="hover:text-foreground transition-colors">How it works</a>
             <a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a>
+            <Link to="/login" className="hover:text-foreground transition-colors">Login</Link>
           </div>
           <div className="flex items-center gap-3">
-            <Link to="/login">
+            <Link to="/login" className="md:hidden">
               <Button variant="ghost" size="sm">Log in</Button>
             </Link>
             <Link to="/signup">
-              <Button size="sm" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 h-9">Start closing deals</Button>
+              <Button size="sm" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_20px_hsl(var(--accent)/0.45)] transition-all h-9">Get Paid Faster</Button>
             </Link>
           </div>
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="relative py-16 md:py-24 px-4 overflow-hidden">
-        {/* Animated gradient glow */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute left-1/2 top-1/2 w-[720px] h-[420px] rounded-full blur-3xl opacity-60 animate-hero-glow"
-          style={{
-            background:
-              "radial-gradient(closest-side, hsl(var(--accent) / 0.45), hsl(var(--purple) / 0.30) 55%, transparent 75%)",
-          }}
-        />
-        <div className="relative container max-w-3xl text-center" style={{ animation: "hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both" }}>
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight leading-tight mb-6">
-            Close deals faster and <span className="bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent font-extrabold">get paid instantly</span>
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed" style={{ animation: "hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both" }}>
-            Send proposals your clients can accept and pay in one simple flow — <span className="text-foreground font-semibold">no chasing, no back-and-forth.</span>
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4" style={{ animation: "hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both" }}>
-            <Link to="/signup">
-              <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground bg-[length:200%_100%] hover:bg-[position:100%_0] transition-[background-position,transform,box-shadow] duration-500 hover:shadow-[0_0_28px_hsl(var(--accent)/0.5)] px-10 h-14 text-base gap-2 hover:scale-[1.03] hover:-translate-y-0.5">
-                Get Paid Faster
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
-            <Link to="/sample">
-              <Button size="lg" variant="outline" className="px-10 h-14 text-base hover:scale-[1.03] hover:-translate-y-0.5 hover:border-accent/50 transition-all duration-300">
-                View Sample Proposal
-              </Button>
-            </Link>
+      {/* Cinematic Hero */}
+      <section className="relative min-h-[92vh] flex items-center pt-24 pb-16 md:pt-28 md:pb-20 px-4 overflow-hidden">
+        {/* Layered animated background */}
+        <div aria-hidden className="absolute inset-0 -z-10">
+          <div
+            className="absolute inset-0 opacity-80 animate-gradient-shift"
+            style={{
+              background:
+                "linear-gradient(120deg, hsl(var(--background)) 0%, hsl(var(--accent) / 0.18) 35%, hsl(var(--purple) / 0.22) 65%, hsl(var(--background)) 100%)",
+              backgroundSize: "200% 200%",
+            }}
+          />
+          <div
+            className="absolute -top-32 -left-24 w-[520px] h-[520px] rounded-full blur-3xl opacity-60 animate-hero-glow"
+            style={{ background: "radial-gradient(closest-side, hsl(var(--accent) / 0.55), transparent 70%)" }}
+          />
+          <div
+            className="absolute bottom-[-160px] right-[-120px] w-[620px] h-[620px] rounded-full blur-3xl opacity-50 animate-hero-glow"
+            style={{ background: "radial-gradient(closest-side, hsl(var(--purple) / 0.55), transparent 70%)", animationDelay: "2.5s" }}
+          />
+          <div
+            className="absolute inset-0 opacity-[0.07]"
+            style={{
+              backgroundImage:
+                "linear-gradient(hsl(var(--foreground) / 0.5) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground) / 0.5) 1px, transparent 1px)",
+              backgroundSize: "44px 44px",
+              maskImage: "radial-gradient(ellipse at center, black 40%, transparent 80%)",
+              WebkitMaskImage: "radial-gradient(ellipse at center, black 40%, transparent 80%)",
+            }}
+          />
+          <div className="absolute inset-0 bg-background/55" />
+        </div>
+
+        <div className="relative container grid lg:grid-cols-12 gap-10 lg:gap-6 items-center">
+          {/* Left: copy */}
+          <div className="lg:col-span-7 text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm text-xs text-muted-foreground mb-6 animate-hero-fade-up">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+              New — One-link Accept &amp; Pay flow
+            </div>
+            <h1
+              className="text-5xl sm:text-6xl lg:text-7xl font-bold text-foreground tracking-tight leading-[1.05] mb-6 animate-hero-fade-up"
+              style={{ animationDelay: "0.1s" }}
+            >
+              Close deals faster.
+              <br />
+              <span className="bg-gradient-to-r from-accent via-purple to-accent bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-shift">
+                Get paid instantly.
+              </span>
+            </h1>
+            <p
+              className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed animate-hero-fade-up"
+              style={{ animationDelay: "0.2s" }}
+            >
+              Send proposals your clients can accept and pay in one simple flow — <span className="text-foreground font-semibold">no chasing, no back-and-forth.</span>
+            </p>
+            <div
+              className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4 animate-hero-fade-up"
+              style={{ animationDelay: "0.3s" }}
+            >
+              <Link to="/signup" className="w-full sm:w-auto">
+                <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-accent to-purple text-accent-foreground bg-[length:200%_100%] hover:bg-[position:100%_0] transition-[background-position,transform,box-shadow] duration-500 hover:shadow-[0_0_36px_hsl(var(--accent)/0.55)] px-10 h-14 text-base gap-2 hover:scale-[1.03] hover:-translate-y-0.5">
+                  Get Paid Faster
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+              <Link to="/sample" className="w-full sm:w-auto">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto px-10 h-14 text-base bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 hover:border-accent/40 hover:-translate-y-0.5 transition-all duration-300">
+                  View Sample Proposal
+                </Button>
+              </Link>
+            </div>
+            <p
+              className="text-xs text-muted-foreground mt-6 animate-hero-fade-up"
+              style={{ animationDelay: "0.45s" }}
+            >
+              Built for freelancers, consultants, and agencies.
+            </p>
           </div>
-          <div className="flex items-center justify-center gap-5 mt-3" style={{ animation: "hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both" }}>
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><Zap className="w-3 h-3 text-accent" />Fast</span>
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><ShieldCheck className="w-3 h-3 text-accent" />Secure payments</span>
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><FileText className="w-3 h-3 text-accent" />Professional</span>
+
+          {/* Right: layered glassmorphism mockups */}
+          <div className="lg:col-span-5 relative h-[420px] sm:h-[480px] lg:h-[540px] hidden md:block">
+            <div className="absolute inset-8 rounded-[2rem] bg-gradient-to-br from-accent/20 to-purple/20 blur-2xl" />
+
+            {/* Proposal mockup card */}
+            <div
+              className="absolute top-2 left-2 sm:left-4 w-[78%] rounded-2xl border border-white/10 bg-card/70 backdrop-blur-xl shadow-2xl shadow-accent/10 p-5 animate-float-slower animate-hero-fade-up"
+              style={{ animationDelay: "0.35s", transform: "rotate(-3deg)" }}
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-purple flex items-center justify-center">
+                  <FileText className="w-4 h-4 text-accent-foreground" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-foreground">Proposal — Brand Refresh</p>
+                  <p className="text-[10px] text-muted-foreground">Sent to acme.co · just now</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="h-2 rounded bg-foreground/10 w-[90%]" />
+                <div className="h-2 rounded bg-foreground/10 w-[75%]" />
+                <div className="h-2 rounded bg-foreground/10 w-[82%]" />
+              </div>
+              <div className="mt-4 flex items-center justify-between pt-3 border-t border-white/5">
+                <span className="text-[10px] text-muted-foreground">Total</span>
+                <span className="text-sm font-bold text-foreground">£4,800.00</span>
+              </div>
+            </div>
+
+            {/* Acceptance badge */}
+            <div
+              className="absolute top-[44%] left-[-8px] sm:left-2 rounded-2xl border border-accent/30 bg-card/85 backdrop-blur-xl shadow-2xl shadow-accent/20 px-4 py-3 flex items-center gap-3 animate-float-slow animate-hero-fade-up"
+              style={{ animationDelay: "0.55s" }}
+            >
+              <div className="w-9 h-9 rounded-full bg-accent/15 flex items-center justify-center">
+                <FileCheck className="w-4 h-4 text-accent" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-foreground">Client accepted</p>
+                <p className="text-[10px] text-muted-foreground">Sarah K. · 2 min ago</p>
+              </div>
+            </div>
+
+            {/* Payment confirmation */}
+            <div
+              className="absolute bottom-2 right-0 sm:right-2 w-[72%] rounded-2xl border border-white/10 bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-xl shadow-2xl shadow-purple/20 p-5 animate-float-slow animate-hero-fade-up"
+              style={{ animationDelay: "0.7s", transform: "rotate(2deg)" }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-purple flex items-center justify-center shadow-lg shadow-accent/30">
+                    <HandCoins className="w-4 h-4 text-accent-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-foreground">Payment received</p>
+                    <p className="text-[10px] text-muted-foreground">Paddle · secure</p>
+                  </div>
+                </div>
+                <CheckCircle className="w-4 h-4 text-accent" />
+              </div>
+              <div className="flex items-end justify-between">
+                <div>
+                  <p className="text-[10px] text-muted-foreground">Amount</p>
+                  <p className="text-2xl font-bold bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent">£4,800</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] text-muted-foreground">Status</p>
+                  <span className="inline-block text-[10px] font-semibold text-accent bg-accent/10 px-2 py-0.5 rounded-full">Paid</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
