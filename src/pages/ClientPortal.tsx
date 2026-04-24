@@ -113,6 +113,19 @@ export default function ClientPortal() {
       setProposal(data as PublicProposal);
       setLoading(false);
 
+      // Fetch the proposal owner's first active booking link (for kickoff CTA)
+      supabase
+        .from("booking_links")
+        .select("slug, name")
+        .eq("user_id", (data as PublicProposal).user_id)
+        .eq("is_active", true)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle()
+        .then(({ data: bl }) => {
+          if (bl) setBookingLink(bl as BookingLinkLite);
+        });
+
       // Auto-mark as viewed (non-blocking)
       supabase.rpc("client_portal_respond", {
         _proposal_id: id,
