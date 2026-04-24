@@ -149,7 +149,7 @@ export default function Index() {
           <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {painPoints.map((p, i) => (
               <AnimateIn key={p.text} delay={i * 100} direction="up">
-                <div className="flex items-center gap-3 p-4 rounded-lg bg-card border border-border text-left hover:border-destructive/40 hover:bg-card/80 transition-all duration-300 group">
+                <div className="flex items-center gap-3 p-4 rounded-lg bg-card border border-border text-left hover:border-destructive/40 hover:bg-card/80 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-12px_hsl(var(--destructive)/0.35)] transition-all duration-300 group">
                   <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center flex-shrink-0 group-hover:bg-destructive/20 transition-colors">
                     <p.icon className="w-4 h-4 text-destructive" />
                   </div>
