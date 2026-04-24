@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText, Zap, AlertTriangle, Clock, XCircle, UserX, ArrowRight, CheckCircle, Briefcase, ShieldCheck, CreditCard, HandCoins, FileCheck } from "lucide-react";
+import { FileText, Zap, AlertTriangle, Clock, XCircle, UserX, ArrowRight, CheckCircle, Briefcase, ShieldCheck, CreditCard, HandCoins, FileCheck, Star, Lock } from "lucide-react";
 import { AnimateIn } from "@/hooks/use-scroll-animation";
 
 const steps = [
@@ -30,7 +30,12 @@ const plans = [
     price: "£0",
     period: "/month",
     description: "Try it out — no card required",
-    features: ["2 proposals per month", "Watermarked proposals", "No payment collection"],
+    features: [
+      "1 proposal per month",
+      "Watermarked proposals",
+      "No payment collection",
+      "No policy generator",
+    ],
     cta: "Start Free",
     popular: false,
   },
@@ -40,16 +45,17 @@ const plans = [
     period: "/month",
     description: "Get paid instantly. Turn leads into clients automatically.",
     features: [
-      "Unlimited proposals",
       "Accept & Pay flow",
       "Payment collection (Paddle)",
-      "Policies auto-attach",
+      "Unlimited proposals",
       "AI lead response",
+      "Policies auto-attach",
       "No watermark",
     ],
-    cta: "Start closing deals",
+    cta: "Get Paid Faster",
     popular: true,
     valueLine: "Close just one extra client and it pays for itself.",
+    trustItems: ["7-day free trial", "Cancel anytime", "Secure payments via Paddle"],
   },
 ];
 
@@ -90,7 +96,7 @@ export default function Index() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4" style={{ animation: "hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both" }}>
             <Link to="/signup">
               <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_20px_hsl(var(--accent)/0.4)] px-10 h-14 text-base gap-2 transition-all hover:scale-105">
-                Start closing deals
+                Get Paid Faster
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
@@ -100,7 +106,6 @@ export default function Index() {
               </Button>
             </Link>
           </div>
-          <p className="text-xs text-muted-foreground mt-6" style={{ animation: "hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both" }}>No signup required to try • Send your first proposal in minutes</p>
           <div className="flex items-center justify-center gap-5 mt-3" style={{ animation: "hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both" }}>
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><Zap className="w-3 h-3 text-accent" />Fast</span>
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><ShieldCheck className="w-3 h-3 text-accent" />Secure payments</span>
@@ -136,8 +141,9 @@ export default function Index() {
         <div className="container max-w-4xl">
           <AnimateIn className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Turn proposals into <span className="bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent">paid deals</span></h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              One link. One flow. From sent to paid — without lifting a finger.
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto leading-relaxed">
+              Your client gets one link.<br />
+              They review, accept, and pay — <span className="text-foreground font-semibold">instantly.</span>
             </p>
           </AnimateIn>
 
@@ -227,6 +233,29 @@ export default function Index() {
         </AnimateIn>
       </section>
 
+      {/* Social Proof */}
+      <section className="py-16 px-4">
+        <div className="container max-w-3xl">
+          <AnimateIn className="text-center mb-10">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">Trusted by freelancers and agencies</h2>
+            <p className="text-muted-foreground text-sm">Real outcomes from people who stopped chasing invoices.</p>
+          </AnimateIn>
+          <AnimateIn direction="scale">
+            <div className="rounded-2xl border border-border bg-card/60 backdrop-blur-sm p-8 md:p-10 text-center max-w-2xl mx-auto shadow-lg shadow-accent/5">
+              <div className="flex items-center justify-center gap-1 mb-5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star key={i} className="w-4 h-4 fill-accent text-accent" />
+                ))}
+              </div>
+              <blockquote className="text-lg md:text-xl text-foreground font-medium leading-relaxed mb-5">
+                “This helped me stop chasing invoices and close clients faster.”
+              </blockquote>
+              <p className="text-sm text-muted-foreground">— Freelance Consultant</p>
+            </div>
+          </AnimateIn>
+        </div>
+      </section>
+
       {/* Pricing */}
       <section id="pricing" className="py-20 pb-24 px-4">
         <div className="container max-w-4xl">
@@ -268,6 +297,16 @@ export default function Index() {
                         {plan.cta}
                       </Button>
                     </Link>
+                    {plan.trustItems && (
+                      <ul className="mt-5 space-y-2">
+                        {plan.trustItems.map((t) => (
+                          <li key={t} className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                            <Lock className="w-3 h-3 text-accent" />
+                            {t}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </CardContent>
                 </Card>
               </AnimateIn>
@@ -300,6 +339,19 @@ export default function Index() {
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
+          </div>
+        </AnimateIn>
+      </section>
+
+      {/* Trust badges */}
+      <section className="px-4 pb-10">
+        <AnimateIn className="container max-w-4xl">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-10 py-6 px-6 rounded-xl border border-border/60 bg-card/40 text-sm text-muted-foreground">
+            <span className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-accent" /> Secure payments via Paddle</span>
+            <span className="hidden md:inline-block w-px h-4 bg-border" />
+            <span className="flex items-center gap-2"><FileText className="w-4 h-4 text-accent" /> Professional client-ready proposals</span>
+            <span className="hidden md:inline-block w-px h-4 bg-border" />
+            <span className="flex items-center gap-2"><Zap className="w-4 h-4 text-accent" /> Built for agencies & freelancers</span>
           </div>
         </AnimateIn>
       </section>
