@@ -233,6 +233,29 @@ export default function Index() {
         </AnimateIn>
       </section>
 
+      {/* Social Proof */}
+      <section className="py-16 px-4">
+        <div className="container max-w-3xl">
+          <AnimateIn className="text-center mb-10">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">Trusted by freelancers and agencies</h2>
+            <p className="text-muted-foreground text-sm">Real outcomes from people who stopped chasing invoices.</p>
+          </AnimateIn>
+          <AnimateIn direction="scale">
+            <div className="rounded-2xl border border-border bg-card/60 backdrop-blur-sm p-8 md:p-10 text-center max-w-2xl mx-auto shadow-lg shadow-accent/5">
+              <div className="flex items-center justify-center gap-1 mb-5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star key={i} className="w-4 h-4 fill-accent text-accent" />
+                ))}
+              </div>
+              <blockquote className="text-lg md:text-xl text-foreground font-medium leading-relaxed mb-5">
+                “This helped me stop chasing invoices and close clients faster.”
+              </blockquote>
+              <p className="text-sm text-muted-foreground">— Freelance Consultant</p>
+            </div>
+          </AnimateIn>
+        </div>
+      </section>
+
       {/* Pricing */}
       <section id="pricing" className="py-20 pb-24 px-4">
         <div className="container max-w-4xl">
