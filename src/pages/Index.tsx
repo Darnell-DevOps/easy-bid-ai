@@ -343,6 +343,19 @@ export default function Index() {
         </AnimateIn>
       </section>
 
+      {/* Trust badges */}
+      <section className="px-4 pb-10">
+        <AnimateIn className="container max-w-4xl">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-10 py-6 px-6 rounded-xl border border-border/60 bg-card/40 text-sm text-muted-foreground">
+            <span className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-accent" /> Secure payments via Paddle</span>
+            <span className="hidden md:inline-block w-px h-4 bg-border" />
+            <span className="flex items-center gap-2"><FileText className="w-4 h-4 text-accent" /> Professional client-ready proposals</span>
+            <span className="hidden md:inline-block w-px h-4 bg-border" />
+            <span className="flex items-center gap-2"><Zap className="w-4 h-4 text-accent" /> Built for agencies & freelancers</span>
+          </div>
+        </AnimateIn>
+      </section>
+
       {/* Footer */}
       <footer className="border-t border-border py-12 px-4">
         <div className="container flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
