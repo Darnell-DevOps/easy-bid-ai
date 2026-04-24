@@ -108,6 +108,18 @@ export default {
           "50%": { transform: "translateX(20%) scaleX(0.6)" },
           "100%": { transform: "translateX(120%) scaleX(0.4)" },
         },
+        "hero-glow": {
+          "0%, 100%": { transform: "translate(-50%, -50%) scale(1)", opacity: "0.55" },
+          "50%": { transform: "translate(-48%, -52%) scale(1.08)", opacity: "0.75" },
+        },
+        "flow-pulse": {
+          "0%, 100%": { transform: "scale(1)", boxShadow: "0 0 0 0 hsl(var(--accent) / 0)" },
+          "50%": { transform: "scale(1.06)", boxShadow: "0 0 28px 4px hsl(var(--accent) / 0.45)" },
+        },
+        "sticky-cta-in": {
+          "0%": { opacity: "0", transform: "translateY(120%)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -115,6 +127,9 @@ export default {
         "shimmer": "shimmer 2s ease-in-out infinite",
         "page-in": "page-in 0.35s cubic-bezier(0.22, 1, 0.36, 1)",
         "progress-indeterminate": "progress-indeterminate 1.1s ease-in-out infinite",
+        "hero-glow": "hero-glow 9s ease-in-out infinite",
+        "flow-pulse": "flow-pulse 1.6s ease-in-out infinite",
+        "sticky-cta-in": "sticky-cta-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both",
       },
     },
   },
