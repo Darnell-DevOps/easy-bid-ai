@@ -402,9 +402,43 @@ export default function ClientPortal() {
             <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-2">
               Payment received — we're on it
             </h2>
-            <p className="text-muted-foreground text-sm">
-              Thanks! A confirmation has been sent. We'll be in touch shortly to kick things off.
+            <p className="text-muted-foreground text-sm mb-5">
+              Thanks! A confirmation has been sent. {bookingLink ? "Lock in your kickoff call below." : "We'll be in touch shortly to kick things off."}
             </p>
+            {bookingLink && (
+              <Button
+                size="lg"
+                asChild
+                className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110"
+              >
+                <RouterLink to={`/book/${bookingLink.slug}?proposal=${proposal.id}`}>
+                  <CalendarPlus className="w-4 h-4" />
+                  Book your kickoff call
+                </RouterLink>
+              </Button>
+            )}
+          </section>
+        ) : isAccepted && bookingLink ? (
+          <section className="rounded-xl border border-purple/30 bg-gradient-to-br from-purple/10 via-accent/5 to-transparent p-6 lg:p-10 text-center">
+            <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-purple/15 mb-4">
+              <CalendarPlus className="w-6 h-6 text-purple" />
+            </div>
+            <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-2">
+              Book your kickoff call
+            </h2>
+            <p className="text-muted-foreground text-sm mb-5">
+              Pick a time that works for you and we'll get started.
+            </p>
+            <Button
+              size="lg"
+              asChild
+              className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110"
+            >
+              <RouterLink to={`/book/${bookingLink.slug}?proposal=${proposal.id}`}>
+                <CalendarPlus className="w-4 h-4" />
+                Schedule Call
+              </RouterLink>
+            </Button>
           </section>
         ) : isRejected ? (
           <section className="rounded-xl border border-border bg-card p-6 lg:p-10 text-center">
