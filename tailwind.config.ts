@@ -166,6 +166,8 @@ export default {
         "float-slower": "float-slower 9s ease-in-out infinite",
         "gradient-shift": "gradient-shift 14s ease infinite",
         "hero-fade-up": "hero-fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) both",
+        "hero-card-glow": "hero-card-glow 9s ease-in-out infinite",
+        "flow-hint": "flow-hint 4.5s ease-in-out infinite",
       },
     },
   },
