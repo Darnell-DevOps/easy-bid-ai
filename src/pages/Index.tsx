@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText, Zap, AlertTriangle, Clock, XCircle, UserX, ArrowRight, CheckCircle, Briefcase, ShieldCheck, CreditCard, HandCoins, FileCheck } from "lucide-react";
+import { FileText, Zap, AlertTriangle, Clock, XCircle, UserX, ArrowRight, CheckCircle, Briefcase, ShieldCheck, CreditCard, HandCoins, FileCheck, Star, Lock } from "lucide-react";
 import { AnimateIn } from "@/hooks/use-scroll-animation";
 
 const steps = [
@@ -30,7 +30,12 @@ const plans = [
     price: "£0",
     period: "/month",
     description: "Try it out — no card required",
-    features: ["2 proposals per month", "Watermarked proposals", "No payment collection"],
+    features: [
+      "1 proposal per month",
+      "Watermarked proposals",
+      "No payment collection",
+      "No policy generator",
+    ],
     cta: "Start Free",
     popular: false,
   },
@@ -40,16 +45,17 @@ const plans = [
     period: "/month",
     description: "Get paid instantly. Turn leads into clients automatically.",
     features: [
-      "Unlimited proposals",
       "Accept & Pay flow",
       "Payment collection (Paddle)",
-      "Policies auto-attach",
+      "Unlimited proposals",
       "AI lead response",
+      "Policies auto-attach",
       "No watermark",
     ],
-    cta: "Start closing deals",
+    cta: "Get Paid Faster",
     popular: true,
     valueLine: "Close just one extra client and it pays for itself.",
+    trustItems: ["7-day free trial", "Cancel anytime", "Secure payments via Paddle"],
   },
 ];
 
