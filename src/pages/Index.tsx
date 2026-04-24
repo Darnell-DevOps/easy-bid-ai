@@ -251,7 +251,7 @@ export default function Index() {
             <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
               {deliverables.map((item, i) => (
                 <AnimateIn key={item} delay={i * 100} direction="up">
-                  <div className="flex items-center gap-3 p-4 rounded-lg bg-card border border-border text-left hover:border-accent/30 hover:bg-card/80 transition-all duration-300 group">
+                  <div className="flex items-center gap-3 p-4 rounded-lg bg-card border border-border text-left hover:border-accent/40 hover:bg-card/80 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-12px_hsl(var(--accent)/0.35)] transition-all duration-300 group">
                     <CheckCircle className="w-5 h-5 text-accent flex-shrink-0 group-hover:scale-110 transition-transform" />
                     <span className="text-sm font-medium text-foreground">{item}</span>
                   </div>
