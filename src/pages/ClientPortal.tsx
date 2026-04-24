@@ -19,7 +19,9 @@ import {
   Lock,
   Mail,
   FileCheck,
+  CalendarPlus,
 } from "lucide-react";
+import { Link as RouterLink } from "react-router-dom";
 import PremiumProposalRenderer from "@/components/proposal/PremiumProposalRenderer";
 import PremiumPricingRenderer from "@/components/proposal/PremiumPricingRenderer";
 import StatusBadge, { normalizeStatus } from "@/components/proposal/StatusBadge";
@@ -30,6 +32,7 @@ import { cn } from "@/lib/utils";
 
 interface PublicProposal {
   id: string;
+  user_id: string;
   client_name: string;
   company_name: string;
   service_type: string;
@@ -45,6 +48,11 @@ interface PublicProposal {
   amount_cents: number | null;
   currency: string | null;
   client_paid: boolean;
+}
+
+interface BookingLinkLite {
+  slug: string;
+  name: string;
 }
 
 const CURRENCY_SYMBOL: Record<string, string> = {
@@ -82,6 +90,7 @@ export default function ClientPortal() {
   const [message, setMessage] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [submitting, setSubmitting] = useState<"accept" | "reject" | null>(null);
+  const [bookingLink, setBookingLink] = useState<BookingLinkLite | null>(null);
   const { openCheckout, loading: payLoading, available: paymentsAvailable } = useProposalCheckout();
 
   useEffect(() => {
@@ -90,7 +99,7 @@ export default function ClientPortal() {
       const { data, error } = await supabase
         .from("proposals")
         .select(
-          "id, client_name, company_name, service_type, proposal_content, pricing_breakdown, created_at, status, sent_at, viewed_at, accepted_at, rejected_at, client_response_message, amount_cents, currency, client_paid"
+          "id, user_id, client_name, company_name, service_type, proposal_content, pricing_breakdown, created_at, status, sent_at, viewed_at, accepted_at, rejected_at, client_response_message, amount_cents, currency, client_paid"
         )
         .eq("id", id)
         .maybeSingle();
@@ -103,6 +112,19 @@ export default function ClientPortal() {
 
       setProposal(data as PublicProposal);
       setLoading(false);
+
+      // Fetch the proposal owner's first active booking link (for kickoff CTA)
+      supabase
+        .from("booking_links")
+        .select("slug, name")
+        .eq("user_id", (data as PublicProposal).user_id)
+        .eq("is_active", true)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle()
+        .then(({ data: bl }) => {
+          if (bl) setBookingLink(bl as BookingLinkLite);
+        });
 
       // Auto-mark as viewed (non-blocking)
       supabase.rpc("client_portal_respond", {
@@ -380,9 +402,43 @@ export default function ClientPortal() {
             <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-2">
               Payment received — we're on it
             </h2>
-            <p className="text-muted-foreground text-sm">
-              Thanks! A confirmation has been sent. We'll be in touch shortly to kick things off.
+            <p className="text-muted-foreground text-sm mb-5">
+              Thanks! A confirmation has been sent. {bookingLink ? "Lock in your kickoff call below." : "We'll be in touch shortly to kick things off."}
             </p>
+            {bookingLink && (
+              <Button
+                size="lg"
+                asChild
+                className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110"
+              >
+                <RouterLink to={`/book/${bookingLink.slug}?proposal=${proposal.id}`}>
+                  <CalendarPlus className="w-4 h-4" />
+                  Book your kickoff call
+                </RouterLink>
+              </Button>
+            )}
+          </section>
+        ) : isAccepted && bookingLink ? (
+          <section className="rounded-xl border border-purple/30 bg-gradient-to-br from-purple/10 via-accent/5 to-transparent p-6 lg:p-10 text-center">
+            <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-purple/15 mb-4">
+              <CalendarPlus className="w-6 h-6 text-purple" />
+            </div>
+            <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-2">
+              Book your kickoff call
+            </h2>
+            <p className="text-muted-foreground text-sm mb-5">
+              Pick a time that works for you and we'll get started.
+            </p>
+            <Button
+              size="lg"
+              asChild
+              className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110"
+            >
+              <RouterLink to={`/book/${bookingLink.slug}?proposal=${proposal.id}`}>
+                <CalendarPlus className="w-4 h-4" />
+                Schedule Call
+              </RouterLink>
+            </Button>
           </section>
         ) : isRejected ? (
           <section className="rounded-xl border border-border bg-card p-6 lg:p-10 text-center">
