@@ -61,6 +61,21 @@ const plans = [
 ];
 
 export default function Index() {
+  const [activeStep, setActiveStep] = useState(0);
+  const [showStickyCta, setShowStickyCta] = useState(false);
+
+  useEffect(() => {
+    const id = setInterval(() => setActiveStep((s) => (s + 1) % 3), 1600);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => setShowStickyCta(window.scrollY > 600);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Nav */}
