@@ -101,8 +101,17 @@ export default function Index() {
       </nav>
 
       {/* Hero */}
-      <section className="py-16 md:py-24 px-4">
-        <div className="container max-w-3xl text-center" style={{ animation: "hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both" }}>
+      <section className="relative py-16 md:py-24 px-4 overflow-hidden">
+        {/* Animated gradient glow */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 top-1/2 w-[720px] h-[420px] rounded-full blur-3xl opacity-60 animate-hero-glow"
+          style={{
+            background:
+              "radial-gradient(closest-side, hsl(var(--accent) / 0.45), hsl(var(--purple) / 0.30) 55%, transparent 75%)",
+          }}
+        />
+        <div className="relative container max-w-3xl text-center" style={{ animation: "hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both" }}>
           <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight leading-tight mb-6">
             Close deals faster and <span className="bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent font-extrabold">get paid instantly</span>
           </h1>
@@ -111,13 +120,13 @@ export default function Index() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4" style={{ animation: "hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both" }}>
             <Link to="/signup">
-              <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_20px_hsl(var(--accent)/0.4)] px-10 h-14 text-base gap-2 transition-all hover:scale-105">
+              <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground bg-[length:200%_100%] hover:bg-[position:100%_0] transition-[background-position,transform,box-shadow] duration-500 hover:shadow-[0_0_28px_hsl(var(--accent)/0.5)] px-10 h-14 text-base gap-2 hover:scale-[1.03] hover:-translate-y-0.5">
                 Get Paid Faster
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
             <Link to="/sample">
-              <Button size="lg" variant="outline" className="px-10 h-14 text-base hover:scale-105 transition-transform">
+              <Button size="lg" variant="outline" className="px-10 h-14 text-base hover:scale-[1.03] hover:-translate-y-0.5 hover:border-accent/50 transition-all duration-300">
                 View Sample Proposal
               </Button>
             </Link>
