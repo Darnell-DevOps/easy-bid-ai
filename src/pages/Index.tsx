@@ -308,7 +308,7 @@ export default function Index() {
           <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto items-stretch">
             {plans.map((plan, i) => (
               <AnimateIn key={plan.name} delay={i * 150} direction="up">
-                <Card className={`border relative transition-all duration-300 flex flex-col h-full hover:translate-y-[-4px] ${plan.popular ? "border-accent border-2 shadow-2xl shadow-accent/30 ring-2 ring-accent/40 z-10" : "border-border shadow-none hover:border-muted-foreground/30"}`}>
+                <Card className={`border relative transition-all duration-500 flex flex-col h-full hover:-translate-y-1.5 ${plan.popular ? "border-accent border-2 shadow-2xl shadow-accent/30 ring-2 ring-accent/40 z-10 hover:shadow-[0_20px_60px_-15px_hsl(var(--accent)/0.55)]" : "border-border shadow-none hover:border-accent/40 hover:shadow-[0_12px_40px_-15px_hsl(var(--accent)/0.25)]"}`}>
                   {plan.popular && (
                     <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-accent text-accent-foreground text-xs font-semibold tracking-wide shadow-lg shadow-accent/30">
                       Most popular
