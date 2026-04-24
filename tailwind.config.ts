@@ -136,6 +136,22 @@ export default {
           "0%": { opacity: "0", transform: "translateY(24px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        "hero-card-glow": {
+          "0%, 22%, 100%": {
+            boxShadow: "0 10px 30px -10px hsl(var(--accent) / 0.10)",
+            borderColor: "hsl(var(--border) / 0.6)",
+            filter: "brightness(1)",
+          },
+          "8%, 14%": {
+            boxShadow: "0 0 0 1px hsl(var(--accent) / 0.45), 0 18px 60px -10px hsl(var(--accent) / 0.55), 0 0 80px -10px hsl(var(--purple) / 0.45)",
+            borderColor: "hsl(var(--accent) / 0.55)",
+            filter: "brightness(1.06)",
+          },
+        },
+        "flow-hint": {
+          "0%, 100%": { opacity: "0.15", transform: "translateY(-30%) scaleY(0.6)" },
+          "50%": { opacity: "0.55", transform: "translateY(30%) scaleY(1)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -150,6 +166,8 @@ export default {
         "float-slower": "float-slower 9s ease-in-out infinite",
         "gradient-shift": "gradient-shift 14s ease infinite",
         "hero-fade-up": "hero-fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) both",
+        "hero-card-glow": "hero-card-glow 9s ease-in-out infinite",
+        "flow-hint": "flow-hint 4.5s ease-in-out infinite",
       },
     },
   },

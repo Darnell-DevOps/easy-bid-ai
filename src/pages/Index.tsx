@@ -187,11 +187,18 @@ export default function Index() {
           <div className="lg:col-span-5 relative h-[420px] sm:h-[480px] lg:h-[540px] hidden md:block">
             <div className="absolute inset-8 rounded-[2rem] bg-gradient-to-br from-accent/20 to-purple/20 blur-2xl" />
 
+            {/* Subtle directional flow hint */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute left-1/2 top-[12%] bottom-[12%] w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-accent/40 to-transparent animate-flow-hint"
+            />
+
             {/* Proposal mockup card */}
             <div
               className="absolute top-2 left-2 sm:left-4 w-[78%] rounded-2xl border border-white/10 bg-card/70 backdrop-blur-xl shadow-2xl shadow-accent/10 p-5 animate-float-slower animate-hero-fade-up"
               style={{ animationDelay: "0.35s", transform: "rotate(-3deg)" }}
             >
+              <div className="absolute inset-0 rounded-2xl pointer-events-none animate-hero-card-glow" style={{ animationDelay: "0s" }} />
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-purple flex items-center justify-center">
                   <FileText className="w-4 h-4 text-accent-foreground" />
@@ -217,6 +224,7 @@ export default function Index() {
               className="absolute top-[44%] left-[-8px] sm:left-2 rounded-2xl border border-accent/30 bg-card/85 backdrop-blur-xl shadow-2xl shadow-accent/20 px-4 py-3 flex items-center gap-3 animate-float-slow animate-hero-fade-up"
               style={{ animationDelay: "0.55s" }}
             >
+              <div className="absolute inset-0 rounded-2xl pointer-events-none animate-hero-card-glow" style={{ animationDelay: "-6s" }} />
               <div className="w-9 h-9 rounded-full bg-accent/15 flex items-center justify-center">
                 <FileCheck className="w-4 h-4 text-accent" />
               </div>
@@ -231,6 +239,7 @@ export default function Index() {
               className="absolute bottom-2 right-0 sm:right-2 w-[72%] rounded-2xl border border-white/10 bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-xl shadow-2xl shadow-purple/20 p-5 animate-float-slow animate-hero-fade-up"
               style={{ animationDelay: "0.7s", transform: "rotate(2deg)" }}
             >
+              <div className="absolute inset-0 rounded-2xl pointer-events-none animate-hero-card-glow" style={{ animationDelay: "-3s" }} />
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-purple flex items-center justify-center shadow-lg shadow-accent/30">
