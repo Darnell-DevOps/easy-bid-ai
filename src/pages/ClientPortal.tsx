@@ -19,7 +19,9 @@ import {
   Lock,
   Mail,
   FileCheck,
+  CalendarPlus,
 } from "lucide-react";
+import { Link as RouterLink } from "react-router-dom";
 import PremiumProposalRenderer from "@/components/proposal/PremiumProposalRenderer";
 import PremiumPricingRenderer from "@/components/proposal/PremiumPricingRenderer";
 import StatusBadge, { normalizeStatus } from "@/components/proposal/StatusBadge";
@@ -30,6 +32,7 @@ import { cn } from "@/lib/utils";
 
 interface PublicProposal {
   id: string;
+  user_id: string;
   client_name: string;
   company_name: string;
   service_type: string;
@@ -45,6 +48,11 @@ interface PublicProposal {
   amount_cents: number | null;
   currency: string | null;
   client_paid: boolean;
+}
+
+interface BookingLinkLite {
+  slug: string;
+  name: string;
 }
 
 const CURRENCY_SYMBOL: Record<string, string> = {
@@ -82,6 +90,7 @@ export default function ClientPortal() {
   const [message, setMessage] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [submitting, setSubmitting] = useState<"accept" | "reject" | null>(null);
+  const [bookingLink, setBookingLink] = useState<BookingLinkLite | null>(null);
   const { openCheckout, loading: payLoading, available: paymentsAvailable } = useProposalCheckout();
 
   useEffect(() => {
@@ -90,7 +99,7 @@ export default function ClientPortal() {
       const { data, error } = await supabase
         .from("proposals")
         .select(
-          "id, client_name, company_name, service_type, proposal_content, pricing_breakdown, created_at, status, sent_at, viewed_at, accepted_at, rejected_at, client_response_message, amount_cents, currency, client_paid"
+          "id, user_id, client_name, company_name, service_type, proposal_content, pricing_breakdown, created_at, status, sent_at, viewed_at, accepted_at, rejected_at, client_response_message, amount_cents, currency, client_paid"
         )
         .eq("id", id)
         .maybeSingle();
