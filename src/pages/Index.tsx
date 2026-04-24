@@ -407,6 +407,22 @@ export default function Index() {
           <p>© 2026 StriveSync. All rights reserved.</p>
         </div>
       </footer>
+
+      {/* Sticky bottom CTA */}
+      {showStickyCta && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 w-full max-w-2xl animate-sticky-cta-in">
+          <div className="flex items-center justify-between gap-4 px-5 py-3 rounded-full border border-accent/30 bg-card/90 backdrop-blur-md shadow-2xl shadow-accent/20">
+            <p className="text-sm text-foreground font-medium hidden sm:block">Ready to close more deals?</p>
+            <p className="text-sm text-foreground font-medium sm:hidden">Close more deals</p>
+            <Link to="/signup">
+              <Button size="sm" className="bg-gradient-to-r from-accent to-purple text-accent-foreground bg-[length:200%_100%] hover:bg-[position:100%_0] transition-[background-position,transform,box-shadow] duration-500 hover:shadow-[0_0_20px_hsl(var(--accent)/0.5)] h-9 px-5 gap-2 hover:-translate-y-0.5">
+                Get Paid Faster
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
