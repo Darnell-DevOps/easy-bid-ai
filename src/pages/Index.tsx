@@ -96,7 +96,7 @@ export default function Index() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4" style={{ animation: "hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both" }}>
             <Link to="/signup">
               <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_20px_hsl(var(--accent)/0.4)] px-10 h-14 text-base gap-2 transition-all hover:scale-105">
-                Start closing deals
+                Get Paid Faster
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
@@ -106,7 +106,6 @@ export default function Index() {
               </Button>
             </Link>
           </div>
-          <p className="text-xs text-muted-foreground mt-6" style={{ animation: "hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both" }}>No signup required to try • Send your first proposal in minutes</p>
           <div className="flex items-center justify-center gap-5 mt-3" style={{ animation: "hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both" }}>
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><Zap className="w-3 h-3 text-accent" />Fast</span>
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><ShieldCheck className="w-3 h-3 text-accent" />Secure payments</span>
@@ -142,8 +141,9 @@ export default function Index() {
         <div className="container max-w-4xl">
           <AnimateIn className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Turn proposals into <span className="bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent">paid deals</span></h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              One link. One flow. From sent to paid — without lifting a finger.
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto leading-relaxed">
+              Your client gets one link.<br />
+              They review, accept, and pay — <span className="text-foreground font-semibold">instantly.</span>
             </p>
           </AnimateIn>
 
