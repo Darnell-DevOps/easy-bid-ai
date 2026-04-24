@@ -181,20 +181,37 @@ export default function Index() {
                     { icon: FileText, label: "Proposal", sub: "Sent in minutes", color: "accent" },
                     { icon: FileCheck, label: "Accept", sub: "One click", color: "accent" },
                     { icon: HandCoins, label: "Payment", sub: "Money in", color: "accent" },
-                  ].map((item, i, arr) => (
+                  ].map((item, i, arr) => {
+                    const isActive = activeStep === i;
+                    return (
                     <div key={item.label} className="flex flex-col md:flex-row items-center gap-6 md:gap-4 flex-1">
                       <div className="flex flex-col items-center text-center flex-1">
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent/20 to-purple/20 border border-accent/30 flex items-center justify-center mb-3 shadow-lg shadow-accent/10">
-                          <item.icon className="w-7 h-7 text-accent" />
+                        <div
+                          className={`w-16 h-16 rounded-2xl bg-gradient-to-br from-accent/20 to-purple/20 border flex items-center justify-center mb-3 transition-all duration-700 ease-out ${
+                            isActive
+                              ? "border-accent scale-110 shadow-[0_0_28px_hsl(var(--accent)/0.5)]"
+                              : "border-accent/30 shadow-lg shadow-accent/10"
+                          }`}
+                        >
+                          <item.icon className={`w-7 h-7 transition-colors duration-500 ${isActive ? "text-accent" : "text-accent/70"}`} />
                         </div>
-                        <p className="font-semibold text-foreground">{item.label}</p>
+                        <p className={`font-semibold transition-colors duration-500 ${isActive ? "text-foreground" : "text-foreground/80"}`}>{item.label}</p>
                         <p className="text-xs text-muted-foreground mt-1">{item.sub}</p>
                       </div>
                       {i < arr.length - 1 && (
-                        <ArrowRight className="w-6 h-6 text-accent rotate-90 md:rotate-0 flex-shrink-0" />
+                        <ArrowRight
+                          className={`w-6 h-6 rotate-90 md:rotate-0 flex-shrink-0 transition-all duration-500 ${
+                            activeStep > i || (activeStep === 0 && i === arr.length - 1)
+                              ? "text-accent translate-x-0"
+                              : isActive
+                              ? "text-accent md:translate-x-1"
+                              : "text-accent/40"
+                          }`}
+                        />
                       )}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
