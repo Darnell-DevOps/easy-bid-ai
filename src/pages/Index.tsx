@@ -297,6 +297,16 @@ export default function Index() {
                         {plan.cta}
                       </Button>
                     </Link>
+                    {plan.trustItems && (
+                      <ul className="mt-5 space-y-2">
+                        {plan.trustItems.map((t) => (
+                          <li key={t} className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                            <Lock className="w-3 h-3 text-accent" />
+                            {t}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </CardContent>
                 </Card>
               </AnimateIn>
