@@ -14,6 +14,150 @@ export type Database = {
   }
   public: {
     Tables: {
+      availability_settings: {
+        Row: {
+          buffer_minutes: number
+          created_at: string
+          id: string
+          min_notice_hours: number
+          timezone: string
+          updated_at: string
+          user_id: string
+          working_days: number[]
+          working_end: string
+          working_start: string
+        }
+        Insert: {
+          buffer_minutes?: number
+          created_at?: string
+          id?: string
+          min_notice_hours?: number
+          timezone?: string
+          updated_at?: string
+          user_id: string
+          working_days?: number[]
+          working_end?: string
+          working_start?: string
+        }
+        Update: {
+          buffer_minutes?: number
+          created_at?: string
+          id?: string
+          min_notice_hours?: number
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+          working_days?: number[]
+          working_end?: string
+          working_start?: string
+        }
+        Relationships: []
+      }
+      booking_links: {
+        Row: {
+          available_days: number[]
+          created_at: string
+          custom_location: string | null
+          description: string | null
+          duration_minutes: number
+          end_time: string
+          id: string
+          is_active: boolean
+          location_type: string
+          name: string
+          slug: string
+          start_time: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          available_days?: number[]
+          created_at?: string
+          custom_location?: string | null
+          description?: string | null
+          duration_minutes?: number
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          location_type?: string
+          name: string
+          slug: string
+          start_time?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          available_days?: number[]
+          created_at?: string
+          custom_location?: string | null
+          description?: string | null
+          duration_minutes?: number
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          location_type?: string
+          name?: string
+          slug?: string
+          start_time?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      bookings: {
+        Row: {
+          booking_link_id: string | null
+          client_email: string
+          client_message: string | null
+          client_name: string
+          created_at: string
+          duration_minutes: number
+          id: string
+          location_details: string | null
+          location_type: string
+          meeting_name: string
+          proposal_id: string | null
+          scheduled_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          booking_link_id?: string | null
+          client_email: string
+          client_message?: string | null
+          client_name: string
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          location_details?: string | null
+          location_type?: string
+          meeting_name: string
+          proposal_id?: string | null
+          scheduled_at: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          booking_link_id?: string | null
+          client_email?: string
+          client_message?: string | null
+          client_name?: string
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          location_details?: string | null
+          location_type?: string
+          meeting_name?: string
+          proposal_id?: string | null
+          scheduled_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           ai_recommendation: string | null
