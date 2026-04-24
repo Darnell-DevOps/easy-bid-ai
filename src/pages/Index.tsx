@@ -221,9 +221,10 @@ export default function Index() {
 
             {/* Acceptance badge */}
             <div
-              className="absolute top-[44%] left-[-8px] sm:left-2 rounded-2xl border border-accent/30 bg-card/85 backdrop-blur-xl shadow-2xl shadow-accent/20 px-4 py-3 flex items-center gap-3 animate-float-slow animate-hero-fade-up animate-hero-card-glow"
-              style={{ animationDelay: "0.55s, -6s" }}
+              className="absolute top-[44%] left-[-8px] sm:left-2 rounded-2xl border border-accent/30 bg-card/85 backdrop-blur-xl shadow-2xl shadow-accent/20 px-4 py-3 flex items-center gap-3 animate-float-slow animate-hero-fade-up"
+              style={{ animationDelay: "0.55s" }}
             >
+              <div className="absolute inset-0 rounded-2xl pointer-events-none animate-hero-card-glow" style={{ animationDelay: "-6s" }} />
               <div className="w-9 h-9 rounded-full bg-accent/15 flex items-center justify-center">
                 <FileCheck className="w-4 h-4 text-accent" />
               </div>
