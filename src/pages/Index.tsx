@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileText, Zap, AlertTriangle, Clock, XCircle, UserX, ArrowRight, CheckCircle, Briefcase, ShieldCheck, CreditCard, HandCoins, FileCheck, Star, Lock } from "lucide-react";
@@ -60,6 +61,21 @@ const plans = [
 ];
 
 export default function Index() {
+  const [activeStep, setActiveStep] = useState(0);
+  const [showStickyCta, setShowStickyCta] = useState(false);
+
+  useEffect(() => {
+    const id = setInterval(() => setActiveStep((s) => (s + 1) % 3), 1600);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => setShowStickyCta(window.scrollY > 600);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Nav */}
@@ -85,8 +101,17 @@ export default function Index() {
       </nav>
 
       {/* Hero */}
-      <section className="py-16 md:py-24 px-4">
-        <div className="container max-w-3xl text-center" style={{ animation: "hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both" }}>
+      <section className="relative py-16 md:py-24 px-4 overflow-hidden">
+        {/* Animated gradient glow */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 top-1/2 w-[720px] h-[420px] rounded-full blur-3xl opacity-60 animate-hero-glow"
+          style={{
+            background:
+              "radial-gradient(closest-side, hsl(var(--accent) / 0.45), hsl(var(--purple) / 0.30) 55%, transparent 75%)",
+          }}
+        />
+        <div className="relative container max-w-3xl text-center" style={{ animation: "hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both" }}>
           <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight leading-tight mb-6">
             Close deals faster and <span className="bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent font-extrabold">get paid instantly</span>
           </h1>
@@ -95,13 +120,13 @@ export default function Index() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4" style={{ animation: "hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both" }}>
             <Link to="/signup">
-              <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_20px_hsl(var(--accent)/0.4)] px-10 h-14 text-base gap-2 transition-all hover:scale-105">
+              <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground bg-[length:200%_100%] hover:bg-[position:100%_0] transition-[background-position,transform,box-shadow] duration-500 hover:shadow-[0_0_28px_hsl(var(--accent)/0.5)] px-10 h-14 text-base gap-2 hover:scale-[1.03] hover:-translate-y-0.5">
                 Get Paid Faster
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
             <Link to="/sample">
-              <Button size="lg" variant="outline" className="px-10 h-14 text-base hover:scale-105 transition-transform">
+              <Button size="lg" variant="outline" className="px-10 h-14 text-base hover:scale-[1.03] hover:-translate-y-0.5 hover:border-accent/50 transition-all duration-300">
                 View Sample Proposal
               </Button>
             </Link>
@@ -124,7 +149,7 @@ export default function Index() {
           <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {painPoints.map((p, i) => (
               <AnimateIn key={p.text} delay={i * 100} direction="up">
-                <div className="flex items-center gap-3 p-4 rounded-lg bg-card border border-border text-left hover:border-destructive/40 hover:bg-card/80 transition-all duration-300 group">
+                <div className="flex items-center gap-3 p-4 rounded-lg bg-card border border-border text-left hover:border-destructive/40 hover:bg-card/80 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-12px_hsl(var(--destructive)/0.35)] transition-all duration-300 group">
                   <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center flex-shrink-0 group-hover:bg-destructive/20 transition-colors">
                     <p.icon className="w-4 h-4 text-destructive" />
                   </div>
@@ -156,20 +181,37 @@ export default function Index() {
                     { icon: FileText, label: "Proposal", sub: "Sent in minutes", color: "accent" },
                     { icon: FileCheck, label: "Accept", sub: "One click", color: "accent" },
                     { icon: HandCoins, label: "Payment", sub: "Money in", color: "accent" },
-                  ].map((item, i, arr) => (
+                  ].map((item, i, arr) => {
+                    const isActive = activeStep === i;
+                    return (
                     <div key={item.label} className="flex flex-col md:flex-row items-center gap-6 md:gap-4 flex-1">
                       <div className="flex flex-col items-center text-center flex-1">
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent/20 to-purple/20 border border-accent/30 flex items-center justify-center mb-3 shadow-lg shadow-accent/10">
-                          <item.icon className="w-7 h-7 text-accent" />
+                        <div
+                          className={`w-16 h-16 rounded-2xl bg-gradient-to-br from-accent/20 to-purple/20 border flex items-center justify-center mb-3 transition-all duration-700 ease-out ${
+                            isActive
+                              ? "border-accent scale-110 shadow-[0_0_28px_hsl(var(--accent)/0.5)]"
+                              : "border-accent/30 shadow-lg shadow-accent/10"
+                          }`}
+                        >
+                          <item.icon className={`w-7 h-7 transition-colors duration-500 ${isActive ? "text-accent" : "text-accent/70"}`} />
                         </div>
-                        <p className="font-semibold text-foreground">{item.label}</p>
+                        <p className={`font-semibold transition-colors duration-500 ${isActive ? "text-foreground" : "text-foreground/80"}`}>{item.label}</p>
                         <p className="text-xs text-muted-foreground mt-1">{item.sub}</p>
                       </div>
                       {i < arr.length - 1 && (
-                        <ArrowRight className="w-6 h-6 text-accent rotate-90 md:rotate-0 flex-shrink-0" />
+                        <ArrowRight
+                          className={`w-6 h-6 rotate-90 md:rotate-0 flex-shrink-0 transition-all duration-500 ${
+                            activeStep > i || (activeStep === 0 && i === arr.length - 1)
+                              ? "text-accent translate-x-0"
+                              : isActive
+                              ? "text-accent md:translate-x-1"
+                              : "text-accent/40"
+                          }`}
+                        />
                       )}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -209,7 +251,7 @@ export default function Index() {
             <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
               {deliverables.map((item, i) => (
                 <AnimateIn key={item} delay={i * 100} direction="up">
-                  <div className="flex items-center gap-3 p-4 rounded-lg bg-card border border-border text-left hover:border-accent/30 hover:bg-card/80 transition-all duration-300 group">
+                  <div className="flex items-center gap-3 p-4 rounded-lg bg-card border border-border text-left hover:border-accent/40 hover:bg-card/80 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-12px_hsl(var(--accent)/0.35)] transition-all duration-300 group">
                     <CheckCircle className="w-5 h-5 text-accent flex-shrink-0 group-hover:scale-110 transition-transform" />
                     <span className="text-sm font-medium text-foreground">{item}</span>
                   </div>
@@ -266,7 +308,7 @@ export default function Index() {
           <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto items-stretch">
             {plans.map((plan, i) => (
               <AnimateIn key={plan.name} delay={i * 150} direction="up">
-                <Card className={`border relative transition-all duration-300 flex flex-col h-full hover:translate-y-[-4px] ${plan.popular ? "border-accent border-2 shadow-2xl shadow-accent/30 ring-2 ring-accent/40 z-10" : "border-border shadow-none hover:border-muted-foreground/30"}`}>
+                <Card className={`border relative transition-all duration-500 flex flex-col h-full hover:-translate-y-1.5 ${plan.popular ? "border-accent border-2 shadow-2xl shadow-accent/30 ring-2 ring-accent/40 z-10 hover:shadow-[0_20px_60px_-15px_hsl(var(--accent)/0.55)]" : "border-border shadow-none hover:border-accent/40 hover:shadow-[0_12px_40px_-15px_hsl(var(--accent)/0.25)]"}`}>
                   {plan.popular && (
                     <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-accent text-accent-foreground text-xs font-semibold tracking-wide shadow-lg shadow-accent/30">
                       Most popular
@@ -365,6 +407,22 @@ export default function Index() {
           <p>© 2026 StriveSync. All rights reserved.</p>
         </div>
       </footer>
+
+      {/* Sticky bottom CTA */}
+      {showStickyCta && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 w-full max-w-2xl animate-sticky-cta-in">
+          <div className="flex items-center justify-between gap-4 px-5 py-3 rounded-full border border-accent/30 bg-card/90 backdrop-blur-md shadow-2xl shadow-accent/20">
+            <p className="text-sm text-foreground font-medium hidden sm:block">Ready to close more deals?</p>
+            <p className="text-sm text-foreground font-medium sm:hidden">Close more deals</p>
+            <Link to="/signup">
+              <Button size="sm" className="bg-gradient-to-r from-accent to-purple text-accent-foreground bg-[length:200%_100%] hover:bg-[position:100%_0] transition-[background-position,transform,box-shadow] duration-500 hover:shadow-[0_0_20px_hsl(var(--accent)/0.5)] h-9 px-5 gap-2 hover:-translate-y-0.5">
+                Get Paid Faster
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
