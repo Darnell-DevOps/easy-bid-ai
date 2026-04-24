@@ -221,16 +221,17 @@ export default function Index() {
 
             {/* Acceptance badge */}
             <div
-              className="absolute top-[44%] left-[-8px] sm:left-2 rounded-2xl border border-accent/30 bg-card/85 backdrop-blur-xl shadow-2xl shadow-accent/20 px-4 py-3 flex items-center gap-3 animate-float-slow animate-hero-fade-up"
+              className="absolute top-[42%] left-[-12px] sm:left-2 rounded-2xl border border-accent/30 bg-card/85 backdrop-blur-xl shadow-2xl shadow-accent/20 px-5 py-4 sm:px-6 sm:py-5 flex items-center gap-4 animate-float-slow animate-hero-fade-up"
               style={{ animationDelay: "0.55s" }}
             >
               <div className="absolute inset-0 rounded-2xl pointer-events-none animate-hero-card-glow" style={{ animationDelay: "-6s" }} />
-              <div className="w-9 h-9 rounded-full bg-accent/15 flex items-center justify-center">
-                <FileCheck className="w-4 h-4 text-accent" />
+              <div className="w-12 h-12 rounded-full bg-accent/15 flex items-center justify-center shrink-0">
+                <FileCheck className="w-6 h-6 text-accent" />
               </div>
-              <div>
-                <p className="text-xs font-semibold text-foreground">Client accepted</p>
-                <p className="text-[10px] text-muted-foreground">Sarah K. · 2 min ago</p>
+              <div className="pr-1">
+                <p className="text-sm font-semibold text-foreground">Client accepted</p>
+                <p className="text-[11px] text-muted-foreground">Sarah K. · 2 min ago</p>
+                <span className="inline-block mt-1.5 text-[10px] font-semibold text-accent bg-accent/10 px-2 py-0.5 rounded-full">Signed & approved</span>
               </div>
             </div>
 
