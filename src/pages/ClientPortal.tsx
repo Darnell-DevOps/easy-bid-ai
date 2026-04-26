@@ -20,6 +20,7 @@ import {
   Mail,
   FileCheck,
   CalendarPlus,
+  FileSignature,
 } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
 import PremiumProposalRenderer from "@/components/proposal/PremiumProposalRenderer";
@@ -53,6 +54,14 @@ interface PublicProposal {
 interface BookingLinkLite {
   slug: string;
   name: string;
+}
+
+interface ContractLite {
+  id: string;
+  title: string;
+  status: string;
+  signing_token: string;
+  signed_at: string | null;
 }
 
 const CURRENCY_SYMBOL: Record<string, string> = {
@@ -91,6 +100,7 @@ export default function ClientPortal() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [submitting, setSubmitting] = useState<"accept" | "reject" | null>(null);
   const [bookingLink, setBookingLink] = useState<BookingLinkLite | null>(null);
+  const [contract, setContract] = useState<ContractLite | null>(null);
   const { openCheckout, loading: payLoading, available: paymentsAvailable } = useProposalCheckout();
 
   useEffect(() => {
@@ -124,6 +134,18 @@ export default function ClientPortal() {
         .maybeSingle()
         .then(({ data: bl }) => {
           if (bl) setBookingLink(bl as BookingLinkLite);
+        });
+
+      // Fetch latest contract for this proposal
+      supabase
+        .from("contracts")
+        .select("id, title, status, signing_token, signed_at")
+        .eq("proposal_id", id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+        .then(({ data: ct }) => {
+          if (ct) setContract(ct as ContractLite);
         });
 
       // Auto-mark as viewed (non-blocking)
@@ -165,6 +187,44 @@ export default function ClientPortal() {
       client_response_message: message.trim() || proposal.client_response_message,
     };
     setProposal(updated);
+
+    // Auto-draft a contract in the background (silent — owner will review & send)
+    if (!contract) {
+      supabase.functions
+        .invoke("generate-contract", {
+          body: {
+            contract_type: "service_agreement",
+            client_name: proposal.client_name,
+            company_name: proposal.company_name,
+            service_type: proposal.service_type,
+            project_scope: (proposal as any).project_scope || "",
+            timeline: (proposal as any).timeline || "",
+            budget: formattedTotal || "",
+            payment_terms: "50% deposit, 50% on completion",
+          },
+        })
+        .then(async ({ data }) => {
+          if (!data?.body) return;
+          const { data: inserted } = await supabase
+            .from("contracts")
+            .insert({
+              user_id: proposal.user_id,
+              proposal_id: proposal.id,
+              contract_type: "service_agreement",
+              title: data.title || "Service Agreement",
+              body: data.body,
+              client_name: proposal.client_name,
+              company_name: proposal.company_name,
+              amount_cents: proposal.amount_cents,
+              currency: proposal.currency,
+              status: "draft",
+            })
+            .select("id, title, status, signing_token, signed_at")
+            .single();
+          if (inserted) setContract(inserted as ContractLite);
+        })
+        .catch((err) => console.warn("auto-draft contract failed", err));
+    }
 
     // Immediately open payment overlay
     if (proposal.amount_cents && proposal.amount_cents >= 70 && paymentsAvailable) {
@@ -389,6 +449,40 @@ export default function ClientPortal() {
                   <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
                 </div>
               ))}
+            </div>
+          </section>
+        )}
+
+        {/* Contract section — appears once a contract has been sent */}
+        {contract && contract.status !== "draft" && (
+          <section className="rounded-xl border border-purple/30 bg-gradient-to-br from-purple/5 via-card to-accent/5 p-6 lg:p-8">
+            <div className="flex items-start gap-4">
+              <div className={`w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                contract.status === "signed" ? "bg-emerald-500/15 text-emerald-500" : "bg-purple/15 text-purple"
+              }`}>
+                {contract.status === "signed" ? <CheckCircle2 className="w-5 h-5" /> : <FileSignature className="w-5 h-5" />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs uppercase tracking-wider text-purple font-semibold mb-1">Agreement</p>
+                <h3 className="text-lg font-semibold text-foreground mb-1">{contract.title}</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  {contract.status === "signed"
+                    ? `Signed ${contract.signed_at ? new Date(contract.signed_at).toLocaleDateString() : ""}.`
+                    : "Please review and sign the agreement to formalise this engagement."}
+                </p>
+                <Button
+                  asChild
+                  className={`gap-2 ${contract.status === "signed"
+                    ? ""
+                    : "bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110"}`}
+                  variant={contract.status === "signed" ? "outline" : "default"}
+                >
+                  <RouterLink to={`/sign/${contract.signing_token}`}>
+                    <FileSignature className="w-4 h-4" />
+                    {contract.status === "signed" ? "View signed contract" : "Review & sign contract"}
+                  </RouterLink>
+                </Button>
+              </div>
             </div>
           </section>
         )}

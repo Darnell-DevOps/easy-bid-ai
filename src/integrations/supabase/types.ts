@@ -224,6 +224,119 @@ export type Database = {
         }
         Relationships: []
       }
+      contract_signatures: {
+        Row: {
+          contract_id: string
+          id: string
+          ip_address: string | null
+          method: string
+          signature_data: string
+          signed_at: string
+          signer_email: string | null
+          signer_name: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          contract_id: string
+          id?: string
+          ip_address?: string | null
+          method?: string
+          signature_data: string
+          signed_at?: string
+          signer_email?: string | null
+          signer_name: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          contract_id?: string
+          id?: string
+          ip_address?: string | null
+          method?: string
+          signature_data?: string
+          signed_at?: string
+          signer_email?: string | null
+          signer_name?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_signatures_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contracts: {
+        Row: {
+          amount_cents: number | null
+          body: string
+          client_email: string | null
+          client_id: string | null
+          client_name: string
+          company_name: string | null
+          contract_type: string
+          created_at: string
+          currency: string | null
+          id: string
+          proposal_id: string | null
+          sent_at: string | null
+          signed_at: string | null
+          signing_token: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+          viewed_at: string | null
+        }
+        Insert: {
+          amount_cents?: number | null
+          body?: string
+          client_email?: string | null
+          client_id?: string | null
+          client_name?: string
+          company_name?: string | null
+          contract_type?: string
+          created_at?: string
+          currency?: string | null
+          id?: string
+          proposal_id?: string | null
+          sent_at?: string | null
+          signed_at?: string | null
+          signing_token?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+          viewed_at?: string | null
+        }
+        Update: {
+          amount_cents?: number | null
+          body?: string
+          client_email?: string | null
+          client_id?: string | null
+          client_name?: string
+          company_name?: string | null
+          contract_type?: string
+          created_at?: string
+          currency?: string | null
+          id?: string
+          proposal_id?: string | null
+          sent_at?: string | null
+          signed_at?: string | null
+          signing_token?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          viewed_at?: string | null
+        }
+        Relationships: []
+      }
       policies: {
         Row: {
           business_name: string
@@ -378,6 +491,19 @@ export type Database = {
       client_portal_respond: {
         Args: { _action: string; _message?: string; _proposal_id: string }
         Returns: undefined
+      }
+      contract_record_view: { Args: { _token: string }; Returns: undefined }
+      contract_sign: {
+        Args: {
+          _ip: string
+          _method: string
+          _signature_data: string
+          _signer_email: string
+          _signer_name: string
+          _token: string
+          _ua: string
+        }
+        Returns: string
       }
       mark_proposal_paid: {
         Args: { _proposal_id: string; _txn_id: string }

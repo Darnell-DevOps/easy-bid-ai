@@ -8,6 +8,7 @@ import DealActivity from "@/components/dashboard/DealActivity";
 import ProposalsList from "@/components/dashboard/ProposalsList";
 import OnboardingHighlight from "@/components/dashboard/OnboardingHighlight";
 import UpcomingBookings from "@/components/dashboard/UpcomingBookings";
+import ContractsWidget from "@/components/dashboard/ContractsWidget";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sparkles, ArrowRight, UserPlus, Lightbulb } from "lucide-react";
@@ -257,6 +258,8 @@ export default function Dashboard() {
             </Card>
 
             <UpcomingBookings />
+
+            <ContractsWidget />
 
             <div>
               <h2 className="text-sm font-semibold mb-3 uppercase tracking-wider text-muted-foreground/80">
