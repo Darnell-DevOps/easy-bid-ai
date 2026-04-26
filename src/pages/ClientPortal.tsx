@@ -453,6 +453,40 @@ export default function ClientPortal() {
           </section>
         )}
 
+        {/* Contract section — appears once a contract has been sent */}
+        {contract && contract.status !== "draft" && (
+          <section className="rounded-xl border border-purple/30 bg-gradient-to-br from-purple/5 via-card to-accent/5 p-6 lg:p-8">
+            <div className="flex items-start gap-4">
+              <div className={`w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                contract.status === "signed" ? "bg-emerald-500/15 text-emerald-500" : "bg-purple/15 text-purple"
+              }`}>
+                {contract.status === "signed" ? <CheckCircle2 className="w-5 h-5" /> : <FileSignature className="w-5 h-5" />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs uppercase tracking-wider text-purple font-semibold mb-1">Agreement</p>
+                <h3 className="text-lg font-semibold text-foreground mb-1">{contract.title}</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  {contract.status === "signed"
+                    ? `Signed ${contract.signed_at ? new Date(contract.signed_at).toLocaleDateString() : ""}.`
+                    : "Please review and sign the agreement to formalise this engagement."}
+                </p>
+                <Button
+                  asChild
+                  className={`gap-2 ${contract.status === "signed"
+                    ? ""
+                    : "bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110"}`}
+                  variant={contract.status === "signed" ? "outline" : "default"}
+                >
+                  <RouterLink to={`/sign/${contract.signing_token}`}>
+                    <FileSignature className="w-4 h-4" />
+                    {contract.status === "signed" ? "View signed contract" : "Review & sign contract"}
+                  </RouterLink>
+                </Button>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Final response section — Accept & Pay OR confirmation */}
         {isPaid ? (
           <section className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-6 lg:p-10 text-center">
