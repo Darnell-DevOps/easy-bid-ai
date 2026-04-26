@@ -188,6 +188,44 @@ export default function ClientPortal() {
     };
     setProposal(updated);
 
+    // Auto-draft a contract in the background (silent — owner will review & send)
+    if (!contract) {
+      supabase.functions
+        .invoke("generate-contract", {
+          body: {
+            contract_type: "service_agreement",
+            client_name: proposal.client_name,
+            company_name: proposal.company_name,
+            service_type: proposal.service_type,
+            project_scope: (proposal as any).project_scope || "",
+            timeline: (proposal as any).timeline || "",
+            budget: formattedTotal || "",
+            payment_terms: "50% deposit, 50% on completion",
+          },
+        })
+        .then(async ({ data }) => {
+          if (!data?.body) return;
+          const { data: inserted } = await supabase
+            .from("contracts")
+            .insert({
+              user_id: proposal.user_id,
+              proposal_id: proposal.id,
+              contract_type: "service_agreement",
+              title: data.title || "Service Agreement",
+              body: data.body,
+              client_name: proposal.client_name,
+              company_name: proposal.company_name,
+              amount_cents: proposal.amount_cents,
+              currency: proposal.currency,
+              status: "draft",
+            })
+            .select("id, title, status, signing_token, signed_at")
+            .single();
+          if (inserted) setContract(inserted as ContractLite);
+        })
+        .catch((err) => console.warn("auto-draft contract failed", err));
+    }
+
     // Immediately open payment overlay
     if (proposal.amount_cents && proposal.amount_cents >= 70 && paymentsAvailable) {
       await openCheckout({
