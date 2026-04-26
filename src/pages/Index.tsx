@@ -514,7 +514,7 @@ export default function Index() {
               <CreditCard className="w-7 h-7 text-accent-foreground" />
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Stop chasing clients — <span className="bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent">start closing deals</span>
+              Stop chasing clients — <span className="text-shimmer-gradient">start closing deals</span>
             </h2>
             <p className="text-muted-foreground text-lg mb-8 max-w-xl mx-auto">
               Join freelancers and agencies who turned their proposals into a payment machine.
