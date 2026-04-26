@@ -167,3 +167,38 @@
     transform: translateY(0);
   }
 }
+
+/* Animated text shimmer for premium gradient words */
+.text-shimmer-gradient {
+  background-image: linear-gradient(
+    100deg,
+    hsl(var(--accent)) 0%,
+    hsl(var(--purple)) 35%,
+    hsl(var(--foreground)) 50%,
+    hsl(var(--purple)) 65%,
+    hsl(var(--accent)) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: text-shimmer 6s linear infinite;
+}
+
+@media (max-width: 640px) {
+  .animate-ambient-drift,
+  .animate-ambient-drift-alt {
+    animation-duration: 36s;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -77,7 +77,22 @@ export default function Index() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative overflow-x-hidden">
+      {/* Page-wide ambient background glow (very subtle, slow) */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        <div
+          className="absolute top-[20%] -left-[10%] w-[60vw] h-[60vw] max-w-[820px] max-h-[820px] rounded-full blur-3xl animate-ambient-drift"
+          style={{ background: "radial-gradient(closest-side, hsl(var(--accent) / 0.18), transparent 70%)" }}
+        />
+        <div
+          className="absolute top-[55%] -right-[10%] w-[55vw] h-[55vw] max-w-[760px] max-h-[760px] rounded-full blur-3xl animate-ambient-drift-alt"
+          style={{ background: "radial-gradient(closest-side, hsl(var(--purple) / 0.20), transparent 70%)", animationDelay: "-8s" }}
+        />
+        <div
+          className="absolute bottom-[5%] left-[30%] w-[40vw] h-[40vw] max-w-[560px] max-h-[560px] rounded-full blur-3xl animate-ambient-drift"
+          style={{ background: "radial-gradient(closest-side, hsl(var(--accent) / 0.12), transparent 70%)", animationDelay: "-14s" }}
+        />
+      </div>
       {/* Sticky premium nav */}
       <nav className="fixed top-0 inset-x-0 z-50 border-b border-white/5 bg-background/40 backdrop-blur-xl supports-[backdrop-filter]:bg-background/30">
         <div className="container flex items-center justify-between h-16 px-4 md:px-8">
@@ -294,7 +309,7 @@ export default function Index() {
       <section className="py-16 px-4">
         <div className="container max-w-4xl">
           <AnimateIn className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Turn proposals into <span className="bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent">paid deals</span></h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Turn proposals into <span className="text-shimmer-gradient">paid deals</span></h2>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto leading-relaxed">
               Your client gets one link.<br />
               They review, accept, and pay — <span className="text-foreground font-semibold">instantly.</span>
@@ -331,9 +346,9 @@ export default function Index() {
                         <ArrowRight
                           className={`w-6 h-6 rotate-90 md:rotate-0 flex-shrink-0 transition-all duration-500 ${
                             activeStep > i || (activeStep === 0 && i === arr.length - 1)
-                              ? "text-accent translate-x-0"
+                              ? "text-accent"
                               : isActive
-                              ? "text-accent md:translate-x-1"
+                              ? "text-accent animate-arrow-slide"
                               : "text-accent/40"
                           }`}
                         />
@@ -437,9 +452,9 @@ export default function Index() {
           <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto items-stretch">
             {plans.map((plan, i) => (
               <AnimateIn key={plan.name} delay={i * 150} direction="up">
-                <Card className={`border relative transition-all duration-500 flex flex-col h-full hover:-translate-y-1.5 ${plan.popular ? "border-accent border-2 shadow-2xl shadow-accent/30 ring-2 ring-accent/40 z-10 hover:shadow-[0_20px_60px_-15px_hsl(var(--accent)/0.55)]" : "border-border shadow-none hover:border-accent/40 hover:shadow-[0_12px_40px_-15px_hsl(var(--accent)/0.25)]"}`}>
+                <Card className={`border relative transition-all duration-500 flex flex-col h-full hover:-translate-y-1.5 ${plan.popular ? "border-accent border-2 shadow-2xl shadow-accent/30 ring-2 ring-accent/40 z-10 hover:shadow-[0_20px_60px_-15px_hsl(var(--accent)/0.55)] animate-border-glow" : "border-border shadow-none hover:border-accent/40 hover:shadow-[0_12px_40px_-15px_hsl(var(--accent)/0.25)]"}`}>
                   {plan.popular && (
-                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-accent text-accent-foreground text-xs font-semibold tracking-wide shadow-lg shadow-accent/30">
+                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-accent text-accent-foreground text-xs font-semibold tracking-wide shadow-lg shadow-accent/30 animate-soft-pulse">
                       Most popular
                     </div>
                   )}
@@ -499,7 +514,7 @@ export default function Index() {
               <CreditCard className="w-7 h-7 text-accent-foreground" />
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Stop chasing clients — <span className="bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent">start closing deals</span>
+              Stop chasing clients — <span className="text-shimmer-gradient">start closing deals</span>
             </h2>
             <p className="text-muted-foreground text-lg mb-8 max-w-xl mx-auto">
               Join freelancers and agencies who turned their proposals into a payment machine.
@@ -517,12 +532,12 @@ export default function Index() {
       {/* Trust badges */}
       <section className="px-4 pb-10">
         <AnimateIn className="container max-w-4xl">
-          <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-10 py-6 px-6 rounded-xl border border-border/60 bg-card/40 text-sm text-muted-foreground">
-            <span className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-accent" /> Secure payments via Paddle</span>
+          <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-10 py-6 px-6 rounded-xl border border-border/60 bg-card/40 text-sm text-muted-foreground transition-all duration-500 hover:border-accent/30 hover:shadow-[0_10px_40px_-20px_hsl(var(--accent)/0.4)]">
+            <span className="group flex items-center gap-2 transition-all duration-300 hover:text-foreground hover:-translate-y-0.5"><ShieldCheck className="w-4 h-4 text-accent transition-all duration-300 group-hover:drop-shadow-[0_0_6px_hsl(var(--accent)/0.7)]" /> Secure payments via Paddle</span>
             <span className="hidden md:inline-block w-px h-4 bg-border" />
-            <span className="flex items-center gap-2"><FileText className="w-4 h-4 text-accent" /> Professional client-ready proposals</span>
+            <span className="group flex items-center gap-2 transition-all duration-300 hover:text-foreground hover:-translate-y-0.5"><FileText className="w-4 h-4 text-accent transition-all duration-300 group-hover:drop-shadow-[0_0_6px_hsl(var(--accent)/0.7)]" /> Professional client-ready proposals</span>
             <span className="hidden md:inline-block w-px h-4 bg-border" />
-            <span className="flex items-center gap-2"><Zap className="w-4 h-4 text-accent" /> Built for agencies & freelancers</span>
+            <span className="group flex items-center gap-2 transition-all duration-300 hover:text-foreground hover:-translate-y-0.5"><Zap className="w-4 h-4 text-accent transition-all duration-300 group-hover:drop-shadow-[0_0_6px_hsl(var(--accent)/0.7)]" /> Built for agencies & freelancers</span>
           </div>
         </AnimateIn>
       </section>
@@ -538,20 +553,25 @@ export default function Index() {
       </footer>
 
       {/* Sticky bottom CTA */}
-      {showStickyCta && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 w-full max-w-2xl animate-sticky-cta-in">
-          <div className="flex items-center justify-between gap-4 px-5 py-3 rounded-full border border-accent/30 bg-card/90 backdrop-blur-md shadow-2xl shadow-accent/20">
-            <p className="text-sm text-foreground font-medium hidden sm:block">Ready to close more deals?</p>
-            <p className="text-sm text-foreground font-medium sm:hidden">Close more deals</p>
-            <Link to="/signup">
-              <Button size="sm" className="bg-gradient-to-r from-accent to-purple text-accent-foreground bg-[length:200%_100%] hover:bg-[position:100%_0] transition-[background-position,transform,box-shadow] duration-500 hover:shadow-[0_0_20px_hsl(var(--accent)/0.5)] h-9 px-5 gap-2 hover:-translate-y-0.5">
-                Get Paid Faster
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Button>
-            </Link>
-          </div>
+      <div
+        className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 w-full max-w-2xl transition-all duration-500 ease-out ${
+          showStickyCta
+            ? "opacity-100 translate-y-0 pointer-events-auto"
+            : "opacity-0 translate-y-6 pointer-events-none"
+        }`}
+        style={{ willChange: "opacity, transform" }}
+      >
+        <div className="flex items-center justify-between gap-4 px-5 py-3 rounded-full border border-accent/30 bg-card/90 backdrop-blur-md shadow-2xl shadow-accent/20">
+          <p className="text-sm text-foreground font-medium hidden sm:block">Ready to close more deals?</p>
+          <p className="text-sm text-foreground font-medium sm:hidden">Close more deals</p>
+          <Link to="/signup">
+            <Button size="sm" className="bg-gradient-to-r from-accent to-purple text-accent-foreground bg-[length:200%_100%] hover:bg-[position:100%_0] transition-[background-position,transform,box-shadow] duration-500 hover:shadow-[0_0_20px_hsl(var(--accent)/0.5)] h-9 px-5 gap-2 hover:-translate-y-0.5">
+              Get Paid Faster
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Button>
+          </Link>
         </div>
-      )}
+      </div>
     </div>
   );
 }

@@ -45,7 +45,9 @@ export function AnimateIn({
       style={{
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? "none" : transforms[direction],
-        transition: `opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
+        filter: isVisible ? "blur(0px)" : "blur(6px)",
+        willChange: "opacity, transform, filter",
+        transition: `opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms, filter 0.7s ease-out ${delay}ms`,
       }}
     >
       {children}

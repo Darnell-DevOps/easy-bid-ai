@@ -152,6 +152,30 @@ export default {
           "0%, 100%": { opacity: "0.15", transform: "translateY(-30%) scaleY(0.6)" },
           "50%": { opacity: "0.55", transform: "translateY(30%) scaleY(1)" },
         },
+        "ambient-drift": {
+          "0%, 100%": { transform: "translate3d(0,0,0) scale(1)", opacity: "0.45" },
+          "50%": { transform: "translate3d(4%, -3%, 0) scale(1.1)", opacity: "0.7" },
+        },
+        "ambient-drift-alt": {
+          "0%, 100%": { transform: "translate3d(0,0,0) scale(1)", opacity: "0.4" },
+          "50%": { transform: "translate3d(-5%, 4%, 0) scale(1.12)", opacity: "0.65" },
+        },
+        "text-shimmer": {
+          "0%": { backgroundPosition: "0% 50%" },
+          "100%": { backgroundPosition: "200% 50%" },
+        },
+        "soft-pulse": {
+          "0%, 100%": { transform: "scale(1)", opacity: "1", boxShadow: "0 0 0 0 hsl(var(--accent) / 0.5)" },
+          "50%": { transform: "scale(1.04)", opacity: "0.95", boxShadow: "0 0 24px 4px hsl(var(--accent) / 0.45)" },
+        },
+        "border-glow": {
+          "0%, 100%": { boxShadow: "0 0 0 1px hsl(var(--accent) / 0.35), 0 12px 40px -16px hsl(var(--accent) / 0.35)" },
+          "50%": { boxShadow: "0 0 0 1px hsl(var(--accent) / 0.55), 0 22px 70px -16px hsl(var(--accent) / 0.55)" },
+        },
+        "arrow-slide": {
+          "0%, 100%": { transform: "translateX(0)", opacity: "0.85" },
+          "50%": { transform: "translateX(4px)", opacity: "1" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -168,6 +192,12 @@ export default {
         "hero-fade-up": "hero-fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) both",
         "hero-card-glow": "hero-card-glow 9s ease-in-out infinite",
         "flow-hint": "flow-hint 4.5s ease-in-out infinite",
+        "ambient-drift": "ambient-drift 22s ease-in-out infinite",
+        "ambient-drift-alt": "ambient-drift-alt 28s ease-in-out infinite",
+        "text-shimmer": "text-shimmer 6s linear infinite",
+        "soft-pulse": "soft-pulse 2.6s ease-in-out infinite",
+        "border-glow": "border-glow 4s ease-in-out infinite",
+        "arrow-slide": "arrow-slide 1.6s ease-in-out infinite",
       },
     },
   },
