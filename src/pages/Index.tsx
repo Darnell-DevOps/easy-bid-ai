@@ -346,9 +346,9 @@ export default function Index() {
                         <ArrowRight
                           className={`w-6 h-6 rotate-90 md:rotate-0 flex-shrink-0 transition-all duration-500 ${
                             activeStep > i || (activeStep === 0 && i === arr.length - 1)
-                              ? "text-accent translate-x-0"
+                              ? "text-accent"
                               : isActive
-                              ? "text-accent md:translate-x-1"
+                              ? "text-accent animate-arrow-slide"
                               : "text-accent/40"
                           }`}
                         />
