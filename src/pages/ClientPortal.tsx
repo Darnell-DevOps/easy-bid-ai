@@ -158,7 +158,7 @@ export default function ClientPortal() {
     load();
   }, [id]);
 
-  const handleAcceptAndPay = async () => {
+  const handleAccept = async () => {
     if (!proposal) return;
     if (!agreedToTerms) {
       toast({
@@ -174,8 +174,8 @@ export default function ClientPortal() {
       _action: "accept",
       _message: message.trim() || null,
     });
-    setSubmitting(null);
     if (error) {
+      setSubmitting(null);
       toast({ title: "Couldn't accept proposal", description: error.message, variant: "destructive" });
       return;
     }
@@ -188,10 +188,10 @@ export default function ClientPortal() {
     };
     setProposal(updated);
 
-    // Auto-draft a contract in the background (silent — owner will review & send)
+    // Auto-draft a contract and immediately make it available for signing
     if (!contract) {
-      supabase.functions
-        .invoke("generate-contract", {
+      try {
+        const { data } = await supabase.functions.invoke("generate-contract", {
           body: {
             contract_type: "service_agreement",
             client_name: proposal.client_name,
@@ -202,9 +202,8 @@ export default function ClientPortal() {
             budget: formattedTotal || "",
             payment_terms: "50% deposit, 50% on completion",
           },
-        })
-        .then(async ({ data }) => {
-          if (!data?.body) return;
+        });
+        if (data?.body) {
           const { data: inserted } = await supabase
             .from("contracts")
             .insert({
@@ -217,22 +216,23 @@ export default function ClientPortal() {
               company_name: proposal.company_name,
               amount_cents: proposal.amount_cents,
               currency: proposal.currency,
-              status: "draft",
+              status: "sent",
+              sent_at: new Date().toISOString(),
             })
             .select("id, title, status, signing_token, signed_at")
             .single();
           if (inserted) setContract(inserted as ContractLite);
-        })
-        .catch((err) => console.warn("auto-draft contract failed", err));
+        }
+      } catch (err) {
+        console.warn("auto-draft contract failed", err);
+      }
     }
 
-    // Immediately open payment overlay
-    if (proposal.amount_cents && proposal.amount_cents >= 70 && paymentsAvailable) {
-      await openCheckout({
-        proposalId: proposal.id,
-        onPaid: () => setProposal((p) => (p ? { ...p, client_paid: true } : p)),
-      });
-    }
+    setSubmitting(null);
+    toast({
+      title: "Proposal accepted",
+      description: "Next step: review and sign your contract.",
+    });
   };
 
   const handleReject = async () => {
