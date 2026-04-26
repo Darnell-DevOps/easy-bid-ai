@@ -296,6 +296,9 @@ export default function ClientPortal() {
   const isRejected = status === "rejected";
   const isPaid = proposal.client_paid;
   const stage = deriveStage(proposal);
+  const isContractSigned = contract?.status === "signed";
+  const needsContractSignature = isAccepted && contract && !isContractSigned;
+  const readyToPay = isAccepted && isContractSigned && !isPaid;
   const acceptedNotPaid = isAccepted && !isPaid;
   const hasPrice = !!proposal.amount_cents && proposal.amount_cents >= 70;
 
