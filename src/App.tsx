@@ -28,6 +28,9 @@ import ClientPortal from "./pages/ClientPortal";
 import Onboarding from "./pages/Onboarding";
 import CalendarPage from "./pages/CalendarPage";
 import PublicBookingPage from "./pages/PublicBookingPage";
+import ContractsPage from "./pages/ContractsPage";
+import ContractDetail from "./pages/ContractDetail";
+import ContractSignPage from "./pages/ContractSignPage";
 import NotFound from "./pages/NotFound";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { PageTransition } from "@/components/PageTransition";
@@ -49,9 +52,12 @@ const App = () => (
             <Route path="/sample" element={<SampleProposal />} />
             <Route path="/proposal/view/:id" element={<ClientPortal />} />
             <Route path="/book/:slug" element={<PublicBookingPage />} />
+            <Route path="/sign/:token" element={<ContractSignPage />} />
             <Route path="/onboarding" element={<AuthGuard><Onboarding /></AuthGuard>} />
             <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
             <Route path="/dashboard/calendar" element={<AuthGuard><CalendarPage /></AuthGuard>} />
+            <Route path="/dashboard/contracts" element={<AuthGuard><ContractsPage /></AuthGuard>} />
+            <Route path="/dashboard/contracts/:id" element={<AuthGuard><ContractDetail /></AuthGuard>} />
             <Route path="/dashboard/new" element={<AuthGuard><NewProposal /></AuthGuard>} />
             <Route path="/dashboard/proposal/:id" element={<AuthGuard><ProposalView /></AuthGuard>} />
             <Route path="/dashboard/billing" element={<AuthGuard><Billing /></AuthGuard>} />
