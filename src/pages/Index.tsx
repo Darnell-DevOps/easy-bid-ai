@@ -77,7 +77,22 @@ export default function Index() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative overflow-x-hidden">
+      {/* Page-wide ambient background glow (very subtle, slow) */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        <div
+          className="absolute top-[20%] -left-[10%] w-[60vw] h-[60vw] max-w-[820px] max-h-[820px] rounded-full blur-3xl animate-ambient-drift"
+          style={{ background: "radial-gradient(closest-side, hsl(var(--accent) / 0.18), transparent 70%)" }}
+        />
+        <div
+          className="absolute top-[55%] -right-[10%] w-[55vw] h-[55vw] max-w-[760px] max-h-[760px] rounded-full blur-3xl animate-ambient-drift-alt"
+          style={{ background: "radial-gradient(closest-side, hsl(var(--purple) / 0.20), transparent 70%)", animationDelay: "-8s" }}
+        />
+        <div
+          className="absolute bottom-[5%] left-[30%] w-[40vw] h-[40vw] max-w-[560px] max-h-[560px] rounded-full blur-3xl animate-ambient-drift"
+          style={{ background: "radial-gradient(closest-side, hsl(var(--accent) / 0.12), transparent 70%)", animationDelay: "-14s" }}
+        />
+      </div>
       {/* Sticky premium nav */}
       <nav className="fixed top-0 inset-x-0 z-50 border-b border-white/5 bg-background/40 backdrop-blur-xl supports-[backdrop-filter]:bg-background/30">
         <div className="container flex items-center justify-between h-16 px-4 md:px-8">
