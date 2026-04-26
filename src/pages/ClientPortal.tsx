@@ -20,6 +20,7 @@ import {
   Mail,
   FileCheck,
   CalendarPlus,
+  FileSignature,
 } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
 import PremiumProposalRenderer from "@/components/proposal/PremiumProposalRenderer";
@@ -53,6 +54,14 @@ interface PublicProposal {
 interface BookingLinkLite {
   slug: string;
   name: string;
+}
+
+interface ContractLite {
+  id: string;
+  title: string;
+  status: string;
+  signing_token: string;
+  signed_at: string | null;
 }
 
 const CURRENCY_SYMBOL: Record<string, string> = {
@@ -91,6 +100,7 @@ export default function ClientPortal() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [submitting, setSubmitting] = useState<"accept" | "reject" | null>(null);
   const [bookingLink, setBookingLink] = useState<BookingLinkLite | null>(null);
+  const [contract, setContract] = useState<ContractLite | null>(null);
   const { openCheckout, loading: payLoading, available: paymentsAvailable } = useProposalCheckout();
 
   useEffect(() => {
@@ -124,6 +134,18 @@ export default function ClientPortal() {
         .maybeSingle()
         .then(({ data: bl }) => {
           if (bl) setBookingLink(bl as BookingLinkLite);
+        });
+
+      // Fetch latest contract for this proposal
+      supabase
+        .from("contracts")
+        .select("id, title, status, signing_token, signed_at")
+        .eq("proposal_id", id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+        .then(({ data: ct }) => {
+          if (ct) setContract(ct as ContractLite);
         });
 
       // Auto-mark as viewed (non-blocking)
