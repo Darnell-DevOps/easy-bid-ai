@@ -682,8 +682,8 @@ export default function ClientPortal() {
         </p>
       </main>
 
-      {/* Sticky mobile Pay bar — only when accepted but not paid */}
-      {acceptedNotPaid && (
+      {/* Sticky mobile Pay bar — only when contract is signed and payment is due */}
+      {readyToPay && (
         <div className="fixed bottom-0 inset-x-0 z-20 sm:hidden border-t border-border bg-card/95 backdrop-blur p-3">
           <Button
             size="lg"
