@@ -158,7 +158,7 @@ export default function ClientPortal() {
     load();
   }, [id]);
 
-  const handleAcceptAndPay = async () => {
+  const handleAccept = async () => {
     if (!proposal) return;
     if (!agreedToTerms) {
       toast({
@@ -174,8 +174,8 @@ export default function ClientPortal() {
       _action: "accept",
       _message: message.trim() || null,
     });
-    setSubmitting(null);
     if (error) {
+      setSubmitting(null);
       toast({ title: "Couldn't accept proposal", description: error.message, variant: "destructive" });
       return;
     }
@@ -188,10 +188,10 @@ export default function ClientPortal() {
     };
     setProposal(updated);
 
-    // Auto-draft a contract in the background (silent — owner will review & send)
+    // Auto-draft a contract and immediately make it available for signing
     if (!contract) {
-      supabase.functions
-        .invoke("generate-contract", {
+      try {
+        const { data } = await supabase.functions.invoke("generate-contract", {
           body: {
             contract_type: "service_agreement",
             client_name: proposal.client_name,
@@ -202,9 +202,8 @@ export default function ClientPortal() {
             budget: formattedTotal || "",
             payment_terms: "50% deposit, 50% on completion",
           },
-        })
-        .then(async ({ data }) => {
-          if (!data?.body) return;
+        });
+        if (data?.body) {
           const { data: inserted } = await supabase
             .from("contracts")
             .insert({
@@ -217,22 +216,23 @@ export default function ClientPortal() {
               company_name: proposal.company_name,
               amount_cents: proposal.amount_cents,
               currency: proposal.currency,
-              status: "draft",
+              status: "sent",
+              sent_at: new Date().toISOString(),
             })
             .select("id, title, status, signing_token, signed_at")
             .single();
           if (inserted) setContract(inserted as ContractLite);
-        })
-        .catch((err) => console.warn("auto-draft contract failed", err));
+        }
+      } catch (err) {
+        console.warn("auto-draft contract failed", err);
+      }
     }
 
-    // Immediately open payment overlay
-    if (proposal.amount_cents && proposal.amount_cents >= 70 && paymentsAvailable) {
-      await openCheckout({
-        proposalId: proposal.id,
-        onPaid: () => setProposal((p) => (p ? { ...p, client_paid: true } : p)),
-      });
-    }
+    setSubmitting(null);
+    toast({
+      title: "Proposal accepted",
+      description: "Next step: review and sign your contract.",
+    });
   };
 
   const handleReject = async () => {
@@ -296,6 +296,9 @@ export default function ClientPortal() {
   const isRejected = status === "rejected";
   const isPaid = proposal.client_paid;
   const stage = deriveStage(proposal);
+  const isContractSigned = contract?.status === "signed";
+  const needsContractSignature = isAccepted && contract && !isContractSigned;
+  const readyToPay = isAccepted && isContractSigned && !isPaid;
   const acceptedNotPaid = isAccepted && !isPaid;
   const hasPrice = !!proposal.amount_cents && proposal.amount_cents >= 70;
 
@@ -341,17 +344,55 @@ export default function ClientPortal() {
           </div>
         </section>
 
-        {/* Accepted-but-unpaid lock notice */}
-        {acceptedNotPaid && (
+        {/* Accepted — needs contract signature */}
+        {needsContractSignature && (
           <div className="rounded-xl border border-purple/40 bg-gradient-to-br from-purple/15 via-accent/5 to-transparent p-5 sm:p-6 text-center">
             <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-purple/20 mb-3">
-              <Lock className="w-5 h-5 text-purple" />
+              <FileSignature className="w-5 h-5 text-purple" />
             </div>
             <p className="text-base sm:text-lg font-semibold text-foreground mb-1">
-              Next step: Complete payment to begin
+              Proposal accepted — review &amp; sign your contract
             </p>
             <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
-              You've accepted the proposal. Secure your slot with payment to kick things off.
+              We've prepared your agreement. Sign it to unlock payment and get started.
+            </p>
+            <Button
+              size="lg"
+              asChild
+              className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 hover:shadow-purple/30 transition-all"
+            >
+              <RouterLink to={`/sign/${contract!.signing_token}`}>
+                <FileSignature className="w-4 h-4" />
+                Review &amp; Sign Contract
+              </RouterLink>
+            </Button>
+          </div>
+        )}
+
+        {/* Accepted — drafting contract spinner */}
+        {isAccepted && !contract && !isPaid && (
+          <div className="rounded-xl border border-purple/30 bg-gradient-to-br from-purple/10 to-transparent p-5 sm:p-6 text-center">
+            <Loader2 className="w-5 h-5 text-purple animate-spin mx-auto mb-3" />
+            <p className="text-base font-semibold text-foreground mb-1">
+              Proposal accepted — preparing your contract…
+            </p>
+            <p className="text-sm text-muted-foreground">
+              This usually takes just a few seconds.
+            </p>
+          </div>
+        )}
+
+        {/* Contract signed — ready to pay */}
+        {readyToPay && (
+          <div className="rounded-xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-card to-transparent p-5 sm:p-6 text-center">
+            <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/15 mb-3">
+              <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+            </div>
+            <p className="text-base sm:text-lg font-semibold text-foreground mb-1">
+              Contract signed — complete payment to begin work
+            </p>
+            <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
+              Secure your slot with payment and we'll kick things off.
             </p>
             <Button
               size="lg"
@@ -368,8 +409,6 @@ export default function ClientPortal() {
             </Button>
           </div>
         )}
-
-        {/* Proposal content — dimmed/locked once accepted */}
         {proposal.proposal_content && (
           <section
             className={cn(
@@ -512,7 +551,7 @@ export default function ClientPortal() {
               </Button>
             )}
           </section>
-        ) : isAccepted && bookingLink ? (
+        ) : isAccepted && isContractSigned && !hasPrice && bookingLink ? (
           <section className="rounded-xl border border-purple/30 bg-gradient-to-br from-purple/10 via-accent/5 to-transparent p-6 lg:p-10 text-center">
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-purple/15 mb-4">
               <CalendarPlus className="w-6 h-6 text-purple" />
@@ -556,7 +595,7 @@ export default function ClientPortal() {
               Ready to move forward?
             </h2>
             <p className="text-sm text-muted-foreground mb-5">
-              One click accepts the proposal and opens secure payment.
+              Accept the proposal to receive your contract for review and signature.
             </p>
 
             <Textarea
@@ -592,18 +631,16 @@ export default function ClientPortal() {
             <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
               <Button
                 size="lg"
-                onClick={handleAcceptAndPay}
-                disabled={!!submitting || payLoading || !agreedToTerms}
+                onClick={handleAccept}
+                disabled={!!submitting || !agreedToTerms}
                 className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 hover:shadow-purple/30 transition-all h-12 disabled:opacity-50"
               >
-                {submitting === "accept" || payLoading ? (
+                {submitting === "accept" ? (
                   <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
                 ) : (
                   <CheckCircle2 className="w-4 h-4 shrink-0" />
                 )}
-                {hasPrice && formattedTotal
-                  ? `Accept & Pay — ${formattedTotal}`
-                  : "Accept & Get Started"}
+                Accept Proposal
                 <ArrowRight className="w-4 h-4 shrink-0" />
               </Button>
               <Button
@@ -645,8 +682,8 @@ export default function ClientPortal() {
         </p>
       </main>
 
-      {/* Sticky mobile Pay bar — only when accepted but not paid */}
-      {acceptedNotPaid && (
+      {/* Sticky mobile Pay bar — only when contract is signed and payment is due */}
+      {readyToPay && (
         <div className="fixed bottom-0 inset-x-0 z-20 sm:hidden border-t border-border bg-card/95 backdrop-blur p-3">
           <Button
             size="lg"
