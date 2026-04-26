@@ -259,6 +259,8 @@ export default function Dashboard() {
 
             <UpcomingBookings />
 
+            <ContractsWidget />
+
             <div>
               <h2 className="text-sm font-semibold mb-3 uppercase tracking-wider text-muted-foreground/80">
                 Deal Activity
