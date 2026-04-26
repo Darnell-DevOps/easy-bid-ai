@@ -595,7 +595,7 @@ export default function ClientPortal() {
               Ready to move forward?
             </h2>
             <p className="text-sm text-muted-foreground mb-5">
-              One click accepts the proposal and opens secure payment.
+              Accept the proposal to receive your contract for review and signature.
             </p>
 
             <Textarea
@@ -631,18 +631,16 @@ export default function ClientPortal() {
             <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
               <Button
                 size="lg"
-                onClick={handleAcceptAndPay}
-                disabled={!!submitting || payLoading || !agreedToTerms}
+                onClick={handleAccept}
+                disabled={!!submitting || !agreedToTerms}
                 className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 hover:shadow-purple/30 transition-all h-12 disabled:opacity-50"
               >
-                {submitting === "accept" || payLoading ? (
+                {submitting === "accept" ? (
                   <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
                 ) : (
                   <CheckCircle2 className="w-4 h-4 shrink-0" />
                 )}
-                {hasPrice && formattedTotal
-                  ? `Accept & Pay — ${formattedTotal}`
-                  : "Accept & Get Started"}
+                Accept Proposal
                 <ArrowRight className="w-4 h-4 shrink-0" />
               </Button>
               <Button
