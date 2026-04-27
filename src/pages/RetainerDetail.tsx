@@ -210,6 +210,33 @@ export default function RetainerDetail() {
     navigate("/dashboard/retainers");
   };
 
+  const subscribeUrl = retainer
+    ? `${window.location.origin}/retainer/${retainer.access_token}`
+    : "";
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(subscribeUrl);
+      toast({ title: "Link copied", description: "Send this to your client to subscribe." });
+    } catch {
+      toast({ title: "Copy failed", variant: "destructive" });
+    }
+  };
+
+  const cancelSubscriptionAtPeriodEnd = async () => {
+    if (!retainer?.paddle_subscription_id) return;
+    if (!confirm("Cancel auto-billing at end of current period? The client keeps access until then.")) return;
+    const { error } = await supabase.functions.invoke("cancel-retainer-subscription", {
+      body: { retainerId: retainer.id, mode: "period_end" },
+    });
+    if (error) {
+      toast({ title: "Cancel failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Auto-billing will stop at period end" });
+    fetchAll();
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
