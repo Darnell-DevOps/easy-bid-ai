@@ -287,13 +287,44 @@ export default function ClientPortal() {
     });
   };
 
+  // Auto-create onboarding form once payment is complete
+  const ensureOnboardingForm = async (p: PublicProposal) => {
+    if (onboarding) return;
+    const fields = buildOnboardingFields(p.service_type);
+    const { data, error } = await supabase
+      .from("onboarding_forms")
+      .insert({
+        user_id: p.user_id,
+        proposal_id: p.id,
+        client_name: p.client_name,
+        service_type: p.service_type,
+        fields: fields as unknown as object,
+        status: "pending",
+        sent_at: new Date().toISOString(),
+      })
+      .select("*")
+      .single();
+    if (!error && data) setOnboarding(data as unknown as OnboardingFormRow);
+  };
+
   const handlePayAgain = async () => {
     if (!proposal) return;
     await openCheckout({
       proposalId: proposal.id,
-      onPaid: () => setProposal((p) => (p ? { ...p, client_paid: true } : p)),
+      onPaid: () => {
+        setProposal((p) => (p ? { ...p, client_paid: true } : p));
+        if (proposal) ensureOnboardingForm({ ...proposal, client_paid: true });
+      },
     });
   };
+
+  // If we land on the page already paid but with no onboarding, create one.
+  useEffect(() => {
+    if (proposal?.client_paid && !onboarding) {
+      ensureOnboardingForm(proposal);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [proposal?.client_paid, onboarding?.id]);
 
   const formattedTotal = useMemo(
     () => (proposal ? formatAmount(proposal.amount_cents, proposal.currency) : null),
