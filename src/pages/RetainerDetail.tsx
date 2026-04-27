@@ -93,9 +93,9 @@ export default function RetainerDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  const update = async (patch: Partial<Retainer> & Record<string, any>, msg: string) => {
+  const update = async (patch: Record<string, any>, msg: string) => {
     if (!retainer) return;
-    const { error } = await supabase.from("retainers").update(patch).eq("id", retainer.id);
+    const { error } = await supabase.from("retainers").update(patch as any).eq("id", retainer.id);
     if (error) {
       toast({ title: "Update failed", description: error.message, variant: "destructive" });
       return;
