@@ -107,6 +107,8 @@ export default function ClientPortal() {
   const [submitting, setSubmitting] = useState<"accept" | "reject" | null>(null);
   const [bookingLink, setBookingLink] = useState<BookingLinkLite | null>(null);
   const [contract, setContract] = useState<ContractLite | null>(null);
+  const [onboarding, setOnboarding] = useState<OnboardingFormRow | null>(null);
+  const [hasBooking, setHasBooking] = useState(false);
   const { openCheckout, loading: payLoading, available: paymentsAvailable } = useProposalCheckout();
 
   useEffect(() => {
@@ -152,6 +154,28 @@ export default function ClientPortal() {
         .maybeSingle()
         .then(({ data: ct }) => {
           if (ct) setContract(ct as ContractLite);
+        });
+
+      // Fetch latest onboarding form for this proposal
+      supabase
+        .from("onboarding_forms")
+        .select("*")
+        .eq("proposal_id", id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+        .then(({ data: ob }) => {
+          if (ob) setOnboarding(ob as unknown as OnboardingFormRow);
+        });
+
+      // Has booking?
+      supabase
+        .from("bookings")
+        .select("id")
+        .eq("proposal_id", id)
+        .limit(1)
+        .then(({ data: bk }) => {
+          if (bk && bk.length > 0) setHasBooking(true);
         });
 
       // Auto-mark as viewed (non-blocking)
