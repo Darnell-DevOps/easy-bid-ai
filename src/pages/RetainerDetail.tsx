@@ -25,6 +25,10 @@ import {
   Mail,
   Repeat,
   Trash2,
+  Link2,
+  Copy,
+  CheckCircle2,
+  Calendar,
 } from "lucide-react";
 
 interface Retainer {
@@ -52,6 +56,9 @@ interface Retainer {
   service_type: string | null;
   template_key: string | null;
   access_token: string;
+  paddle_subscription_id: string | null;
+  current_period_end: string | null;
+  cancel_at_period_end: boolean;
 }
 
 interface Invoice {
