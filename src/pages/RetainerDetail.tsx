@@ -366,6 +366,69 @@ export default function RetainerDetail() {
           </Card>
         )}
 
+        {/* Subscription / auto-charge */}
+        <Card className="border-border/60">
+          <CardContent className="p-5 space-y-4">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                  Auto-billing subscription
+                </p>
+                <p className="text-sm text-foreground mt-1">
+                  {retainer.paddle_subscription_id
+                    ? "Recurring charges run automatically via Paddle."
+                    : "Send the client a subscribe link to start auto-billing."}
+                </p>
+              </div>
+              {retainer.paddle_subscription_id ? (
+                <Badge variant="outline" className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 gap-1">
+                  <CheckCircle2 className="w-3 h-3" /> Active
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="bg-secondary text-muted-foreground border-border">
+                  Not subscribed
+                </Badge>
+              )}
+            </div>
+
+            {retainer.cancel_at_period_end && retainer.current_period_end && (
+              <div className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-300">
+                <Calendar className="w-4 h-4 mt-0.5" />
+                <p>
+                  Subscription set to cancel on{" "}
+                  {new Date(retainer.current_period_end).toLocaleDateString()}.
+                </p>
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex-1 flex items-center gap-2 rounded-md border border-border bg-background/50 px-3 py-2 text-xs text-muted-foreground overflow-hidden">
+                <Link2 className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">{subscribeUrl}</span>
+              </div>
+              <Button variant="outline" size="sm" onClick={copyLink} className="gap-1.5">
+                <Copy className="w-3.5 h-3.5" /> Copy link
+              </Button>
+              <Button variant="outline" size="sm" asChild className="gap-1.5">
+                <a href={subscribeUrl} target="_blank" rel="noreferrer">
+                  Open
+                </a>
+              </Button>
+            </div>
+
+            {retainer.paddle_subscription_id && !retainer.cancel_at_period_end && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={cancelSubscriptionAtPeriodEnd}
+                className="text-rose-400 hover:text-rose-300 gap-1.5"
+              >
+                <X className="w-3.5 h-3.5" /> Cancel auto-billing at period end
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <StatCard label="Amount" value={formatMoney(retainer.amount_cents, retainer.currency)} sub={`/ ${intervalLabel(retainer.billing_interval, retainer.custom_interval_days).toLowerCase()}`} />
