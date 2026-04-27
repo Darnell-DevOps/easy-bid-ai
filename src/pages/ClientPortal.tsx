@@ -291,15 +291,14 @@ export default function ClientPortal() {
   const ensureOnboardingForm = async (p: PublicProposal) => {
     if (onboarding) return;
     const fields = buildOnboardingFields(p.service_type);
-    const { data, error } = await supabase
-      .from("onboarding_forms")
+    const { data, error } = await (supabase.from("onboarding_forms") as any)
       .insert([
         {
           user_id: p.user_id,
           proposal_id: p.id,
           client_name: p.client_name,
           service_type: p.service_type,
-          fields: fields as unknown as object,
+          fields,
           status: "pending",
           sent_at: new Date().toISOString(),
         },
