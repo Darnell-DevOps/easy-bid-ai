@@ -543,6 +543,180 @@ export type Database = {
           },
         ]
       }
+      retainer_invoices: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          currency: string
+          due_date: string
+          failed_at: string | null
+          failure_reason: string | null
+          id: string
+          paddle_transaction_id: string | null
+          paid_at: string | null
+          retainer_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          due_date: string
+          failed_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          paddle_transaction_id?: string | null
+          paid_at?: string | null
+          retainer_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          due_date?: string
+          failed_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          paddle_transaction_id?: string | null
+          paid_at?: string | null
+          retainer_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      retainers: {
+        Row: {
+          access_token: string
+          amount_cents: number
+          auto_renew: boolean
+          billing_interval: string
+          cancelled_at: string | null
+          client_email: string | null
+          client_id: string | null
+          client_name: string
+          company_name: string | null
+          contract_id: string | null
+          created_at: string
+          currency: string
+          custom_interval_days: number | null
+          description: string | null
+          end_date: string | null
+          environment: string | null
+          failed_payment_at: string | null
+          failed_payment_reason: string | null
+          has_failed_payment: boolean
+          id: string
+          last_billed_date: string | null
+          next_billing_date: string | null
+          notes: string | null
+          paddle_customer_id: string | null
+          paddle_price_id: string | null
+          paddle_product_id: string | null
+          paddle_subscription_id: string | null
+          paused_at: string | null
+          proposal_id: string | null
+          renewed_at: string | null
+          service_type: string | null
+          start_date: string
+          status: string
+          template_key: string | null
+          title: string
+          total_billed_cents: number
+          total_payments_count: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token?: string
+          amount_cents?: number
+          auto_renew?: boolean
+          billing_interval?: string
+          cancelled_at?: string | null
+          client_email?: string | null
+          client_id?: string | null
+          client_name?: string
+          company_name?: string | null
+          contract_id?: string | null
+          created_at?: string
+          currency?: string
+          custom_interval_days?: number | null
+          description?: string | null
+          end_date?: string | null
+          environment?: string | null
+          failed_payment_at?: string | null
+          failed_payment_reason?: string | null
+          has_failed_payment?: boolean
+          id?: string
+          last_billed_date?: string | null
+          next_billing_date?: string | null
+          notes?: string | null
+          paddle_customer_id?: string | null
+          paddle_price_id?: string | null
+          paddle_product_id?: string | null
+          paddle_subscription_id?: string | null
+          paused_at?: string | null
+          proposal_id?: string | null
+          renewed_at?: string | null
+          service_type?: string | null
+          start_date?: string
+          status?: string
+          template_key?: string | null
+          title?: string
+          total_billed_cents?: number
+          total_payments_count?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          amount_cents?: number
+          auto_renew?: boolean
+          billing_interval?: string
+          cancelled_at?: string | null
+          client_email?: string | null
+          client_id?: string | null
+          client_name?: string
+          company_name?: string | null
+          contract_id?: string | null
+          created_at?: string
+          currency?: string
+          custom_interval_days?: number | null
+          description?: string | null
+          end_date?: string | null
+          environment?: string | null
+          failed_payment_at?: string | null
+          failed_payment_reason?: string | null
+          has_failed_payment?: boolean
+          id?: string
+          last_billed_date?: string | null
+          next_billing_date?: string | null
+          notes?: string | null
+          paddle_customer_id?: string | null
+          paddle_price_id?: string | null
+          paddle_product_id?: string | null
+          paddle_subscription_id?: string | null
+          paused_at?: string | null
+          proposal_id?: string | null
+          renewed_at?: string | null
+          service_type?: string | null
+          start_date?: string
+          status?: string
+          template_key?: string | null
+          title?: string
+          total_billed_cents?: number
+          total_payments_count?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
