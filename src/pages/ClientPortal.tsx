@@ -26,10 +26,12 @@ import { Link as RouterLink } from "react-router-dom";
 import PremiumProposalRenderer from "@/components/proposal/PremiumProposalRenderer";
 import PremiumPricingRenderer from "@/components/proposal/PremiumPricingRenderer";
 import StatusBadge, { normalizeStatus } from "@/components/proposal/StatusBadge";
-import DealProgressTracker, { type DealStage } from "@/components/proposal/DealProgressTracker";
+import OnboardingProgressTracker, { type FullStage } from "@/components/onboarding/OnboardingProgressTracker";
 import { useToast } from "@/hooks/use-toast";
 import { useProposalCheckout } from "@/hooks/use-proposal-checkout";
 import { cn } from "@/lib/utils";
+import { buildOnboardingFields, type OnboardingFormRow } from "@/lib/onboarding";
+import { ClipboardList } from "lucide-react";
 
 interface PublicProposal {
   id: string;
@@ -83,11 +85,15 @@ function formatAmount(cents: number | null, currency: string | null) {
   return `${symbol}${value}`;
 }
 
-function deriveStage(p: PublicProposal): DealStage {
-  if (p.client_paid) return "paid";
-  if (p.status === "accepted" || p.accepted_at) return "accepted";
-  if (p.viewed_at || p.status === "viewed") return "viewed";
-  return "sent";
+function deriveFullStage(p: PublicProposal, contract: ContractLite | null, onboarding: OnboardingFormRow | null, hasBooking: boolean): FullStage {
+  if (onboarding?.status === "completed") return "ready";
+  if (p.client_paid) {
+    if (hasBooking) return "onboarding";
+    return "booking";
+  }
+  if (contract?.status === "signed") return "payment";
+  if (p.status === "accepted" || p.accepted_at) return "contract";
+  return "proposal";
 }
 
 export default function ClientPortal() {
@@ -101,6 +107,8 @@ export default function ClientPortal() {
   const [submitting, setSubmitting] = useState<"accept" | "reject" | null>(null);
   const [bookingLink, setBookingLink] = useState<BookingLinkLite | null>(null);
   const [contract, setContract] = useState<ContractLite | null>(null);
+  const [onboarding, setOnboarding] = useState<OnboardingFormRow | null>(null);
+  const [hasBooking, setHasBooking] = useState(false);
   const { openCheckout, loading: payLoading, available: paymentsAvailable } = useProposalCheckout();
 
   useEffect(() => {
@@ -146,6 +154,28 @@ export default function ClientPortal() {
         .maybeSingle()
         .then(({ data: ct }) => {
           if (ct) setContract(ct as ContractLite);
+        });
+
+      // Fetch latest onboarding form for this proposal
+      supabase
+        .from("onboarding_forms")
+        .select("*")
+        .eq("proposal_id", id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+        .then(({ data: ob }) => {
+          if (ob) setOnboarding(ob as unknown as OnboardingFormRow);
+        });
+
+      // Has booking?
+      supabase
+        .from("bookings")
+        .select("id")
+        .eq("proposal_id", id)
+        .limit(1)
+        .then(({ data: bk }) => {
+          if (bk && bk.length > 0) setHasBooking(true);
         });
 
       // Auto-mark as viewed (non-blocking)
@@ -257,13 +287,45 @@ export default function ClientPortal() {
     });
   };
 
+  // Auto-create onboarding form once payment is complete
+  const ensureOnboardingForm = async (p: PublicProposal) => {
+    if (onboarding) return;
+    const fields = buildOnboardingFields(p.service_type);
+    const { data, error } = await (supabase.from("onboarding_forms") as any)
+      .insert([
+        {
+          user_id: p.user_id,
+          proposal_id: p.id,
+          client_name: p.client_name,
+          service_type: p.service_type,
+          fields,
+          status: "pending",
+          sent_at: new Date().toISOString(),
+        },
+      ])
+      .select("*")
+      .single();
+    if (!error && data) setOnboarding(data as unknown as OnboardingFormRow);
+  };
+
   const handlePayAgain = async () => {
     if (!proposal) return;
     await openCheckout({
       proposalId: proposal.id,
-      onPaid: () => setProposal((p) => (p ? { ...p, client_paid: true } : p)),
+      onPaid: () => {
+        setProposal((p) => (p ? { ...p, client_paid: true } : p));
+        if (proposal) ensureOnboardingForm({ ...proposal, client_paid: true });
+      },
     });
   };
+
+  // If we land on the page already paid but with no onboarding, create one.
+  useEffect(() => {
+    if (proposal?.client_paid && !onboarding) {
+      ensureOnboardingForm(proposal);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [proposal?.client_paid, onboarding?.id]);
 
   const formattedTotal = useMemo(
     () => (proposal ? formatAmount(proposal.amount_cents, proposal.currency) : null),
@@ -295,7 +357,9 @@ export default function ClientPortal() {
   const isAccepted = status === "accepted";
   const isRejected = status === "rejected";
   const isPaid = proposal.client_paid;
-  const stage = deriveStage(proposal);
+  const stage = deriveFullStage(proposal, contract, onboarding, hasBooking);
+  const onboardingComplete = onboarding?.status === "completed";
+  const onboardingStarted = onboarding?.status === "in_progress";
   const isContractSigned = contract?.status === "signed";
   const needsContractSignature = isAccepted && contract && !isContractSigned;
   const readyToPay = isAccepted && isContractSigned && !isPaid;
@@ -319,7 +383,7 @@ export default function ClientPortal() {
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 lg:py-10 space-y-6 lg:space-y-8">
         {/* Deal Progress Tracker */}
-        {!isRejected && <DealProgressTracker currentStage={stage} />}
+        {!isRejected && <OnboardingProgressTracker currentStage={stage} />}
 
         {/* Hero / Summary */}
         <section className="rounded-xl border border-border bg-card p-6 lg:p-10">
@@ -526,7 +590,54 @@ export default function ClientPortal() {
           </section>
         )}
 
-        {/* Final response section — Accept & Pay OR confirmation */}
+        {/* Onboarding step — appears once payment is complete */}
+        {isPaid && onboarding && !onboardingComplete && (
+          <section className="rounded-xl border border-purple/40 bg-gradient-to-br from-purple/15 via-accent/5 to-transparent p-6 lg:p-8">
+            <div className="flex items-start gap-4">
+              <div className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 bg-purple/20 text-purple">
+                <ClipboardList className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs uppercase tracking-wider text-purple font-semibold mb-1">Next step</p>
+                <h3 className="text-lg font-semibold text-foreground mb-1">
+                  {onboardingStarted ? "Continue your onboarding" : "Complete Your Onboarding"}
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4 max-w-md">
+                  Tell us a bit about your project so we can hit the ground running. Takes about 3–5 minutes.
+                </p>
+                <Button
+                  asChild
+                  size="lg"
+                  className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110"
+                >
+                  <RouterLink to={`/onboard/${onboarding.access_token}`}>
+                    <ClipboardList className="w-4 h-4" />
+                    {onboardingStarted ? "Continue Onboarding" : "Start Onboarding"}
+                    <ArrowRight className="w-4 h-4" />
+                  </RouterLink>
+                </Button>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Onboarding completed confirmation */}
+        {isPaid && onboardingComplete && (
+          <section className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-6 lg:p-8">
+            <div className="flex items-start gap-4">
+              <div className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 bg-emerald-500/15 text-emerald-500">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs uppercase tracking-wider text-emerald-500 font-semibold mb-1">Project Ready</p>
+                <h3 className="text-lg font-semibold text-foreground mb-1">Onboarding complete 🚀</h3>
+                <p className="text-sm text-muted-foreground">
+                  Thanks! Everything's in place. We'll be in touch shortly to begin your project.
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
         {isPaid ? (
           <section className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-6 lg:p-10 text-center">
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/15 mb-4">

@@ -337,6 +337,66 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_forms: {
+        Row: {
+          access_token: string
+          client_email: string | null
+          client_id: string | null
+          client_name: string
+          completed_at: string | null
+          created_at: string
+          fields: Json
+          id: string
+          proposal_id: string | null
+          reminded_at: string | null
+          responses: Json
+          sent_at: string | null
+          service_type: string | null
+          started_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token?: string
+          client_email?: string | null
+          client_id?: string | null
+          client_name?: string
+          completed_at?: string | null
+          created_at?: string
+          fields?: Json
+          id?: string
+          proposal_id?: string | null
+          reminded_at?: string | null
+          responses?: Json
+          sent_at?: string | null
+          service_type?: string | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          client_email?: string | null
+          client_id?: string | null
+          client_name?: string
+          completed_at?: string | null
+          created_at?: string
+          fields?: Json
+          id?: string
+          proposal_id?: string | null
+          reminded_at?: string | null
+          responses?: Json
+          sent_at?: string | null
+          service_type?: string | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       policies: {
         Row: {
           business_name: string
@@ -508,6 +568,10 @@ export type Database = {
       mark_proposal_paid: {
         Args: { _proposal_id: string; _txn_id: string }
         Returns: undefined
+      }
+      onboarding_submit: {
+        Args: { _complete?: boolean; _responses: Json; _token: string }
+        Returns: string
       }
     }
     Enums: {
