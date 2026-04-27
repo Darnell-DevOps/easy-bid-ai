@@ -325,7 +325,9 @@ export default function ClientPortal() {
   const isAccepted = status === "accepted";
   const isRejected = status === "rejected";
   const isPaid = proposal.client_paid;
-  const stage = deriveStage(proposal);
+  const stage = deriveFullStage(proposal, contract, onboarding, hasBooking);
+  const onboardingComplete = onboarding?.status === "completed";
+  const onboardingStarted = onboarding?.status === "in_progress";
   const isContractSigned = contract?.status === "signed";
   const needsContractSignature = isAccepted && contract && !isContractSigned;
   const readyToPay = isAccepted && isContractSigned && !isPaid;
@@ -349,7 +351,7 @@ export default function ClientPortal() {
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 lg:py-10 space-y-6 lg:space-y-8">
         {/* Deal Progress Tracker */}
-        {!isRejected && <DealProgressTracker currentStage={stage} />}
+        {!isRejected && <OnboardingProgressTracker currentStage={stage} />}
 
         {/* Hero / Summary */}
         <section className="rounded-xl border border-border bg-card p-6 lg:p-10">
