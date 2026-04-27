@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import ChurnRiskCard from "@/components/ai/ChurnRiskCard";
 import {
   formatMoney,
   intervalLabel,
@@ -322,6 +323,9 @@ export default function RetainerDetail() {
             </Button>
           </div>
         </div>
+
+        {/* AI churn risk — only for active/paused retainers with history */}
+        <ChurnRiskCard retainerId={retainer.id} enabled={isActive || isPaused} />
 
         {/* Failed payment alert */}
         {retainer.has_failed_payment && (
