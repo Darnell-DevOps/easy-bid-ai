@@ -20,6 +20,8 @@ import { getFollowUpScenario, FOLLOW_UP_META } from "@/lib/follow-up";
 import { usePlan } from "@/hooks/use-plan";
 import UpgradeModal from "@/components/plan/UpgradeModal";
 import ProposalWatermark from "@/components/plan/ProposalWatermark";
+import DealScoreBadge from "@/components/ai/DealScoreBadge";
+import ProposalAuditPanel from "@/components/ai/ProposalAuditPanel";
 
 interface ProposalData {
   id: string;
@@ -699,7 +701,13 @@ export default function ProposalView() {
               {proposal.company_name}
             </p>
             <StatusBadge status={currentStatus} paid={clientPaid} descriptive />
+            <DealScoreBadge proposalId={proposal.id} enabled={currentStatus !== "draft"} />
           </div>
+        </div>
+
+        {/* AI proposal audit (collapsible-feel: hidden until run) */}
+        <div className="mb-5">
+          <ProposalAuditPanel proposalId={proposal.id} />
         </div>
 
         {/* Smart alerts */}
