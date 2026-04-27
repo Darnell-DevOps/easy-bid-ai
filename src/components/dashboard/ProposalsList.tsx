@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, FileText, Search, MoreVertical, Eye, Pencil, Copy, Trash2, Calendar, Bell } from "lucide-react";
 import StatusBadge from "@/components/proposal/StatusBadge";
 import { getFollowUpScenario } from "@/lib/follow-up";
+import DealScoreBadge from "@/components/ai/DealScoreBadge";
 
 interface Proposal {
   id: string;
@@ -181,6 +182,10 @@ export default function ProposalsList({ proposals, loading, onRefresh }: Proposa
                     </span>
                   )}
                   <StatusBadge status={p.status} paid={p.client_paid} descriptive className="hidden sm:inline-flex" />
+                  <DealScoreBadge
+                    proposalId={p.id}
+                    enabled={!!p.status && p.status !== "draft"}
+                  />
                   <span className="text-xs text-muted-foreground hidden md:block">{new Date(p.created_at).toLocaleDateString()}</span>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>

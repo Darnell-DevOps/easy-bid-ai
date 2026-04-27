@@ -11,6 +11,8 @@ import UpcomingBookings from "@/components/dashboard/UpcomingBookings";
 import ContractsWidget from "@/components/dashboard/ContractsWidget";
 import OnboardingWidget from "@/components/dashboard/OnboardingWidget";
 import RetainersWidget from "@/components/dashboard/RetainersWidget";
+import CoachFeedWidget from "@/components/dashboard/CoachFeedWidget";
+import WeeklyBriefingCard from "@/components/dashboard/WeeklyBriefingCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sparkles, ArrowRight, UserPlus, Lightbulb } from "lucide-react";
@@ -176,6 +178,10 @@ export default function Dashboard() {
         </div>
 
         <OnboardingHighlight />
+
+        {/* AI SALES COACH — premium intelligence layer */}
+        <WeeklyBriefingCard />
+        <CoachFeedWidget />
 
         {/* PRIORITY ACTIONS — top of the dashboard */}
         <PriorityActions
