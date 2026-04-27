@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_insights: {
+        Row: {
+          action_url: string | null
+          created_at: string
+          details: Json
+          dismissed_at: string | null
+          entity_id: string | null
+          entity_type: string
+          expires_at: string | null
+          generated_at: string
+          id: string
+          kind: string
+          recommended_action: string | null
+          score: number | null
+          severity: string | null
+          summary: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action_url?: string | null
+          created_at?: string
+          details?: Json
+          dismissed_at?: string | null
+          entity_id?: string | null
+          entity_type: string
+          expires_at?: string | null
+          generated_at?: string
+          id?: string
+          kind: string
+          recommended_action?: string | null
+          score?: number | null
+          severity?: string | null
+          summary: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action_url?: string | null
+          created_at?: string
+          details?: Json
+          dismissed_at?: string | null
+          entity_id?: string | null
+          entity_type?: string
+          expires_at?: string | null
+          generated_at?: string
+          id?: string
+          kind?: string
+          recommended_action?: string | null
+          score?: number | null
+          severity?: string | null
+          summary?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       availability_settings: {
         Row: {
           buffer_minutes: number
