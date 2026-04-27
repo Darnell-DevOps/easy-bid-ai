@@ -293,15 +293,17 @@ export default function ClientPortal() {
     const fields = buildOnboardingFields(p.service_type);
     const { data, error } = await supabase
       .from("onboarding_forms")
-      .insert({
-        user_id: p.user_id,
-        proposal_id: p.id,
-        client_name: p.client_name,
-        service_type: p.service_type,
-        fields: fields as unknown as object,
-        status: "pending",
-        sent_at: new Date().toISOString(),
-      })
+      .insert([
+        {
+          user_id: p.user_id,
+          proposal_id: p.id,
+          client_name: p.client_name,
+          service_type: p.service_type,
+          fields: fields as unknown as object,
+          status: "pending",
+          sent_at: new Date().toISOString(),
+        },
+      ])
       .select("*")
       .single();
     if (!error && data) setOnboarding(data as unknown as OnboardingFormRow);
