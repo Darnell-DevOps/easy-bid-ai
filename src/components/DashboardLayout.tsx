@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, Plus, CreditCard, Settings, LogOut, Menu, X, LayoutTemplate, Users, Sparkles, ScrollText, Calendar, FileSignature, ClipboardList } from "lucide-react";
+import { FileText, Plus, CreditCard, Settings, LogOut, Menu, X, LayoutTemplate, Users, Sparkles, ScrollText, Calendar, FileSignature, ClipboardList, Repeat } from "lucide-react";
 
 const navItems = [
   { label: "New Proposal", icon: Plus, href: "/dashboard/new" },
   { label: "Saved Proposals", icon: FileText, href: "/dashboard" },
   { label: "Clients", icon: Users, href: "/dashboard/clients" },
   { label: "Contracts", icon: FileSignature, href: "/dashboard/contracts" },
+  { label: "Retainers", icon: Repeat, href: "/dashboard/retainers" },
   { label: "Onboarding", icon: ClipboardList, href: "/dashboard/onboarding" },
   { label: "Calendar", icon: Calendar, href: "/dashboard/calendar" },
   { label: "Lead Assistant", icon: Sparkles, href: "/dashboard/leads" },

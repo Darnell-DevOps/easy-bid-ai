@@ -33,6 +33,9 @@ import ContractDetail from "./pages/ContractDetail";
 import ContractSignPage from "./pages/ContractSignPage";
 import OnboardingFormPage from "./pages/OnboardingFormPage";
 import OnboardingDashboard from "./pages/OnboardingDashboard";
+import RetainersPage from "./pages/RetainersPage";
+import NewRetainerPage from "./pages/NewRetainerPage";
+import RetainerDetail from "./pages/RetainerDetail";
 import NotFound from "./pages/NotFound";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { PageTransition } from "@/components/PageTransition";
@@ -62,6 +65,9 @@ const App = () => (
             <Route path="/dashboard/calendar" element={<AuthGuard><CalendarPage /></AuthGuard>} />
             <Route path="/dashboard/contracts" element={<AuthGuard><ContractsPage /></AuthGuard>} />
             <Route path="/dashboard/contracts/:id" element={<AuthGuard><ContractDetail /></AuthGuard>} />
+            <Route path="/dashboard/retainers" element={<AuthGuard><RetainersPage /></AuthGuard>} />
+            <Route path="/dashboard/retainers/new" element={<AuthGuard><NewRetainerPage /></AuthGuard>} />
+            <Route path="/dashboard/retainers/:id" element={<AuthGuard><RetainerDetail /></AuthGuard>} />
             <Route path="/dashboard/new" element={<AuthGuard><NewProposal /></AuthGuard>} />
             <Route path="/dashboard/proposal/:id" element={<AuthGuard><ProposalView /></AuthGuard>} />
             <Route path="/dashboard/billing" element={<AuthGuard><Billing /></AuthGuard>} />
