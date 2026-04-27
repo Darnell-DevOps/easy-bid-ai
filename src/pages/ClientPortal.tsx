@@ -590,7 +590,54 @@ export default function ClientPortal() {
           </section>
         )}
 
-        {/* Final response section — Accept & Pay OR confirmation */}
+        {/* Onboarding step — appears once payment is complete */}
+        {isPaid && onboarding && !onboardingComplete && (
+          <section className="rounded-xl border border-purple/40 bg-gradient-to-br from-purple/15 via-accent/5 to-transparent p-6 lg:p-8">
+            <div className="flex items-start gap-4">
+              <div className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 bg-purple/20 text-purple">
+                <ClipboardList className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs uppercase tracking-wider text-purple font-semibold mb-1">Next step</p>
+                <h3 className="text-lg font-semibold text-foreground mb-1">
+                  {onboardingStarted ? "Continue your onboarding" : "Complete Your Onboarding"}
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4 max-w-md">
+                  Tell us a bit about your project so we can hit the ground running. Takes about 3–5 minutes.
+                </p>
+                <Button
+                  asChild
+                  size="lg"
+                  className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110"
+                >
+                  <RouterLink to={`/onboard/${onboarding.access_token}`}>
+                    <ClipboardList className="w-4 h-4" />
+                    {onboardingStarted ? "Continue Onboarding" : "Start Onboarding"}
+                    <ArrowRight className="w-4 h-4" />
+                  </RouterLink>
+                </Button>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Onboarding completed confirmation */}
+        {isPaid && onboardingComplete && (
+          <section className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-6 lg:p-8">
+            <div className="flex items-start gap-4">
+              <div className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 bg-emerald-500/15 text-emerald-500">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs uppercase tracking-wider text-emerald-500 font-semibold mb-1">Project Ready</p>
+                <h3 className="text-lg font-semibold text-foreground mb-1">Onboarding complete 🚀</h3>
+                <p className="text-sm text-muted-foreground">
+                  Thanks! Everything's in place. We'll be in touch shortly to begin your project.
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
         {isPaid ? (
           <section className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-6 lg:p-10 text-center">
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/15 mb-4">
