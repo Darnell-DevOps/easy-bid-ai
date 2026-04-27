@@ -36,6 +36,7 @@ import OnboardingDashboard from "./pages/OnboardingDashboard";
 import RetainersPage from "./pages/RetainersPage";
 import NewRetainerPage from "./pages/NewRetainerPage";
 import RetainerDetail from "./pages/RetainerDetail";
+import RetainerSubscribePage from "./pages/RetainerSubscribePage";
 import NotFound from "./pages/NotFound";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { PageTransition } from "@/components/PageTransition";
@@ -59,6 +60,7 @@ const App = () => (
             <Route path="/book/:slug" element={<PublicBookingPage />} />
             <Route path="/sign/:token" element={<ContractSignPage />} />
             <Route path="/onboard/:token" element={<OnboardingFormPage />} />
+            <Route path="/retainer/:token" element={<RetainerSubscribePage />} />
             <Route path="/onboarding" element={<AuthGuard><Onboarding /></AuthGuard>} />
             <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
             <Route path="/dashboard/onboarding" element={<AuthGuard><OnboardingDashboard /></AuthGuard>} />

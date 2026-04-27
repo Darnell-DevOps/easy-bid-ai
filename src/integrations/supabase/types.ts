@@ -597,6 +597,7 @@ export type Database = {
           amount_cents: number
           auto_renew: boolean
           billing_interval: string
+          cancel_at_period_end: boolean
           cancelled_at: string | null
           client_email: string | null
           client_id: string | null
@@ -605,6 +606,7 @@ export type Database = {
           contract_id: string | null
           created_at: string
           currency: string
+          current_period_end: string | null
           custom_interval_days: number | null
           description: string | null
           end_date: string | null
@@ -623,6 +625,7 @@ export type Database = {
           paused_at: string | null
           proposal_id: string | null
           renewed_at: string | null
+          scheduled_change: Json | null
           service_type: string | null
           start_date: string
           status: string
@@ -638,6 +641,7 @@ export type Database = {
           amount_cents?: number
           auto_renew?: boolean
           billing_interval?: string
+          cancel_at_period_end?: boolean
           cancelled_at?: string | null
           client_email?: string | null
           client_id?: string | null
@@ -646,6 +650,7 @@ export type Database = {
           contract_id?: string | null
           created_at?: string
           currency?: string
+          current_period_end?: string | null
           custom_interval_days?: number | null
           description?: string | null
           end_date?: string | null
@@ -664,6 +669,7 @@ export type Database = {
           paused_at?: string | null
           proposal_id?: string | null
           renewed_at?: string | null
+          scheduled_change?: Json | null
           service_type?: string | null
           start_date?: string
           status?: string
@@ -679,6 +685,7 @@ export type Database = {
           amount_cents?: number
           auto_renew?: boolean
           billing_interval?: string
+          cancel_at_period_end?: boolean
           cancelled_at?: string | null
           client_email?: string | null
           client_id?: string | null
@@ -687,6 +694,7 @@ export type Database = {
           contract_id?: string | null
           created_at?: string
           currency?: string
+          current_period_end?: string | null
           custom_interval_days?: number | null
           description?: string | null
           end_date?: string | null
@@ -705,6 +713,7 @@ export type Database = {
           paused_at?: string | null
           proposal_id?: string | null
           renewed_at?: string | null
+          scheduled_change?: Json | null
           service_type?: string | null
           start_date?: string
           status?: string
