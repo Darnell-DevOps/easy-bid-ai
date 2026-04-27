@@ -177,6 +177,10 @@ export default function Dashboard() {
 
         <OnboardingHighlight />
 
+        {/* AI SALES COACH — premium intelligence layer */}
+        <WeeklyBriefingCard />
+        <CoachFeedWidget />
+
         {/* PRIORITY ACTIONS — top of the dashboard */}
         <PriorityActions
           proposals={proposals}
