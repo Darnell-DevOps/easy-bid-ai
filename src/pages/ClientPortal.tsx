@@ -26,10 +26,12 @@ import { Link as RouterLink } from "react-router-dom";
 import PremiumProposalRenderer from "@/components/proposal/PremiumProposalRenderer";
 import PremiumPricingRenderer from "@/components/proposal/PremiumPricingRenderer";
 import StatusBadge, { normalizeStatus } from "@/components/proposal/StatusBadge";
-import DealProgressTracker, { type DealStage } from "@/components/proposal/DealProgressTracker";
+import OnboardingProgressTracker, { type FullStage } from "@/components/onboarding/OnboardingProgressTracker";
 import { useToast } from "@/hooks/use-toast";
 import { useProposalCheckout } from "@/hooks/use-proposal-checkout";
 import { cn } from "@/lib/utils";
+import { buildOnboardingFields, type OnboardingFormRow } from "@/lib/onboarding";
+import { ClipboardList } from "lucide-react";
 
 interface PublicProposal {
   id: string;
