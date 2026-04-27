@@ -85,11 +85,15 @@ function formatAmount(cents: number | null, currency: string | null) {
   return `${symbol}${value}`;
 }
 
-function deriveStage(p: PublicProposal): DealStage {
-  if (p.client_paid) return "paid";
-  if (p.status === "accepted" || p.accepted_at) return "accepted";
-  if (p.viewed_at || p.status === "viewed") return "viewed";
-  return "sent";
+function deriveFullStage(p: PublicProposal, contract: ContractLite | null, onboarding: OnboardingFormRow | null, hasBooking: boolean): FullStage {
+  if (onboarding?.status === "completed") return "ready";
+  if (p.client_paid) {
+    if (hasBooking) return "onboarding";
+    return "booking";
+  }
+  if (contract?.status === "signed") return "payment";
+  if (p.status === "accepted" || p.accepted_at) return "contract";
+  return "proposal";
 }
 
 export default function ClientPortal() {
