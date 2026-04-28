@@ -95,15 +95,59 @@ async function handleTransactionPaymentFailed(data: any) {
     retainerId = r?.id || null;
   }
   if (!retainerId) return;
+
+  const { data: ret } = await supabase
+    .from("retainers")
+    .select("user_id, currency, payment_retry_count")
+    .eq("id", retainerId)
+    .maybeSingle();
+  if (!ret) return;
+
+  const reason =
+    data?.details?.payments?.[0]?.errorCode || "Payment declined";
+  const newRetryCount = (ret.payment_retry_count || 0) + 1;
+  const amount = Number(
+    data?.details?.totals?.total ?? data?.details?.totals?.grandTotal ?? 0,
+  );
+  const currency = data?.currencyCode || ret.currency || "USD";
+
+  // Record the failed invoice
+  await supabase.from("retainer_invoices").insert({
+    user_id: ret.user_id,
+    retainer_id: retainerId,
+    amount_cents: amount,
+    currency,
+    due_date: new Date().toISOString().slice(0, 10),
+    failed_at: new Date().toISOString(),
+    failure_reason: reason,
+    paddle_transaction_id: data.id,
+    status: "failed",
+  });
+
   await supabase
     .from("retainers")
     .update({
       has_failed_payment: true,
       failed_payment_at: new Date().toISOString(),
-      failed_payment_reason:
-        data?.details?.payments?.[0]?.errorCode || "Payment declined",
+      failed_payment_reason: reason,
+      payment_retry_count: newRetryCount,
+      status: "past_due",
     })
     .eq("id", retainerId);
+
+  // Queue (or upgrade) a reminder for the owner
+  const reminderKind = newRetryCount >= 3 ? "payment_final" : "payment_failed";
+  await supabase.from("retainer_reminders").upsert(
+    {
+      user_id: ret.user_id,
+      retainer_id: retainerId,
+      kind: reminderKind,
+      scheduled_for: new Date().toISOString(),
+      status: "pending",
+      channel: "in_app",
+    },
+    { onConflict: "retainer_id,kind" },
+  );
 }
 
 async function handleSubscriptionCreated(data: any) {
