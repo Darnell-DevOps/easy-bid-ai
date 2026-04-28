@@ -95,32 +95,32 @@ export default function RetainersWidget() {
           </div>
         </div>
 
-        {failed.length > 0 && (
-          <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 flex gap-2">
-            <AlertTriangle className="w-4 h-4 text-rose-400 mt-0.5 shrink-0" />
-            <div>
-              <p className="text-xs font-semibold text-rose-300">
-                {failed.length} payment{failed.length > 1 ? "s" : ""} failed
+        {(failed.length > 0 || renewingSoon.length > 0) && (
+          <Link
+            to="/dashboard/recovery"
+            className="block rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 hover:bg-amber-500/15 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+              <p className="text-xs font-semibold text-amber-300">
+                {failed.length > 0 && (
+                  <>
+                    {failed.length} failed payment{failed.length > 1 ? "s" : ""}
+                  </>
+                )}
+                {failed.length > 0 && renewingSoon.length > 0 && " · "}
+                {renewingSoon.length > 0 && (
+                  <>
+                    {renewingSoon.length} renewing soon
+                  </>
+                )}
               </p>
-              <p className="text-[11px] text-rose-300/80">
-                {failed.map((f) => f.client_name).join(", ")}
-              </p>
+              <ArrowRight className="w-3 h-3 text-amber-300 ml-auto" />
             </div>
-          </div>
-        )}
-
-        {renewingSoon.length > 0 && (
-          <div className="rounded-lg border border-purple-500/30 bg-purple-500/10 p-3 flex gap-2">
-            <CalendarClock className="w-4 h-4 text-purple-400 mt-0.5 shrink-0" />
-            <div>
-              <p className="text-xs font-semibold text-purple-300">
-                {renewingSoon.length} renewing soon
-              </p>
-              <p className="text-[11px] text-purple-300/80">
-                Send renewal proposals before contracts end.
-              </p>
-            </div>
-          </div>
+            <p className="text-[11px] text-amber-300/80 mt-1">
+              Open the recovery queue to act on them.
+            </p>
+          </Link>
         )}
 
         {!loading && upcoming.length > 0 && (
