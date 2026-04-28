@@ -53,6 +53,7 @@ interface Retainer {
   total_payments_count: number;
   has_failed_payment: boolean;
   failed_payment_reason: string | null;
+  payment_retry_count: number;
   notes: string | null;
   service_type: string | null;
   template_key: string | null;
