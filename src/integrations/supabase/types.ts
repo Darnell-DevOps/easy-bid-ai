@@ -611,6 +611,7 @@ export type Database = {
           id: string
           paddle_transaction_id: string | null
           paid_at: string | null
+          recovered_at: string | null
           retainer_id: string
           status: string
           updated_at: string
@@ -626,6 +627,7 @@ export type Database = {
           id?: string
           paddle_transaction_id?: string | null
           paid_at?: string | null
+          recovered_at?: string | null
           retainer_id: string
           status?: string
           updated_at?: string
@@ -641,7 +643,50 @@ export type Database = {
           id?: string
           paddle_transaction_id?: string | null
           paid_at?: string | null
+          recovered_at?: string | null
           retainer_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      retainer_reminders: {
+        Row: {
+          channel: string
+          created_at: string
+          error: string | null
+          id: string
+          kind: string
+          retainer_id: string
+          scheduled_for: string
+          sent_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          channel?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          kind: string
+          retainer_id: string
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          kind?: string
+          retainer_id?: string
+          scheduled_for?: string
+          sent_at?: string | null
           status?: string
           updated_at?: string
           user_id?: string
@@ -673,6 +718,8 @@ export type Database = {
           has_failed_payment: boolean
           id: string
           last_billed_date: string | null
+          last_recovery_email_at: string | null
+          last_renewal_email_at: string | null
           next_billing_date: string | null
           notes: string | null
           paddle_customer_id: string | null
@@ -680,6 +727,8 @@ export type Database = {
           paddle_product_id: string | null
           paddle_subscription_id: string | null
           paused_at: string | null
+          payment_recovered_at: string | null
+          payment_retry_count: number
           proposal_id: string | null
           renewed_at: string | null
           scheduled_change: Json | null
@@ -717,6 +766,8 @@ export type Database = {
           has_failed_payment?: boolean
           id?: string
           last_billed_date?: string | null
+          last_recovery_email_at?: string | null
+          last_renewal_email_at?: string | null
           next_billing_date?: string | null
           notes?: string | null
           paddle_customer_id?: string | null
@@ -724,6 +775,8 @@ export type Database = {
           paddle_product_id?: string | null
           paddle_subscription_id?: string | null
           paused_at?: string | null
+          payment_recovered_at?: string | null
+          payment_retry_count?: number
           proposal_id?: string | null
           renewed_at?: string | null
           scheduled_change?: Json | null
@@ -761,6 +814,8 @@ export type Database = {
           has_failed_payment?: boolean
           id?: string
           last_billed_date?: string | null
+          last_recovery_email_at?: string | null
+          last_renewal_email_at?: string | null
           next_billing_date?: string | null
           notes?: string | null
           paddle_customer_id?: string | null
@@ -768,6 +823,8 @@ export type Database = {
           paddle_product_id?: string | null
           paddle_subscription_id?: string | null
           paused_at?: string | null
+          payment_recovered_at?: string | null
+          payment_retry_count?: number
           proposal_id?: string | null
           renewed_at?: string | null
           scheduled_change?: Json | null
