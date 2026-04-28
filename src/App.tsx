@@ -37,6 +37,8 @@ import RetainersPage from "./pages/RetainersPage";
 import NewRetainerPage from "./pages/NewRetainerPage";
 import RetainerDetail from "./pages/RetainerDetail";
 import RetainerSubscribePage from "./pages/RetainerSubscribePage";
+import RetainerRecoverPage from "./pages/RetainerRecoverPage";
+import RecoveryDashboard from "./pages/RecoveryDashboard";
 import NotFound from "./pages/NotFound";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { PageTransition } from "@/components/PageTransition";
