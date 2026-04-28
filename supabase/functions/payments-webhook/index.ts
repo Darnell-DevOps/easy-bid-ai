@@ -51,6 +51,14 @@ async function handleTransactionCompleted(data: any) {
       status: "paid",
     });
 
+    // Mark any prior failed invoice for this retainer as recovered
+    await supabase
+      .from("retainer_invoices")
+      .update({ recovered_at: new Date().toISOString(), status: "recovered" })
+      .eq("retainer_id", retainerId)
+      .eq("status", "failed")
+      .is("recovered_at", null);
+
     await supabase
       .from("retainers")
       .update({
@@ -60,8 +68,18 @@ async function handleTransactionCompleted(data: any) {
         has_failed_payment: false,
         failed_payment_reason: null,
         failed_payment_at: null,
+        payment_retry_count: 0,
+        payment_recovered_at: new Date().toISOString(),
       })
       .eq("id", retainerId);
+
+    // Clear any pending payment_failed reminders
+    await supabase
+      .from("retainer_reminders")
+      .update({ status: "resolved", sent_at: new Date().toISOString() })
+      .eq("retainer_id", retainerId)
+      .in("kind", ["payment_failed", "payment_final"])
+      .eq("status", "pending");
   }
 }
 
