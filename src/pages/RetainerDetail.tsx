@@ -354,7 +354,7 @@ export default function RetainerDetail() {
                   onClick={() => {
                     const url = `${window.location.origin}/r/recover/${retainer.access_token}`;
                     navigator.clipboard.writeText(url);
-                    toast.success("Recovery link copied — send to client");
+                    toast({ title: "Recovery link copied", description: "Send it to your client." });
                   }}
                 >
                   <Send className="w-3.5 h-3.5" /> Copy recovery link
