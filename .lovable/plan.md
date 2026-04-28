@@ -1,139 +1,68 @@
-## AI Sales Coach + Deal Intelligence
+# Renewal & Payment Recovery
 
-A proactive AI layer across CloseSync that scores every deal, audits every proposal, flags churn risk on retainers, and surfaces a single "Coach" feed telling the user exactly what to do next — and why.
+Add a proper recovery + renewal layer on top of the existing retainers system. Today we *detect* failures and "renewing soon" but never act on them or expose them to clients.
 
-This is additive only. No existing feature changes behavior.
+## What we'll build
 
----
+### 1. Webhook upgrades (`payments-webhook`)
+- Handle `past_due` subscription status (currently falls through as raw string).
+- On `transaction.payment_failed`: write a `retainer_invoices` row with `status='failed'` + reason, increment retry counter.
+- On `transaction.completed` for a retry: mark prior failed invoice `recovered_at`.
+- New retainer fields: `payment_retry_count`, `payment_recovered_at`, `last_recovery_email_at`.
 
-## What the user gets
+### 2. Client-facing recovery page
+- New public route `/r/recover/:token` (uses existing `retainers.access_token`).
+- Shows: "Hi {client}, the last payment for {retainer} didn't go through. Update your payment method to keep things running."
+- Button calls `retainer-portal-session` (modified to accept token instead of auth) → opens Paddle customer portal in new tab.
+- Token-gated, no login required.
 
-**1. Deal Score (0–100)**
-Every proposal gets an AI-computed close probability with a one-line reason ("Viewed 3x in 48h, no booking — high intent, follow up today"). Shown as a badge on the proposal card and inside `ProposalView`.
+### 3. Renewal automation
+- New `retainer_reminders` table: `retainer_id`, `kind` (`renewal_t30|renewal_t14|renewal_t7|payment_failed|payment_final`), `scheduled_for`, `sent_at`, `channel`.
+- Cron edge function `retainer-recovery-cron` (hourly): scans active retainers, queues reminders for renewal windows + dunning.
+- "Generate renewal proposal" button on `RetainerDetail` → prefills `NewProposal` with retainer's client + service, links back via `proposal.client_id`.
 
-**2. Proposal Audit**
-A "Run AI Audit" button on each draft proposal. Returns:
-- Pricing verdict (underpriced / fair / overpriced + suggested range)
-- Scope clarity score
-- Missing sections (timeline, deliverables, terms)
-- 3 concrete rewrite suggestions
-- Predicted close probability before sending
+### 4. Email delivery
+- Use `setup_email_infra` + `scaffold_transactional_email` to provision the email queue.
+- Three templates: `payment_failed_client`, `renewal_upcoming_client`, `payment_final_attempt_client`.
+- Cron enqueues; existing `process-email-queue` sends.
+- Each email links to `/r/recover/:token` (recovery) or includes a friendly renewal nudge.
 
-**3. Churn Risk on Retainers**
-For active retainers, AI flags risk based on payment history, failed payments, age, communication gaps. Shown on `RetainerDetail` and the Retainers list.
+### 5. Recovery dashboard
+- New page `/dashboard/recovery` + sidebar nav entry.
+- Two tabs: **Failed payments** (active dunning) and **Renewing soon** (≤30 days to `end_date`).
+- Each row: client, amount, status badge (`Retrying` / `Final attempt` / `Recovered` / `Renewing in N days`), actions (Resend recovery email, Open portal link, Generate renewal proposal, Mark resolved).
+- Replaces the inline banners on `RetainersWidget` with a "View recovery queue (N)" link.
 
-**4. AI Coach Feed (new dashboard widget)**
-Replaces nothing — sits above `PriorityActions`. A ranked list of AI-generated next actions across the whole business:
-- "Re-engage Acme Co — opened proposal 4x but no response (72% close odds)"
-- "Raise prices on SEO retainer template — your last 5 closed 20% above ask"
-- "Sarah's retainer at churn risk — payment failed once, no contact in 14 days"
-- "Best time to send proposals: Tue 10am (your data)"
-
-Each item has a one-click action button.
-
-**5. Weekly AI Briefing**
-A generated summary card on the dashboard: wins, losses, what to focus on this week, and one specific recommendation.
-
----
-
-## Technical design
-
-### Database (1 new table + 2 columns)
-
-```sql
--- Cached AI insights so we don't re-run the model on every page load
-create table public.ai_insights (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null,
-  entity_type text not null,        -- 'proposal' | 'retainer' | 'dashboard' | 'audit'
-  entity_id uuid,                   -- nullable for dashboard-wide insights
-  kind text not null,               -- 'deal_score' | 'audit' | 'churn_risk' | 'coach_feed' | 'weekly_briefing'
-  score integer,                    -- 0-100 where applicable
-  severity text,                    -- 'info' | 'warning' | 'critical'
-  summary text not null,
-  details jsonb not null default '{}'::jsonb,
-  recommended_action text,
-  action_url text,
-  generated_at timestamptz not null default now(),
-  expires_at timestamptz,           -- regen after this
-  dismissed_at timestamptz
-);
--- RLS: user_id = auth.uid() for all CRUD
-```
-
-Cache TTLs: deal_score 6h, churn_risk 12h, coach_feed 1h, weekly_briefing 7d, audit never expires (manual re-run).
-
-### Edge functions (4 new, all using Lovable AI Gateway)
-
-| Function | Purpose | Model |
-|---|---|---|
-| `ai-deal-score` | Score one proposal; called on proposal view + nightly batch | `google/gemini-3-flash-preview` |
-| `ai-proposal-audit` | Deep audit of a draft proposal (pricing, scope, rewrite tips) | `google/gemini-2.5-pro` |
-| `ai-churn-risk` | Score one retainer for churn risk | `google/gemini-3-flash-preview` |
-| `ai-coach-feed` | Generate prioritized action list + weekly briefing for the whole account | `google/gemini-2.5-pro` |
-
-All use structured tool-calling output (no JSON-in-prose parsing). All write into `ai_insights`. All read user context (proposals, retainers, payments, bookings) via service-role client.
-
-### Frontend (new + light edits)
-
-**New components**
-- `src/components/ai/DealScoreBadge.tsx` — colored 0–100 badge + tooltip with reason
-- `src/components/ai/ProposalAuditPanel.tsx` — collapsible panel inside `NewProposal` / `ProposalView`
-- `src/components/ai/ChurnRiskCard.tsx` — risk indicator inside `RetainerDetail`
-- `src/components/dashboard/CoachFeedWidget.tsx` — main AI Coach feed for `Dashboard`
-- `src/components/dashboard/WeeklyBriefingCard.tsx` — weekly briefing card
-
-**New hook**
-- `src/hooks/use-ai-insight.ts` — generic `useInsight(entityType, entityId, kind)` that reads cache, triggers regen if stale, and returns `{ insight, loading, refresh }`
-
-**Light edits** (non-breaking, additive)
-- `Dashboard.tsx` — add `<WeeklyBriefingCard />` and `<CoachFeedWidget />` above `PriorityActions`
-- `ProposalsDashboard.tsx` / `ProposalsList.tsx` — render `<DealScoreBadge>` per row
-- `ProposalView.tsx` — show deal score next to status
-- `NewProposal.tsx` — add "Run AI Audit" button → `<ProposalAuditPanel>`
-- `RetainerDetail.tsx` + `RetainersPage.tsx` — render `<ChurnRiskCard>`
-
-### Animations
-Reuse the existing premium animation system (shimmer for AI generation, fade-in for results). Score numbers count up on mount. Subtle pulse on high-priority coach items.
-
-### Cost & rate limiting
-- All AI calls cached in `ai_insights` with TTL — UI reads cache first
-- `ai-coach-feed` rate-limited to once per hour per user (server-side check via `generated_at`)
-- Audit is on-demand only (user clicks the button)
-- Surface 402 (credits) and 429 (rate limit) errors as toasts
-
----
+### 6. Status surfacing
+- `past_due` badge on `RetainerDetail` and `RetainersPage` rows.
+- AI Coach Feed already reads `has_failed_payment`; extend prompt with retry count + days since failure for sharper recommendations.
 
 ## Files
 
-**Created**
-- `supabase/migrations/<ts>_ai_insights.sql`
-- `supabase/functions/ai-deal-score/index.ts`
-- `supabase/functions/ai-proposal-audit/index.ts`
-- `supabase/functions/ai-churn-risk/index.ts`
-- `supabase/functions/ai-coach-feed/index.ts`
-- `src/lib/ai-coach.ts` (shared types + helpers)
-- `src/hooks/use-ai-insight.ts`
-- `src/components/ai/DealScoreBadge.tsx`
-- `src/components/ai/ProposalAuditPanel.tsx`
-- `src/components/ai/ChurnRiskCard.tsx`
-- `src/components/dashboard/CoachFeedWidget.tsx`
-- `src/components/dashboard/WeeklyBriefingCard.tsx`
+**New**
+- `src/pages/RecoveryDashboard.tsx`
+- `src/pages/RetainerRecoverPage.tsx` (public)
+- `src/components/recovery/RecoveryQueue.tsx`
+- `src/components/recovery/RenewalQueue.tsx`
+- `supabase/functions/retainer-recovery-cron/index.ts`
+- `supabase/functions/retainer-recover-portal/index.ts` (token-based portal session)
+- `supabase/migrations/<ts>_recovery.sql` (new columns + `retainer_reminders` table + RLS)
+- 3 email template edge functions (via scaffold tool)
 
-**Edited (additive only)**
-- `src/pages/Dashboard.tsx`
-- `src/pages/ProposalsDashboard.tsx`
-- `src/components/dashboard/ProposalsList.tsx`
-- `src/pages/ProposalView.tsx`
-- `src/pages/NewProposal.tsx`
-- `src/pages/RetainerDetail.tsx`
-- `src/pages/RetainersPage.tsx`
-- `supabase/config.toml` (register new functions, `verify_jwt = true` — these need user context)
+**Edited**
+- `supabase/functions/payments-webhook/index.ts` — past_due, failed invoice rows, retry counter, recovery detection
+- `src/pages/RetainerDetail.tsx` — past_due badge, "Generate renewal proposal" button, recovery link copy
+- `src/components/dashboard/RetainersWidget.tsx` — link to recovery queue instead of inline lists
+- `src/components/DashboardLayout.tsx` — Recovery nav item
+- `src/App.tsx` — new routes
+- `supabase/functions/ai-coach-feed/index.ts` + `ai-churn-risk/index.ts` — include retry count
 
----
+## Setup steps (in order)
+1. Migration: new table + columns.
+2. `setup_email_infra` then `scaffold_transactional_email` (asks user for domain if not configured).
+3. Webhook + cron + recovery edge functions.
+4. UI pages.
+5. Cron schedule via insert tool (hourly).
 
-## Out of scope (future)
-- Auto-sending follow-ups (currently AI suggests, user clicks)
-- Voice/email transcript analysis
-- A/B testing proposal templates
-- Multi-account benchmarking ("agencies like yours close at 34%")
+## Open question
+Email sending requires a verified domain. If you don't have one yet I'll set up the infra and surface the domain-verification step; recovery dashboard + manual actions still work without email.
