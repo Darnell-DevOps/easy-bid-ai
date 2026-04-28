@@ -333,14 +333,30 @@ export default function RetainerDetail() {
             <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
               <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />
               <div className="flex-1">
-                <p className="text-sm font-semibold text-rose-200">Payment failed</p>
+                <p className="text-sm font-semibold text-rose-200">
+                  Payment failed
+                  {retainer.payment_retry_count > 0 && (
+                    <span className="ml-2 text-xs font-normal text-rose-200/70">
+                      Attempt {retainer.payment_retry_count}
+                    </span>
+                  )}
+                </p>
                 <p className="text-xs text-rose-200/70">
                   {retainer.failed_payment_reason || "The last attempted charge did not go through."}
                 </p>
               </div>
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" className="gap-1.5">
-                  <Send className="w-3.5 h-3.5" /> Resend payment request
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5"
+                  onClick={() => {
+                    const url = `${window.location.origin}/r/recover/${retainer.access_token}`;
+                    navigator.clipboard.writeText(url);
+                    toast.success("Recovery link copied — send to client");
+                  }}
+                >
+                  <Send className="w-3.5 h-3.5" /> Copy recovery link
                 </Button>
                 <Button size="sm" variant="ghost" onClick={clearFailed}>
                   Mark resolved
@@ -353,8 +369,8 @@ export default function RetainerDetail() {
         {/* Renewing soon */}
         {isActive && renewIn !== null && renewIn >= 0 && renewIn <= 14 && (
           <Card className="border-purple-500/30 bg-purple-500/5">
-            <CardContent className="p-4 flex items-center gap-3">
-              <RefreshCw className="w-5 h-5 text-purple-400" />
+            <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <RefreshCw className="w-5 h-5 text-purple-400 shrink-0" />
               <div className="flex-1">
                 <p className="text-sm font-semibold text-purple-200">
                   Contract ends in {renewIn} day{renewIn === 1 ? "" : "s"}
@@ -363,9 +379,22 @@ export default function RetainerDetail() {
                   Send a renewal proposal to keep the retainer running.
                 </p>
               </div>
-              <Button size="sm" variant="outline" onClick={renew}>
-                Mark renewed
-              </Button>
+              <div className="flex gap-2 flex-wrap">
+                <Button size="sm" variant="outline" asChild>
+                  <Link
+                    to={`/dashboard/new?clientName=${encodeURIComponent(
+                      retainer.client_name,
+                    )}&serviceType=${encodeURIComponent(
+                      retainer.service_type || "Retainer renewal",
+                    )}&renewalOf=${retainer.id}`}
+                  >
+                    Generate renewal proposal
+                  </Link>
+                </Button>
+                <Button size="sm" variant="ghost" onClick={renew}>
+                  Mark renewed
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
