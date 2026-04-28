@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
-import { Repeat, ArrowRight, AlertTriangle, CalendarClock } from "lucide-react";
+import { Repeat, ArrowRight, AlertTriangle } from "lucide-react";
 import {
   formatMoney,
   monthlyEquivalentCents,
