@@ -121,7 +121,7 @@ export default function RecoveryDashboard() {
           <StatCard
             label="Renewing in 30 days"
             value={renewing.length}
-            icon={<CalendarClock className="w-4 h-4 text-purple-400" />}
+            icon={<CalendarClock className="w-4 h-4 text-purple" />}
             tone="purple"
           />
           <StatCard
@@ -246,7 +246,7 @@ export default function RecoveryDashboard() {
                   ? "border-rose-500/40 text-rose-400 bg-rose-500/10"
                   : days <= 14
                     ? "border-amber-500/40 text-amber-400 bg-amber-500/10"
-                    : "border-purple-500/40 text-purple-400 bg-purple-500/10";
+                    : "border-purple/40 text-purple bg-purple/10";
               const renewalProposalUrl = `/dashboard/new?clientName=${encodeURIComponent(
                 r.client_name,
               )}&serviceType=${encodeURIComponent(
@@ -323,7 +323,7 @@ function StatCard({
     tone === "rose"
       ? "bg-rose-500/10"
       : tone === "purple"
-        ? "bg-purple-500/10"
+        ? "bg-purple/10"
         : "bg-emerald-500/10";
   return (
     <Card className="border-border/60">

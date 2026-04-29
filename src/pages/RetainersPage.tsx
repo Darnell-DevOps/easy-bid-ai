@@ -154,9 +154,9 @@ export default function RetainersPage() {
               </Card>
             )}
             {metrics.renewingSoon > 0 && (
-              <Card className="border-purple-500/30 bg-purple-500/5">
+              <Card className="border-purple/30 bg-purple/5">
                 <CardContent className="p-4 flex items-center gap-3">
-                  <CalendarClock className="w-5 h-5 text-purple-400 shrink-0" />
+                  <CalendarClock className="w-5 h-5 text-purple shrink-0" />
                   <div className="flex-1">
                     <p className="text-sm font-semibold text-purple-200">
                       {metrics.renewingSoon} retainer{metrics.renewingSoon > 1 ? "s" : ""} renewing within 14 days
@@ -292,7 +292,7 @@ function MetricCard({
     tone === "accent"
       ? "bg-accent/10 border-accent/30"
       : tone === "purple"
-        ? "bg-purple-500/10 border-purple-500/30"
+        ? "bg-purple/10 border-purple/30"
         : tone === "rose"
           ? "bg-rose-500/10 border-rose-500/30"
           : "border-border/60 bg-card/50";
