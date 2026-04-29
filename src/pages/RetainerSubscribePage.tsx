@@ -141,7 +141,9 @@ export default function RetainerSubscribePage() {
   }
 
   const isSubscribed = !!retainer.paddle_subscription_id;
-  const isActive = retainer.status === "active";
+  // A client should be able to subscribe whenever the retainer isn't paused/cancelled.
+  // Includes draft/pending retainers that have just been shared.
+  const canSubscribe = !["cancelled", "paused"].includes(retainer.status);
 
   return (
     <div className="min-h-screen bg-background py-12 px-4">
@@ -240,7 +242,7 @@ export default function RetainerSubscribePage() {
         )}
 
         {/* Subscribe CTA */}
-        {!isSubscribed && isActive && (
+        {!isSubscribed && canSubscribe && (
           <Card>
             <CardContent className="p-6 space-y-3">
               <Button
@@ -262,9 +264,9 @@ export default function RetainerSubscribePage() {
           </Card>
         )}
 
-        {!isSubscribed && !isActive && (
+        {!isSubscribed && !canSubscribe && (
           <p className="text-center text-xs text-muted-foreground">
-            This retainer isn't ready to accept subscriptions yet.
+            This retainer is currently {retainer.status} and isn't accepting new subscriptions.
           </p>
         )}
       </div>
