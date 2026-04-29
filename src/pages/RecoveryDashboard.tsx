@@ -247,11 +247,16 @@ export default function RecoveryDashboard() {
                   : days <= 14
                     ? "border-amber-500/40 text-amber-400 bg-amber-500/10"
                     : "border-purple/40 text-purple bg-purple/10";
-              const renewalProposalUrl = `/dashboard/new?clientName=${encodeURIComponent(
-                r.client_name,
-              )}&serviceType=${encodeURIComponent(
-                r.service_type || "Retainer renewal",
-              )}&renewalOf=${r.id}`;
+              const renewalState = {
+                prefillFromClient: {
+                  client_id: r.client_id || undefined,
+                  client_name: r.client_name,
+                  service_type: r.service_type || "Retainer renewal",
+                  budget: formatMoney(r.amount_cents, r.currency),
+                  original_lead_message: `Renewal of retainer: ${r.title}`,
+                },
+                renewalOfRetainerId: r.id,
+              };
               return (
                 <Card key={r.id} className="border-border/60">
                   <CardContent className="p-5 space-y-3">
@@ -285,8 +290,16 @@ export default function RecoveryDashboard() {
                         </p>
                       </div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <Button size="sm" variant="outline" asChild>
-                          <Link to={renewalProposalUrl}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                            (window.location.href = "/dashboard/new") &&
+                            null /* fallback no-op */
+                          }
+                          asChild
+                        >
+                          <Link to="/dashboard/new" state={renewalState}>
                             Generate renewal proposal
                           </Link>
                         </Button>
