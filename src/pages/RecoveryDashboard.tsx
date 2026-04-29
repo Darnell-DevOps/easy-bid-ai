@@ -290,15 +290,7 @@ export default function RecoveryDashboard() {
                         </p>
                       </div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            (window.location.href = "/dashboard/new") &&
-                            null /* fallback no-op */
-                          }
-                          asChild
-                        >
+                        <Button size="sm" variant="outline" asChild>
                           <Link to="/dashboard/new" state={renewalState}>
                             Generate renewal proposal
                           </Link>
