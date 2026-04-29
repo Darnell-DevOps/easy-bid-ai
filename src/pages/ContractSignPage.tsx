@@ -90,6 +90,21 @@ export default function ContractSignPage() {
         .then(({ data: bl }) => {
           if (bl) setBookingSlug((bl as any).slug);
         });
+
+      // If this contract is tied to a proposal that also has a retainer, surface
+      // the retainer subscribe link so the client can start their subscription.
+      if ((data as any).proposal_id) {
+        supabase
+          .from("retainers")
+          .select("access_token")
+          .eq("proposal_id", (data as any).proposal_id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+          .then(({ data: rt }) => {
+            if (rt) setRetainerToken((rt as any).access_token);
+          });
+      }
     };
     load();
   }, [token]);
