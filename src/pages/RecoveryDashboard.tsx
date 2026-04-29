@@ -121,7 +121,7 @@ export default function RecoveryDashboard() {
           <StatCard
             label="Renewing in 30 days"
             value={renewing.length}
-            icon={<CalendarClock className="w-4 h-4 text-purple-400" />}
+            icon={<CalendarClock className="w-4 h-4 text-purple" />}
             tone="purple"
           />
           <StatCard
@@ -246,12 +246,17 @@ export default function RecoveryDashboard() {
                   ? "border-rose-500/40 text-rose-400 bg-rose-500/10"
                   : days <= 14
                     ? "border-amber-500/40 text-amber-400 bg-amber-500/10"
-                    : "border-purple-500/40 text-purple-400 bg-purple-500/10";
-              const renewalProposalUrl = `/dashboard/new?clientName=${encodeURIComponent(
-                r.client_name,
-              )}&serviceType=${encodeURIComponent(
-                r.service_type || "Retainer renewal",
-              )}&renewalOf=${r.id}`;
+                    : "border-purple/40 text-purple bg-purple/10";
+              const renewalState = {
+                prefillFromClient: {
+                  client_id: r.client_id || undefined,
+                  client_name: r.client_name,
+                  service_type: r.service_type || "Retainer renewal",
+                  budget: formatMoney(r.amount_cents, r.currency),
+                  original_lead_message: `Renewal of retainer: ${r.title}`,
+                },
+                renewalOfRetainerId: r.id,
+              };
               return (
                 <Card key={r.id} className="border-border/60">
                   <CardContent className="p-5 space-y-3">
@@ -286,7 +291,7 @@ export default function RecoveryDashboard() {
                       </div>
                       <div className="flex items-center gap-2 flex-wrap">
                         <Button size="sm" variant="outline" asChild>
-                          <Link to={renewalProposalUrl}>
+                          <Link to="/dashboard/new" state={renewalState}>
                             Generate renewal proposal
                           </Link>
                         </Button>
@@ -323,7 +328,7 @@ function StatCard({
     tone === "rose"
       ? "bg-rose-500/10"
       : tone === "purple"
-        ? "bg-purple-500/10"
+        ? "bg-purple/10"
         : "bg-emerald-500/10";
   return (
     <Card className="border-border/60">

@@ -245,7 +245,7 @@ export function statusBadgeClasses(status: string): string {
     case "past_due":
       return "bg-rose-500/15 text-rose-400 border-rose-500/30";
     case "pending_renewal":
-      return "bg-purple-500/15 text-purple-400 border-purple-500/30";
+      return "bg-purple/15 text-purple border-purple/30";
     case "cancelled":
       return "bg-rose-500/15 text-rose-400 border-rose-500/30";
     case "completed":

@@ -49,6 +49,7 @@ export default function ContractSignPage() {
   const [submitting, setSubmitting] = useState(false);
   const [method, setMethod] = useState<"typed" | "drawn">("typed");
   const [bookingSlug, setBookingSlug] = useState<string | null>(null);
+  const [retainerToken, setRetainerToken] = useState<string | null>(null);
 
   // Drawn signature state
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -89,6 +90,21 @@ export default function ContractSignPage() {
         .then(({ data: bl }) => {
           if (bl) setBookingSlug((bl as any).slug);
         });
+
+      // If this contract is tied to a proposal that also has a retainer, surface
+      // the retainer subscribe link so the client can start their subscription.
+      if ((data as any).proposal_id) {
+        supabase
+          .from("retainers")
+          .select("access_token")
+          .eq("proposal_id", (data as any).proposal_id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+          .then(({ data: rt }) => {
+            if (rt) setRetainerToken((rt as any).access_token);
+          });
+      }
     };
     load();
   }, [token]);
@@ -259,15 +275,21 @@ export default function ContractSignPage() {
               A copy has been saved to your records. Here's what's next:
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              {contract.proposal_id && (
+              {retainerToken ? (
+                <Button size="lg" asChild className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold">
+                  <Link to={`/retainer/${retainerToken}`}>
+                    <CreditCard className="w-4 h-4" /> Start subscription
+                  </Link>
+                </Button>
+              ) : contract.proposal_id ? (
                 <Button size="lg" asChild className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold">
                   <Link to={`/proposal/view/${contract.proposal_id}`}>
                     <CreditCard className="w-4 h-4" /> Complete payment
                   </Link>
                 </Button>
-              )}
+              ) : null}
               {bookingSlug && (
-                <Button size="lg" variant={contract.proposal_id ? "outline" : "default"} asChild className="gap-2">
+                <Button size="lg" variant={contract.proposal_id || retainerToken ? "outline" : "default"} asChild className="gap-2">
                   <Link to={`/book/${bookingSlug}${contract.proposal_id ? `?proposal=${contract.proposal_id}` : ""}`}>
                     <CalendarPlus className="w-4 h-4" /> Book kickoff call
                   </Link>
