@@ -8,7 +8,7 @@ export default function QuickActions() {
       label: "Generate Proposal from Lead",
       description: "Paste a lead — AI picks the best template",
       icon: Wand2,
-      href: "/dashboard/lead-assistant?mode=smart",
+      href: "/dashboard/leads?mode=smart",
       accent: "from-accent to-purple",
       primary: true,
     },
