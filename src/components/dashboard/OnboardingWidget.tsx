@@ -51,13 +51,13 @@ export default function OnboardingWidget({ className }: Props) {
     return (
       <Card className={className}>
         <CardContent className="p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <ClipboardList className="w-4 h-4 text-purple" />
-            <p className="text-sm font-semibold text-foreground">Client Onboarding</p>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Onboarding forms appear here automatically once a client completes payment.
-          </p>
+          <EmptyState
+            icon={ClipboardList}
+            title="Onboard clients on autopilot"
+            description="Onboarding forms are auto-created when a client completes payment, so you collect everything you need to start the project — no chasing email threads."
+            variant="inline"
+            tone="purple"
+          />
         </CardContent>
       </Card>
     );
