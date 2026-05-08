@@ -77,13 +77,18 @@ export default function OnboardingDashboard() {
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
         ) : forms.length === 0 ? (
-          <Card>
-            <CardContent className="p-10 text-center">
-              <ClipboardList className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-              <h3 className="text-lg font-semibold text-foreground mb-1">No onboarding forms yet</h3>
-              <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                Onboarding forms are auto-created when a client completes payment, so you can collect everything you need to start the project.
+          <Card className="border-dashed border-border/60">
+            <CardContent className="p-10 text-center space-y-3">
+              <div className="w-12 h-12 rounded-full bg-purple/15 flex items-center justify-center mx-auto">
+                <ClipboardList className="w-5 h-5 text-purple" />
+              </div>
+              <p className="text-sm font-semibold text-foreground">No onboarding forms yet</p>
+              <p className="text-xs text-muted-foreground max-w-md mx-auto">
+                Onboarding forms are auto-created the moment a client completes payment, so you can collect every brief, asset, and detail you need to start the project — without chasing email threads.
               </p>
+              <Button asChild size="sm" variant="outline" className="gap-2">
+                <Link to="/dashboard/proposals">View proposals <ArrowRight className="w-3.5 h-3.5" /></Link>
+              </Button>
             </CardContent>
           </Card>
         ) : (

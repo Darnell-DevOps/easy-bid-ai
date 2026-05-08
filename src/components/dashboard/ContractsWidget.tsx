@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { FileSignature, ArrowRight, CheckCircle2, Send, Eye } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
 
 interface ContractLite {
   id: string;
@@ -57,12 +58,14 @@ export default function ContractsWidget() {
         {loading ? (
           <p className="text-xs text-muted-foreground">Loading...</p>
         ) : contracts.length === 0 ? (
-          <div className="text-xs text-muted-foreground py-3">
-            <p>No contracts yet.</p>
-            <Link to="/dashboard/contracts" className="text-accent hover:underline">
-              Create your first contract →
-            </Link>
-          </div>
+          <EmptyState
+            icon={FileSignature}
+            title="Lock in deals with contracts"
+            description="Generate a signed contract from any proposal in seconds. Clients sign in their browser — no PDFs, no DocuSign."
+            ctaLabel="Create your first contract"
+            ctaHref="/dashboard/contracts"
+            variant="inline"
+          />
         ) : (
           <>
             <div className="flex items-center gap-3 mb-3 text-xs">

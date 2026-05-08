@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { UserPlus, Send, Eye, CheckCircle2, Banknote, ArrowRight } from "lucide-react";
+import { UserPlus, Send, Eye, CheckCircle2, Banknote, ArrowRight, GitBranch } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
 
 interface ProposalLite {
   status?: string | null;
@@ -31,6 +32,7 @@ export default function PipelineView({ proposals, clients }: PipelineViewProps) 
     accepted: proposals.filter((p) => (p.status || "").toLowerCase() === "accepted" && !p.client_paid).length,
     paid: proposals.filter((p) => p.client_paid).length,
   };
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
 
   return (
     <div>
@@ -40,6 +42,16 @@ export default function PipelineView({ proposals, clients }: PipelineViewProps) 
           <p className="text-xs text-muted-foreground mt-0.5">Where your deals stand right now.</p>
         </div>
       </div>
+      {total === 0 ? (
+        <EmptyState
+          icon={GitBranch}
+          title="Your deals will live here"
+          description="As you add leads and send proposals, you'll watch them move from New → Sent → Viewed → Accepted → Paid."
+          ctaLabel="Add your first client"
+          ctaHref="/dashboard/clients/new"
+          variant="panel"
+        />
+      ) : (
       <Card>
         <CardContent className="p-4 sm:p-5">
           <div className="flex items-stretch gap-2 overflow-x-auto">
@@ -66,6 +78,7 @@ export default function PipelineView({ proposals, clients }: PipelineViewProps) 
           </div>
         </CardContent>
       </Card>
+      )}
     </div>
   );
 }

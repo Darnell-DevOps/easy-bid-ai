@@ -34,8 +34,14 @@ export default function RecentActivity({ proposals }: { proposals: Proposal[] })
   if (activities.length === 0) {
     return (
       <Card>
-        <CardContent className="py-8 text-center text-muted-foreground text-sm">
-          No recent activity yet. Create your first proposal to get started.
+        <CardContent className="py-8 px-4 text-center space-y-2">
+          <div className="w-10 h-10 rounded-lg bg-accent/15 flex items-center justify-center mx-auto">
+            <FileText className="w-4 h-4 text-accent" />
+          </div>
+          <p className="text-sm font-semibold text-foreground">Nothing here yet</p>
+          <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+            Create your first proposal and you'll see proposals, invoices, and contracts flow into this feed.
+          </p>
         </CardContent>
       </Card>
     );

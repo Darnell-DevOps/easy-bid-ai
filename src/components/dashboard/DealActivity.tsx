@@ -98,8 +98,14 @@ export default function DealActivity({ proposals }: { proposals: ProposalLite[] 
   if (sorted.length === 0) {
     return (
       <Card>
-        <CardContent className="py-8 text-center text-muted-foreground text-sm">
-          No deal activity yet. Send a proposal to start tracking momentum.
+        <CardContent className="py-8 px-4 text-center space-y-2">
+          <div className="w-10 h-10 rounded-lg bg-accent/15 flex items-center justify-center mx-auto">
+            <Send className="w-4 h-4 text-accent" />
+          </div>
+          <p className="text-sm font-semibold text-foreground">Track every deal moment</p>
+          <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+            When you send a proposal, every view, accept, and payment shows up here so you know exactly when to follow up.
+          </p>
         </CardContent>
       </Card>
     );

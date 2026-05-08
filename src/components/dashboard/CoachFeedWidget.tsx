@@ -77,11 +77,13 @@ export default function CoachFeedWidget() {
         )}
 
         {!loading && actions.length === 0 && !generating && (
-          <div className="text-center py-6">
-            <Sparkles className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
-            <p className="text-sm font-medium">No coaching insights yet</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Click refresh to scan your account.
+          <div className="text-center py-6 space-y-2">
+            <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center mx-auto">
+              <Sparkles className="w-4 h-4 text-primary" />
+            </div>
+            <p className="text-sm font-semibold text-foreground">Your AI coach is ready</p>
+            <p className="text-xs text-muted-foreground max-w-[280px] mx-auto leading-relaxed">
+              Add a client or send a proposal and the coach will tell you the single highest-leverage move to make today.
             </p>
           </div>
         )}

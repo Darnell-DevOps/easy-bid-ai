@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Repeat, ArrowRight, AlertTriangle } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
 import {
   formatMoney,
   monthlyEquivalentCents,
@@ -147,13 +148,14 @@ export default function RetainersWidget() {
         )}
 
         {!loading && rows.length === 0 && (
-          <p className="text-xs text-muted-foreground">
-            No retainers yet.{" "}
-            <Link to="/dashboard/retainers/new" className="text-accent hover:underline">
-              Create one
-            </Link>
-            .
-          </p>
+          <EmptyState
+            icon={Repeat}
+            title="Turn clients into recurring revenue"
+            description="Set up monthly, weekly, or quarterly retainers in under 2 minutes — Lovable handles billing, reminders, and recovery."
+            ctaLabel="Create your first retainer"
+            ctaHref="/dashboard/retainers/new"
+            variant="inline"
+          />
         )}
       </CardContent>
     </Card>
