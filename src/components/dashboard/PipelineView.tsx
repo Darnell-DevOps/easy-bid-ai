@@ -42,6 +42,16 @@ export default function PipelineView({ proposals, clients }: PipelineViewProps) 
           <p className="text-xs text-muted-foreground mt-0.5">Where your deals stand right now.</p>
         </div>
       </div>
+      {total === 0 ? (
+        <EmptyState
+          icon={GitBranch}
+          title="Your deals will live here"
+          description="As you add leads and send proposals, you'll watch them move from New → Sent → Viewed → Accepted → Paid."
+          ctaLabel="Add your first client"
+          ctaHref="/dashboard/clients/new"
+          variant="panel"
+        />
+      ) : (
       <Card>
         <CardContent className="p-4 sm:p-5">
           <div className="flex items-stretch gap-2 overflow-x-auto">
