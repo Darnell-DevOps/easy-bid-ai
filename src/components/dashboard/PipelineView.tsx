@@ -32,6 +32,7 @@ export default function PipelineView({ proposals, clients }: PipelineViewProps) 
     accepted: proposals.filter((p) => (p.status || "").toLowerCase() === "accepted" && !p.client_paid).length,
     paid: proposals.filter((p) => p.client_paid).length,
   };
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
 
   return (
     <div>
