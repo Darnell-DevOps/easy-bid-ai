@@ -1,62 +1,70 @@
-## Production Readiness Audit
+## Empty States & First-Run Polish
 
-A focused, no-new-features pass to catch failures before real customers hit them. Three parallel checks, then a short remediation pass for whatever surfaces.
+Goal: the first time a user lands anywhere in the app, they should see *what this section is for* and *a single button to populate it* — not a blank panel or a one-line "No X yet" string. No new features, no design changes to populated states, no business logic changes.
 
-### 1. Security scan
-Run the full backend security scanner against the Supabase project. It checks:
-- Tables missing RLS
-- Policies that are too permissive (e.g. `using (true)`)
-- Exposed PII columns
-- SECURITY DEFINER functions without `set search_path`
-- Storage bucket misconfigurations
-- Edge function auth gaps
+### Principle: every empty state has 3 elements
 
-Output: a categorized list of findings (critical / high / medium / low). I'll fix anything critical/high in the same pass and document medium/low for you to decide on.
+1. An icon (already in each widget — reuse it)
+2. A one-line **what this is** + one-line **why it matters**
+3. A single primary CTA that takes the user to the page that creates the first item
 
-### 2. Paddle webhook end-to-end check
-The recovery layer depends on `payments-webhook` correctly handling the dunning path. I'll verify against the actual deployed function:
+Same visual language as the rest of the app: existing card surfaces, muted text, accent-colored CTA. Nothing new in the design system.
 
-- Pull recent edge function logs for `payments-webhook` (live + sandbox) and look for: signature failures, missing `customData`, unhandled event types, RPC errors from `mark_proposal_paid`.
-- Trace `transaction.payment_failed` → `retainers.has_failed_payment=true` → `retainer_reminders` upsert path.
-- Verify `subscription.canceled` correctly flips status without orphaning invoices.
-- Check that `retainer_invoices` rows get the right `status` transitions (`failed` → `recovered` → `paid`).
-- Confirm `?env=sandbox` vs `?env=live` query param routing matches the registered webhook URLs.
+### Scope — files to update
 
-If I find any silent failures, fix them in `supabase/functions/payments-webhook/index.ts` and re-test via `supabase--curl_edge_functions` or Paddle's simulation API.
+**Dashboard widgets (sidebar + main column):**
+- `src/components/dashboard/PipelineView.tsx` — when all 5 stage counts are 0, replace the funnel with a teaching card ("Your deals will flow through here. Start by adding a lead." → Add Client)
+- `src/components/dashboard/RetainersWidget.tsx` — upgrade the one-line "No retainers yet" into a proper empty card explaining MRR + CTA to `/dashboard/retainers/new`
+- `src/components/dashboard/ContractsWidget.tsx` — same treatment, CTA to first contract flow
+- `src/components/dashboard/OnboardingWidget.tsx` — explain what client onboarding forms do + CTA
+- `src/components/dashboard/UpcomingBookings.tsx` — explain booking link + CTA to share booking page / settings
+- `src/components/dashboard/CoachFeedWidget.tsx` — current empty state says "Click refresh." Improve to: "AI Coach watches your pipeline and tells you exactly which deal to nudge today. Add a lead or proposal to get your first move." (auto-hide refresh hint when there's literally nothing to coach on)
+- `src/components/dashboard/DealActivity.tsx` / `RecentActivity.tsx` — short teaching empty state
+- `src/components/dashboard/ProposalsList.tsx` — already has an empty state; audit it and align tone
+- `src/components/dashboard/PriorityActions.tsx` — when there's nothing urgent, current copy is already friendly; light tone pass only
 
-### 3. Edge function log sweep
-Check the last ~24h of logs for these functions and triage any errors:
-- `payments-webhook`
-- `retainer-recovery-cron`
-- `create-proposal-checkout`
-- `create-retainer-subscription`
-- `retainer-portal-session`
-- `retainer-recover-portal`
-- `ai-coach-feed`
-- `ai-deal-score`
-- `ai-churn-risk`
-- `ai-proposal-audit`
-- `generate-proposal` / `generate-contract` / `generate-policy`
-- `lead-response`
+**Full pages (when the user lands and the list is empty):**
+- `src/pages/RecoveryDashboard.tsx` — "No failed payments. When a retainer payment fails, it lands here with a one-click recovery link to send the client."
+- `src/pages/RetainersPage.tsx` — explain retainers + CTA
+- `src/pages/ContractsPage.tsx` — explain contracts + CTA
+- `src/pages/OnboardingDashboard.tsx` — explain client onboarding forms + CTA
+- `src/pages/ProposalsDashboard.tsx` — verify empty state quality
+- `src/pages/Clients.tsx` — verify empty state quality
 
-Focus on: 5xx responses, unhandled exceptions, CORS errors, missing env vars, RLS denials from the service role calls.
+### Shared component
 
-### 4. Remediation pass
-Anything found in steps 1–3 gets fixed in priority order:
-- Critical security → first
-- Webhook bugs that drop money events → second
-- Silent edge function errors → third
-- Polish (better error messages, retry logic) → last
+Create `src/components/EmptyState.tsx` — a small presentational component:
 
-No design changes. No new features. Stability only.
+```
+<EmptyState
+  icon={Repeat}
+  title="No retainers yet"
+  description="Retainers turn one-time clients into monthly recurring revenue. Set up auto-billing in under 2 minutes."
+  ctaLabel="Create your first retainer"
+  ctaHref="/dashboard/retainers/new"
+  variant="card" | "inline"  // card = full panel, inline = small widget version
+/>
+```
 
-### Deliverable
-A short report with: what was scanned, what was found, what was fixed, what's left for you to decide on (e.g. "this RLS policy is intentionally permissive — confirm?"). Plus the updated files.
+Reused everywhere above. Keeps tone and spacing consistent. Uses existing tokens — no new colors, gradients, or shadows.
+
+### Copy tone
+
+Short, concrete, benefit-led. Examples:
+
+- Pipeline (empty): **"Your deals will live here."** "As you add leads and send proposals, you'll watch them move from New → Sent → Paid." → *Add your first client*
+- Coach Feed (empty): **"Your AI coach is ready."** "Add a client or proposal and the coach will tell you the single highest-leverage move to make today." → *Add a client*
+- Recovery (empty): **"All payments healthy."** "When a retainer payment fails, it appears here with a one-click recovery link you can send the client."
+- Retainers widget (empty): **"Turn clients into recurring revenue."** "Set up monthly billing in under 2 minutes." → *Create retainer*
 
 ### Out of scope
-- Empty states polish (separate pass)
-- Mobile review (separate pass)
-- Landing page conversion work (separate pass)
-- Any new functionality
 
-Approve and I'll run the three checks in parallel and report back with findings + fixes.
+- No changes to populated-state UI
+- No new widgets, routes, or data
+- No changes to the design system, colors, or typography
+- No mobile-specific layout changes (separate pass)
+- No analytics instrumentation (separate pass)
+
+### Deliverable
+
+One shared `EmptyState` component + ~10 widgets/pages updated to use it. After this, a brand-new signup landing on the dashboard sees a guided, opinionated experience instead of a sea of "0" and "—" placeholders.
