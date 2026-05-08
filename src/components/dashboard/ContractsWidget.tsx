@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { FileSignature, ArrowRight, CheckCircle2, Send, Eye } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
 
 interface ContractLite {
   id: string;
