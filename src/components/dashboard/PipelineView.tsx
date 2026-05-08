@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { UserPlus, Send, Eye, CheckCircle2, Banknote, ArrowRight } from "lucide-react";
+import { UserPlus, Send, Eye, CheckCircle2, Banknote, ArrowRight, GitBranch } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
 
 interface ProposalLite {
   status?: string | null;
