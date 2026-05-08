@@ -150,9 +150,15 @@ export default function RecoveryDashboard() {
               <p className="text-sm text-muted-foreground">Loading…</p>
             )}
             {!loading && failed.length === 0 && (
-              <Card className="border-border/60">
-                <CardContent className="p-8 text-center text-sm text-muted-foreground">
-                  No failed payments. Nice work.
+              <Card className="border-dashed border-border/60">
+                <CardContent className="p-10 text-center space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-emerald-500/15 flex items-center justify-center mx-auto">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                  </div>
+                  <p className="text-sm font-semibold text-foreground">All payments healthy</p>
+                  <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                    When a retainer payment fails, it lands here with a one-click recovery link you can send the client.
+                  </p>
                 </CardContent>
               </Card>
             )}
