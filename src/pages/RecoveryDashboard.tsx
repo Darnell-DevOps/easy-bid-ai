@@ -13,6 +13,8 @@ import {
   ExternalLink,
   RefreshCw,
   ShieldCheck,
+  CheckCircle2,
+  CalendarRange,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatMoney, daysUntil } from "@/lib/retainers";
