@@ -78,6 +78,7 @@ export default function PipelineView({ proposals, clients }: PipelineViewProps) 
           </div>
         </CardContent>
       </Card>
+      )}
     </div>
   );
 }
