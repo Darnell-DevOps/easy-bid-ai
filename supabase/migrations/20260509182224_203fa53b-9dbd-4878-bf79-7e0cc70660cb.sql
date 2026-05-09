@@ -1,0 +1,9 @@
+DROP POLICY IF EXISTS "Super admins read all proposals" ON public.proposals;
+DROP POLICY IF EXISTS "Super admins read all contracts" ON public.contracts;
+DROP POLICY IF EXISTS "Super admins read all clients" ON public.clients;
+DROP POLICY IF EXISTS "Super admins read all retainers" ON public.retainers;
+DROP POLICY IF EXISTS "Super admins read all retainer_invoices" ON public.retainer_invoices;
+DROP POLICY IF EXISTS "Super admins read all bookings" ON public.bookings;
+DROP POLICY IF EXISTS "Super admins read all onboarding_forms" ON public.onboarding_forms;
+DROP POLICY IF EXISTS "Super admins read all ai_insights" ON public.ai_insights;
+DROP POLICY IF EXISTS "Super admins read all email_send_log" ON public.email_send_log;
