@@ -2,6 +2,12 @@
 // Errors are swallowed (logged) — email failures must never block UX.
 import { supabase } from "@/integrations/supabase/client";
 
+export interface EmailAttachment {
+  filename: string;
+  content: string; // base64-encoded
+  content_type?: string;
+}
+
 export async function sendEmail(args: {
   templateName: string;
   recipientEmail: string;
@@ -9,6 +15,7 @@ export async function sendEmail(args: {
   idempotencyKey?: string;
   userId?: string;
   replyTo?: string;
+  attachments?: EmailAttachment[];
 }): Promise<void> {
   if (!args.recipientEmail) return;
   try {

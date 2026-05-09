@@ -179,6 +179,20 @@ const templates: Record<string, Tpl> = {
     };
   },
 
+  "booking-reminder": (d) => {
+    const subject = `Reminder: ${escape(d.title || "your meeting")} tomorrow${d.when ? ` at ${escape(d.when)}` : ""}`;
+    const body =
+      h1(`See you soon`) +
+      p(`${d.name ? `Hi ${escape(d.name)}, ` : ""}this is a friendly reminder about your upcoming ${escape(d.title || "meeting")}${d.when ? ` on <strong>${escape(d.when)}</strong>` : ""}.`) +
+      (d.location ? p(`Location: ${escape(d.location)}`) : "") +
+      (d.url ? button(String(d.url), "View details") : "");
+    return {
+      subject,
+      html: layout({ preheader: "Quick reminder about your upcoming meeting.", bodyHtml: body }),
+      text: `Reminder: ${d.title || "meeting"}${d.when ? ` at ${d.when}` : ""}.`,
+    };
+  },
+
   "follow-up-reminder": (d) => {
     const subject = `Follow up with ${escape(d.client_name || "your client")}`;
     const body =
