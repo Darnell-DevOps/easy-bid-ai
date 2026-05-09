@@ -103,6 +103,7 @@ Deno.serve(async (req) => {
         html: rendered.html,
         text: rendered.text,
         ...(replyTo ? { reply_to: replyTo } : {}),
+        ...(attachments && attachments.length ? { attachments } : {}),
       }),
     });
     const payload = await res.json().catch(() => ({}));
