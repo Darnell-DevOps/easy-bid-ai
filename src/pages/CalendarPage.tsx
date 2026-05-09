@@ -50,6 +50,7 @@ import {
   relativeDateLabel,
   buildIcs,
   icsToBase64,
+  resolveMeetingUrl,
   type BookingLinkRow,
   type BookingRow,
 } from "@/lib/bookings";
@@ -108,6 +109,7 @@ export default function CalendarPage() {
     duration_minutes: 30,
     location_type: "google_meet",
     custom_location: "",
+    meeting_url: "",
     available_days: [1, 2, 3, 4, 5],
     start_time: "09:00",
     end_time: "17:00",
@@ -125,6 +127,7 @@ export default function CalendarPage() {
     time: "10:00",
     location_type: "google_meet",
     location_details: "",
+    meeting_url: "",
     client_message: "",
     send_invite: true,
   });
@@ -193,6 +196,7 @@ export default function CalendarPage() {
       duration_minutes: form.duration_minutes,
       location_type: form.location_type,
       custom_location: form.custom_location.trim() || null,
+      meeting_url: form.meeting_url.trim() || null,
       available_days: form.available_days,
       start_time: form.start_time,
       end_time: form.end_time,
@@ -265,9 +269,17 @@ export default function CalendarPage() {
       return;
     }
 
+    const newBookingId = crypto.randomUUID();
+    const meetingUrl = resolveMeetingUrl({
+      locationType: f.location_type,
+      customLocation: f.location_details,
+      linkMeetingUrl: f.meeting_url,
+      bookingId: newBookingId,
+    });
     const { data, error } = await supabase
       .from("bookings")
       .insert({
+        id: newBookingId,
         user_id: userId,
         client_name: f.client_name.trim(),
         client_email: f.client_email.trim(),
@@ -276,6 +288,7 @@ export default function CalendarPage() {
         scheduled_at: scheduled.toISOString(),
         location_type: f.location_type,
         location_details: f.location_details.trim() || null,
+        meeting_url: meetingUrl || null,
         client_message: f.client_message.trim() || null,
         status: "confirmed",
       })
@@ -287,6 +300,8 @@ export default function CalendarPage() {
       return;
     }
 
+    const locationDisplay = meetingUrl || locationLabel(f.location_type, f.location_details);
+
     if (f.send_invite) {
       const ics = buildIcs({
         uid: (data as BookingRow).id,
@@ -295,6 +310,7 @@ export default function CalendarPage() {
         start: scheduled,
         durationMinutes: f.duration_minutes,
         location: locationLabel(f.location_type, f.location_details),
+        url: meetingUrl || undefined,
         organizerEmail: userEmail || undefined,
         attendeeName: f.client_name,
         attendeeEmail: f.client_email,
@@ -304,11 +320,14 @@ export default function CalendarPage() {
         recipientEmail: f.client_email,
         userId,
         data: {
-          client_name: f.client_name,
-          meeting_name: f.meeting_name,
-          scheduled_at: scheduled.toISOString(),
-          duration_minutes: f.duration_minutes,
-          location: locationLabel(f.location_type, f.location_details),
+          name: f.client_name,
+          title: f.meeting_name,
+          when: scheduled.toLocaleString(undefined, {
+            weekday: "long", month: "long", day: "numeric",
+            hour: "numeric", minute: "2-digit",
+          }),
+          location: locationDisplay,
+          meeting_url: meetingUrl || undefined,
           reschedule_url: `${window.location.origin}/reschedule/${(data as any).reschedule_token}`,
         },
         attachments: [
@@ -333,6 +352,7 @@ export default function CalendarPage() {
       time: "10:00",
       location_type: "google_meet",
       location_details: "",
+      meeting_url: "",
       client_message: "",
       send_invite: true,
     });
