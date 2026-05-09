@@ -17,6 +17,7 @@ import ProposalHeader from "@/components/proposal/ProposalHeader";
 import StatusBadge, { normalizeStatus, type ProposalStatus } from "@/components/proposal/StatusBadge";
 import FollowUpDialog from "@/components/proposal/FollowUpDialog";
 import { getFollowUpScenario, FOLLOW_UP_META } from "@/lib/follow-up";
+import { sendEmail } from "@/lib/email";
 import { usePlan } from "@/hooks/use-plan";
 import UpgradeModal from "@/components/plan/UpgradeModal";
 import ProposalWatermark from "@/components/plan/ProposalWatermark";
@@ -199,6 +200,50 @@ export default function ProposalView() {
       draft: "Draft", sent: "Sent", viewed: "Viewed", accepted: "Accepted", rejected: "Rejected",
     };
     toast({ title: `Marked as ${labels[next]}` });
+
+    // First-time "sent" → email the client a review link.
+    if (next === "sent" && !previous.sent_at) {
+      const { data: row } = await supabase
+        .from("proposals")
+        .select("client_id, amount_cents, currency, user_id, client_name")
+        .eq("id", proposal.id)
+        .maybeSingle();
+      let clientEmail: string | null = null;
+      if (row?.client_id) {
+        const { data: c } = await supabase
+          .from("clients")
+          .select("email")
+          .eq("id", row.client_id)
+          .maybeSingle();
+        clientEmail = c?.email || null;
+      }
+      if (clientEmail && row) {
+        const { data: udata } = await supabase.auth.getUser();
+        const fromName =
+          (udata.user?.user_metadata as any)?.full_name ||
+          udata.user?.email?.split("@")[0] ||
+          "Your contact";
+        const amount =
+          row.amount_cents != null
+            ? new Intl.NumberFormat("en-US", {
+                style: "currency",
+                currency: row.currency || "USD",
+              }).format((row.amount_cents || 0) / 100)
+            : undefined;
+        void sendEmail({
+          templateName: "proposal-sent",
+          recipientEmail: clientEmail,
+          userId: row.user_id,
+          idempotencyKey: `proposal-sent-${proposal.id}`,
+          data: {
+            from_name: fromName,
+            title: row.client_name,
+            amount,
+            url: `${window.location.origin}/proposal/view/${proposal.id}`,
+          },
+        });
+      }
+    }
   };
 
   const handleCopyProposal = async () => {

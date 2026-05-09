@@ -9,6 +9,7 @@ import ContractRenderer from "@/components/contracts/ContractRenderer";
 import { Loader2, ArrowLeft, Copy, ExternalLink, Send, CheckCircle2, Clock, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { contractTypeLabel, type ContractRow, type ContractSignatureRow } from "@/lib/contracts";
+import { sendEmail } from "@/lib/email";
 
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -72,6 +73,19 @@ export default function ContractDetail() {
     if (error) {
       toast({ title: "Couldn't send", description: error.message, variant: "destructive" });
       return;
+    }
+    if (contract.client_email) {
+      void sendEmail({
+        templateName: "contract-signature-reminder",
+        recipientEmail: contract.client_email,
+        userId: contract.user_id,
+        idempotencyKey: `contract-sent-${contract.id}`,
+        data: {
+          from_name: contract.company_name || "Your contact",
+          title: contract.title,
+          url: signingUrl,
+        },
+      });
     }
     await navigator.clipboard.writeText(signingUrl);
     toast({ title: "Marked as sent", description: "Signing link copied to clipboard — share it with your client." });

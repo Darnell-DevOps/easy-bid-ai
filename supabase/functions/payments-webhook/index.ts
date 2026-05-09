@@ -50,19 +50,24 @@ async function handleTransactionCompleted(data: any) {
     // Send payment-confirmation to client
     const { data: prop } = await supabase
       .from("proposals")
-      .select("user_id, client_email, client_name, title, amount_cents, currency")
+      .select("user_id, client_id, client_name, service_type, amount_cents, currency")
       .eq("id", cd.proposalId)
       .maybeSingle();
-    if (prop?.client_email) {
+    let clientEmail: string | null = null;
+    if (prop?.client_id) {
+      const { data: c } = await supabase.from("clients").select("email").eq("id", prop.client_id).maybeSingle();
+      clientEmail = c?.email || null;
+    }
+    if (clientEmail && prop) {
       await sendEmail({
         templateName: "payment-confirmation",
-        recipientEmail: prop.client_email,
+        recipientEmail: clientEmail,
         userId: prop.user_id,
         idempotencyKey: `paid-prop-${cd.proposalId}-${data.id}`,
         data: {
           name: prop.client_name,
           amount: fmtMoney(prop.amount_cents || 0, prop.currency || "USD"),
-          description: prop.title,
+          description: prop.service_type || `Proposal — ${prop.client_name}`,
         },
       });
     }
