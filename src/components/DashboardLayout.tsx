@@ -26,6 +26,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const isAdmin = useIsSuperAdmin();
 
   useEffect(() => {
     supabase.auth.onAuthStateChange((event) => {
@@ -64,6 +65,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </Link>
           );
         })}
+        {isAdmin && (
+          <Link
+            to="/admin"
+            onClick={() => setMobileOpen(false)}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors mt-2 border-t border-sidebar-border/40 pt-4 ${
+              location.pathname === "/admin"
+                ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+            }`}
+          >
+            <Shield className="w-4 h-4" />
+            Admin
+          </Link>
+        )}
       </nav>
       <div className="p-3">
         <button
