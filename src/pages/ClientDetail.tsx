@@ -867,6 +867,18 @@ export default function ClientDetail() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {client.original_lead_message && (
+          <ReplyDrafterDialog
+            open={replyOpen}
+            onOpenChange={setReplyOpen}
+            message={client.original_lead_message}
+            clientName={client.name}
+            clientEmail={client.email}
+            scenario="incoming lead message"
+            defaultTone="warm"
+          />
+        )}
       </div>
     </DashboardLayout>
   );
