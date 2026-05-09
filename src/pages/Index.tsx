@@ -290,6 +290,9 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Live 60-second product demo */}
+      <LiveDemo />
+
       {/* Pain Section */}
       <section className="py-16 px-4">
         <AnimateIn className="container max-w-3xl text-center">
