@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -244,9 +244,8 @@ export default function EmailsDashboard() {
                     const meta = STATUS_BADGE[r.status] || STATUS_BADGE.pending;
                     const isOpen = expanded === r.id;
                     return (
-                      <>
+                      <Fragment key={r.id}>
                         <TableRow
-                          key={r.id}
                           className={r.error ? "cursor-pointer" : ""}
                           onClick={() => r.error && setExpanded(isOpen ? null : r.id)}
                         >
@@ -262,13 +261,13 @@ export default function EmailsDashboard() {
                           </TableCell>
                         </TableRow>
                         {isOpen && r.error && (
-                          <TableRow key={`${r.id}-err`}>
+                          <TableRow>
                             <TableCell colSpan={4} className="bg-muted/40 text-xs text-red-400 font-mono">
                               {r.error}
                             </TableCell>
                           </TableRow>
                         )}
-                      </>
+                      </Fragment>
                     );
                   })}
                 </TableBody>
