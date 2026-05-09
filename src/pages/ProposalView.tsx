@@ -205,10 +205,19 @@ export default function ProposalView() {
     if (next === "sent" && !previous.sent_at) {
       const { data: row } = await supabase
         .from("proposals")
-        .select("client_email, title, amount_cents, currency, user_id")
+        .select("client_id, amount_cents, currency, user_id, client_name")
         .eq("id", proposal.id)
         .maybeSingle();
-      if (row?.client_email) {
+      let clientEmail: string | null = null;
+      if (row?.client_id) {
+        const { data: c } = await supabase
+          .from("clients")
+          .select("email")
+          .eq("id", row.client_id)
+          .maybeSingle();
+        clientEmail = c?.email || null;
+      }
+      if (clientEmail && row) {
         const { data: udata } = await supabase.auth.getUser();
         const fromName =
           (udata.user?.user_metadata as any)?.full_name ||
@@ -223,12 +232,12 @@ export default function ProposalView() {
             : undefined;
         void sendEmail({
           templateName: "proposal-sent",
-          recipientEmail: row.client_email,
+          recipientEmail: clientEmail,
           userId: row.user_id,
           idempotencyKey: `proposal-sent-${proposal.id}`,
           data: {
             from_name: fromName,
-            title: row.title || proposal.client_name,
+            title: row.client_name,
             amount,
             url: `${window.location.origin}/proposal/view/${proposal.id}`,
           },
