@@ -190,8 +190,12 @@ export function buildIcs(opts: {
     `DTSTART:${fmt(opts.start)}`,
     `DTEND:${fmt(end)}`,
     `SUMMARY:${esc(opts.title)}`,
-    opts.description ? `DESCRIPTION:${esc(opts.description)}` : "",
-    opts.location ? `LOCATION:${esc(opts.location)}` : "",
+    (opts.description || opts.url)
+      ? `DESCRIPTION:${esc([opts.url ? `Join: ${opts.url}` : "", opts.description || ""].filter(Boolean).join("\n\n"))}`
+      : "",
+    // Prefer the joinable URL as LOCATION so calendar apps make it clickable
+    (opts.url || opts.location) ? `LOCATION:${esc(opts.url || opts.location || "")}` : "",
+    opts.url ? `URL:${opts.url}` : "",
     opts.organizerEmail
       ? `ORGANIZER;CN=${esc(opts.organizerName || "Host")}:mailto:${opts.organizerEmail}`
       : "",
