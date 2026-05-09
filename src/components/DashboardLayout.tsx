@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, Plus, CreditCard, Settings, LogOut, Menu, X, LayoutTemplate, Users, Sparkles, ScrollText, Calendar, FileSignature, ClipboardList, Repeat, LifeBuoy, Mail, Shield } from "lucide-react";
+import { FileText, Plus, CreditCard, Settings, LogOut, Menu, X, LayoutTemplate, Users, Sparkles, ScrollText, Calendar, FileSignature, ClipboardList, Repeat, LifeBuoy, Mail, Shield, Star } from "lucide-react";
 import { useIsSuperAdmin } from "@/hooks/useIsSuperAdmin";
 
 const navItems = [
@@ -13,6 +13,7 @@ const navItems = [
   { label: "Retainers", icon: Repeat, href: "/dashboard/retainers" },
   { label: "Recovery", icon: LifeBuoy, href: "/dashboard/recovery" },
   { label: "Onboarding", icon: ClipboardList, href: "/dashboard/onboarding" },
+  { label: "Testimonials", icon: Star, href: "/dashboard/testimonials" },
   { label: "Calendar", icon: Calendar, href: "/dashboard/calendar" },
   { label: "Lead Assistant", icon: Sparkles, href: "/dashboard/leads" },
   { label: "Policies", icon: ScrollText, href: "/dashboard/policies" },

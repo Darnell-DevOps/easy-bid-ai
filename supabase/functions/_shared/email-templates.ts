@@ -191,6 +191,38 @@ const templates: Record<string, Tpl> = {
       text: `Follow up with ${d.client_name || ""}: ${d.url || APP_URL}/proposals`,
     };
   },
+
+  "review-request": (d) => {
+    const fromName = escape(d.from_name || "We");
+    const subject = `${d.from_name ? escape(d.from_name) + " would" : "We would"} love your feedback`;
+    const body =
+      h1(`Could you share a quick review?`) +
+      p(`Hi ${escape(d.client_name || "")},`) +
+      p(`${fromName} hope${d.from_name ? "s" : ""} the work landed well. A short review — even one sentence — would mean a lot and helps future clients trust the process.`) +
+      (d.custom_message ? p(escape(d.custom_message)) : "") +
+      button(String(d.url || APP_URL), "Leave a review (1 min)") +
+      (d.google_review_url ? p(`Prefer Google? <a href="${escape(d.google_review_url)}" style="color:#0a0a0a;">Leave a Google review</a>.`) : "");
+    return {
+      subject,
+      html: layout({ preheader: "A quick review would mean a lot.", bodyHtml: body }),
+      text: `Hi ${d.client_name || ""}, could you share a quick review? ${d.url || APP_URL}`,
+    };
+  },
+
+  "review-reminder": (d) => {
+    const subject = `A small nudge — your review${d.from_name ? ` for ${escape(d.from_name)}` : ""}`;
+    const body =
+      h1(`Just a gentle reminder`) +
+      p(`Hi ${escape(d.client_name || "")}, no pressure at all — just floating this back to the top of your inbox in case it slipped past.`) +
+      p(`A quick sentence about your experience would genuinely help.`) +
+      button(String(d.url || APP_URL), "Leave a review") +
+      (d.google_review_url ? p(`Or share on <a href="${escape(d.google_review_url)}" style="color:#0a0a0a;">Google</a>.`) : "");
+    return {
+      subject,
+      html: layout({ preheader: "Quick reminder about your review.", bodyHtml: body }),
+      text: `Reminder — your review: ${d.url || APP_URL}`,
+    };
+  },
 };
 
 export function renderTemplate(name: string, data: EmailData) {

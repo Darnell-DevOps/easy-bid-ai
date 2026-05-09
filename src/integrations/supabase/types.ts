@@ -930,6 +930,177 @@ export type Database = {
         }
         Relationships: []
       }
+      review_requests: {
+        Row: {
+          client_email: string | null
+          client_id: string | null
+          client_name: string
+          completed_at: string | null
+          contract_id: string | null
+          created_at: string
+          id: string
+          last_reminder_at: string | null
+          proposal_id: string | null
+          reminder_count: number
+          sent_at: string | null
+          source: string
+          status: string
+          testimonial_id: string | null
+          token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_email?: string | null
+          client_id?: string | null
+          client_name?: string
+          completed_at?: string | null
+          contract_id?: string | null
+          created_at?: string
+          id?: string
+          last_reminder_at?: string | null
+          proposal_id?: string | null
+          reminder_count?: number
+          sent_at?: string | null
+          source?: string
+          status?: string
+          testimonial_id?: string | null
+          token?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_email?: string | null
+          client_id?: string | null
+          client_name?: string
+          completed_at?: string | null
+          contract_id?: string | null
+          created_at?: string
+          id?: string
+          last_reminder_at?: string | null
+          proposal_id?: string | null
+          reminder_count?: number
+          sent_at?: string | null
+          source?: string
+          status?: string
+          testimonial_id?: string | null
+          token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      testimonial_settings: {
+        Row: {
+          auto_request_on_contract_signed: boolean
+          auto_request_on_proposal_paid: boolean
+          created_at: string
+          custom_message: string | null
+          follow_up_days: number
+          from_name: string | null
+          google_review_url: string | null
+          id: string
+          max_reminders: number
+          public_slug: string
+          updated_at: string
+          user_id: string
+          wall_headline: string | null
+          wall_intro: string | null
+        }
+        Insert: {
+          auto_request_on_contract_signed?: boolean
+          auto_request_on_proposal_paid?: boolean
+          created_at?: string
+          custom_message?: string | null
+          follow_up_days?: number
+          from_name?: string | null
+          google_review_url?: string | null
+          id?: string
+          max_reminders?: number
+          public_slug?: string
+          updated_at?: string
+          user_id: string
+          wall_headline?: string | null
+          wall_intro?: string | null
+        }
+        Update: {
+          auto_request_on_contract_signed?: boolean
+          auto_request_on_proposal_paid?: boolean
+          created_at?: string
+          custom_message?: string | null
+          follow_up_days?: number
+          from_name?: string | null
+          google_review_url?: string | null
+          id?: string
+          max_reminders?: number
+          public_slug?: string
+          updated_at?: string
+          user_id?: string
+          wall_headline?: string | null
+          wall_intro?: string | null
+        }
+        Relationships: []
+      }
+      testimonials: {
+        Row: {
+          allow_public: boolean
+          avatar_url: string | null
+          client_email: string | null
+          client_id: string | null
+          client_name: string
+          company: string | null
+          content: string
+          created_at: string
+          id: string
+          is_featured: boolean
+          is_published: boolean
+          rating: number | null
+          request_id: string | null
+          role_title: string | null
+          source: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allow_public?: boolean
+          avatar_url?: string | null
+          client_email?: string | null
+          client_id?: string | null
+          client_name: string
+          company?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          is_featured?: boolean
+          is_published?: boolean
+          rating?: number | null
+          request_id?: string | null
+          role_title?: string | null
+          source?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allow_public?: boolean
+          avatar_url?: string | null
+          client_email?: string | null
+          client_id?: string | null
+          client_name?: string
+          company?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          is_featured?: boolean
+          is_published?: boolean
+          rating?: number | null
+          request_id?: string | null
+          role_title?: string | null
+          source?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1011,6 +1182,20 @@ export type Database = {
         Args: { _complete?: boolean; _responses: Json; _token: string }
         Returns: string
       }
+      testimonial_request_get: { Args: { _token: string }; Returns: Json }
+      testimonial_submit: {
+        Args: {
+          _allow_public?: boolean
+          _client_name: string
+          _company?: string
+          _content: string
+          _rating: number
+          _role_title?: string
+          _token: string
+        }
+        Returns: string
+      }
+      testimonial_wall_get: { Args: { _slug: string }; Returns: Json }
     }
     Enums: {
       app_role: "super_admin" | "user"
