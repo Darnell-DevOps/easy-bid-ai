@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
                   client_name: r.client_name,
                   end_date: r.end_date,
                   days_until: days,
-                  url: `https://app.strivesync.io/retainers/${r.id}`,
+                  url: `https://app.closesync.io/retainers/${r.id}`,
                 },
               });
               emailed++;
@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
             client_name: r.client_name,
             reason: r.failed_payment_reason || "",
             severity: isFinal ? "final" : "warning",
-            url: `https://app.strivesync.io/recovery`,
+            url: `https://app.closesync.io/recovery`,
           },
         });
         emailed++;

@@ -50,12 +50,12 @@ const SAMPLE_DATA: Record<string, Record<string, unknown>> = {
     from_name: "Jordan at Acme",
     title: "Brand redesign — Q2 sprint",
     amount: "$4,500.00",
-    url: "https://app.strivesync.io/proposal/view/sample",
+    url: "https://app.closesync.io/proposal/view/sample",
   },
   "contract-signature-reminder": {
     from_name: "Jordan at Acme",
     title: "Service Agreement — Acme",
-    url: "https://app.strivesync.io/sign/sample",
+    url: "https://app.closesync.io/sign/sample",
   },
   "payment-confirmation": {
     name: "Alex",

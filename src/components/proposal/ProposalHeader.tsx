@@ -15,7 +15,7 @@ export default function ProposalHeader({ clientName, companyName, serviceType, c
             <span className="text-xs font-bold text-accent-foreground">SS</span>
           </div>
           <div>
-            <p className="text-sm font-semibold text-foreground leading-tight">StriveSync</p>
+            <p className="text-sm font-semibold text-foreground leading-tight">CloseSync</p>
             <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Professional Proposal</p>
           </div>
         </div>

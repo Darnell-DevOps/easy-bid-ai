@@ -1,11 +1,11 @@
-// Premium minimal transactional email templates for CloseSync AI / StriveSync.
+// Premium minimal transactional email templates for CloseSync AI / CloseSync.
 // Pure HTML strings — no React Email dependency. Each template returns
 // { subject, html, text } given a small data bag.
 
 export type EmailData = Record<string, string | number | undefined | null>;
 
 const BRAND = "CloseSync AI";
-const APP_URL = "https://app.strivesync.io";
+const APP_URL = "https://app.closesync.io";
 
 function layout(opts: { preheader: string; bodyHtml: string }): string {
   return `<!doctype html>
