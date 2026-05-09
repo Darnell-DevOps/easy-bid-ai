@@ -124,3 +124,59 @@ export function relativeDateLabel(date: Date | string): string {
   if (diff > 1 && diff < 7) return DAY_NAMES_FULL[d.getDay()];
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
+
+/**
+ * Build a minimal RFC 5545 .ics calendar invite for a single booking.
+ * Returns the raw .ics text — base64-encode for email attachments.
+ */
+export function buildIcs(opts: {
+  uid: string;
+  title: string;
+  description?: string;
+  start: Date;
+  durationMinutes: number;
+  location?: string;
+  organizerName?: string;
+  organizerEmail?: string;
+  attendeeName?: string;
+  attendeeEmail?: string;
+}): string {
+  const fmt = (d: Date) =>
+    d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  const end = new Date(opts.start.getTime() + opts.durationMinutes * 60000);
+  const esc = (s: string) =>
+    s.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
+  const lines = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//CloseSync AI//Booking//EN",
+    "CALSCALE:GREGORIAN",
+    "METHOD:REQUEST",
+    "BEGIN:VEVENT",
+    `UID:${opts.uid}@closesync.io`,
+    `DTSTAMP:${fmt(new Date())}`,
+    `DTSTART:${fmt(opts.start)}`,
+    `DTEND:${fmt(end)}`,
+    `SUMMARY:${esc(opts.title)}`,
+    opts.description ? `DESCRIPTION:${esc(opts.description)}` : "",
+    opts.location ? `LOCATION:${esc(opts.location)}` : "",
+    opts.organizerEmail
+      ? `ORGANIZER;CN=${esc(opts.organizerName || "Host")}:mailto:${opts.organizerEmail}`
+      : "",
+    opts.attendeeEmail
+      ? `ATTENDEE;CN=${esc(opts.attendeeName || "Attendee")};RSVP=TRUE:mailto:${opts.attendeeEmail}`
+      : "",
+    "STATUS:CONFIRMED",
+    "SEQUENCE:0",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].filter(Boolean);
+  return lines.join("\r\n");
+}
+
+export function icsToBase64(ics: string): string {
+  const bytes = new TextEncoder().encode(ics);
+  let bin = "";
+  bytes.forEach((b) => (bin += String.fromCharCode(b)));
+  return btoa(bin);
+}

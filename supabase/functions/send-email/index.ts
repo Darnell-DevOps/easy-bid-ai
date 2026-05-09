@@ -18,6 +18,11 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
 
+interface Attachment {
+  filename: string;
+  content: string; // base64
+  content_type?: string;
+}
 interface Body {
   templateName: string;
   recipientEmail: string;
@@ -26,6 +31,7 @@ interface Body {
   userId?: string;
   from?: string;
   replyTo?: string;
+  attachments?: Attachment[];
 }
 
 Deno.serve(async (req) => {
@@ -41,7 +47,7 @@ Deno.serve(async (req) => {
     return json({ error: "invalid_json" }, 400);
   }
 
-  const { templateName, recipientEmail, data = {}, idempotencyKey, userId, from, replyTo } = body;
+  const { templateName, recipientEmail, data = {}, idempotencyKey, userId, from, replyTo, attachments } = body;
   if (!templateName || !recipientEmail) {
     return json({ error: "missing_fields" }, 400);
   }
@@ -97,6 +103,7 @@ Deno.serve(async (req) => {
         html: rendered.html,
         text: rendered.text,
         ...(replyTo ? { reply_to: replyTo } : {}),
+        ...(attachments && attachments.length ? { attachments } : {}),
       }),
     });
     const payload = await res.json().catch(() => ({}));
