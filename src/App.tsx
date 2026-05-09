@@ -39,6 +39,7 @@ import RetainerDetail from "./pages/RetainerDetail";
 import RetainerSubscribePage from "./pages/RetainerSubscribePage";
 import RetainerRecoverPage from "./pages/RetainerRecoverPage";
 import RecoveryDashboard from "./pages/RecoveryDashboard";
+import EmailsDashboard from "./pages/EmailsDashboard";
 import NotFound from "./pages/NotFound";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { PageTransition } from "@/components/PageTransition";
@@ -78,7 +79,8 @@ const App = () => (
             <Route path="/dashboard/proposal/:id" element={<AuthGuard><ProposalView /></AuthGuard>} />
             <Route path="/dashboard/billing" element={<AuthGuard><Billing /></AuthGuard>} />
             <Route path="/dashboard/settings" element={<AuthGuard><SettingsPage /></AuthGuard>} />
-            <Route path="/dashboard/templates" element={<AuthGuard><Templates /></AuthGuard>} />
+           <Route path="/dashboard/templates" element={<AuthGuard><Templates /></AuthGuard>} />
+           <Route path="/dashboard/emails" element={<AuthGuard><EmailsDashboard /></AuthGuard>} />
             <Route path="/dashboard/revenue" element={<AuthGuard><RevenueDashboard /></AuthGuard>} />
             <Route path="/dashboard/proposals" element={<AuthGuard><ProposalsDashboard /></AuthGuard>} />
             <Route path="/dashboard/clients" element={<AuthGuard><Clients /></AuthGuard>} />
