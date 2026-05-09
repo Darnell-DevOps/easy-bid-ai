@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
     return json({ error: "invalid_json" }, 400);
   }
 
-  const { templateName, recipientEmail, data = {}, idempotencyKey, userId, from, replyTo } = body;
+  const { templateName, recipientEmail, data = {}, idempotencyKey, userId, from, replyTo, attachments } = body;
   if (!templateName || !recipientEmail) {
     return json({ error: "missing_fields" }, 400);
   }
