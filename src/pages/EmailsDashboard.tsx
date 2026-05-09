@@ -107,7 +107,6 @@ const STATUS_BADGE: Record<string, { label: string; cls: string; Icon: any }> = 
 const PAGE_SIZE = 50;
 
 export default function EmailsDashboard() {
-  const { toast } = useToast();
   const [range, setRange] = useState<Range>("7d");
   const [tplFilter, setTplFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
