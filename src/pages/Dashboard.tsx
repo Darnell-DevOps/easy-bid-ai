@@ -6,7 +6,7 @@ import PipelineView from "@/components/dashboard/PipelineView";
 import PriorityActions from "@/components/dashboard/PriorityActions";
 import DealActivity from "@/components/dashboard/DealActivity";
 import ProposalsList from "@/components/dashboard/ProposalsList";
-import OnboardingHighlight from "@/components/dashboard/OnboardingHighlight";
+import ActivationChecklist from "@/components/dashboard/ActivationChecklist";
 import UpcomingBookings from "@/components/dashboard/UpcomingBookings";
 import ContractsWidget from "@/components/dashboard/ContractsWidget";
 import OnboardingWidget from "@/components/dashboard/OnboardingWidget";
@@ -177,7 +177,7 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <OnboardingHighlight />
+        <ActivationChecklist />
 
         {/* AI SALES COACH — premium intelligence layer */}
         <WeeklyBriefingCard />
