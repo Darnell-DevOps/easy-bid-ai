@@ -1,9 +1,9 @@
 // AI Deal Score: scores one proposal 0-100 with a one-line reason.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import {
   corsHeaders,
   callAITool,
-  getServiceClient,
   getUserId,
   handleError,
   errorResponse,
@@ -20,12 +20,17 @@ serve(async (req) => {
     const { proposalId } = await req.json();
     if (!proposalId) return errorResponse("proposalId is required", 400);
 
-    const supabase = getServiceClient();
+    // Use a user-context client so RLS decides access (owner OR super_admin).
+    const authHeader = req.headers.get("Authorization")!;
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } },
+    );
     const { data: proposal, error } = await supabase
       .from("proposals")
       .select("*")
       .eq("id", proposalId)
-      .eq("user_id", userId)
       .maybeSingle();
     if (error || !proposal) return errorResponse("Proposal not found", 404);
 
