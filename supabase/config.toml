@@ -1,19 +1,17 @@
 project_id = "avtogztwdoemxuffnwyv"
 
-[functions.create-proposal-checkout]
-verify_jwt = false
-
-[functions.get-paddle-price]
-verify_jwt = false
-
-[functions.payments-webhook]
-verify_jwt = false
-
-[functions.create-retainer-subscription]
-verify_jwt = false
-
-[functions.retainer-portal-session]
-verify_jwt = false
-
-[functions.cancel-retainer-subscription]
-verify_jwt = false
+[functions]
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.cancel-retainer-subscription]
+    verify_jwt = false
+  [functions.create-proposal-checkout]
+    verify_jwt = false
+  [functions.create-retainer-subscription]
+    verify_jwt = false
+  [functions.get-paddle-price]
+    verify_jwt = false
+  [functions.payments-webhook]
+    verify_jwt = false
+  [functions.retainer-portal-session]
+    verify_jwt = false
