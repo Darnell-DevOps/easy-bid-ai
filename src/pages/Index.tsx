@@ -2,8 +2,10 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText, Zap, AlertTriangle, Clock, XCircle, UserX, ArrowRight, CheckCircle, Briefcase, ShieldCheck, CreditCard, HandCoins, FileCheck, Star, Lock } from "lucide-react";
+import { FileText, Zap, AlertTriangle, Clock, XCircle, UserX, ArrowRight, CheckCircle, Briefcase, ShieldCheck, CreditCard, HandCoins, FileCheck, Star, Lock, PlayCircle } from "lucide-react";
 import { AnimateIn } from "@/hooks/use-scroll-animation";
+import LiveDemo from "@/components/landing/LiveDemo";
+import { track } from "@/lib/landing-analytics";
 
 const steps = [
   { number: "1", title: "Send your proposal", description: "Generate a polished proposal in seconds and share it with one link." },
@@ -65,6 +67,7 @@ export default function Index() {
   const [showStickyCta, setShowStickyCta] = useState(false);
 
   useEffect(() => {
+    track("landing_view");
     const id = setInterval(() => setActiveStep((s) => (s + 1) % 3), 1600);
     return () => clearInterval(id);
   }, []);
@@ -103,6 +106,7 @@ export default function Index() {
             <span className="hidden sm:inline text-[10px] uppercase tracking-widest text-muted-foreground">by StriveSync</span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
+            <a href="#live-demo" className="hover:text-foreground transition-colors">Demo</a>
             <a href="#how-it-works" className="hover:text-foreground transition-colors">How it works</a>
             <a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a>
             <Link to="/login" className="hover:text-foreground transition-colors">Login</Link>
@@ -111,7 +115,7 @@ export default function Index() {
             <Link to="/login" className="md:hidden">
               <Button variant="ghost" size="sm">Log in</Button>
             </Link>
-            <Link to="/signup">
+            <Link to="/signup" onClick={() => track("cta_click", { location: "nav" })}>
               <Button size="sm" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_20px_hsl(var(--accent)/0.45)] transition-all h-9">Get Paid Faster</Button>
             </Link>
           </div>
@@ -178,23 +182,26 @@ export default function Index() {
               className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4 animate-hero-fade-up"
               style={{ animationDelay: "0.3s" }}
             >
-              <Link to="/signup" className="w-full sm:w-auto">
+              <Link to="/signup" className="w-full sm:w-auto" onClick={() => track("cta_click", { location: "hero" })}>
                 <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-accent to-purple text-accent-foreground bg-[length:200%_100%] hover:bg-[position:100%_0] transition-[background-position,transform,box-shadow] duration-500 hover:shadow-[0_0_36px_hsl(var(--accent)/0.55)] px-10 h-14 text-base gap-2 hover:scale-[1.03] hover:-translate-y-0.5">
                   Get Paid Faster
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
-              <Link to="/sample" className="w-full sm:w-auto">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto px-10 h-14 text-base bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 hover:border-accent/40 hover:-translate-y-0.5 transition-all duration-300">
-                  View Sample Proposal
+              <a href="#live-demo" className="w-full sm:w-auto" onClick={() => track("cta_click", { location: "hero_demo" })}>
+                <Button size="lg" variant="outline" className="w-full sm:w-auto px-10 h-14 text-base bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 hover:border-accent/40 hover:-translate-y-0.5 transition-all duration-300 gap-2">
+                  <PlayCircle className="w-4 h-4" /> See 60-second demo
                 </Button>
-              </Link>
+              </a>
             </div>
             <p
               className="text-xs text-muted-foreground mt-6 animate-hero-fade-up"
               style={{ animationDelay: "0.45s" }}
             >
-              Built for freelancers, consultants, and agencies.
+              Built for freelancers, consultants, and agencies. ·{" "}
+              <Link to="/sample" className="underline hover:text-foreground" onClick={() => track("sample_view")}>
+                View static sample proposal
+              </Link>
             </p>
           </div>
 
