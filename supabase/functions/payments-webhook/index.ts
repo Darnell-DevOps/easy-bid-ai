@@ -7,6 +7,36 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
 
+function fmtMoney(cents: number, currency = "USD") {
+  try {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency }).format((cents || 0) / 100);
+  } catch {
+    return `${((cents || 0) / 100).toFixed(2)} ${currency}`;
+  }
+}
+
+async function ownerEmail(userId: string): Promise<string | null> {
+  try {
+    const { data } = await supabase.auth.admin.getUserById(userId);
+    return data?.user?.email ?? null;
+  } catch { return null; }
+}
+
+async function sendEmail(args: {
+  templateName: string;
+  recipientEmail: string;
+  data: Record<string, unknown>;
+  idempotencyKey: string;
+  userId?: string;
+}) {
+  try {
+    const { error } = await supabase.functions.invoke("send-email", { body: args });
+    if (error) console.error("send-email invoke error:", error.message);
+  } catch (e: any) {
+    console.error("send-email exception:", e?.message || e);
+  }
+}
+
 async function handleTransactionCompleted(data: any) {
   const cd = data?.customData || {};
   // Proposal one-off payments
@@ -16,6 +46,26 @@ async function handleTransactionCompleted(data: any) {
       _txn_id: data.id,
     });
     if (error) console.error("mark_proposal_paid error:", error.message);
+
+    // Send payment-confirmation to client
+    const { data: prop } = await supabase
+      .from("proposals")
+      .select("user_id, client_email, client_name, title, amount_cents, currency")
+      .eq("id", cd.proposalId)
+      .maybeSingle();
+    if (prop?.client_email) {
+      await sendEmail({
+        templateName: "payment-confirmation",
+        recipientEmail: prop.client_email,
+        userId: prop.user_id,
+        idempotencyKey: `paid-prop-${cd.proposalId}-${data.id}`,
+        data: {
+          name: prop.client_name,
+          amount: fmtMoney(prop.amount_cents || 0, prop.currency || "USD"),
+          description: prop.title,
+        },
+      });
+    }
     return;
   }
   // Recurring retainer charge — record an invoice and bump totals
@@ -32,7 +82,7 @@ async function handleTransactionCompleted(data: any) {
     if (!retainerId) return;
     const { data: ret } = await supabase
       .from("retainers")
-      .select("user_id, total_billed_cents, total_payments_count, currency")
+      .select("user_id, client_email, client_name, total_billed_cents, total_payments_count, currency")
       .eq("id", retainerId)
       .maybeSingle();
     if (!ret) return;
@@ -80,6 +130,21 @@ async function handleTransactionCompleted(data: any) {
       .eq("retainer_id", retainerId)
       .in("kind", ["payment_failed", "payment_final"])
       .eq("status", "pending");
+
+    // Email payment confirmation to the client
+    if (ret.client_email) {
+      await sendEmail({
+        templateName: "payment-confirmation",
+        recipientEmail: ret.client_email,
+        userId: ret.user_id,
+        idempotencyKey: `paid-ret-${retainerId}-${data.id}`,
+        data: {
+          name: ret.client_name,
+          amount: fmtMoney(amount, currency),
+          description: `Retainer — ${ret.client_name || ""}`.trim(),
+        },
+      });
+    }
   }
 }
 
@@ -98,7 +163,7 @@ async function handleTransactionPaymentFailed(data: any) {
 
   const { data: ret } = await supabase
     .from("retainers")
-    .select("user_id, currency, payment_retry_count")
+    .select("user_id, client_name, currency, payment_retry_count")
     .eq("id", retainerId)
     .maybeSingle();
   if (!ret) return;
@@ -148,6 +213,24 @@ async function handleTransactionPaymentFailed(data: any) {
     },
     { onConflict: "retainer_id,kind" },
   );
+
+  // Email the owner immediately
+  const to = await ownerEmail(ret.user_id);
+  if (to) {
+    await sendEmail({
+      templateName: "payment-failed",
+      recipientEmail: to,
+      userId: ret.user_id,
+      idempotencyKey: `payfail-${retainerId}-${newRetryCount}`,
+      data: {
+        client_name: ret.client_name,
+        amount: fmtMoney(amount, currency),
+        reason,
+        severity: newRetryCount >= 3 ? "final" : "warning",
+        url: `https://app.strivesync.io/recovery`,
+      },
+    });
+  }
 }
 
 async function handleSubscriptionCreated(data: any) {

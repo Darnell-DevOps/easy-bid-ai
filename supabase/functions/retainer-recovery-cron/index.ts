@@ -1,6 +1,7 @@
 // Hourly cron: queues renewal reminders (T-30/T-14/T-7) for active retainers
 // with end_date approaching, and ensures payment_failed reminders exist for
 // retainers currently in dunning. Idempotent via UNIQUE(retainer_id, kind).
+// Also fires real emails to the retainer owner via send-email.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const supabase = createClient(
@@ -9,26 +10,46 @@ const supabase = createClient(
 );
 
 function daysBetween(a: Date, b: Date): number {
-  const ms = b.getTime() - a.getTime();
-  return Math.floor(ms / (1000 * 60 * 60 * 24));
+  return Math.floor((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+async function ownerEmail(userId: string): Promise<string | null> {
+  try {
+    const { data } = await supabase.auth.admin.getUserById(userId);
+    return data?.user?.email ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function sendEmail(args: {
+  templateName: string;
+  recipientEmail: string;
+  data: Record<string, unknown>;
+  idempotencyKey: string;
+  userId?: string;
+}) {
+  try {
+    const { error } = await supabase.functions.invoke("send-email", { body: args });
+    if (error) console.error("send-email invoke error:", error.message);
+  } catch (e: any) {
+    console.error("send-email exception:", e?.message || e);
+  }
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok");
-  }
+  if (req.method === "OPTIONS") return new Response("ok");
   try {
     const now = new Date();
 
-    // 1) Renewal reminders: scan active retainers with end_date set
+    // 1) Renewal reminders
     const { data: retainers } = await supabase
       .from("retainers")
-      .select(
-        "id, user_id, end_date, has_failed_payment, payment_retry_count, status, auto_renew",
-      )
+      .select("id, user_id, client_name, end_date, status")
       .eq("status", "active");
 
     let queued = 0;
+    let emailed = 0;
 
     for (const r of retainers || []) {
       if (!r.end_date) continue;
@@ -51,21 +72,38 @@ Deno.serve(async (req) => {
             },
             { onConflict: "retainer_id,kind", ignoreDuplicates: true },
           );
-          if (!error) queued++;
+          if (!error) {
+            queued++;
+            const to = await ownerEmail(r.user_id);
+            if (to) {
+              await sendEmail({
+                templateName: "renewal-reminder",
+                recipientEmail: to,
+                userId: r.user_id,
+                idempotencyKey: `renewal-${r.id}-${w.kind}`,
+                data: {
+                  client_name: r.client_name,
+                  end_date: r.end_date,
+                  days_until: days,
+                  url: `https://app.strivesync.io/retainers/${r.id}`,
+                },
+              });
+              emailed++;
+            }
+          }
         }
       }
     }
 
-    // 2) Ensure payment_failed reminders exist for any retainer in dunning
+    // 2) Payment failure reminders
     const { data: failed } = await supabase
       .from("retainers")
-      .select("id, user_id, payment_retry_count")
+      .select("id, user_id, client_name, payment_retry_count, failed_payment_reason")
       .eq("has_failed_payment", true);
 
     for (const r of failed || []) {
-      const kind = (r.payment_retry_count || 0) >= 3
-        ? "payment_final"
-        : "payment_failed";
+      const isFinal = (r.payment_retry_count || 0) >= 3;
+      const kind = isFinal ? "payment_final" : "payment_failed";
       await supabase.from("retainer_reminders").upsert(
         {
           user_id: r.user_id,
@@ -77,9 +115,25 @@ Deno.serve(async (req) => {
         },
         { onConflict: "retainer_id,kind", ignoreDuplicates: true },
       );
+      const to = await ownerEmail(r.user_id);
+      if (to) {
+        await sendEmail({
+          templateName: "payment-failed",
+          recipientEmail: to,
+          userId: r.user_id,
+          idempotencyKey: `payfail-${r.id}-${r.payment_retry_count || 0}`,
+          data: {
+            client_name: r.client_name,
+            reason: r.failed_payment_reason || "",
+            severity: isFinal ? "final" : "warning",
+            url: `https://app.strivesync.io/recovery`,
+          },
+        });
+        emailed++;
+      }
     }
 
-    return new Response(JSON.stringify({ ok: true, queued }), {
+    return new Response(JSON.stringify({ ok: true, queued, emailed }), {
       headers: { "Content-Type": "application/json" },
     });
   } catch (e: any) {
