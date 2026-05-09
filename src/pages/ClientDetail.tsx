@@ -58,6 +58,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
+import ClientBriefCard from "@/components/ai/ClientBriefCard";
+import ReplyDrafterDialog from "@/components/ai/ReplyDrafterDialog";
 
 interface ClientInfo {
   id: string;
@@ -151,6 +153,7 @@ export default function ClientDetail() {
   const [deleting, setDeleting] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [edit, setEdit] = useState<Partial<ClientInfo>>({});
+  const [replyOpen, setReplyOpen] = useState(false);
 
   useEffect(() => {
     const fetch = async () => {
@@ -460,6 +463,9 @@ export default function ClientDetail() {
           </Card>
         )}
 
+        {/* AI Client Brief */}
+        <ClientBriefCard clientId={client.id} />
+
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
           <Card>
@@ -643,8 +649,18 @@ export default function ClientDetail() {
 
               {client.original_lead_message && (
                 <div className="space-y-2">
-                  <div className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                    <MessageSquare className="w-3 h-3" /> Original lead message
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                      <MessageSquare className="w-3 h-3" /> Original lead message
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setReplyOpen(true)}
+                      className="h-7 px-2.5 text-xs gap-1.5 border-accent/30 text-accent hover:bg-accent/10 hover:text-accent"
+                    >
+                      <Sparkles className="w-3 h-3" /> Draft AI reply
+                    </Button>
                   </div>
                   <div className="rounded-lg bg-muted/40 border border-border/50 p-3 text-sm text-foreground whitespace-pre-wrap leading-relaxed">
                     {client.original_lead_message}
@@ -851,6 +867,18 @@ export default function ClientDetail() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {client.original_lead_message && (
+          <ReplyDrafterDialog
+            open={replyOpen}
+            onOpenChange={setReplyOpen}
+            message={client.original_lead_message}
+            clientName={client.name}
+            clientEmail={client.email}
+            scenario="incoming lead message"
+            defaultTone="warm"
+          />
+        )}
       </div>
     </DashboardLayout>
   );
