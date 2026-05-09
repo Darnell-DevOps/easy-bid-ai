@@ -156,6 +156,8 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
+        <InboundEmailSettings />
+
         {/* Branding Section */}
         <Card className="relative overflow-hidden">
           <CardContent className="p-6">
