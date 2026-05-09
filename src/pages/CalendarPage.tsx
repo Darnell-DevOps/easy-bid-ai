@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Calendar as CalendarUI } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -22,7 +23,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -37,7 +37,9 @@ import {
   Settings as SettingsIcon,
   CheckCircle2,
   Mail,
-  User,
+  CalendarPlus,
+  ExternalLink,
+  X,
 } from "lucide-react";
 import {
   DAY_NAMES,
@@ -46,9 +48,12 @@ import {
   locationLabel,
   formatTime,
   relativeDateLabel,
+  buildIcs,
+  icsToBase64,
   type BookingLinkRow,
   type BookingRow,
 } from "@/lib/bookings";
+import { sendEmail } from "@/lib/email";
 
 interface AvailabilityRow {
   id: string;
@@ -76,17 +81,27 @@ function locationIcon(type: string) {
   return <Video className="w-3.5 h-3.5" />;
 }
 
+function sameDay(a: Date, b: Date) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
 export default function CalendarPage() {
   const { toast } = useToast();
   const [userId, setUserId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [links, setLinks] = useState<BookingLinkRow[]>([]);
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [availability, setAvailability] = useState<AvailabilityRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [availOpen, setAvailOpen] = useState(false);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
-  // Form state for new link
   const [form, setForm] = useState({
     name: "Discovery Call",
     description: "",
@@ -98,13 +113,27 @@ export default function CalendarPage() {
     end_time: "17:00",
   });
 
-  // Availability form
   const [availForm, setAvailForm] = useState(DEFAULT_AVAILABILITY);
+
+  // Schedule manual meeting form
+  const [scheduleForm, setScheduleForm] = useState({
+    client_name: "",
+    client_email: "",
+    meeting_name: "Meeting",
+    duration_minutes: 30,
+    date: new Date().toISOString().slice(0, 10),
+    time: "10:00",
+    location_type: "google_meet",
+    location_details: "",
+    client_message: "",
+    send_invite: true,
+  });
 
   const fetchAll = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     setUserId(user.id);
+    setUserEmail(user.email ?? null);
 
     const [linksRes, bookingsRes, availRes] = await Promise.all([
       supabase.from("booking_links").select("*").order("created_at", { ascending: false }),
@@ -174,16 +203,6 @@ export default function CalendarPage() {
     }
     toast({ title: "Booking link created" });
     setCreateOpen(false);
-    setForm({
-      name: "Discovery Call",
-      description: "",
-      duration_minutes: 30,
-      location_type: "google_meet",
-      custom_location: "",
-      available_days: [1, 2, 3, 4, 5],
-      start_time: "09:00",
-      end_time: "17:00",
-    });
     fetchAll();
   };
 
@@ -194,6 +213,17 @@ export default function CalendarPage() {
       toast({ title: "Couldn't delete", description: error.message, variant: "destructive" });
       return;
     }
+    fetchAll();
+  };
+
+  const cancelBooking = async (b: BookingRow) => {
+    if (!confirm(`Cancel meeting with ${b.client_name}?`)) return;
+    const { error } = await supabase.from("bookings").update({ status: "cancelled" }).eq("id", b.id);
+    if (error) {
+      toast({ title: "Couldn't cancel", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Meeting cancelled" });
     fetchAll();
   };
 
@@ -218,8 +248,114 @@ export default function CalendarPage() {
     fetchAll();
   };
 
-  const upcoming = bookings.filter((b) => new Date(b.scheduled_at) >= new Date());
+  const scheduleMeeting = async () => {
+    if (!userId) return;
+    const f = scheduleForm;
+    if (!f.client_name.trim()) {
+      toast({ title: "Client name required", variant: "destructive" });
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.client_email.trim())) {
+      toast({ title: "Valid client email required", variant: "destructive" });
+      return;
+    }
+    const scheduled = new Date(`${f.date}T${f.time}:00`);
+    if (Number.isNaN(scheduled.getTime())) {
+      toast({ title: "Invalid date/time", variant: "destructive" });
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("bookings")
+      .insert({
+        user_id: userId,
+        client_name: f.client_name.trim(),
+        client_email: f.client_email.trim(),
+        meeting_name: f.meeting_name.trim() || "Meeting",
+        duration_minutes: f.duration_minutes,
+        scheduled_at: scheduled.toISOString(),
+        location_type: f.location_type,
+        location_details: f.location_details.trim() || null,
+        client_message: f.client_message.trim() || null,
+        status: "confirmed",
+      })
+      .select("*")
+      .single();
+
+    if (error) {
+      toast({ title: "Couldn't schedule", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    if (f.send_invite) {
+      const ics = buildIcs({
+        uid: (data as BookingRow).id,
+        title: f.meeting_name || "Meeting",
+        description: f.client_message || "",
+        start: scheduled,
+        durationMinutes: f.duration_minutes,
+        location: locationLabel(f.location_type, f.location_details),
+        organizerEmail: userEmail || undefined,
+        attendeeName: f.client_name,
+        attendeeEmail: f.client_email,
+      });
+      await sendEmail({
+        templateName: "booking-confirmation",
+        recipientEmail: f.client_email,
+        userId,
+        data: {
+          client_name: f.client_name,
+          meeting_name: f.meeting_name,
+          scheduled_at: scheduled.toISOString(),
+          duration_minutes: f.duration_minutes,
+          location: locationLabel(f.location_type, f.location_details),
+          reschedule_url: `${window.location.origin}/reschedule/${(data as any).reschedule_token}`,
+        },
+        attachments: [
+          { filename: "invite.ics", content: icsToBase64(ics), content_type: "text/calendar" },
+        ],
+      });
+    }
+
+    toast({ title: "Meeting scheduled", description: f.send_invite ? "Invite sent to client." : undefined });
+    setScheduleOpen(false);
+    setScheduleForm({
+      client_name: "",
+      client_email: "",
+      meeting_name: "Meeting",
+      duration_minutes: 30,
+      date: new Date().toISOString().slice(0, 10),
+      time: "10:00",
+      location_type: "google_meet",
+      location_details: "",
+      client_message: "",
+      send_invite: true,
+    });
+    fetchAll();
+  };
+
+  const activeBookings = useMemo(
+    () => bookings.filter((b) => b.status !== "cancelled"),
+    [bookings],
+  );
+
+  const bookingDates = useMemo(() => {
+    return activeBookings.map((b) => new Date(b.scheduled_at));
+  }, [activeBookings]);
+
+  const bookingsForSelected = useMemo(() => {
+    return activeBookings
+      .filter((b) => sameDay(new Date(b.scheduled_at), selectedDate))
+      .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
+  }, [activeBookings, selectedDate]);
+
+  const upcoming = activeBookings.filter((b) => new Date(b.scheduled_at) >= new Date());
   const past = bookings.filter((b) => new Date(b.scheduled_at) < new Date());
+
+  const openScheduleForDate = (d: Date) => {
+    setScheduleForm((s) => ({ ...s, date: d.toISOString().slice(0, 10) }));
+    setScheduleOpen(true);
+  };
 
   return (
     <DashboardLayout>
@@ -231,33 +367,133 @@ export default function CalendarPage() {
               Calendar
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Share booking links so clients can schedule calls with you in seconds.
+              Schedule meetings, view your month at a glance, and share booking links.
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => setAvailOpen(true)} className="gap-2">
               <SettingsIcon className="w-4 h-4" /> Availability
             </Button>
-            <Button onClick={() => setCreateOpen(true)} className="gap-2 bg-gradient-to-r from-accent to-purple text-white">
-              <Plus className="w-4 h-4" /> New booking link
+            <Button variant="outline" onClick={() => setCreateOpen(true)} className="gap-2">
+              <LinkIcon className="w-4 h-4" /> New booking link
+            </Button>
+            <Button onClick={() => setScheduleOpen(true)} className="gap-2 bg-gradient-to-r from-accent to-purple text-white">
+              <CalendarPlus className="w-4 h-4" /> Schedule meeting
             </Button>
           </div>
         </div>
 
-        {/* Upcoming bookings */}
+        {/* Calendar + day detail */}
+        <div className="grid grid-cols-1 lg:grid-cols-[auto_1fr] gap-4">
+          <Card>
+            <CardContent className="p-3 sm:p-4">
+              <CalendarUI
+                mode="single"
+                selected={selectedDate}
+                onSelect={(d) => d && setSelectedDate(d)}
+                modifiers={{ hasBooking: bookingDates }}
+                modifiersClassNames={{
+                  hasBooking:
+                    "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:rounded-full after:bg-purple",
+                }}
+                className="p-0"
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-base font-semibold text-foreground">
+                    {selectedDate.toLocaleDateString(undefined, {
+                      weekday: "long",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {bookingsForSelected.length === 0
+                      ? "No meetings scheduled"
+                      : `${bookingsForSelected.length} meeting${bookingsForSelected.length > 1 ? "s" : ""}`}
+                  </p>
+                </div>
+                <Button size="sm" variant="outline" onClick={() => openScheduleForDate(selectedDate)} className="gap-1.5">
+                  <Plus className="w-3.5 h-3.5" /> Add
+                </Button>
+              </div>
+
+              {bookingsForSelected.length === 0 ? (
+                <div className="text-center py-10 border border-dashed border-border rounded-lg">
+                  <Calendar className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">Nothing on the books for this day.</p>
+                  <Button size="sm" variant="ghost" onClick={() => openScheduleForDate(selectedDate)} className="mt-2 gap-1.5 text-xs">
+                    <CalendarPlus className="w-3.5 h-3.5" /> Schedule a meeting
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {bookingsForSelected.map((b) => (
+                    <div
+                      key={b.id}
+                      className="flex items-start gap-3 p-3 rounded-lg border border-border bg-card/50 hover:border-purple/30 transition"
+                    >
+                      <div className="w-14 text-xs text-center flex-shrink-0">
+                        <div className="font-semibold text-foreground">{formatTime(b.scheduled_at)}</div>
+                        <div className="text-muted-foreground mt-0.5">{b.duration_minutes}m</div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-foreground truncate">{b.meeting_name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{b.client_name}</p>
+                        <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[11px] text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Mail className="w-3 h-3" />
+                            {b.client_email}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            {locationIcon(b.location_type)}
+                            {locationLabel(b.location_type, b.location_details)}
+                          </span>
+                        </div>
+                        {b.client_message && (
+                          <p className="text-[11px] text-muted-foreground mt-1.5 italic line-clamp-2">"{b.client_message}"</p>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => cancelBooking(b)}
+                        className="h-7 w-7 flex-shrink-0"
+                        title="Cancel meeting"
+                      >
+                        <X className="w-3.5 h-3.5 text-muted-foreground" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Upcoming list */}
         <Card>
           <CardContent className="p-6">
-            <h2 className="text-lg font-semibold text-foreground mb-4">Upcoming bookings</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-4">Upcoming meetings</h2>
             {loading ? (
               <p className="text-sm text-muted-foreground">Loading…</p>
             ) : upcoming.length === 0 ? (
               <div className="text-center py-8 text-sm text-muted-foreground">
-                No upcoming bookings yet. Share a booking link to get your first one.
+                No upcoming meetings. Schedule one or share a booking link.
               </div>
             ) : (
               <div className="divide-y divide-border">
-                {upcoming.map((b) => (
-                  <div key={b.id} className="py-3 flex items-start justify-between gap-3">
+                {upcoming.slice(0, 10).map((b) => (
+                  <button
+                    key={b.id}
+                    onClick={() => setSelectedDate(new Date(b.scheduled_at))}
+                    className="w-full py-3 flex items-start justify-between gap-3 text-left hover:bg-muted/30 -mx-2 px-2 rounded transition"
+                  >
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-foreground">
                         {b.meeting_name} with {b.client_name}
@@ -280,7 +516,7 @@ export default function CalendarPage() {
                     <Badge variant="outline" className="capitalize text-xs">
                       {b.status}
                     </Badge>
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -333,8 +569,10 @@ export default function CalendarPage() {
                       <Button size="sm" variant="outline" onClick={() => copyLink(link.slug)} className="flex-1 gap-1.5 text-xs">
                         <Copy className="w-3 h-3" /> Copy link
                       </Button>
-                      <Button size="sm" asChild variant="ghost" className="text-xs">
-                        <Link to={`/book/${link.slug}`} target="_blank">Preview</Link>
+                      <Button size="sm" asChild variant="ghost" className="text-xs gap-1">
+                        <Link to={`/book/${link.slug}`} target="_blank">
+                          <ExternalLink className="w-3 h-3" /> Preview
+                        </Link>
                       </Button>
                     </div>
                   </div>
@@ -344,11 +582,10 @@ export default function CalendarPage() {
           </CardContent>
         </Card>
 
-        {/* Past bookings */}
         {past.length > 0 && (
           <Card>
             <CardContent className="p-6">
-              <h2 className="text-lg font-semibold text-foreground mb-4">Past bookings</h2>
+              <h2 className="text-lg font-semibold text-foreground mb-4">Past meetings</h2>
               <div className="divide-y divide-border">
                 {past.slice(0, 10).map((b) => (
                   <div key={b.id} className="py-2.5 flex items-center justify-between gap-3 opacity-70">
@@ -360,6 +597,9 @@ export default function CalendarPage() {
                         {new Date(b.scheduled_at).toLocaleDateString()} at {formatTime(b.scheduled_at)}
                       </p>
                     </div>
+                    {b.status === "cancelled" && (
+                      <Badge variant="outline" className="text-xs">cancelled</Badge>
+                    )}
                   </div>
                 ))}
               </div>
@@ -367,6 +607,128 @@ export default function CalendarPage() {
           </Card>
         )}
       </div>
+
+      {/* Schedule meeting dialog */}
+      <Dialog open={scheduleOpen} onOpenChange={setScheduleOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Schedule a meeting</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Client name *</Label>
+                <Input
+                  value={scheduleForm.client_name}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, client_name: e.target.value })}
+                  placeholder="Jane Smith"
+                  maxLength={100}
+                />
+              </div>
+              <div>
+                <Label>Client email *</Label>
+                <Input
+                  type="email"
+                  value={scheduleForm.client_email}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, client_email: e.target.value })}
+                  placeholder="jane@company.com"
+                  maxLength={255}
+                />
+              </div>
+            </div>
+            <div>
+              <Label>Meeting name</Label>
+              <Input
+                value={scheduleForm.meeting_name}
+                onChange={(e) => setScheduleForm({ ...scheduleForm, meeting_name: e.target.value })}
+                placeholder="Discovery Call"
+                maxLength={100}
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <Label>Date</Label>
+                <Input
+                  type="date"
+                  value={scheduleForm.date}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, date: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Time</Label>
+                <Input
+                  type="time"
+                  value={scheduleForm.time}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, time: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Duration</Label>
+                <Select
+                  value={String(scheduleForm.duration_minutes)}
+                  onValueChange={(v) => setScheduleForm({ ...scheduleForm, duration_minutes: Number(v) })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {[15, 30, 45, 60, 90, 120].map((m) => (
+                      <SelectItem key={m} value={String(m)}>{m} min</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Location</Label>
+                <Select
+                  value={scheduleForm.location_type}
+                  onValueChange={(v) => setScheduleForm({ ...scheduleForm, location_type: v })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {LOCATION_TYPES.map((l) => (
+                      <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Link / details</Label>
+                <Input
+                  value={scheduleForm.location_details}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, location_details: e.target.value })}
+                  placeholder={scheduleForm.location_type === "phone" ? "+1 555 0100" : "https://..."}
+                />
+              </div>
+            </div>
+            <div>
+              <Label>Notes (optional)</Label>
+              <Textarea
+                value={scheduleForm.client_message}
+                onChange={(e) => setScheduleForm({ ...scheduleForm, client_message: e.target.value })}
+                placeholder="Agenda or context for the meeting"
+                maxLength={1000}
+                rows={2}
+              />
+            </div>
+            <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+              <input
+                type="checkbox"
+                checked={scheduleForm.send_invite}
+                onChange={(e) => setScheduleForm({ ...scheduleForm, send_invite: e.target.checked })}
+                className="rounded border-border"
+              />
+              Send confirmation email with calendar invite (.ics) to the client
+            </label>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setScheduleOpen(false)}>Cancel</Button>
+            <Button onClick={scheduleMeeting} className="gap-2 bg-gradient-to-r from-accent to-purple text-white">
+              <CheckCircle2 className="w-4 h-4" /> Schedule
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Create Link dialog */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
