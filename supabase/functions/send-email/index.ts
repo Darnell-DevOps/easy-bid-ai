@@ -11,7 +11,7 @@ const corsHeaders = {
 };
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
-const FROM_DEFAULT = "CloseSync AI <notifications@notify.closesync.io>";
+const FROM_DEFAULT = "CloseSync AI <notify@closesync.io>";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
