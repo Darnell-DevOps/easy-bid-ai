@@ -1,129 +1,107 @@
+# SMS Notifications (Twilio) — Layer 1 Only
 
-# SMS + WhatsApp notifications + WhatsApp AI agent
+Add Twilio SMS notifications for the four key booking events. WhatsApp and AI agent are explicitly deferred until there's revenue/demand to justify them.
 
-Three layers, built in this order so each one is usable on its own.
+## Scope — 4 SMS events
 
----
+1. **Booking confirmed** → SMS to client (when public booking is created)
+2. **Booking cancelled** → SMS to client (when host cancels in CalendarPage)
+3. **24h reminder** → SMS to client (via existing booking-reminder cron)
+4. **New booking alert** → SMS to host (you), so you get pinged on every fresh booking
 
-## Layer 1 — SMS notifications (Twilio)
+Each event has a per-user on/off toggle. All four default OFF until the user enables them in Settings (no surprise SMS bills).
 
-**Setup**
-- Connect the Twilio connector (handles `TWILIO_API_KEY` automatically via the Lovable gateway — no manual secrets).
-- Add settings fields so you can enter:
-  - Your Twilio sender number (the "From" number)
-  - Your own mobile number (for host alerts)
-- Add a phone field to the public booking form. Optional by default; required if you want SMS confirmations enforced.
+## Multi-tenancy model (start simple)
 
-**Database**
-- `bookings.client_phone` (text, nullable)
-- `notification_preferences` table per user: toggles for `sms_client_confirm`, `sms_client_cancel`, `sms_client_reminder`, `sms_host_new_booking`, plus `host_phone` and `twilio_from_number`.
-- `sms_send_log` table mirroring `email_send_log` (idempotency_key unique, status, provider_id, error).
-- `phone_suppressions` table (opt-out list).
+**Shared Twilio account, shared "from" number** owned by CloseSync.
+- One Twilio connection at the workspace level.
+- All users send from the same `+1...` number.
+- Client SMS reads: `"Hi {client_name}, your meeting with {host_name} on {date} is confirmed. Reply STOP to opt out."` — host name is in the body, not the sender ID.
+- Host alerts go to the host's own phone number stored on their profile.
 
-**Edge function: `send-sms`**
-Mirrors `send-email`:
-- Idempotency check on `sms_send_log`
-- Suppression check
-- Render short message from a named template (`booking-confirmation`, `booking-cancelled`, `booking-reminder`, `booking-host-alert`)
-- POST to Twilio gateway `/Messages.json`
-- Log result
+This is the cheapest, fastest path. When a user later asks "I want my own number," we add a Pro tier with bring-your-own-Twilio (out of scope for this plan).
 
-**Wire-up points** (already exist for email — add SMS calls beside them):
-- `PublicBookingPage.tsx` → on booking create → SMS to client + SMS to host
-- `CalendarPage.tsx` `cancelBooking` → SMS to client
-- `booking-reminder-cron` → also send SMS
+## Database changes
 
-**STOP / opt-out**: Twilio auto-handles STOP keywords; we listen for them via inbound webhook and write to `phone_suppressions`.
+**`bookings`** — add column:
+- `client_phone` (text, nullable) — collected on the public booking form
 
----
+**`notification_preferences`** — new table (one row per user):
+- `user_id` (unique)
+- `host_phone` (text, nullable) — E.164, where host alerts go
+- `sms_client_confirm` (bool, default false)
+- `sms_client_cancel` (bool, default false)
+- `sms_client_reminder` (bool, default false)
+- `sms_host_new_booking` (bool, default false)
+- RLS: owner-only CRUD
 
-## Layer 2 — WhatsApp notifications
+**`sms_send_log`** — new table (idempotency + audit + cost visibility):
+- `user_id`, `recipient`, `template`, `status` (pending/sent/failed), `provider_id` (Twilio SID), `error`, `idempotency_key` (unique), `meta` jsonb
+- RLS: owner-read-only (matches `email_send_log` pattern)
 
-Same Twilio account, same `send-sms` function — just prefix `whatsapp:` on `To`/`From`. Add a `channel` arg (`sms` | `whatsapp`) and a `notification_preferences.whatsapp_*` toggle set.
+**`phone_suppressions`** — new table:
+- `phone` (PK), `reason`, `created_at`
+- Populated when Twilio reports STOP / undeliverable. No RLS needed (service-role-only writes).
 
-**Important caveats** (Meta rules, not us):
-- Sandbox works immediately for testing.
-- Production requires a Twilio-approved WhatsApp sender + **pre-registered message templates** for any message sent outside a 24-hour customer window. We'll register 4 templates (confirmation, cancellation, reminder, host alert) with placeholders that match the email templates.
-- I'll add a settings panel that shows template approval status and a "Use sandbox for now" toggle so you can test today.
+## Edge function: `send-sms`
 
----
+One internal function called by other edge functions and triggers.
 
-## Layer 3 — Inbound WhatsApp AI agent
+- Validates input with Zod (`to`, `template`, `vars`, `user_id`, `idempotency_key`)
+- Checks `notification_preferences` for the relevant toggle — bails if off
+- Checks `phone_suppressions` — bails if suppressed
+- Renders template (4 short templates, ~140 chars each, all include "Reply STOP to opt out")
+- Calls Twilio gateway: `POST /Messages.json` with `URLSearchParams`
+- Writes `sms_send_log` row (idempotent on `idempotency_key`)
+- Returns `{ ok, sid }`
 
-A client texts your WhatsApp number → AI replies → can answer FAQs, qualify leads, book meetings, or hand off to you.
+Twilio handles STOP/HELP automatically at the carrier level, but we still mirror suppressions locally to skip API calls.
 
-**Flow**
-```text
-Client WhatsApp msg
-   ↓
-Twilio inbound webhook → edge function `whatsapp-agent`
-   ↓
-Look up / create conversation + lead
-   ↓
-Lovable AI Gateway (google/gemini-2.5-flash) with tools:
-   • get_services_info        (reads your FAQ/service config)
-   • check_availability       (queries booking_links + bookings)
-   • create_booking           (writes a booking, sends confirmations)
-   • save_lead_info           (upserts into clients table)
-   • request_human_handoff    (flips conversation to "needs_attention", SMS-alerts you)
-   ↓
-Reply via Twilio WhatsApp send
-   ↓
-Persist message in conversation history
-```
+## Wiring (3 touch points)
 
-**Database**
-- `wa_conversations` (id, user_id [host], client_phone, client_name nullable, lead_id nullable, status: `active`/`needs_attention`/`closed`, last_message_at, ai_enabled bool)
-- `wa_messages` (conversation_id, role: `user`/`assistant`/`system`/`tool`, content, parts jsonb, created_at)
-- `agent_settings` per user: business name, services blurb, FAQ entries, tone, default booking_link_id, handoff trigger phrases, after-hours behavior
+1. **`src/pages/PublicBookingPage.tsx`** — add optional phone field; after booking insert, invoke `send-sms` for `client_confirm` and `host_new_booking`.
+2. **`src/pages/CalendarPage.tsx` `cancelBooking`** — invoke `send-sms` for `client_cancel` (mirrors the email we already added last session).
+3. **`booking-reminder` cron edge function** — for each booking 24h out with a phone on file, invoke `send-sms` for `client_reminder`.
 
-**Edge functions**
-- `whatsapp-agent` — Twilio webhook receiver + AI loop (uses Vercel AI SDK `generateText` with tools, `stopWhen: stepCountIs(50)`)
-- `whatsapp-send` — outbound helper (extracted from `send-sms` for reuse)
+## UI
 
-**Frontend**
-- New `/agent` page in dashboard:
-  - **Settings tab**: configure business info, FAQs, default booking link, tone, handoff phrases, AI on/off per conversation
-  - **Conversations tab**: list of WhatsApp threads, click into a thread to read full transcript, manually send a message, toggle AI off (handoff), mark closed
-  - **Notifications**: when a thread flips to `needs_attention`, you get an SMS + in-app toast
+New section in **Settings → Notifications** (or extend existing settings page):
+- Host phone input (E.164 with simple validation)
+- Four toggles for the four events
+- Small note: "SMS uses your CloseSync number. Standard SMS rates apply to your account when usage exceeds the free tier."
 
-**Safety rails**
-- AI never books outside your configured booking link availability.
-- AI confirms booking details with the client before calling `create_booking`.
-- Rate limit per phone number (in-memory + DB) to prevent SMS pumping abuse.
-- All tools are server-side; AI cannot access other users' data (every query scoped by `user_id` from the conversation).
+## Setup steps (in order)
 
----
+1. Connect Twilio connector → user picks/creates a Twilio API Key in the picker.
+2. Ask user for the **Twilio "from" phone number** (stored as a project secret `TWILIO_FROM_NUMBER`, since it's not part of the connector key).
+3. Run migration (4 schema changes above).
+4. Build `send-sms` edge function.
+5. Wire the 3 touch points.
+6. Add Settings UI.
+7. Smoke-test end-to-end with a real phone number.
 
-## Settings & UX changes
+## Explicitly out of scope (deferred)
 
-- **Settings page** gets two new sections: "SMS & WhatsApp notifications" (channel toggles per event, sender numbers, host number) and "WhatsApp AI agent" (business info, FAQs, default booking link, AI on/off, handoff config).
-- **Public booking form**: optional phone field with a "Text me a confirmation" checkbox.
-- **Calendar page**: cancellation modal mentions which channels will notify the client.
+- WhatsApp channel (Layer 2)
+- Inbound WhatsApp AI agent (Layer 3)
+- Per-user Twilio numbers / bring-your-own-Twilio
+- SMS for proposal/contract/retainer events (can add later same pattern)
+- Two-way SMS replies / inbound webhook
 
----
+## Cost expectations to set with the user
 
-## Build order (so you can use each piece as it lands)
+- US SMS: ~$0.0079 per segment outbound
+- Twilio US number rental: ~$1.15/month
+- Realistic cost for a user doing 50 bookings/month with all 4 toggles on: ~$1.50–2.00/month in SMS
 
-1. Twilio connector + `send-sms` + booking confirmation/cancel/reminder/host alert SMS + settings UI. **(~1 round)**
-2. Add WhatsApp channel to same function + sandbox testing + production template registration helper. **(~½ round)**
-3. Inbound webhook + AI agent + conversations UI. **(1–2 rounds, biggest piece)**
+## Build order
 
----
-
-## Technical details (skip if not interested)
-
-- **Vercel AI SDK** with `@ai-sdk/openai-compatible` + Lovable AI Gateway (`google/gemini-2.5-flash` for cost; `gemini-2.5-pro` for hard cases). System prompt built from `agent_settings`.
-- Tools defined with Zod schemas; `create_booking` reuses the same insert path as `PublicBookingPage` so it triggers existing email + SMS notifications automatically.
-- Twilio webhooks signed-request verification using Twilio's signature header (no auth on the public webhook, but we verify `X-Twilio-Signature`).
-- Reuse `buildIcs` from `src/lib/bookings.ts` so AI-created bookings still get calendar invites.
-- `wa_conversations` + `wa_messages` RLS: only the host owner can read; webhook function uses service role.
-- Inbound STOP/STOPALL/UNSUBSCRIBE → suppression list (Twilio also blocks at carrier level).
-
----
-
-## What I need from you to start
-
-- Confirm the build order (or tell me to do everything in one go).
-- Confirm you want to start in Twilio sandbox for WhatsApp (instant) vs waiting on production sender approval (days).
-- Confirm the AI model choice — Gemini 2.5 Flash is the sweet spot for this; say if you'd rather use GPT-5-mini or Gemini 2.5 Pro.
+One round, in this order:
+1. Twilio connector + `TWILIO_FROM_NUMBER` secret
+2. Migration
+3. `send-sms` edge function
+4. Wire booking confirm + host alert in PublicBookingPage
+5. Wire cancel in CalendarPage
+6. Wire reminder in cron
+7. Settings UI
+8. Test
