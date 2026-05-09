@@ -25,6 +25,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { CONTRACT_TYPES, contractTypeLabel, type ContractRow } from "@/lib/contracts";
 import { useToast } from "@/hooks/use-toast";
+import { sendEmail } from "@/lib/email";
 import {
   FileSignature,
   Plus,
@@ -211,6 +212,19 @@ export default function ContractsPage() {
     if (error) {
       toast({ title: "Couldn't update", description: error.message, variant: "destructive" });
       return;
+    }
+    if (c.client_email) {
+      void sendEmail({
+        templateName: "contract-signature-reminder",
+        recipientEmail: c.client_email,
+        userId: c.user_id,
+        idempotencyKey: `contract-sent-${c.id}`,
+        data: {
+          from_name: c.company_name || "Your contact",
+          title: c.title,
+          url: `${window.location.origin}/sign/${c.signing_token}`,
+        },
+      });
     }
     await copySigningLink(c.signing_token);
     fetchData();

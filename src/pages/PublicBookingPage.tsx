@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { sendEmail } from "@/lib/email";
 import {
   Calendar as CalendarIcon,
   Clock,
@@ -147,7 +148,9 @@ export default function PublicBookingPage() {
       return;
     }
     setSubmitting(true);
+    const bookingId = crypto.randomUUID();
     const { error } = await supabase.from("bookings").insert({
+      id: bookingId,
       user_id: link.user_id,
       booking_link_id: link.id,
       proposal_id: proposalId,
@@ -166,6 +169,21 @@ export default function PublicBookingPage() {
       toast({ title: "Couldn't book", description: error.message, variant: "destructive" });
       return;
     }
+    void sendEmail({
+      templateName: "booking-confirmation",
+      recipientEmail: email.trim(),
+      userId: link.user_id,
+      idempotencyKey: `booking-${bookingId}`,
+      data: {
+        name: name.trim(),
+        title: link.name,
+        when: selectedSlot.toLocaleString(undefined, {
+          weekday: "long", month: "long", day: "numeric",
+          hour: "numeric", minute: "2-digit",
+        }),
+        location: locationLabel(link.location_type, link.custom_location),
+      },
+    });
     setConfirmed({ when: selectedSlot, meetingName: link.name });
   };
 
