@@ -82,7 +82,7 @@ async function handleTransactionCompleted(data: any) {
     if (!retainerId) return;
     const { data: ret } = await supabase
       .from("retainers")
-      .select("user_id, total_billed_cents, total_payments_count, currency")
+      .select("user_id, client_email, client_name, total_billed_cents, total_payments_count, currency")
       .eq("id", retainerId)
       .maybeSingle();
     if (!ret) return;
