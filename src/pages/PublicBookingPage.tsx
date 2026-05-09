@@ -27,6 +27,7 @@ import {
   locationLabel,
   buildIcs,
   icsToBase64,
+  resolveMeetingUrl,
   type BookingLinkRow,
 } from "@/lib/bookings";
 
@@ -159,6 +160,12 @@ export default function PublicBookingPage() {
     }
     setSubmitting(true);
     const bookingId = crypto.randomUUID();
+    const meetingUrl = resolveMeetingUrl({
+      locationType: link.location_type,
+      customLocation: link.custom_location,
+      linkMeetingUrl: link.meeting_url,
+      bookingId,
+    });
     const { data: inserted, error } = await supabase.from("bookings").insert({
       id: bookingId,
       user_id: link.user_id,
@@ -171,6 +178,7 @@ export default function PublicBookingPage() {
       scheduled_at: selectedSlot.toISOString(),
       location_type: link.location_type,
       location_details: link.custom_location,
+      meeting_url: meetingUrl || null,
       client_message: message.trim().slice(0, 1000) || null,
       status: "confirmed",
     }).select("reschedule_token").maybeSingle();
@@ -184,6 +192,8 @@ export default function PublicBookingPage() {
       ? `${window.location.origin}/reschedule/${inserted.reschedule_token}`
       : undefined;
 
+    const locationDisplay = meetingUrl || locationLabel(link.location_type, link.custom_location);
+
     // Build .ics calendar invite for both parties
     const ics = buildIcs({
       uid: bookingId,
@@ -192,6 +202,7 @@ export default function PublicBookingPage() {
       start: selectedSlot,
       durationMinutes: link.duration_minutes,
       location: locationLabel(link.location_type, link.custom_location),
+      url: meetingUrl || undefined,
       organizerName: hostName || "Host",
       attendeeName: name.trim(),
       attendeeEmail: email.trim(),
@@ -215,7 +226,8 @@ export default function PublicBookingPage() {
           weekday: "long", month: "long", day: "numeric",
           hour: "numeric", minute: "2-digit",
         }),
-        location: locationLabel(link.location_type, link.custom_location),
+        location: locationDisplay,
+        meeting_url: meetingUrl || undefined,
         reschedule_url: rescheduleUrl,
       },
     });
