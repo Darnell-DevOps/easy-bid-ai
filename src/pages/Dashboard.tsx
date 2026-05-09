@@ -206,26 +206,26 @@ export default function Dashboard() {
           <div className="lg:col-span-7 xl:col-span-8 space-y-6">
             {/* Hero */}
             <Card className="relative overflow-hidden border-accent/20 bg-gradient-to-br from-accent/10 via-card to-purple/10">
-              <CardContent className="p-7 sm:p-8 space-y-5">
+              <CardContent className="p-5 sm:p-8 space-y-4 sm:space-y-5">
                 <div className="space-y-2">
-                  <h2 className="text-2xl sm:text-3xl font-bold text-foreground leading-tight">
+                  <h2 className="text-xl sm:text-3xl font-bold text-foreground leading-tight">
                     Create a proposal and get paid faster
                   </h2>
                   <p className="text-sm sm:text-base text-muted-foreground">
                     Turn your next lead into a paying client in minutes.
                   </p>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
                   <Button
                     asChild
                     size="lg"
-                    className="bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 gap-2 h-12 px-6 text-base font-semibold shadow-lg shadow-accent/20"
+                    className="w-full sm:w-auto bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 gap-2 h-12 px-6 text-base font-semibold shadow-lg shadow-accent/20"
                   >
                     <Link to="/dashboard/new">
                       <Sparkles className="w-4 h-4" /> Create Proposal <ArrowRight className="w-4 h-4" />
                     </Link>
                   </Button>
-                  <Button asChild variant="outline" size="lg" className="gap-2 h-12 px-5">
+                  <Button asChild variant="outline" size="lg" className="w-full sm:w-auto gap-2 h-12 px-5">
                     <Link to="/dashboard/clients/new">
                       <UserPlus className="w-4 h-4" /> Add Client
                     </Link>

@@ -167,7 +167,7 @@ export default function ActivationChecklist() {
                   <p className="text-xs font-semibold text-foreground truncate">
                     Next: {next.label}
                   </p>
-                  <p className="text-[11px] text-muted-foreground truncate">{next.description}</p>
+                  <p className="text-[11px] text-muted-foreground line-clamp-2 sm:truncate">{next.description}</p>
                 </div>
               </div>
               <Button asChild size="sm" className="h-7 px-2.5 text-xs gap-1 shrink-0">

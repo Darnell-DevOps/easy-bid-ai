@@ -206,18 +206,20 @@ export default function PriorityActions({ proposals, clients, proposalClientName
           const styles = TONE_STYLES[item.tone];
           return (
             <Card key={item.key} className={styles.card}>
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${styles.iconWrap}`}>
-                  <Icon className={`w-4 h-4 ${styles.icon}`} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground truncate">{item.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{item.subtitle}</p>
+              <CardContent className="p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex items-start gap-3 flex-1 min-w-0">
+                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${styles.iconWrap}`}>
+                    <Icon className={`w-4 h-4 ${styles.icon}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground line-clamp-2 sm:truncate">{item.title}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 sm:line-clamp-1">{item.subtitle}</p>
+                  </div>
                 </div>
                 <Button
                   size="sm"
                   onClick={item.onClick}
-                  className={`gap-1.5 flex-shrink-0 ${styles.button}`}
+                  className={`gap-1.5 flex-shrink-0 w-full sm:w-auto ${styles.button}`}
                 >
                   {item.buttonLabel}
                   <ArrowRight className="w-3.5 h-3.5" />
