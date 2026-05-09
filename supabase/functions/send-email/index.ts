@@ -18,6 +18,11 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
 
+interface Attachment {
+  filename: string;
+  content: string; // base64
+  content_type?: string;
+}
 interface Body {
   templateName: string;
   recipientEmail: string;
@@ -26,6 +31,7 @@ interface Body {
   userId?: string;
   from?: string;
   replyTo?: string;
+  attachments?: Attachment[];
 }
 
 Deno.serve(async (req) => {
