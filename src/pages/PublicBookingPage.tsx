@@ -19,11 +19,14 @@ import {
   Loader2,
   Sparkles,
   ArrowLeft,
+  Globe,
 } from "lucide-react";
 import {
   buildSlotsForDate,
   formatTime,
   locationLabel,
+  buildIcs,
+  icsToBase64,
   type BookingLinkRow,
 } from "@/lib/bookings";
 
@@ -32,10 +35,10 @@ interface AvailabilitySettings {
   min_notice_hours: number;
 }
 
-function locationIcon(type: string) {
-  if (type === "phone") return <Phone className="w-4 h-4" />;
-  if (type === "custom") return <LinkIcon className="w-4 h-4" />;
-  return <Video className="w-4 h-4" />;
+function locationIcon(type: string, className = "w-4 h-4") {
+  if (type === "phone") return <Phone className={className} />;
+  if (type === "custom") return <LinkIcon className={className} />;
+  return <Video className={className} />;
 }
 
 function startOfMonth(d: Date) {
@@ -53,6 +56,7 @@ export default function PublicBookingPage() {
   const { toast } = useToast();
 
   const [link, setLink] = useState<BookingLinkRow | null>(null);
+  const [hostName, setHostName] = useState<string>("");
   const [availability, setAvailability] = useState<AvailabilitySettings | null>(null);
   const [existing, setExisting] = useState<{ scheduled_at: string; duration_minutes: number }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,12 +65,18 @@ export default function PublicBookingPage() {
   const [month, setMonth] = useState(startOfMonth(new Date()));
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<Date | null>(null);
+  const [pendingSlot, setPendingSlot] = useState<Date | null>(null);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState<{ when: Date; meetingName: string } | null>(null);
+
+  const tz = useMemo(
+    () => Intl.DateTimeFormat().resolvedOptions().timeZone || "Local time",
+    [],
+  );
 
   useEffect(() => {
     if (!slug) return;
@@ -85,7 +95,7 @@ export default function PublicBookingPage() {
       }
       setLink(linkData as BookingLinkRow);
 
-      const [availRes, bookingsRes] = await Promise.all([
+      const [availRes, bookingsRes, profileRes] = await Promise.all([
         supabase
           .from("availability_settings")
           .select("buffer_minutes, min_notice_hours")
@@ -96,9 +106,16 @@ export default function PublicBookingPage() {
           .select("scheduled_at, duration_minutes")
           .eq("user_id", linkData.user_id)
           .gte("scheduled_at", new Date().toISOString()),
+        supabase
+          .from("profiles")
+          .select("display_name, business_name")
+          .eq("user_id", linkData.user_id)
+          .maybeSingle(),
       ]);
       if (availRes.data) setAvailability(availRes.data as AvailabilitySettings);
       setExisting(bookingsRes.data || []);
+      const p = profileRes.data as { display_name?: string; business_name?: string } | null;
+      setHostName(p?.business_name || p?.display_name || "");
       setLoading(false);
     };
     load();
@@ -115,7 +132,6 @@ export default function PublicBookingPage() {
     );
   }, [link, selectedDate, existing, availability]);
 
-  // Build calendar grid
   const monthDays = useMemo(() => {
     const first = startOfMonth(month);
     const startWeekday = first.getDay();
@@ -169,11 +185,31 @@ export default function PublicBookingPage() {
       toast({ title: "Couldn't book", description: error.message, variant: "destructive" });
       return;
     }
+
+    // Build .ics calendar invite for both parties
+    const ics = buildIcs({
+      uid: bookingId,
+      title: link.name,
+      description: link.description || message || "",
+      start: selectedSlot,
+      durationMinutes: link.duration_minutes,
+      location: locationLabel(link.location_type, link.custom_location),
+      organizerName: hostName || "Host",
+      attendeeName: name.trim(),
+      attendeeEmail: email.trim(),
+    });
+    const icsAttachment = {
+      filename: "invite.ics",
+      content: icsToBase64(ics),
+      content_type: "text/calendar",
+    };
+
     void sendEmail({
       templateName: "booking-confirmation",
       recipientEmail: email.trim(),
       userId: link.user_id,
       idempotencyKey: `booking-${bookingId}`,
+      attachments: [icsAttachment],
       data: {
         name: name.trim(),
         title: link.name,
@@ -216,7 +252,7 @@ export default function PublicBookingPage() {
           <div>
             <h1 className="text-2xl font-bold text-foreground mb-2">Booking confirmed</h1>
             <p className="text-muted-foreground text-sm">
-              You and your client will receive confirmation details.
+              A calendar invite has been emailed to you. We'll send a reminder 24 hours before.
             </p>
           </div>
           <div className="rounded-xl border border-border bg-card p-5 text-left space-y-2">
@@ -247,60 +283,84 @@ export default function PublicBookingPage() {
   }
 
   const monthLabel = month.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  const showBookingForm = !!selectedSlot;
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen bg-background py-6 px-4">
+      <div className="max-w-5xl mx-auto">
         <header className="flex items-center gap-2 mb-6">
           <Sparkles className="w-5 h-5 text-purple" />
           <span className="text-sm font-semibold text-foreground">CloseSync AI</span>
         </header>
 
-        <div className="rounded-2xl border border-border bg-card overflow-hidden">
-          <div className="p-6 lg:p-8 border-b border-border">
-            <h1 className="text-2xl lg:text-3xl font-bold text-foreground">{link.name}</h1>
-            {link.description && (
-              <p className="text-muted-foreground text-sm mt-2">{link.description}</p>
-            )}
-            <div className="flex flex-wrap gap-4 mt-4 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5" /> {link.duration_minutes} minutes
-              </span>
-              <span className="flex items-center gap-1.5">
-                {locationIcon(link.location_type)}
-                {locationLabel(link.location_type, link.custom_location)}
-              </span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border">
-            {/* Calendar */}
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-semibold text-foreground">{monthLabel}</h2>
-                <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}
-                    disabled={month <= startOfMonth(today)}
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
+        <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-xl">
+          <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] lg:grid-cols-[300px_1fr_320px]">
+            {/* Left brand panel */}
+            <div className="p-6 lg:p-8 border-b md:border-b-0 md:border-r border-border bg-gradient-to-b from-card to-background/30">
+              <div className="space-y-5">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-accent/30 to-purple/30 border border-purple/20">
+                  <Sparkles className="w-5 h-5 text-purple" />
+                </div>
+                {hostName && (
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                    {hostName}
+                  </p>
+                )}
+                <h1 className="text-2xl font-bold text-foreground leading-tight">
+                  {link.name}
+                </h1>
+                {link.description && (
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {link.description}
+                  </p>
+                )}
+                <div className="space-y-3 pt-2 text-sm">
+                  <div className="flex items-center gap-2.5 text-muted-foreground">
+                    <Clock className="w-4 h-4 shrink-0" />
+                    <span>{link.duration_minutes} minutes</span>
+                  </div>
+                  <div className="flex items-center gap-2.5 text-muted-foreground">
+                    {locationIcon(link.location_type)}
+                    <span>{locationLabel(link.location_type, link.custom_location)}</span>
+                  </div>
+                  <div className="flex items-center gap-2.5 text-muted-foreground">
+                    <Globe className="w-4 h-4 shrink-0" />
+                    <span className="truncate">{tz}</span>
+                  </div>
                 </div>
               </div>
-              <div className="grid grid-cols-7 gap-1 text-[11px] text-muted-foreground text-center mb-1">
-                {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-                  <div key={i} className="py-1">{d}</div>
+            </div>
+
+            {/* Calendar */}
+            <div className={`p-6 lg:p-8 ${showBookingForm ? "hidden lg:block" : ""}`}>
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-base font-semibold text-foreground">Select a date & time</h2>
+              </div>
+
+              <div className="flex items-center justify-between mb-3">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}
+                  disabled={month <= startOfMonth(today)}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <span className="text-sm font-medium text-foreground">{monthLabel}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-7 gap-1 text-[11px] text-muted-foreground text-center mb-1 font-medium uppercase tracking-wider">
+                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d, i) => (
+                  <div key={i} className="py-1.5">{d}</div>
                 ))}
               </div>
               <div className="grid grid-cols-7 gap-1">
@@ -316,12 +376,13 @@ export default function PublicBookingPage() {
                       onClick={() => {
                         setSelectedDate(d);
                         setSelectedSlot(null);
+                        setPendingSlot(null);
                       }}
-                      className={`aspect-square rounded-md text-sm font-medium transition ${
+                      className={`aspect-square rounded-full text-sm font-medium transition relative ${
                         selected
-                          ? "bg-purple text-white"
+                          ? "bg-purple text-white shadow-md shadow-purple/30"
                           : selectable
-                          ? "bg-background hover:bg-purple/10 text-foreground"
+                          ? "bg-purple/5 hover:bg-purple/15 text-foreground"
                           : "text-muted-foreground/30 cursor-not-allowed"
                       } ${isToday && !selected ? "ring-1 ring-purple/40" : ""}`}
                     >
@@ -332,30 +393,51 @@ export default function PublicBookingPage() {
               </div>
             </div>
 
-            {/* Slots / form */}
-            <div className="p-6">
+            {/* Right slots / form panel */}
+            <div className="p-6 lg:p-8 border-t lg:border-t-0 lg:border-l border-border bg-background/50">
               {!selectedDate ? (
                 <div className="h-full flex items-center justify-center text-center text-sm text-muted-foreground py-8">
                   Pick a date to see available times.
                 </div>
-              ) : !selectedSlot ? (
+              ) : !showBookingForm ? (
                 <>
-                  <p className="text-sm font-semibold text-foreground mb-3">
+                  <p className="text-sm font-semibold text-foreground mb-4">
                     {selectedDate.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
                   </p>
                   {slots.length === 0 ? (
                     <p className="text-sm text-muted-foreground">No times available on this day.</p>
                   ) : (
-                    <div className="grid grid-cols-2 gap-2 max-h-80 overflow-y-auto pr-1">
-                      {slots.map((s) => (
-                        <button
-                          key={s.toISOString()}
-                          onClick={() => setSelectedSlot(s)}
-                          className="py-2.5 rounded-md border border-border bg-background text-sm font-medium text-foreground hover:border-purple hover:bg-purple/5 transition"
-                        >
-                          {formatTime(s)}
-                        </button>
-                      ))}
+                    <div className="grid grid-cols-1 gap-2 max-h-[420px] overflow-y-auto pr-1">
+                      {slots.map((s) => {
+                        const isPending = pendingSlot && s.getTime() === pendingSlot.getTime();
+                        if (isPending) {
+                          return (
+                            <div key={s.toISOString()} className="grid grid-cols-2 gap-2">
+                              <button
+                                onClick={() => setPendingSlot(null)}
+                                className="py-2.5 rounded-lg border border-border bg-foreground/90 text-sm font-semibold text-background"
+                              >
+                                {formatTime(s)}
+                              </button>
+                              <button
+                                onClick={() => setSelectedSlot(s)}
+                                className="py-2.5 rounded-lg bg-purple text-sm font-semibold text-white hover:bg-purple/90 transition"
+                              >
+                                Confirm
+                              </button>
+                            </div>
+                          );
+                        }
+                        return (
+                          <button
+                            key={s.toISOString()}
+                            onClick={() => setPendingSlot(s)}
+                            className="py-2.5 rounded-lg border border-purple/30 bg-background text-sm font-semibold text-purple hover:border-purple hover:bg-purple/5 transition"
+                          >
+                            {formatTime(s)}
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 </>
@@ -365,10 +447,12 @@ export default function PublicBookingPage() {
                     <div>
                       <p className="text-xs text-muted-foreground">Selected time</p>
                       <p className="text-sm font-semibold text-foreground">
-                        {selectedSlot.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })} · {formatTime(selectedSlot)}
+                        {selectedSlot!.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })} · {formatTime(selectedSlot!)}
                       </p>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => setSelectedSlot(null)}>Change</Button>
+                    <Button variant="ghost" size="sm" onClick={() => { setSelectedSlot(null); setPendingSlot(null); }}>
+                      Change
+                    </Button>
                   </div>
                   <div>
                     <Label>Your name</Label>
@@ -390,6 +474,9 @@ export default function PublicBookingPage() {
                     {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                     Confirm booking
                   </Button>
+                  <p className="text-xs text-muted-foreground text-center">
+                    A calendar invite (.ics) will be emailed to you instantly.
+                  </p>
                 </div>
               )}
             </div>
