@@ -274,7 +274,8 @@ function StatCard({ label, value, icon }: { label: string; value: string; icon?:
 
 function TestimonialCard({ t, onChanged }: { t: Testimonial; onChanged: () => void }) {
   const toggle = async (field: "is_published" | "is_featured", value: boolean) => {
-    await supabase.from("testimonials").update({ [field]: value }).eq("id", t.id);
+    const patch: any = { [field]: value };
+    await supabase.from("testimonials").update(patch).eq("id", t.id);
     onChanged();
   };
   const remove = async () => {
