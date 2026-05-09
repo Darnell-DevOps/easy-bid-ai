@@ -58,6 +58,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
+import ClientBriefCard from "@/components/ai/ClientBriefCard";
+import ReplyDrafterDialog from "@/components/ai/ReplyDrafterDialog";
 
 interface ClientInfo {
   id: string;
@@ -151,6 +153,7 @@ export default function ClientDetail() {
   const [deleting, setDeleting] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [edit, setEdit] = useState<Partial<ClientInfo>>({});
+  const [replyOpen, setReplyOpen] = useState(false);
 
   useEffect(() => {
     const fetch = async () => {
