@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { track } from "@/lib/landing-analytics";
+import { sendEmail } from "@/lib/email";
 
 export default function Signup() {
   const [email, setEmail] = useState("");
@@ -22,7 +23,7 @@ export default function Signup() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { emailRedirectTo: window.location.origin },
@@ -32,6 +33,16 @@ export default function Signup() {
       toast({ title: "Signup failed", description: error.message, variant: "destructive" });
     } else {
       track("signup_submit_success");
+      const userId = data.user?.id;
+      if (userId) {
+        void sendEmail({
+          templateName: "welcome",
+          recipientEmail: email,
+          userId,
+          idempotencyKey: `welcome-${userId}`,
+          data: { name: email.split("@")[0] },
+        });
+      }
       toast({ title: "Check your email", description: "We sent you a confirmation link." });
       navigate("/login");
     }
