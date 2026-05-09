@@ -821,6 +821,19 @@ export default function CalendarPage() {
                 />
               </div>
             )}
+            {form.location_type !== "phone" && form.location_type !== "custom" && (
+              <div>
+                <Label>Your meeting link <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                <Input
+                  value={form.meeting_url}
+                  onChange={(e) => setForm({ ...form, meeting_url: e.target.value })}
+                  placeholder="https://meet.google.com/abc-defg-hij or your Zoom personal room"
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Paste your Google Meet, Zoom, or Whereby link. If left blank, a free Jitsi Meet room is auto-generated for each booking.
+                </p>
+              </div>
+            )}
             <div>
               <Label>Available days</Label>
               <div className="flex gap-1 mt-1.5">
