@@ -13,6 +13,7 @@ const navItems = [
   { label: "Retainers", icon: Repeat, href: "/dashboard/retainers" },
   { label: "Recovery", icon: LifeBuoy, href: "/dashboard/recovery" },
   { label: "Onboarding", icon: ClipboardList, href: "/dashboard/onboarding" },
+  { label: "Testimonials", icon: Star, href: "/dashboard/testimonials" },
   { label: "Calendar", icon: Calendar, href: "/dashboard/calendar" },
   { label: "Lead Assistant", icon: Sparkles, href: "/dashboard/leads" },
   { label: "Policies", icon: ScrollText, href: "/dashboard/policies" },
