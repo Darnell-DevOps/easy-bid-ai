@@ -278,6 +278,22 @@ const templates: Record<string, Tpl> = {
       text: `Reminder — your review: ${d.url || APP_URL}`,
     };
   },
+
+  "lead-digest": (d) => {
+    const count = Number(d.count || 0);
+    const subject = `${count} new lead${count === 1 ? "" : "s"} in CloseSync`;
+    const body =
+      h1(`${count} new lead${count === 1 ? "" : "s"} arrived`) +
+      p(`We received ${count} email${count === 1 ? "" : "s"} at your forwarding address in the last 24 hours${d.summary ? `:` : "."}`) +
+      (d.summary ? `<div style="font-size:14px;line-height:1.7;color:#1a1a1a;margin:0 0 20px;white-space:pre-wrap;">${escape(d.summary)}</div>` : "") +
+      p(`Each lead has an AI-drafted reply waiting for your review.`) +
+      button(String(d.url || `${APP_URL}/dashboard/leads`), "Review leads");
+    return {
+      subject,
+      html: layout({ preheader: `${count} new lead${count === 1 ? "" : "s"} waiting in CloseSync.`, bodyHtml: body }),
+      text: `${count} new lead${count === 1 ? "" : "s"} arrived. Review: ${d.url || `${APP_URL}/dashboard/leads`}`,
+    };
+  },
 };
 
 export function renderTemplate(name: string, data: EmailData) {

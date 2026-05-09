@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { FileText, Plus, CreditCard, Settings, LogOut, Menu, X, LayoutTemplate, Users, Sparkles, ScrollText, Calendar, FileSignature, ClipboardList, Repeat, LifeBuoy, Mail, Shield, Star } from "lucide-react";
 import { useIsSuperAdmin } from "@/hooks/useIsSuperAdmin";
+import { useUnreadLeadsCount } from "@/hooks/use-unread-leads";
 
 const navItems = [
   { label: "New Proposal", icon: Plus, href: "/dashboard/new" },
@@ -28,6 +29,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const isAdmin = useIsSuperAdmin();
+  const unreadLeads = useUnreadLeadsCount();
 
   useEffect(() => {
     supabase.auth.onAuthStateChange((event) => {
@@ -50,6 +52,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <nav className="flex-1 px-3 space-y-1">
         {navItems.map((item) => {
           const active = location.pathname === item.href;
+          const showBadge = item.href === "/dashboard/leads" && unreadLeads > 0;
           return (
             <Link
               key={item.href}
@@ -62,7 +65,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               }`}
             >
               <item.icon className="w-4 h-4" />
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {showBadge && (
+                <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-accent text-accent-foreground text-[10px] font-semibold">
+                  {unreadLeads > 99 ? "99+" : unreadLeads}
+                </span>
+              )}
             </Link>
           );
         })}
