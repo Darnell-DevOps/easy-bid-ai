@@ -219,6 +219,12 @@ export default function PublicBookingPage() {
         reschedule_url: rescheduleUrl,
       },
     });
+
+    // Notify the host (looks up host email server-side)
+    void supabase.functions.invoke("notify-booking-host", {
+      body: { booking_id: bookingId },
+    });
+
     setConfirmed({ when: selectedSlot, meetingName: link.name });
   };
 

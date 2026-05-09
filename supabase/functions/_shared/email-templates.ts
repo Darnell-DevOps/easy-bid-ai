@@ -182,6 +182,23 @@ const templates: Record<string, Tpl> = {
     };
   },
 
+  "booking-host-notification": (d) => {
+    const subject = `New meeting: ${escape(d.title || "meeting")}${d.when ? ` — ${escape(d.when)}` : ""}`;
+    const body =
+      h1(`New meeting on your calendar`) +
+      p(`<strong>${escape(d.client_name || "A client")}</strong> is booked${d.when ? ` for <strong>${escape(d.when)}</strong>` : ""}.`) +
+      (d.client_email ? p(`Email: <a href="mailto:${escape(d.client_email)}" style="color:#0a0a0a;">${escape(d.client_email)}</a>`) : "") +
+      (d.location ? p(`Location: ${escape(d.location)}`) : "") +
+      (d.client_message ? p(`<em>"${escape(d.client_message)}"</em>`) : "") +
+      p(`The calendar invite is attached — open it to add this to your email's calendar.`) +
+      button(String(d.url || `${APP_URL}/dashboard/calendar`), "Open calendar");
+    return {
+      subject,
+      html: layout({ preheader: "A new meeting was just scheduled.", bodyHtml: body }),
+      text: `New meeting with ${d.client_name || ""}${d.when ? ` on ${d.when}` : ""}.`,
+    };
+  },
+
   "booking-reminder": (d) => {
     const subject = `Reminder: ${escape(d.title || "your meeting")} tomorrow${d.when ? ` at ${escape(d.when)}` : ""}`;
     const body =

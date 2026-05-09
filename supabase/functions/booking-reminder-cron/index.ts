@@ -50,26 +50,49 @@ Deno.serve(async (req) => {
   const APP_URL = "https://app.closesync.io";
 
   let sent = 0;
+  const hostEmailCache = new Map<string, string | null>();
+  const getHostEmail = async (uid: string): Promise<string | null> => {
+    if (hostEmailCache.has(uid)) return hostEmailCache.get(uid) ?? null;
+    const { data } = await supabase.auth.admin.getUserById(uid);
+    const email = data?.user?.email ?? null;
+    hostEmailCache.set(uid, email);
+    return email;
+  };
+
   for (const b of bookings ?? []) {
-    if (!b.client_email) continue;
     const when = new Date(b.scheduled_at).toLocaleString(undefined, {
       weekday: "long", month: "long", day: "numeric",
       hour: "numeric", minute: "2-digit",
     });
-    const ok = await send({
-      templateName: "booking-reminder",
-      recipientEmail: b.client_email,
-      userId: b.user_id,
-      idempotencyKey: `booking-reminder-24h:${b.id}`,
-      data: {
-        name: b.client_name,
-        title: b.meeting_name,
-        when,
-        location: b.location_details || b.location_type,
-        reschedule_url: b.reschedule_token ? `${APP_URL}/reschedule/${b.reschedule_token}` : undefined,
-      },
-    });
-    if (ok) sent++;
+    const baseData = {
+      title: b.meeting_name,
+      when,
+      location: b.location_details || b.location_type,
+      reschedule_url: b.reschedule_token ? `${APP_URL}/reschedule/${b.reschedule_token}` : undefined,
+    };
+
+    if (b.client_email) {
+      const ok = await send({
+        templateName: "booking-reminder",
+        recipientEmail: b.client_email,
+        userId: b.user_id,
+        idempotencyKey: `booking-reminder-24h:${b.id}`,
+        data: { ...baseData, name: b.client_name },
+      });
+      if (ok) sent++;
+    }
+
+    const hostEmail = await getHostEmail(b.user_id);
+    if (hostEmail) {
+      const ok = await send({
+        templateName: "booking-reminder",
+        recipientEmail: hostEmail,
+        userId: b.user_id,
+        idempotencyKey: `booking-reminder-24h-host:${b.id}`,
+        data: { ...baseData, name: "you", title: `${b.meeting_name} with ${b.client_name}` },
+      });
+      if (ok) sent++;
+    }
   }
 
   return new Response(JSON.stringify({ ok: true, scanned: bookings?.length ?? 0, sent }), {

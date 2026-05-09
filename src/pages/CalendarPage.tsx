@@ -317,7 +317,12 @@ export default function CalendarPage() {
       });
     }
 
-    toast({ title: "Meeting scheduled", description: f.send_invite ? "Invite sent to client." : undefined });
+    // Always notify the host (you), even if client invite was disabled
+    void supabase.functions.invoke("notify-booking-host", {
+      body: { booking_id: (data as BookingRow).id },
+    });
+
+    toast({ title: "Meeting scheduled", description: "Calendar invite sent to your email." });
     setScheduleOpen(false);
     setScheduleForm({
       client_name: "",
