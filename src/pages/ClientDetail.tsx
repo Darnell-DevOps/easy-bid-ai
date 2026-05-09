@@ -646,8 +646,18 @@ export default function ClientDetail() {
 
               {client.original_lead_message && (
                 <div className="space-y-2">
-                  <div className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                    <MessageSquare className="w-3 h-3" /> Original lead message
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                      <MessageSquare className="w-3 h-3" /> Original lead message
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setReplyOpen(true)}
+                      className="h-7 px-2.5 text-xs gap-1.5 border-accent/30 text-accent hover:bg-accent/10 hover:text-accent"
+                    >
+                      <Sparkles className="w-3 h-3" /> Draft AI reply
+                    </Button>
                   </div>
                   <div className="rounded-lg bg-muted/40 border border-border/50 p-3 text-sm text-foreground whitespace-pre-wrap leading-relaxed">
                     {client.original_lead_message}
