@@ -463,6 +463,9 @@ export default function ClientDetail() {
           </Card>
         )}
 
+        {/* AI Client Brief */}
+        <ClientBriefCard clientId={client.id} />
+
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
           <Card>
