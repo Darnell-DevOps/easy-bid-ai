@@ -488,7 +488,7 @@ export default function Index() {
                         </li>
                       ))}
                     </ul>
-                    <Link to="/signup" className="mt-auto">
+                    <Link to="/signup" className="mt-auto" onClick={() => track("cta_click", { location: plan.popular ? "pricing_pro" : "pricing_free" })}>
                       <Button className={`w-full h-12 text-base transition-all ${plan.popular ? "bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_24px_hsl(var(--accent)/0.5)] font-semibold" : "hover:brightness-110"}`} variant={plan.popular ? "default" : "outline"}>
                         {plan.cta}
                       </Button>
@@ -529,7 +529,7 @@ export default function Index() {
             <p className="text-muted-foreground text-lg mb-8 max-w-xl mx-auto">
               Join freelancers and agencies who turned their proposals into a payment machine.
             </p>
-            <Link to="/signup">
+            <Link to="/signup" onClick={() => track("cta_click", { location: "final" })}>
               <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_24px_hsl(var(--accent)/0.5)] px-10 h-14 text-base gap-2 transition-all hover:scale-105">
                 Start closing deals
                 <ArrowRight className="w-4 h-4" />
@@ -574,7 +574,7 @@ export default function Index() {
         <div className="flex items-center justify-between gap-4 px-5 py-3 rounded-full border border-accent/30 bg-card/90 backdrop-blur-md shadow-2xl shadow-accent/20">
           <p className="text-sm text-foreground font-medium hidden sm:block">Ready to close more deals?</p>
           <p className="text-sm text-foreground font-medium sm:hidden">Close more deals</p>
-          <Link to="/signup">
+          <Link to="/signup" onClick={() => track("cta_click", { location: "sticky" })}>
             <Button size="sm" className="bg-gradient-to-r from-accent to-purple text-accent-foreground bg-[length:200%_100%] hover:bg-[position:100%_0] transition-[background-position,transform,box-shadow] duration-500 hover:shadow-[0_0_20px_hsl(var(--accent)/0.5)] h-9 px-5 gap-2 hover:-translate-y-0.5">
               Get Paid Faster
               <ArrowRight className="w-3.5 h-3.5" />
