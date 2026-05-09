@@ -930,11 +930,54 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      admin_grant_self_super_admin: {
+        Args: { _secret: string }
+        Returns: boolean
+      }
+      admin_revenue_stats: { Args: never; Returns: Json }
+      admin_usage_stats: { Args: never; Returns: Json }
+      admin_user_list: {
+        Args: { _limit?: number; _offset?: number; _search?: string }
+        Returns: {
+          bookings_count: number
+          clients_count: number
+          contracts_signed: number
+          created_at: string
+          email: string
+          last_active: string
+          proposals_count: number
+          retainers_active: number
+          revenue_cents: number
+          user_id: string
+        }[]
+      }
+      admin_user_stats: { Args: never; Returns: Json }
       client_portal_respond: {
         Args: { _action: string; _message?: string; _proposal_id: string }
         Returns: undefined
@@ -952,6 +995,14 @@ export type Database = {
         }
         Returns: string
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_super_admin: { Args: never; Returns: boolean }
       mark_proposal_paid: {
         Args: { _proposal_id: string; _txn_id: string }
         Returns: undefined
@@ -962,7 +1013,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "super_admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1089,6 +1140,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["super_admin", "user"],
+    },
   },
 } as const

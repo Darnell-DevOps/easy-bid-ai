@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, Plus, CreditCard, Settings, LogOut, Menu, X, LayoutTemplate, Users, Sparkles, ScrollText, Calendar, FileSignature, ClipboardList, Repeat, LifeBuoy, Mail } from "lucide-react";
+import { FileText, Plus, CreditCard, Settings, LogOut, Menu, X, LayoutTemplate, Users, Sparkles, ScrollText, Calendar, FileSignature, ClipboardList, Repeat, LifeBuoy, Mail, Shield } from "lucide-react";
+import { useIsSuperAdmin } from "@/hooks/useIsSuperAdmin";
 
 const navItems = [
   { label: "New Proposal", icon: Plus, href: "/dashboard/new" },
@@ -25,6 +26,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const isAdmin = useIsSuperAdmin();
 
   useEffect(() => {
     supabase.auth.onAuthStateChange((event) => {
@@ -63,6 +65,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </Link>
           );
         })}
+        {isAdmin && (
+          <Link
+            to="/admin"
+            onClick={() => setMobileOpen(false)}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors mt-2 border-t border-sidebar-border/40 pt-4 ${
+              location.pathname === "/admin"
+                ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+            }`}
+          >
+            <Shield className="w-4 h-4" />
+            Admin
+          </Link>
+        )}
       </nav>
       <div className="p-3">
         <button

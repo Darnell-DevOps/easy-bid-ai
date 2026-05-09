@@ -1,62 +1,87 @@
-# Smoke-test + Email Monitoring Dashboard
 
-## Part 1 — Smoke-test the pipeline (no code changes)
+# Founder Analytics Dashboard
 
-Run these in order against the live `notify.closesync.io` sender. After each, I'll query `email_send_log` to confirm a row with `status='sent'` and a Resend `provider_id`.
+A private `/admin` area only you can see, with platform-wide stats and per-user drilldown. Pulls product usage from the database and authoritative revenue/MRR from Paddle.
 
-1. **welcome** — sign up with a fresh test address (or trigger via the test panel below).
-2. **proposal-sent** — open any draft proposal in `/dashboard/proposals`, change status to "Sent". The client must have an email on file.
-3. **contract-signature-reminder** — on a contract in `/dashboard/contracts`, click "Mark sent".
-4. **booking-confirmation** — visit your public booking link in incognito, book a slot.
-5. **payment-confirmation / payment-failed** — covered by Paddle webhook; verify by replaying a sandbox event or trusting the existing webhook smoke test.
-6. **renewal-reminder** — manually invoke `retainer-recovery-cron` and check that any retainer with end_date 6–31 days out produced a row.
+---
 
-To make this faster I'll add a tiny **"Send test email"** button in the Email Dashboard (owner-only) that lets you fire any of the 9 templates to your own address with sample data — no need to manufacture real proposals/bookings.
+## 1. Super-admin role (foundation)
 
-## Part 2 — Email Dashboard at `/dashboard/emails`
+Create a proper role system so you (and only you) can read across all users without breaking the existing per-user RLS.
 
-Owner-only page (gated to the currently signed-in user — they only see their own `email_send_log` rows, which RLS already enforces). No new roles table needed.
+- New enum `app_role` with values `super_admin`, `user`
+- New table `user_roles (user_id, role)` with RLS — users can read their own role, no one can write (you'll be inserted manually via a one-time data insert)
+- `has_role(_user_id, _role)` SECURITY DEFINER function (avoids RLS recursion)
+- `is_super_admin()` convenience wrapper that checks `auth.uid()`
+- Add permissive `super_admin` SELECT policies to: `clients`, `proposals`, `contracts`, `bookings`, `retainers`, `retainer_invoices`, `onboarding_forms`, `email_send_log`, `ai_insights`. These run alongside existing `auth.uid() = user_id` policies — regular users are unaffected, you get full read access.
+- One-time insert: grant `super_admin` to your user_id
 
-### Layout
-```text
-┌────────────────────────────────────────────────────────┐
-│ Emails                          [Send test email ▼]   │
-├────────────────────────────────────────────────────────┤
-│ [24h] [7d] [30d] [Custom…]   Template ▾   Status ▾    │
-├────────────────────────────────────────────────────────┤
-│  Total   Sent   Failed   Suppressed                    │
-│   142    138      3         1                          │
-├────────────────────────────────────────────────────────┤
-│ Time         Template           Recipient    Status    │
-│ 2m ago       proposal-sent      a@b.com      ● Sent    │
-│ 1h ago       payment-failed     c@d.com      ● Failed  │
-│   └─ "402 insufficient_balance"                        │
-│ …                                                      │
-│                                            [< 1 2 >]   │
-└────────────────────────────────────────────────────────┘
-```
+---
 
-### Features (all included in v1)
-- **Time-range filter**: 24h / 7d / 30d preset chips + custom date range. Default 7d.
-- **Template filter**: dropdown populated from `SELECT DISTINCT template FROM email_send_log`.
-- **Status filter**: All / Sent / Failed / Suppressed / Pending. Color-coded badges.
-- **Summary stats** (4 cards): total, sent, failed, suppressed for the active filter window.
-- **Log table**: paginated 50/page, sorted by `created_at DESC`. Columns: time (relative), template, recipient, status badge, error (expandable for failed rows). One row per email — `idempotency_key` is unique so no dedup pass needed.
-- **Send test email**: dialog with template picker + recipient (defaults to your own email) + "Send". Calls existing `send-email` function with prefilled sample data per template. Logs land in the same dashboard so you can verify immediately.
+## 2. `/admin` route + access guard
 
-### Routing & gating
-- Add `/dashboard/emails` route inside `<AuthGuard>` in `src/App.tsx`.
-- Add a sidebar link in `DashboardLayout.tsx` (under Settings).
-- RLS on `email_send_log` already restricts SELECT to `auth.uid() = user_id`, so each owner sees only their own emails. No additional admin role required.
+- New route `/admin` registered in `src/App.tsx`, wrapped in `AuthGuard` + a new `SuperAdminGuard` that calls `is_super_admin()` and redirects non-admins to `/dashboard`
+- Hidden from regular nav; only shows a small "Admin" link in `DashboardLayout` if `is_super_admin()` returns true
+- Visual style matches existing premium dark dashboard (no redesign)
 
-### Files to create/edit
-- **New**: `src/pages/EmailsDashboard.tsx` — page component.
-- **New**: `src/components/emails/EmailStatsCards.tsx`, `EmailLogTable.tsx`, `SendTestEmailDialog.tsx`.
-- **Edit**: `src/App.tsx` (route), `src/components/DashboardLayout.tsx` (nav link).
+---
 
-### Out of scope (v1)
-- Bounce/complaint webhook from Resend → auto-suppression. Can add later.
-- CSV export, advanced search, per-recipient drill-down.
-- Multi-tenant admin view across all users (current design is per-owner).
+## 3. Founder dashboard sections
 
-After approval I'll do the smoke-test prep first (add the test-send button) so the rest of the smoke test takes ~2 minutes from the dashboard.
+### a) Users & growth (from DB + auth.users)
+Stats cards + chart:
+- Total signups, new signups (24h / 7d / 30d)
+- Active users (users who created/updated any row in last 7d / 30d)
+- Signups-over-time line chart (daily, last 90d)
+- Read via a SECURITY DEFINER RPC `admin_user_stats()` that joins `auth.users` with activity tables (auth.users isn't directly queryable from JS)
+
+### b) Revenue & MRR (DB + Paddle, side by side)
+Two columns:
+- **From DB**: sum of `proposals.amount_cents` where `client_paid = true`, sum of `retainer_invoices.amount_cents` where `status = 'paid'`, count of paid invoices, breakdown by month
+- **From Paddle (live)**: MRR, active subscribers, revenue last 30d — fetched via a new edge function `admin-paddle-metrics` that calls `/metrics/monthly-recurring-revenue`, `/metrics/active-subscribers`, `/metrics/revenue` using `getPaddleClient('live')`. Function gated to super_admin via JWT check.
+
+### c) Product usage (from DB)
+Stat cards:
+- Total proposals (created / sent / accepted / paid)
+- Total contracts (sent / signed)
+- Total bookings
+- Total clients tracked
+- Emails sent last 7d (from `email_send_log`, dedup by `idempotency_key`, group by status)
+
+### d) Per-user drilldown
+Table with search + sort:
+- Columns: email, signup date, last active, # clients, # proposals, # contracts signed, total revenue (DB), Paddle subscription status
+- Click row → side panel with that user's full breakdown + recent activity timeline
+- Backed by a single RPC `admin_user_list(search, limit, offset)` that pre-aggregates counts per user (one query, not N+1)
+
+---
+
+## 4. Files
+
+**Migration** (1):
+- `app_role` enum, `user_roles` table + RLS, `has_role` + `is_super_admin` functions, super_admin SELECT policies on 9 tables, `admin_user_stats` + `admin_user_list` + `admin_revenue_stats` RPCs
+
+**Data insert** (1):
+- Grant super_admin to your user_id
+
+**Edge function** (1):
+- `supabase/functions/admin-paddle-metrics/index.ts` — verifies JWT + super_admin role, returns MRR/subscribers/revenue from Paddle live env
+
+**Frontend** (~6 small files):
+- `src/pages/AdminDashboard.tsx` — page shell with 4 sections
+- `src/components/admin/SuperAdminGuard.tsx`
+- `src/components/admin/UsersGrowthSection.tsx` (with recharts line chart)
+- `src/components/admin/RevenueSection.tsx` (DB + Paddle side by side)
+- `src/components/admin/UsageSection.tsx`
+- `src/components/admin/UsersTable.tsx` (search + drilldown panel)
+- `src/hooks/useIsSuperAdmin.ts`
+- Edits: `src/App.tsx` (route), `src/components/DashboardLayout.tsx` (conditional Admin link)
+
+---
+
+## Out of scope (can add later)
+- Cohort retention analysis, funnel charts, churn prediction
+- Manual user actions (impersonate, suspend, refund) — read-only for now
+- Exporting CSV reports
+- Real-time updates (page refresh on demand only)
+- Multiple admin tiers — just one `super_admin` role
