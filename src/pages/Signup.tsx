@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { track } from "@/lib/landing-analytics";
 
 export default function Signup() {
   const [email, setEmail] = useState("");
@@ -13,6 +14,10 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    track("signup_view");
+  }, []);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,6 +31,7 @@ export default function Signup() {
     if (error) {
       toast({ title: "Signup failed", description: error.message, variant: "destructive" });
     } else {
+      track("signup_submit_success");
       toast({ title: "Check your email", description: "We sent you a confirmation link." });
       navigate("/login");
     }

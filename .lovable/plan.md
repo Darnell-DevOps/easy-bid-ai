@@ -1,62 +1,60 @@
-## Mobile Polish Pass
+## Landing → Signup Conversion Pass
 
-Goal: make the existing dashboard and core pages feel native at 360–414px width. **No new features, no design system changes, no business logic changes** — only responsive layout, spacing, and overflow fixes.
+Goal: lift conversion from the marketing page without redesigning it. Add lightweight analytics, a self-running 60-second interactive demo, and stronger social proof. No backend changes, no design system changes, no new routes added beyond what's needed.
 
-### Principle
+### 1. Lightweight analytics (no third-party SDK)
 
-Match the polish of the desktop view at mobile widths. Single-column where appropriate, horizontal-scroll where information density matters (pipeline, tables), tap targets ≥40px, no horizontal page scroll, no clipped numbers or buttons.
+Add a tiny first-party event logger that writes to a new public `landing_events` table via the existing Supabase client.
 
-### Scope — what gets fixed
+- New table `landing_events` (RLS: anon `INSERT` only, no `SELECT` for anon — owner-readable later if we need a dashboard).
+  - `id uuid pk`, `created_at timestamptz default now()`, `event text`, `path text`, `referrer text`, `session_id text`, `meta jsonb`.
+- New helper `src/lib/landing-analytics.ts`:
+  - `track(event, meta?)` — fires fire-and-forget insert; no PII.
+  - Generates a per-session id stored in `sessionStorage`.
+- Instrument key landing events:
+  - `landing_view` (mount of `Index.tsx`)
+  - `cta_click` with `meta.location` ∈ `{ hero, nav, sticky, pricing_free, pricing_pro, final, demo }`
+  - `demo_start`, `demo_complete`
+  - `sample_view` (already-existing "View Sample Proposal" button)
+  - `signup_view` and `signup_submit_success` (in `Signup.tsx`)
+- Zero blocking — every call is wrapped in try/catch and never awaits.
 
-**Dashboard shell (`DashboardLayout.tsx`)**
-- Audit sidebar/topbar at <640px: confirm the mobile drawer behaves, close on route change, and that the topbar CTA row doesn't wrap awkwardly.
-- Reduce hero (`Sales Command Center` heading + subtitle) padding on mobile.
+### 2. Self-running "See it work in 60s" interactive demo
 
-**Top of dashboard (`Dashboard.tsx`)**
-- Hero card ("Create a proposal and get paid faster"): stack buttons full-width on mobile, reduce padding from `p-7 sm:p-8` baseline.
-- Right column (Tip + Bookings + Contracts + Retainers + Onboarding + Deal Activity) currently sits below main column on mobile (good) but each widget needs its own pass.
+A new section `src/components/landing/LiveDemo.tsx` placed between the hero and the existing "Money Moment" section.
 
-**Pipeline (`PipelineView.tsx`)**
-- Today: 5 stage columns shrink and wrap text. Switch to a horizontal scroll-snap row at <640px (`overflow-x-auto snap-x`), each card `min-w-[78%]`. Keeps it scannable instead of squashed.
+- Three-stage choreographed mock that loops every ~18s, with a manual progress bar + Play/Pause control:
+  1. Compose proposal (typing animation fills client name, scope, price)
+  2. Client opens proposal (tilted card slides in, "Viewed" badge appears, accept button pulses)
+  3. Payment received (counter ticks up to £4,800, confetti-style accent glow)
+- Built with React state + `setInterval` (NOT Remotion — this is the live site).
+- "Start free trial" CTA appears at end of cycle with `track('cta_click', { location: 'demo' })`.
+- Fully presentational: no real backend calls, no auth.
+- Respects `prefers-reduced-motion` — falls back to a static three-frame view.
 
-**Sales Metrics (`SalesMetrics.tsx`)**
-- Audit grid: ensure 2-col on mobile (not 1, not 4). Truncate currency when long, keep label one line.
+### 3. Touch-ups directly tied to conversion
 
-**Coach Feed (`CoachFeedWidget.tsx`)**
-- Action buttons currently can wrap. Make them stack full-width <480px and ensure refresh button stays in header.
-
-**Priority Actions (`PriorityActions.tsx`)**
-- Each action row: client name + reason + CTA must not collapse. Verify CTA stays right-aligned with proper truncation on the left.
-
-**Activation Checklist (`ActivationChecklist.tsx`)**
-- Already mobile-aware but the next-action row truncates labels too aggressively. Allow 2-line description on mobile.
-
-**Sidebar widgets (Bookings / Contracts / Retainers / Onboarding)**
-- Standardize padding, ensure CTAs are full-width on mobile, ensure timestamps don't push price off-screen.
-
-**Tables across pages (`ProposalsDashboard`, `ContractsPage`, `RetainersPage`, `RecoveryDashboard`, `OnboardingDashboard`)**
-- Where shadcn `Table` is used, wrap in `overflow-x-auto` and fix the first column as the readable label. Where rows are very wide (Recovery, Retainers), convert to a card list at <640px instead of a horizontally scrolled table.
-
-**Forms (`NewProposal`, `NewClient`, `NewRetainerPage`)**
-- Audit inputs at 360px: labels above inputs, full-width buttons, no two-column form fields below 640px.
-
-**Misc**
-- `index.css`: confirm no fixed `min-width` on body. Remove any stray `w-screen` causing horizontal scroll.
+- Hero secondary CTA: change `View Sample Proposal` to `See 60-second demo` (anchor to `#live-demo`); keep "View sample" as a smaller text link below the row.
+- Add `id="live-demo"` and update nav anchors so the new section is reachable from the sticky nav (insert "Demo" between Logo and "How it works").
+- Annotate every CTA on the page with `onClick={() => track('cta_click', { location })}` — no visual change.
 
 ### Out of scope
 
-- No design token changes
-- No new components beyond a tiny `<MobileTable>` helper if needed (likely not — Tailwind classes are enough)
-- No copy changes
-- No analytics
-- No tablet-specific pass (768px is fine today)
+- No third-party analytics (PostHog/GA) — keep stack first-party
+- No real customer logos or fabricated metrics
+- No A/B testing infra
+- No new routes
+- No design system / color changes
+
+### Files
+
+- New: `supabase/migrations/<timestamp>_landing_events.sql`
+- New: `src/lib/landing-analytics.ts`
+- New: `src/components/landing/LiveDemo.tsx`
+- New: `src/components/landing/Testimonials.tsx`
+- Edited: `src/pages/Index.tsx` (mount tracking, swap proof block, insert LiveDemo, CTA tracking)
+- Edited: `src/pages/Signup.tsx` (page-view + submit-success tracking)
 
 ### Deliverable
 
-A single focused pass. After this, opening the app at 390px feels like a deliberate mobile experience: no clipped buttons, no squashed pipeline columns, no horizontal page scroll, all CTAs reachable with one thumb.
-
-### Technical notes
-
-- Use existing Tailwind breakpoints only (`sm: 640`, `md: 768`, `lg: 1024`).
-- Prefer `flex-col sm:flex-row`, `grid-cols-2 sm:grid-cols-4`, and `overflow-x-auto` patterns already used elsewhere.
-- For tables → card lists, render two trees gated by `hidden sm:block` / `sm:hidden`. Acceptable given the small number of rows typical per user.
+Landing page that: (a) tells us which CTAs/sections actually convert, (b) lets a curious visitor watch the product work end-to-end in under a minute without leaving the page, and (c) feels backed by real human voices instead of one anonymous line.

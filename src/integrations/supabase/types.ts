@@ -394,6 +394,36 @@ export type Database = {
         }
         Relationships: []
       }
+      landing_events: {
+        Row: {
+          created_at: string
+          event: string
+          id: string
+          meta: Json
+          path: string | null
+          referrer: string | null
+          session_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event: string
+          id?: string
+          meta?: Json
+          path?: string | null
+          referrer?: string | null
+          session_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event?: string
+          id?: string
+          meta?: Json
+          path?: string | null
+          referrer?: string | null
+          session_id?: string | null
+        }
+        Relationships: []
+      }
       onboarding_forms: {
         Row: {
           access_token: string
