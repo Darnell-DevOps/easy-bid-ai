@@ -163,7 +163,7 @@ async function handleTransactionPaymentFailed(data: any) {
 
   const { data: ret } = await supabase
     .from("retainers")
-    .select("user_id, currency, payment_retry_count")
+    .select("user_id, client_name, currency, payment_retry_count")
     .eq("id", retainerId)
     .maybeSingle();
   if (!ret) return;
