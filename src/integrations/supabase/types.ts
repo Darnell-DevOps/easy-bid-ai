@@ -234,6 +234,10 @@ export type Database = {
           goals: string | null
           id: string
           is_active: boolean
+          lead_draft_reply: string | null
+          lead_draft_subject: string | null
+          lead_inbound_from_email: string | null
+          lead_inbound_subject: string | null
           lead_quality: string | null
           lead_source: string | null
           name: string
@@ -243,6 +247,7 @@ export type Database = {
           service_requested: string | null
           status: string
           timeline: string | null
+          unread_at: string | null
           updated_at: string
           user_id: string
         }
@@ -255,6 +260,10 @@ export type Database = {
           goals?: string | null
           id?: string
           is_active?: boolean
+          lead_draft_reply?: string | null
+          lead_draft_subject?: string | null
+          lead_inbound_from_email?: string | null
+          lead_inbound_subject?: string | null
           lead_quality?: string | null
           lead_source?: string | null
           name: string
@@ -264,6 +273,7 @@ export type Database = {
           service_requested?: string | null
           status?: string
           timeline?: string | null
+          unread_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -276,6 +286,10 @@ export type Database = {
           goals?: string | null
           id?: string
           is_active?: boolean
+          lead_draft_reply?: string | null
+          lead_draft_subject?: string | null
+          lead_inbound_from_email?: string | null
+          lead_inbound_subject?: string | null
           lead_quality?: string | null
           lead_source?: string | null
           name?: string
@@ -285,6 +299,7 @@ export type Database = {
           service_requested?: string | null
           status?: string
           timeline?: string | null
+          unread_at?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -1110,6 +1125,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_inbound_aliases: {
+        Row: {
+          created_at: string
+          id: string
+          inbound_secret: string
+          last_digest_sent_at: string | null
+          last_inbound_at: string | null
+          notify_digest: boolean
+          slug: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inbound_secret?: string
+          last_digest_sent_at?: string | null
+          last_inbound_at?: string | null
+          notify_digest?: boolean
+          slug?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inbound_secret?: string
+          last_digest_sent_at?: string | null
+          last_inbound_at?: string | null
+          notify_digest?: boolean
+          slug?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1186,6 +1237,13 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      inbound_alias_lookup: {
+        Args: { _slug: string }
+        Returns: {
+          inbound_secret: string
+          user_id: string
+        }[]
       }
       is_super_admin: { Args: never; Returns: boolean }
       mark_proposal_paid: {
