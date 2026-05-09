@@ -174,6 +174,7 @@ export type Database = {
           location_type: string
           meeting_name: string
           proposal_id: string | null
+          reschedule_token: string
           scheduled_at: string
           status: string
           updated_at: string
@@ -191,6 +192,7 @@ export type Database = {
           location_type?: string
           meeting_name: string
           proposal_id?: string | null
+          reschedule_token?: string
           scheduled_at: string
           status?: string
           updated_at?: string
@@ -208,6 +210,7 @@ export type Database = {
           location_type?: string
           meeting_name?: string
           proposal_id?: string | null
+          reschedule_token?: string
           scheduled_at?: string
           status?: string
           updated_at?: string
@@ -1149,6 +1152,11 @@ export type Database = {
         }[]
       }
       admin_user_stats: { Args: never; Returns: Json }
+      booking_reschedule: {
+        Args: { _new_at: string; _token: string }
+        Returns: string
+      }
+      booking_reschedule_get: { Args: { _token: string }; Returns: Json }
       client_portal_respond: {
         Args: { _action: string; _message?: string; _proposal_id: string }
         Returns: undefined

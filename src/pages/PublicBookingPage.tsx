@@ -159,7 +159,7 @@ export default function PublicBookingPage() {
     }
     setSubmitting(true);
     const bookingId = crypto.randomUUID();
-    const { error } = await supabase.from("bookings").insert({
+    const { data: inserted, error } = await supabase.from("bookings").insert({
       id: bookingId,
       user_id: link.user_id,
       booking_link_id: link.id,
@@ -173,12 +173,16 @@ export default function PublicBookingPage() {
       location_details: link.custom_location,
       client_message: message.trim().slice(0, 1000) || null,
       status: "confirmed",
-    });
+    }).select("reschedule_token").maybeSingle();
     setSubmitting(false);
     if (error) {
       toast({ title: "Couldn't book", description: error.message, variant: "destructive" });
       return;
     }
+
+    const rescheduleUrl = inserted?.reschedule_token
+      ? `${window.location.origin}/reschedule/${inserted.reschedule_token}`
+      : undefined;
 
     // Build .ics calendar invite for both parties
     const ics = buildIcs({
@@ -212,6 +216,7 @@ export default function PublicBookingPage() {
           hour: "numeric", minute: "2-digit",
         }),
         location: locationLabel(link.location_type, link.custom_location),
+        reschedule_url: rescheduleUrl,
       },
     });
     setConfirmed({ when: selectedSlot, meetingName: link.name });
