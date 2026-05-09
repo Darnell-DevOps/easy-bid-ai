@@ -568,8 +568,8 @@ export default function ProposalView() {
   <div class="doc">
     <div class="cover">
       <div class="cover-brand">
-        <img src="${LOGO_BASE64}" alt="StriveSync" />
-        <div class="cover-brand-name">StriveSync</div>
+        <img src="${LOGO_BASE64}" alt="CloseSync" />
+        <div class="cover-brand-name">CloseSync</div>
         <div class="cover-brand-tag">${type === "proposal" ? "Proposal" : "Invoice"}</div>
       </div>
       <div class="cover-eyebrow">Prepared for ${escapeHtml(proposal?.client_name || "")}</div>
@@ -585,7 +585,7 @@ export default function ProposalView() {
     ${sectionsHtml}
 
     <div class="doc-footer">
-      <div>Prepared by <span class="footer-brand">StriveSync</span></div>
+      <div>Prepared by <span class="footer-brand">CloseSync</span></div>
       <div>Confidential · ${dateStr}</div>
     </div>
   </div>
@@ -683,7 +683,7 @@ export default function ProposalView() {
     toast({ title: "Link copied", description: "Share this with your client." });
   };
   const handleSendEmail = () => {
-    const subject = encodeURIComponent(`Your proposal from StriveSync`);
+    const subject = encodeURIComponent(`Your proposal from CloseSync`);
     const body = encodeURIComponent(
       `Hi ${proposal.client_name},\n\nYour proposal is ready. You can review it here:\n${clientUrl}\n\nLet me know if you have any questions.`,
     );

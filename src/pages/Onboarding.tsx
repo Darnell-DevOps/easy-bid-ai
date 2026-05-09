@@ -153,7 +153,7 @@ export default function Onboarding() {
     <div className="min-h-screen bg-background flex flex-col">
       <header className="px-6 py-4 flex items-center justify-between border-b border-border">
         <span className="text-sm font-semibold text-foreground tracking-tight">
-          StriveSync
+          CloseSync
         </span>
         <button
           onClick={skip}

@@ -232,7 +232,7 @@ async function handleTransactionPaymentFailed(data: any) {
         amount: fmtMoney(amount, currency),
         reason,
         severity: newRetryCount >= 3 ? "final" : "warning",
-        url: `https://app.strivesync.io/recovery`,
+        url: `https://app.closesync.io/recovery`,
       },
     });
   }

@@ -206,7 +206,7 @@ export default function SettingsPage() {
               <Button
                 variant="outline"
                 className="gap-2 flex-1"
-                onClick={() => window.open("mailto:support@strivesync.com", "_blank")}
+                onClick={() => window.open("mailto:support@closesync.io", "_blank")}
               >
                 <Mail className="w-4 h-4" /> Contact Support
               </Button>

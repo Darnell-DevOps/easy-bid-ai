@@ -103,7 +103,7 @@ export default function Index() {
             <span className="text-xl font-semibold text-foreground tracking-tight">
               Close<span className="text-gradient-sync">Sync</span> <span className="text-foreground">AI</span>
             </span>
-            <span className="hidden sm:inline text-[10px] uppercase tracking-widest text-muted-foreground">by StriveSync</span>
+            <span className="hidden sm:inline text-[10px] uppercase tracking-widest text-muted-foreground">by CloseSync</span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
             <a href="#live-demo" className="hover:text-foreground transition-colors">Demo</a>
@@ -558,7 +558,7 @@ export default function Index() {
           <span className="font-medium text-foreground">
             Close<span className="text-gradient-sync">Sync</span> <span className="text-foreground">AI</span>
           </span>
-          <p>© 2026 StriveSync. All rights reserved.</p>
+          <p>© 2026 CloseSync. All rights reserved.</p>
         </div>
       </footer>
 
