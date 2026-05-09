@@ -74,6 +74,8 @@ const App = () => (
             <Route path="/onboard/:token" element={<OnboardingFormPage />} />
             <Route path="/retainer/:token" element={<RetainerSubscribePage />} />
             <Route path="/r/recover/:token" element={<RetainerRecoverPage />} />
+            <Route path="/testimonial/:token" element={<TestimonialSubmitPage />} />
+            <Route path="/wall/:slug" element={<TestimonialWallPage />} />
             <Route path="/dashboard/recovery" element={<AuthGuard><RecoveryDashboard /></AuthGuard>} />
             <Route path="/onboarding" element={<AuthGuard><Onboarding /></AuthGuard>} />
             <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
