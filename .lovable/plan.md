@@ -1,56 +1,41 @@
-## Goal
-Send all emails (auth + app) from `notify@closesync.io` using Resend.
+## Root cause
 
-## Why this works
-You're using the **root domain** `closesync.io` as the sender — NOT the `notify.closesync.io` subdomain that's still delegated to Lovable's nameservers. So you can ignore the NS record cleanup for now and verify Resend immediately on the root domain.
+Your `admin@closesync.io` account has the `super_admin` role. The database has broad RLS policies on every data table named **"Super admins read all X"** that let any super admin SELECT *every* user's rows directly. The dashboards (`Dashboard`, `RevenueDashboard`, `ProposalsDashboard`, `RecentActivity`, etc.) use plain `supabase.from('proposals').select(...)` and rely on RLS to scope by user — so when you log in as the super admin, RLS returns **everyone's** proposals, contracts, clients, retainers, bookings, retainer invoices, ai_insights, and email logs as if they were yours.
 
-(`notify@closesync.io` = mailbox `notify` at domain `closesync.io`. Different from the `notify.closesync.io` subdomain.)
+Confirmed by querying the DB:
+- `admin@closesync.io` is the only `super_admin`
+- All existing data belongs to `darnellmckenzie@hotmail.com` and `sanmi.alao2@yahoo.com` (no rows belong to admin)
+- Yet the admin dashboard sees them all because of the super-admin SELECT policy
 
----
+The `/admin` page itself does **not** rely on these policies — it uses dedicated `SECURITY DEFINER` RPCs (`admin_user_list`, `admin_revenue_stats`, `admin_usage_stats`) which already enforce the super-admin check internally. So the broad SELECT policies are vestigial and only cause harm.
 
-## Step 1 — Verify `closesync.io` in Resend (you do this)
+## Fix
 
-1. Go to https://resend.com/domains → **Add Domain** → enter `closesync.io`.
-2. Resend shows DNS records to add (typically: 1 MX, 2 TXT for SPF + DKIM, optionally 1 TXT for DMARC).
-3. Add those records at your domain registrar where `closesync.io` lives.
-4. Click **Verify** in Resend. Usually green within a few minutes.
+Drop the "Super admins read all X" SELECT policies from these tables:
 
-When done, tell me "Resend verified" and I'll do Steps 2 & 3.
+- `proposals`
+- `contracts`
+- `clients`
+- `retainers`
+- `retainer_invoices`
+- `bookings`
+- `onboarding_forms`
+- `ai_insights`
+- `email_send_log`
 
-## Step 2 — Update the app sender (I do this)
+After this, every account — including super admins — will only see their own rows in normal app pages. The `/admin` page keeps working because it goes through the SECURITY DEFINER RPCs.
 
-In `supabase/functions/send-email/index.ts`, change:
-```
-FROM_DEFAULT = "CloseSync AI <notifications@notify.closesync.io>"
-```
-to:
-```
-FROM_DEFAULT = "CloseSync AI <notify@closesync.io>"
-```
-Then redeploy the function. All transactional emails (proposals, retainers, recovery) will start sending from `notify@closesync.io`.
+### What this changes for you
 
-## Step 3 — Route Supabase auth emails through Resend (I guide, you click)
+- ✅ Each account sees only its own data in dashboards, proposals list, contracts, clients, retainers, etc.
+- ✅ `/admin` page still shows aggregate stats and the user list (uses RPCs, not direct selects)
+- ⚠️ As a super admin, you can no longer "browse other users' actual rows" through the regular app pages — only see aggregates in `/admin`. If you ever need row-level cross-user access, we'd build it as a dedicated admin RPC.
 
-Auth emails (signup confirm, password reset, magic link) currently fall back to `no-reply@auth.lovable.cloud` because Lovable Emails is disabled. To send them from `notify@closesync.io`, you point Supabase Auth at Resend's SMTP server.
+### Files / changes
 
-In **Cloud → Users → Auth Settings** (gear icon) → **SMTP Settings**, enable Custom SMTP and enter:
-- Host: `smtp.resend.com`
-- Port: `465`
-- Username: `resend`
-- Password: your Resend API key (starts with `re_…`)
-- Sender email: `notify@closesync.io`
-- Sender name: `CloseSync AI`
+1. **Migration** — drop 9 policies (one DROP POLICY per table, no schema changes)
+2. **No frontend changes needed** — the dashboards already query `.from('table').select()` and will start respecting per-user scoping automatically.
 
-Save. Test by triggering a password reset from `/login`.
+### Verification
 
-## Step 4 — Cleanup (optional, do anytime)
-
-Since you're not using the `notify.closesync.io` subdomain anymore, you can:
-- Remove the `notify.closesync.io NS ns3.lovable.cloud` and `NS ns4.lovable.cloud` records at your registrar.
-- This is purely housekeeping — nothing breaks if you leave them.
-
----
-
-## What I need from you to start
-
-Just confirm Step 1 is done (Resend shows `closesync.io` as Verified), then say go and I'll handle Steps 2 & 3.
+After applying, log in as admin@closesync.io and the dashboards should be empty (since admin owns no proposals/contracts/clients). Log in as one of the other accounts to confirm they still see their own data.
