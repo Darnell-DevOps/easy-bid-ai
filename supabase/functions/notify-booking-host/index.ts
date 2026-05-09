@@ -21,6 +21,7 @@ function buildIcs(opts: {
   start: Date;
   durationMinutes: number;
   location?: string;
+  url?: string;
   organizerEmail?: string;
   attendeeName?: string;
   attendeeEmail?: string;
@@ -28,6 +29,7 @@ function buildIcs(opts: {
   const end = new Date(opts.start.getTime() + opts.durationMinutes * 60000);
   const esc = (s: string) =>
     s.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
+  const descParts = [opts.url ? `Join: ${opts.url}` : "", opts.description || ""].filter(Boolean);
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
@@ -40,11 +42,10 @@ function buildIcs(opts: {
     `DTSTART:${fmtIcs(opts.start)}`,
     `DTEND:${fmtIcs(end)}`,
     `SUMMARY:${esc(opts.title)}`,
-    opts.description ? `DESCRIPTION:${esc(opts.description)}` : "",
-    opts.location ? `LOCATION:${esc(opts.location)}` : "",
-    opts.organizerEmail
-      ? `ORGANIZER:mailto:${opts.organizerEmail}`
-      : "",
+    descParts.length ? `DESCRIPTION:${esc(descParts.join("\n\n"))}` : "",
+    (opts.url || opts.location) ? `LOCATION:${esc(opts.url || opts.location || "")}` : "",
+    opts.url ? `URL:${opts.url}` : "",
+    opts.organizerEmail ? `ORGANIZER:mailto:${opts.organizerEmail}` : "",
     opts.attendeeEmail
       ? `ATTENDEE;CN=${esc(opts.attendeeName || "Attendee")};RSVP=TRUE:mailto:${opts.attendeeEmail}`
       : "",
@@ -112,6 +113,9 @@ Deno.serve(async (req) => {
       timeZoneName: "short",
     });
 
+    const meetingUrl: string | null = booking.meeting_url || null;
+    const locationDisplay = meetingUrl || booking.location_details || booking.location_type;
+
     const ics = buildIcs({
       uid: booking.id,
       title: `${booking.meeting_name} with ${booking.client_name}`,
@@ -119,6 +123,7 @@ Deno.serve(async (req) => {
       start,
       durationMinutes: booking.duration_minutes,
       location: booking.location_details || booking.location_type,
+      url: meetingUrl || undefined,
       organizerEmail: hostEmail,
       attendeeName: booking.client_name,
       attendeeEmail: booking.client_email,
@@ -142,7 +147,8 @@ Deno.serve(async (req) => {
           when: whenStr,
           client_name: booking.client_name,
           client_email: booking.client_email,
-          location: booking.location_details || booking.location_type,
+          location: locationDisplay,
+          meeting_url: meetingUrl || undefined,
           client_message: booking.client_message || "",
         },
         attachments: [
