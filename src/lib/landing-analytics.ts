@@ -35,8 +35,7 @@ export type LandingEvent =
 export function track(event: LandingEvent, meta: Record<string, unknown> = {}): void {
   if (typeof window === "undefined") return;
   try {
-    void supabase
-      .from("landing_events")
+    void (supabase.from("landing_events" as any) as any)
       .insert({
         event,
         path: window.location.pathname + window.location.search,
