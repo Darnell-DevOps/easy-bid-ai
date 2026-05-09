@@ -1,60 +1,71 @@
-## Landing → Signup Conversion Pass
+# Plan: Resend-powered transactional emails
 
-Goal: lift conversion from the marketing page without redesigning it. Add lightweight analytics, a self-running 60-second interactive demo, and stronger social proof. No backend changes, no design system changes, no new routes added beyond what's needed.
+Hostinger doesn't allow NS records on subdomains, so we'll use the **Resend connector** instead. Resend only needs standard TXT/CNAME records, which Hostinger fully supports.
 
-### 1. Lightweight analytics (no third-party SDK)
+## What you'll do (once, ~10 min)
+1. Create a free Resend account at resend.com.
+2. Add the domain `closesync.io` (or `notify.closesync.io`) in Resend → Domains.
+3. Resend gives you ~4 records (SPF TXT, DKIM CNAMEs, optional DMARC TXT). Paste them into Hostinger's DNS manager.
+4. Connect Resend in Lovable when prompted; verification typically completes in minutes.
 
-Add a tiny first-party event logger that writes to a new public `landing_events` table via the existing Supabase client.
+## What I'll build
 
-- New table `landing_events` (RLS: anon `INSERT` only, no `SELECT` for anon — owner-readable later if we need a dashboard).
-  - `id uuid pk`, `created_at timestamptz default now()`, `event text`, `path text`, `referrer text`, `session_id text`, `meta jsonb`.
-- New helper `src/lib/landing-analytics.ts`:
-  - `track(event, meta?)` — fires fire-and-forget insert; no PII.
-  - Generates a per-session id stored in `sessionStorage`.
-- Instrument key landing events:
-  - `landing_view` (mount of `Index.tsx`)
-  - `cta_click` with `meta.location` ∈ `{ hero, nav, sticky, pricing_free, pricing_pro, final, demo }`
-  - `demo_start`, `demo_complete`
-  - `sample_view` (already-existing "View Sample Proposal" button)
-  - `signup_view` and `signup_submit_success` (in `Signup.tsx`)
-- Zero blocking — every call is wrapped in try/catch and never awaits.
+### 1. Connect Resend
+- Call the Resend connector → exposes `RESEND_API_KEY` to edge functions.
 
-### 2. Self-running "See it work in 60s" interactive demo
+### 2. Shared sender edge function
+- New `supabase/functions/send-email/index.ts` — single entry point that:
+  - Looks up a template by `templateName`
+  - Renders HTML with passed `data` (recipient name, amount, links, etc.)
+  - Sends via Resend gateway (`POST /emails`)
+  - Logs send to a new `email_send_log` table (status, provider id, error)
+  - Honors a new `email_suppressions` table (skips if recipient suppressed)
+  - Idempotency via `idempotency_key` (unique index — duplicate inserts no-op)
 
-A new section `src/components/landing/LiveDemo.tsx` placed between the hero and the existing "Money Moment" section.
+### 3. Templates (premium dark-on-white, CloseSync brand)
+HTML strings in `supabase/functions/_shared/email-templates/`:
+- `welcome` — onboarding after signup
+- `proposal-sent` — to client when proposal is sent
+- `contract-signature-reminder` — to client when contract pending
+- `payment-confirmation` — to client after successful payment
+- `payment-failed` — to owner when retainer charge fails (T+0, T+3, final)
+- `renewal-reminder` — to owner T-30 / T-14 / T-7
+- `retainer-notification` — generic retainer status updates
+- `booking-confirmation` — to client after booking
+- `follow-up-reminder` — to owner for proposal follow-ups
 
-- Three-stage choreographed mock that loops every ~18s, with a manual progress bar + Play/Pause control:
-  1. Compose proposal (typing animation fills client name, scope, price)
-  2. Client opens proposal (tilted card slides in, "Viewed" badge appears, accept button pulses)
-  3. Payment received (counter ticks up to £4,800, confetti-style accent glow)
-- Built with React state + `setInterval` (NOT Remotion — this is the live site).
-- "Start free trial" CTA appears at end of cycle with `track('cta_click', { location: 'demo' })`.
-- Fully presentational: no real backend calls, no auth.
-- Respects `prefers-reduced-motion` — falls back to a static three-frame view.
+Each template: minimal layout, brand mark, single CTA button, plain-text fallback.
 
-### 3. Touch-ups directly tied to conversion
+### 4. Wire existing flows to send real emails (alongside in-app)
+- **`retainer-recovery-cron`** — after each `retainer_reminders` upsert, also invoke `send-email` for the appropriate template (renewal_t30/14/7, payment_failed, payment_final). Keeps in-app reminder.
+- **`payments-webhook`**:
+  - `TransactionCompleted` (proposal) → `payment-confirmation` to client
+  - `TransactionCompleted` (retainer) → `payment-confirmation` to client
+  - `TransactionPaymentFailed` → `payment-failed` to owner
+- **Proposal "send" action** (client code) → `proposal-sent` to client
+- **Contract sent** → `contract-signature-reminder` to client (immediate); cron-based reminders deferred to v2
+- **Onboarding signup** → `welcome` to user
+- **Booking created** → `booking-confirmation` to client
+- **Follow-up scheduled** → `follow-up-reminder` to owner at due time (cron)
 
-- Hero secondary CTA: change `View Sample Proposal` to `See 60-second demo` (anchor to `#live-demo`); keep "View sample" as a smaller text link below the row.
-- Add `id="live-demo"` and update nav anchors so the new section is reachable from the sticky nav (insert "Demo" between Logo and "How it works").
-- Annotate every CTA on the page with `onClick={() => track('cta_click', { location })}` — no visual change.
+### 5. Database (one migration)
+```text
+email_send_log(id, user_id, template, recipient, status, provider_id,
+               error, idempotency_key UNIQUE, created_at)
+email_suppressions(email PRIMARY KEY, reason, created_at)
+```
+RLS: owners read their own log rows; service role writes.
 
-### Out of scope
+## Out of scope (for now)
+- Marketing/broadcast emails
+- Resend webhook for bounces/complaints (can add later to auto-populate suppressions)
+- Custom unsubscribe page (Resend's default + a List-Unsubscribe header is enough at current volume)
 
-- No third-party analytics (PostHog/GA) — keep stack first-party
-- No real customer logos or fabricated metrics
-- No A/B testing infra
-- No new routes
-- No design system / color changes
+## Order of operations
+1. Migration (tables + RLS)
+2. Resend connector
+3. `send-email` function + templates
+4. Wire cron + webhook + client triggers
+5. Deploy + smoke test (send `welcome` to your own address)
 
-### Files
-
-- New: `supabase/migrations/<timestamp>_landing_events.sql`
-- New: `src/lib/landing-analytics.ts`
-- New: `src/components/landing/LiveDemo.tsx`
-- New: `src/components/landing/Testimonials.tsx`
-- Edited: `src/pages/Index.tsx` (mount tracking, swap proof block, insert LiveDemo, CTA tracking)
-- Edited: `src/pages/Signup.tsx` (page-view + submit-success tracking)
-
-### Deliverable
-
-Landing page that: (a) tells us which CTAs/sections actually convert, (b) lets a curious visitor watch the product work end-to-end in under a minute without leaving the page, and (c) feels backed by real human voices instead of one anonymous line.
+After approval I'll start with the migration.

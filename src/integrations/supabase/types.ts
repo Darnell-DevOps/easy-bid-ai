@@ -394,6 +394,66 @@ export type Database = {
         }
         Relationships: []
       }
+      email_send_log: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          idempotency_key: string | null
+          meta: Json | null
+          provider_id: string | null
+          recipient: string
+          status: string
+          subject: string | null
+          template: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          idempotency_key?: string | null
+          meta?: Json | null
+          provider_id?: string | null
+          recipient: string
+          status?: string
+          subject?: string | null
+          template: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          idempotency_key?: string | null
+          meta?: Json | null
+          provider_id?: string | null
+          recipient?: string
+          status?: string
+          subject?: string | null
+          template?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      email_suppressions: {
+        Row: {
+          created_at: string
+          email: string
+          reason: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          reason?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          reason?: string
+        }
+        Relationships: []
+      }
       landing_events: {
         Row: {
           created_at: string
