@@ -30,6 +30,7 @@ import ClientPortal from "./pages/ClientPortal";
 import Onboarding from "./pages/Onboarding";
 import CalendarPage from "./pages/CalendarPage";
 import PublicBookingPage from "./pages/PublicBookingPage";
+import ReschedulePage from "./pages/ReschedulePage";
 import ContractsPage from "./pages/ContractsPage";
 import ContractDetail from "./pages/ContractDetail";
 import ContractSignPage from "./pages/ContractSignPage";
@@ -70,6 +71,7 @@ const App = () => (
             <Route path="/sample" element={<SampleProposal />} />
             <Route path="/proposal/view/:id" element={<ClientPortal />} />
             <Route path="/book/:slug" element={<PublicBookingPage />} />
+            <Route path="/reschedule/:token" element={<ReschedulePage />} />
             <Route path="/sign/:token" element={<ContractSignPage />} />
             <Route path="/onboard/:token" element={<OnboardingFormPage />} />
             <Route path="/retainer/:token" element={<RetainerSubscribePage />} />
