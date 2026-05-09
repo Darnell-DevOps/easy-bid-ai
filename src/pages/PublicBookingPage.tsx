@@ -95,7 +95,7 @@ export default function PublicBookingPage() {
       }
       setLink(linkData as BookingLinkRow);
 
-      const [availRes, bookingsRes, profileRes] = await Promise.all([
+      const [availRes, bookingsRes] = await Promise.all([
         supabase
           .from("availability_settings")
           .select("buffer_minutes, min_notice_hours")
@@ -106,16 +106,10 @@ export default function PublicBookingPage() {
           .select("scheduled_at, duration_minutes")
           .eq("user_id", linkData.user_id)
           .gte("scheduled_at", new Date().toISOString()),
-        supabase
-          .from("profiles")
-          .select("display_name, business_name")
-          .eq("user_id", linkData.user_id)
-          .maybeSingle(),
       ]);
       if (availRes.data) setAvailability(availRes.data as AvailabilitySettings);
       setExisting(bookingsRes.data || []);
-      const p = profileRes.data as { display_name?: string; business_name?: string } | null;
-      setHostName(p?.business_name || p?.display_name || "");
+      setHostName("");
       setLoading(false);
     };
     load();
