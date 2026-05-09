@@ -14,6 +14,35 @@ export function locationLabel(type: string, custom?: string | null): string {
   return found?.label || type;
 }
 
+/**
+ * Resolve the actual joinable meeting URL for a booking.
+ * Priority:
+ *  1. Custom location URL the host pasted (custom_location for "custom" type)
+ *  2. The host-configured meeting_url on the booking link (e.g. their personal Zoom room)
+ *  3. Auto-generated Jitsi room for video types (google_meet / zoom)
+ *  4. Empty string for phone / no-link types
+ */
+export function resolveMeetingUrl(opts: {
+  locationType: string;
+  customLocation?: string | null;
+  linkMeetingUrl?: string | null;
+  bookingId: string;
+}): string {
+  const { locationType, customLocation, linkMeetingUrl, bookingId } = opts;
+  if (locationType === "custom" && customLocation && /^https?:\/\//i.test(customLocation)) {
+    return customLocation;
+  }
+  if (linkMeetingUrl && /^https?:\/\//i.test(linkMeetingUrl)) {
+    return linkMeetingUrl;
+  }
+  if (locationType === "google_meet" || locationType === "zoom") {
+    // Free, no-auth video room — works in any browser. UID keeps it unique per booking.
+    const room = `CloseSync-${bookingId.replace(/-/g, "").slice(0, 12)}`;
+    return `https://meet.jit.si/${room}`;
+  }
+  return "";
+}
+
 export function generateSlug(name: string): string {
   const base = name
     .toLowerCase()
@@ -33,6 +62,7 @@ export interface BookingLinkRow {
   duration_minutes: number;
   location_type: string;
   custom_location: string | null;
+  meeting_url: string | null;
   available_days: number[];
   start_time: string;
   end_time: string;
@@ -51,6 +81,7 @@ export interface BookingRow {
   scheduled_at: string;
   location_type: string;
   location_details: string | null;
+  meeting_url: string | null;
   client_message: string | null;
   status: string;
   created_at: string;
@@ -136,6 +167,7 @@ export function buildIcs(opts: {
   start: Date;
   durationMinutes: number;
   location?: string;
+  url?: string;
   organizerName?: string;
   organizerEmail?: string;
   attendeeName?: string;
@@ -158,8 +190,12 @@ export function buildIcs(opts: {
     `DTSTART:${fmt(opts.start)}`,
     `DTEND:${fmt(end)}`,
     `SUMMARY:${esc(opts.title)}`,
-    opts.description ? `DESCRIPTION:${esc(opts.description)}` : "",
-    opts.location ? `LOCATION:${esc(opts.location)}` : "",
+    (opts.description || opts.url)
+      ? `DESCRIPTION:${esc([opts.url ? `Join: ${opts.url}` : "", opts.description || ""].filter(Boolean).join("\n\n"))}`
+      : "",
+    // Prefer the joinable URL as LOCATION so calendar apps make it clickable
+    (opts.url || opts.location) ? `LOCATION:${esc(opts.url || opts.location || "")}` : "",
+    opts.url ? `URL:${opts.url}` : "",
     opts.organizerEmail
       ? `ORGANIZER;CN=${esc(opts.organizerName || "Host")}:mailto:${opts.organizerEmail}`
       : "",

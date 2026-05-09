@@ -170,15 +170,16 @@ const templates: Record<string, Tpl> = {
     const body =
       h1(`You're booked in`) +
       p(`${d.name ? `Hi ${escape(d.name)}, ` : ""}your ${escape(d.title || "session")} is confirmed${d.when ? ` for <strong>${escape(d.when)}</strong>` : ""}.`) +
-      (d.location ? p(`Location: ${escape(d.location)}`) : "") +
-      (d.url ? button(String(d.url), "View details") : "") +
+      (d.meeting_url
+        ? p(`<strong>Join link:</strong> <a href="${escape(d.meeting_url)}" style="color:#0a0a0a;text-decoration:underline;word-break:break-all;">${escape(d.meeting_url)}</a>`) + button(String(d.meeting_url), "Join meeting")
+        : (d.location ? p(`Location: ${escape(d.location)}`) : "")) +
       (d.reschedule_url
         ? p(`Need a different time? <a href="${escape(d.reschedule_url)}" style="color:#0a0a0a;text-decoration:underline;">Reschedule</a>.`)
         : "");
     return {
       subject,
       html: layout({ preheader: "Your booking is confirmed.", bodyHtml: body }),
-      text: `Booking confirmed${d.when ? ` for ${d.when}` : ""}.${d.reschedule_url ? ` Reschedule: ${d.reschedule_url}` : ""}`,
+      text: `Booking confirmed${d.when ? ` for ${d.when}` : ""}.${d.meeting_url ? `\nJoin: ${d.meeting_url}` : ""}${d.reschedule_url ? `\nReschedule: ${d.reschedule_url}` : ""}`,
     };
   },
 
@@ -188,14 +189,15 @@ const templates: Record<string, Tpl> = {
       h1(`New meeting on your calendar`) +
       p(`<strong>${escape(d.client_name || "A client")}</strong> is booked${d.when ? ` for <strong>${escape(d.when)}</strong>` : ""}.`) +
       (d.client_email ? p(`Email: <a href="mailto:${escape(d.client_email)}" style="color:#0a0a0a;">${escape(d.client_email)}</a>`) : "") +
-      (d.location ? p(`Location: ${escape(d.location)}`) : "") +
+      (d.meeting_url
+        ? p(`<strong>Join link:</strong> <a href="${escape(d.meeting_url)}" style="color:#0a0a0a;text-decoration:underline;word-break:break-all;">${escape(d.meeting_url)}</a>`) + button(String(d.meeting_url), "Join meeting")
+        : (d.location ? p(`Location: ${escape(d.location)}`) : "")) +
       (d.client_message ? p(`<em>"${escape(d.client_message)}"</em>`) : "") +
-      p(`The calendar invite is attached — open it to add this to your email's calendar.`) +
-      button(String(d.url || `${APP_URL}/dashboard/calendar`), "Open calendar");
+      p(`The calendar invite is attached — open it to add this to your email's calendar.`);
     return {
       subject,
       html: layout({ preheader: "A new meeting was just scheduled.", bodyHtml: body }),
-      text: `New meeting with ${d.client_name || ""}${d.when ? ` on ${d.when}` : ""}.`,
+      text: `New meeting with ${d.client_name || ""}${d.when ? ` on ${d.when}` : ""}.${d.meeting_url ? `\nJoin: ${d.meeting_url}` : ""}`,
     };
   },
 
@@ -204,15 +206,16 @@ const templates: Record<string, Tpl> = {
     const body =
       h1(`See you soon`) +
       p(`${d.name ? `Hi ${escape(d.name)}, ` : ""}this is a friendly reminder about your upcoming ${escape(d.title || "meeting")}${d.when ? ` on <strong>${escape(d.when)}</strong>` : ""}.`) +
-      (d.location ? p(`Location: ${escape(d.location)}`) : "") +
-      (d.url ? button(String(d.url), "View details") : "") +
+      (d.meeting_url
+        ? p(`<strong>Join link:</strong> <a href="${escape(d.meeting_url)}" style="color:#0a0a0a;text-decoration:underline;word-break:break-all;">${escape(d.meeting_url)}</a>`) + button(String(d.meeting_url), "Join meeting")
+        : (d.location ? p(`Location: ${escape(d.location)}`) : "")) +
       (d.reschedule_url
         ? p(`Can't make it? <a href="${escape(d.reschedule_url)}" style="color:#0a0a0a;text-decoration:underline;">Reschedule</a>.`)
         : "");
     return {
       subject,
       html: layout({ preheader: "Quick reminder about your upcoming meeting.", bodyHtml: body }),
-      text: `Reminder: ${d.title || "meeting"}${d.when ? ` at ${d.when}` : ""}.${d.reschedule_url ? ` Reschedule: ${d.reschedule_url}` : ""}`,
+      text: `Reminder: ${d.title || "meeting"}${d.when ? ` at ${d.when}` : ""}.${d.meeting_url ? `\nJoin: ${d.meeting_url}` : ""}${d.reschedule_url ? `\nReschedule: ${d.reschedule_url}` : ""}`,
     };
   },
 

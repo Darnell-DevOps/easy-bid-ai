@@ -67,7 +67,8 @@ Deno.serve(async (req) => {
     const baseData = {
       title: b.meeting_name,
       when,
-      location: b.location_details || b.location_type,
+      location: b.meeting_url || b.location_details || b.location_type,
+      meeting_url: b.meeting_url || undefined,
       reschedule_url: b.reschedule_token ? `${APP_URL}/reschedule/${b.reschedule_token}` : undefined,
     };
 
