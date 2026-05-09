@@ -130,6 +130,21 @@ async function handleTransactionCompleted(data: any) {
       .eq("retainer_id", retainerId)
       .in("kind", ["payment_failed", "payment_final"])
       .eq("status", "pending");
+
+    // Email payment confirmation to the client
+    if (ret.client_email) {
+      await sendEmail({
+        templateName: "payment-confirmation",
+        recipientEmail: ret.client_email,
+        userId: ret.user_id,
+        idempotencyKey: `paid-ret-${retainerId}-${data.id}`,
+        data: {
+          name: ret.client_name,
+          amount: fmtMoney(amount, currency),
+          description: `Retainer — ${ret.client_name || ""}`.trim(),
+        },
+      });
+    }
   }
 }
 
