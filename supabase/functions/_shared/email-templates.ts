@@ -183,6 +183,21 @@ const templates: Record<string, Tpl> = {
     };
   },
 
+  "booking-cancelled": (d) => {
+    const subject = `Cancelled: ${escape(d.title || "your meeting")}${d.when ? ` — ${escape(d.when)}` : ""}`;
+    const body =
+      h1(`Meeting cancelled`) +
+      p(`${d.name ? `Hi ${escape(d.name)}, ` : ""}your ${escape(d.title || "meeting")}${d.when ? ` scheduled for <strong>${escape(d.when)}</strong>` : ""} has been cancelled${d.host_name ? ` by ${escape(d.host_name)}` : ""}.`) +
+      (d.reschedule_url
+        ? p(`Want to pick a new time? <a href="${escape(d.reschedule_url)}" style="color:#0a0a0a;text-decoration:underline;">Reschedule here</a>.`) + button(String(d.reschedule_url), "Reschedule")
+        : p(`If you'd like to reschedule, just reply to this email.`));
+    return {
+      subject,
+      html: layout({ preheader: "Your meeting has been cancelled.", bodyHtml: body }),
+      text: `Your ${d.title || "meeting"}${d.when ? ` on ${d.when}` : ""} has been cancelled.${d.reschedule_url ? `\nReschedule: ${d.reschedule_url}` : ""}`,
+    };
+  },
+
   "booking-host-notification": (d) => {
     const subject = `New meeting: ${escape(d.title || "meeting")}${d.when ? ` — ${escape(d.when)}` : ""}`;
     const body =
