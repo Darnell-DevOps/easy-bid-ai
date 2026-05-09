@@ -7,6 +7,8 @@ import AuthGuard from "@/components/AuthGuard";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import NewProposal from "./pages/NewProposal";
 import ProposalView from "./pages/ProposalView";
@@ -60,6 +62,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/sample" element={<SampleProposal />} />
             <Route path="/proposal/view/:id" element={<ClientPortal />} />
             <Route path="/book/:slug" element={<PublicBookingPage />} />
