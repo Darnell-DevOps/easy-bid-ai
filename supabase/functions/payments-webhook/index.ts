@@ -213,6 +213,24 @@ async function handleTransactionPaymentFailed(data: any) {
     },
     { onConflict: "retainer_id,kind" },
   );
+
+  // Email the owner immediately
+  const to = await ownerEmail(ret.user_id);
+  if (to) {
+    await sendEmail({
+      templateName: "payment-failed",
+      recipientEmail: to,
+      userId: ret.user_id,
+      idempotencyKey: `payfail-${retainerId}-${newRetryCount}`,
+      data: {
+        client_name: ret.client_name,
+        amount: fmtMoney(amount, currency),
+        reason,
+        severity: newRetryCount >= 3 ? "final" : "warning",
+        url: `https://app.strivesync.io/recovery`,
+      },
+    });
+  }
 }
 
 async function handleSubscriptionCreated(data: any) {
