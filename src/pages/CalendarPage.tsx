@@ -221,13 +221,44 @@ export default function CalendarPage() {
   };
 
   const cancelBooking = async (b: BookingRow) => {
-    if (!confirm(`Cancel meeting with ${b.client_name}?`)) return;
+    if (!confirm(`Cancel meeting with ${b.client_name}? They'll be notified by email.`)) return;
     const { error } = await supabase.from("bookings").update({ status: "cancelled" }).eq("id", b.id);
     if (error) {
       toast({ title: "Couldn't cancel", description: error.message, variant: "destructive" });
       return;
     }
-    toast({ title: "Meeting cancelled" });
+
+    // Notify the client
+    if (b.client_email) {
+      const scheduled = new Date(b.scheduled_at);
+      const { data: { user } } = await supabase.auth.getUser();
+      const hostName =
+        (user?.user_metadata as any)?.full_name ||
+        (user?.user_metadata as any)?.name ||
+        user?.email ||
+        undefined;
+      void sendEmail({
+        templateName: "booking-cancelled",
+        recipientEmail: b.client_email,
+        userId: b.user_id,
+        idempotencyKey: `booking-cancelled-${b.id}`,
+        replyTo: user?.email || undefined,
+        data: {
+          name: b.client_name,
+          title: b.meeting_name,
+          host_name: hostName,
+          when: scheduled.toLocaleString(undefined, {
+            weekday: "long", month: "long", day: "numeric",
+            hour: "numeric", minute: "2-digit",
+          }),
+          reschedule_url: b.reschedule_token
+            ? `${window.location.origin}/reschedule/${b.reschedule_token}`
+            : undefined,
+        },
+      });
+    }
+
+    toast({ title: "Meeting cancelled", description: b.client_email ? "Client notified by email." : undefined });
     fetchAll();
   };
 
