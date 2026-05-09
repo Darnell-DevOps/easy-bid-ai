@@ -53,8 +53,33 @@ export default function PipelineView({ proposals, clients }: PipelineViewProps) 
         />
       ) : (
       <Card>
-        <CardContent className="p-4 sm:p-5">
-          <div className="flex items-stretch gap-2 overflow-x-auto">
+        <CardContent className="p-3 sm:p-5">
+          {/* Mobile: horizontal scroll-snap row of stage chips */}
+          <div className="flex sm:hidden gap-2 overflow-x-auto snap-x snap-mandatory -mx-1 px-1 pb-1 scrollbar-thin">
+            {STAGES.map((stage) => {
+              const Icon = stage.icon;
+              const count = counts[stage.key];
+              return (
+                <div
+                  key={stage.key}
+                  className="snap-start shrink-0 min-w-[44%] rounded-lg border border-border/60 bg-card/40 p-3 flex items-center gap-3"
+                >
+                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${stage.bg}`}>
+                    <Icon className={`w-4 h-4 ${stage.color}`} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xl font-bold text-foreground leading-none">{count}</p>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1 font-medium truncate">
+                      {stage.label}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop: full funnel with arrows */}
+          <div className="hidden sm:flex items-stretch gap-2 overflow-x-auto">
             {STAGES.map((stage, i) => {
               const Icon = stage.icon;
               const count = counts[stage.key];
