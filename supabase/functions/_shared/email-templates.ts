@@ -171,11 +171,14 @@ const templates: Record<string, Tpl> = {
       h1(`You're booked in`) +
       p(`${d.name ? `Hi ${escape(d.name)}, ` : ""}your ${escape(d.title || "session")} is confirmed${d.when ? ` for <strong>${escape(d.when)}</strong>` : ""}.`) +
       (d.location ? p(`Location: ${escape(d.location)}`) : "") +
-      (d.url ? button(String(d.url), "View details") : "");
+      (d.url ? button(String(d.url), "View details") : "") +
+      (d.reschedule_url
+        ? p(`Need a different time? <a href="${escape(d.reschedule_url)}" style="color:#0a0a0a;text-decoration:underline;">Reschedule</a>.`)
+        : "");
     return {
       subject,
       html: layout({ preheader: "Your booking is confirmed.", bodyHtml: body }),
-      text: `Booking confirmed${d.when ? ` for ${d.when}` : ""}.`,
+      text: `Booking confirmed${d.when ? ` for ${d.when}` : ""}.${d.reschedule_url ? ` Reschedule: ${d.reschedule_url}` : ""}`,
     };
   },
 
@@ -185,11 +188,14 @@ const templates: Record<string, Tpl> = {
       h1(`See you soon`) +
       p(`${d.name ? `Hi ${escape(d.name)}, ` : ""}this is a friendly reminder about your upcoming ${escape(d.title || "meeting")}${d.when ? ` on <strong>${escape(d.when)}</strong>` : ""}.`) +
       (d.location ? p(`Location: ${escape(d.location)}`) : "") +
-      (d.url ? button(String(d.url), "View details") : "");
+      (d.url ? button(String(d.url), "View details") : "") +
+      (d.reschedule_url
+        ? p(`Can't make it? <a href="${escape(d.reschedule_url)}" style="color:#0a0a0a;text-decoration:underline;">Reschedule</a>.`)
+        : "");
     return {
       subject,
       html: layout({ preheader: "Quick reminder about your upcoming meeting.", bodyHtml: body }),
-      text: `Reminder: ${d.title || "meeting"}${d.when ? ` at ${d.when}` : ""}.`,
+      text: `Reminder: ${d.title || "meeting"}${d.when ? ` at ${d.when}` : ""}.${d.reschedule_url ? ` Reschedule: ${d.reschedule_url}` : ""}`,
     };
   },
 
