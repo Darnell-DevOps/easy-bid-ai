@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, Plus, CreditCard, Settings, LogOut, Menu, X, LayoutTemplate, Users, Sparkles, ScrollText, Calendar, FileSignature, ClipboardList, Repeat, LifeBuoy } from "lucide-react";
+import { FileText, Plus, CreditCard, Settings, LogOut, Menu, X, LayoutTemplate, Users, Sparkles, ScrollText, Calendar, FileSignature, ClipboardList, Repeat, LifeBuoy, Mail } from "lucide-react";
 
 const navItems = [
   { label: "New Proposal", icon: Plus, href: "/dashboard/new" },
@@ -16,6 +16,7 @@ const navItems = [
   { label: "Lead Assistant", icon: Sparkles, href: "/dashboard/leads" },
   { label: "Policies", icon: ScrollText, href: "/dashboard/policies" },
   { label: "Templates", icon: LayoutTemplate, href: "/dashboard/templates" },
+  { label: "Emails", icon: Mail, href: "/dashboard/emails" },
   { label: "Billing", icon: CreditCard, href: "/dashboard/billing" },
   { label: "Settings", icon: Settings, href: "/dashboard/settings" },
 ];
