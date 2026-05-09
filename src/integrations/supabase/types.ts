@@ -121,6 +121,7 @@ export type Database = {
           id: string
           is_active: boolean
           location_type: string
+          meeting_url: string | null
           name: string
           slug: string
           start_time: string
@@ -137,6 +138,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           location_type?: string
+          meeting_url?: string | null
           name: string
           slug: string
           start_time?: string
@@ -153,6 +155,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           location_type?: string
+          meeting_url?: string | null
           name?: string
           slug?: string
           start_time?: string
@@ -173,6 +176,7 @@ export type Database = {
           location_details: string | null
           location_type: string
           meeting_name: string
+          meeting_url: string | null
           proposal_id: string | null
           reschedule_token: string
           scheduled_at: string
@@ -191,6 +195,7 @@ export type Database = {
           location_details?: string | null
           location_type?: string
           meeting_name: string
+          meeting_url?: string | null
           proposal_id?: string | null
           reschedule_token?: string
           scheduled_at: string
@@ -209,6 +214,7 @@ export type Database = {
           location_details?: string | null
           location_type?: string
           meeting_name?: string
+          meeting_url?: string | null
           proposal_id?: string | null
           reschedule_token?: string
           scheduled_at?: string
