@@ -41,11 +41,13 @@ Deno.serve(async (req) => {
 
   const { data: bookings } = await supabase
     .from("bookings")
-    .select("id, user_id, client_email, client_name, meeting_name, scheduled_at, location_type, location_details, status")
+    .select("id, user_id, client_email, client_name, meeting_name, scheduled_at, location_type, location_details, status, reschedule_token")
     .eq("status", "confirmed")
     .gte("scheduled_at", min)
     .lte("scheduled_at", max)
     .limit(200);
+
+  const APP_URL = "https://app.closesync.io";
 
   let sent = 0;
   for (const b of bookings ?? []) {
@@ -64,6 +66,7 @@ Deno.serve(async (req) => {
         title: b.meeting_name,
         when,
         location: b.location_details || b.location_type,
+        reschedule_url: b.reschedule_token ? `${APP_URL}/reschedule/${b.reschedule_token}` : undefined,
       },
     });
     if (ok) sent++;
