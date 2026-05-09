@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, Plus, CreditCard, Settings, LogOut, Menu, X, LayoutTemplate, Users, Sparkles, ScrollText, Calendar, FileSignature, ClipboardList, Repeat, LifeBuoy, Mail } from "lucide-react";
+import { FileText, Plus, CreditCard, Settings, LogOut, Menu, X, LayoutTemplate, Users, Sparkles, ScrollText, Calendar, FileSignature, ClipboardList, Repeat, LifeBuoy, Mail, Shield } from "lucide-react";
+import { useIsSuperAdmin } from "@/hooks/useIsSuperAdmin";
 
 const navItems = [
   { label: "New Proposal", icon: Plus, href: "/dashboard/new" },

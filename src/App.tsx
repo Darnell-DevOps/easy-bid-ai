@@ -40,6 +40,8 @@ import RetainerSubscribePage from "./pages/RetainerSubscribePage";
 import RetainerRecoverPage from "./pages/RetainerRecoverPage";
 import RecoveryDashboard from "./pages/RecoveryDashboard";
 import EmailsDashboard from "./pages/EmailsDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
+import SuperAdminGuard from "./components/admin/SuperAdminGuard";
 import NotFound from "./pages/NotFound";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { PageTransition } from "@/components/PageTransition";
@@ -91,6 +93,7 @@ const App = () => (
             <Route path="/dashboard/policies" element={<AuthGuard><Policies /></AuthGuard>} />
             <Route path="/dashboard/policies/new" element={<AuthGuard><NewPolicy /></AuthGuard>} />
             <Route path="/dashboard/policies/:id" element={<AuthGuard><PolicyView /></AuthGuard>} />
+            <Route path="/admin" element={<AuthGuard><SuperAdminGuard><AdminDashboard /></SuperAdminGuard></AuthGuard>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </PageTransition>
