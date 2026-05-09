@@ -84,6 +84,7 @@ export interface BookingRow {
   meeting_url: string | null;
   client_message: string | null;
   status: string;
+  reschedule_token?: string | null;
   created_at: string;
 }
 
