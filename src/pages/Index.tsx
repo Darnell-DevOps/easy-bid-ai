@@ -553,7 +553,7 @@ export default function Index() {
           </div>
           <AnimateIn>
             <p className="text-center text-sm text-muted-foreground mt-12">
-              Close just one extra client and it pays for itself.
+              One closed deal more than covers the year. Everything else is upside.
             </p>
           </AnimateIn>
         </div>
