@@ -135,6 +135,7 @@ export default function Index() {
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
             <a href="#platform" className="hover:text-foreground transition-colors">Platform</a>
+            <a href="#ai" className="hover:text-foreground transition-colors">AI</a>
             <a href="#live-demo" className="hover:text-foreground transition-colors">Demo</a>
             <a href="#how-it-works" className="hover:text-foreground transition-colors">How it works</a>
             <a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a>
