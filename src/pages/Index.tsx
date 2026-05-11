@@ -588,9 +588,9 @@ export default function Index() {
           <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-10 py-6 px-6 rounded-xl border border-border/60 bg-card/40 text-sm text-muted-foreground transition-all duration-500 hover:border-accent/30 hover:shadow-[0_10px_40px_-20px_hsl(var(--accent)/0.4)]">
             <span className="group flex items-center gap-2 transition-all duration-300 hover:text-foreground hover:-translate-y-0.5"><ShieldCheck className="w-4 h-4 text-accent transition-all duration-300 group-hover:drop-shadow-[0_0_6px_hsl(var(--accent)/0.7)]" /> Secure payments via Paddle</span>
             <span className="hidden md:inline-block w-px h-4 bg-border" />
-            <span className="group flex items-center gap-2 transition-all duration-300 hover:text-foreground hover:-translate-y-0.5"><FileText className="w-4 h-4 text-accent transition-all duration-300 group-hover:drop-shadow-[0_0_6px_hsl(var(--accent)/0.7)]" /> Professional client-ready proposals</span>
+            <span className="group flex items-center gap-2 transition-all duration-300 hover:text-foreground hover:-translate-y-0.5"><Brain className="w-4 h-4 text-accent transition-all duration-300 group-hover:drop-shadow-[0_0_6px_hsl(var(--accent)/0.7)]" /> AI-powered closing &amp; ops</span>
             <span className="hidden md:inline-block w-px h-4 bg-border" />
-            <span className="group flex items-center gap-2 transition-all duration-300 hover:text-foreground hover:-translate-y-0.5"><Zap className="w-4 h-4 text-accent transition-all duration-300 group-hover:drop-shadow-[0_0_6px_hsl(var(--accent)/0.7)]" /> Built for agencies & freelancers</span>
+            <span className="group flex items-center gap-2 transition-all duration-300 hover:text-foreground hover:-translate-y-0.5"><Zap className="w-4 h-4 text-accent transition-all duration-300 group-hover:drop-shadow-[0_0_6px_hsl(var(--accent)/0.7)]" /> Built for agencies &amp; consultants</span>
           </div>
         </AnimateIn>
       </section>
