@@ -172,23 +172,23 @@ export default function Index() {
           <div className="lg:col-span-7 text-center lg:text-left">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm text-xs text-muted-foreground mb-6 animate-hero-fade-up">
               <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-              The AI platform for closing &amp; client ops
+              The AI client workflow platform — replace 8 tools with one
             </div>
             <h1
               className="text-5xl sm:text-6xl lg:text-7xl font-bold text-foreground tracking-tight leading-[1.05] mb-6 animate-hero-fade-up"
               style={{ animationDelay: "0.1s" }}
             >
-              Close clients faster.
+              Run your entire client business.
               <br />
               <span className="bg-gradient-to-r from-accent via-purple to-accent bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-shift">
-                Run your business on autopilot.
+                From lead to retainer. On autopilot.
               </span>
             </h1>
             <p
               className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed animate-hero-fade-up"
               style={{ animationDelay: "0.2s" }}
             >
-              From first reply to recurring revenue — <span className="text-foreground font-semibold">proposals, contracts, payments, retainers, bookings and AI insights</span> in one platform.
+              CloseSync is the <span className="text-foreground font-semibold">AI-powered client operations platform</span> that replaces your proposal docs, e-sign tool, invoicing, CRM, onboarding forms, booking app and follow-up scripts — all in one workflow.
             </p>
             <div
               className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4 animate-hero-fade-up"
