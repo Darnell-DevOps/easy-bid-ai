@@ -117,6 +117,7 @@ export default function Index() {
             <span className="hidden sm:inline text-[10px] uppercase tracking-widest text-muted-foreground">by CloseSync</span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
+            <a href="#platform" className="hover:text-foreground transition-colors">Platform</a>
             <a href="#live-demo" className="hover:text-foreground transition-colors">Demo</a>
             <a href="#how-it-works" className="hover:text-foreground transition-colors">How it works</a>
             <a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a>
@@ -127,7 +128,7 @@ export default function Index() {
               <Button variant="ghost" size="sm">Log in</Button>
             </Link>
             <Link to="/signup" onClick={() => track("cta_click", { location: "nav" })}>
-              <Button size="sm" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_20px_hsl(var(--accent)/0.45)] transition-all h-9">Get Paid Faster</Button>
+              <Button size="sm" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_20px_hsl(var(--accent)/0.45)] transition-all h-9">Start free</Button>
             </Link>
           </div>
         </div>
