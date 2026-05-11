@@ -314,10 +314,10 @@ export default function Index() {
         <div className="container max-w-6xl">
           <AnimateIn className="text-center mb-12">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/30 bg-accent/10 text-xs text-accent mb-4">
-              <Sparkles className="w-3 h-3" /> Replace 8 tools with one AI platform
+              <Sparkles className="w-3 h-3" /> One platform · twelve workflows
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              The complete <span className="text-shimmer-gradient">client operations</span> stack
+              Everything you need to <span className="text-shimmer-gradient">run client work</span>
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               Stop paying for — and switching between — Proposify, DocuSign, Stripe Invoicing, HubSpot, Calendly, Notion onboarding docs and a dozen Zapier hacks. CloseSync runs your entire client workflow from one place.
@@ -338,15 +338,26 @@ export default function Index() {
             </div>
           </AnimateIn>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-6xl mx-auto">
             {platform.map((p, i) => (
-              <AnimateIn key={p.title} delay={i * 80} direction="up">
-                <div className="group h-full p-5 rounded-2xl border border-border bg-card/60 backdrop-blur-sm hover:border-accent/40 hover:bg-card/80 hover:-translate-y-1 hover:shadow-[0_12px_40px_-15px_hsl(var(--accent)/0.35)] transition-all duration-300">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-purple/20 border border-accent/20 flex items-center justify-center mb-4 group-hover:shadow-[0_0_20px_hsl(var(--accent)/0.45)] transition-all">
-                    <p.icon className="w-5 h-5 text-accent" />
+              <AnimateIn key={p.title} delay={i * 60} direction="up">
+                <div className="group relative h-full p-5 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden hover:border-accent/40 hover:-translate-y-1 hover:shadow-[0_18px_50px_-15px_hsl(var(--accent)/0.45)] transition-all duration-300">
+                  {/* Hover glow */}
+                  <div
+                    aria-hidden
+                    className="absolute -inset-px rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                    style={{
+                      background:
+                        "radial-gradient(circle at top left, hsl(var(--accent) / 0.18), transparent 60%), radial-gradient(circle at bottom right, hsl(var(--purple) / 0.18), transparent 60%)",
+                    }}
+                  />
+                  <div className="relative">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/25 to-purple/25 border border-accent/30 flex items-center justify-center mb-4 group-hover:shadow-[0_0_22px_hsl(var(--accent)/0.55)] group-hover:scale-110 transition-all duration-300">
+                      <p.icon className="w-5 h-5 text-accent" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-foreground mb-1.5">{p.title}</h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{p.desc}</p>
                   </div>
-                  <h3 className="text-sm font-semibold text-foreground mb-1.5">{p.title}</h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{p.desc}</p>
                 </div>
               </AnimateIn>
             ))}
