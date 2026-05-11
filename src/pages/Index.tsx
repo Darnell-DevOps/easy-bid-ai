@@ -22,13 +22,17 @@ const painPoints = [
 
 const platform = [
   { icon: FileText, title: "AI Proposals", desc: "Polished, on-brand proposals generated in seconds." },
-  { icon: PenLine, title: "Contracts & e-sign", desc: "Send, track and legally bind with one link." },
-  { icon: HandCoins, title: "One-click Accept & Pay", desc: "Clients accept and pay in the same flow. No invoicing." },
-  { icon: Users, title: "Client portal & onboarding", desc: "Smart intake forms and a portal that does the back-and-forth for you." },
-  { icon: Repeat, title: "Retainers & recovery", desc: "Recurring revenue, automated renewals, and dunning recovery." },
-  { icon: Calendar, title: "Bookings & reminders", desc: "Public booking pages, reminders, and host notifications built in." },
-  { icon: Inbox, title: "Inbound email AI", desc: "Auto-reply to leads, draft follow-ups, and turn emails into deals." },
-  { icon: Brain, title: "AI coach & insights", desc: "Deal scores, churn risk, weekly briefings — your CRO in your pocket." },
+  { icon: PenLine, title: "Contracts & E-signatures", desc: "Send, track and legally bind agreements with one link." },
+  { icon: HandCoins, title: "Payment Collection", desc: "One-click Accept & Pay — money lands without invoicing." },
+  { icon: Repeat, title: "Retainers & Subscriptions", desc: "Lock in recurring revenue with automated renewals." },
+  { icon: Inbox, title: "AI Lead Replies", desc: "Auto-respond to inbound emails and qualify leads instantly." },
+  { icon: Users, title: "Client Portal", desc: "A branded space where clients review, sign and pay." },
+  { icon: Calendar, title: "Booking & Calendar", desc: "Public booking pages, reminders and host notifications." },
+  { icon: LayoutDashboard, title: "Client Onboarding", desc: "Smart intake forms that handle the back-and-forth for you." },
+  { icon: Send, title: "Automated Follow-Ups", desc: "AI nudges deals forward when clients go quiet." },
+  { icon: Upload, title: "File Uploads", desc: "Collect deliverables and assets without third-party tools." },
+  { icon: RefreshCw, title: "Recurring Billing", desc: "Subscriptions, dunning recovery and renewal automation." },
+  { icon: BarChart3, title: "Progress Tracking", desc: "Live dashboards for deals, revenue and time saved." },
 ];
 
 const deliverables = [
