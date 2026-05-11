@@ -188,7 +188,7 @@ export default function Index() {
               className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed animate-hero-fade-up"
               style={{ animationDelay: "0.2s" }}
             >
-              CloseSync is the <span className="text-foreground font-semibold">AI-powered client operations platform</span> that replaces your proposal docs, e-sign tool, invoicing, CRM, onboarding forms, booking app and follow-up scripts — all in one workflow.
+              Win proposals, e-sign contracts, collect payments, onboard new clients, run bookings and grow retainers — orchestrated by <span className="text-foreground font-semibold">one AI workflow</span> that runs while you sleep.
             </p>
             <div
               className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4 animate-hero-fade-up"
