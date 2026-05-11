@@ -2,29 +2,40 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText, Zap, AlertTriangle, Clock, XCircle, UserX, ArrowRight, CheckCircle, Briefcase, ShieldCheck, CreditCard, HandCoins, FileCheck, Star, Lock, PlayCircle } from "lucide-react";
+import { FileText, Zap, AlertTriangle, Clock, XCircle, UserX, ArrowRight, CheckCircle, Briefcase, ShieldCheck, CreditCard, HandCoins, FileCheck, Star, Lock, PlayCircle, MessageSquare, Repeat, Calendar, Users, Brain, Sparkles, PenLine, Inbox } from "lucide-react";
 import { AnimateIn } from "@/hooks/use-scroll-animation";
 import LiveDemo from "@/components/landing/LiveDemo";
 import { track } from "@/lib/landing-analytics";
 
 const steps = [
-  { number: "1", title: "Send your proposal", description: "Generate a polished proposal in seconds and share it with one link." },
-  { number: "2", title: "Client accepts it", description: "Your client reviews and accepts the proposal in one click — no email back-and-forth." },
-  { number: "3", title: "Client pays instantly", description: "Payment is collected automatically the moment they accept. No chasing invoices." },
+  { number: "1", title: "Capture & qualify leads", description: "AI replies to inbound emails, scores deals, and surfaces who's worth your time — no manual triage." },
+  { number: "2", title: "Close with proposals & contracts", description: "Generate a polished proposal, e-sign contract, and one-click Accept & Pay flow — all from one link." },
+  { number: "3", title: "Run & grow accounts", description: "Onboarding, retainers, bookings, churn alerts and AI insights keep every client moving forward." },
 ];
 
 const painPoints = [
   { icon: UserX, text: "Clients ghost after proposals" },
   { icon: Clock, text: "You chase invoices manually" },
   { icon: XCircle, text: "Deals fall through the cracks" },
-  { icon: AlertTriangle, text: "Payments are slow or missed" },
+  { icon: AlertTriangle, text: "Retainers churn without warning" },
+];
+
+const platform = [
+  { icon: FileText, title: "AI Proposals", desc: "Polished, on-brand proposals generated in seconds." },
+  { icon: PenLine, title: "Contracts & e-sign", desc: "Send, track and legally bind with one link." },
+  { icon: HandCoins, title: "One-click Accept & Pay", desc: "Clients accept and pay in the same flow. No invoicing." },
+  { icon: Users, title: "Client portal & onboarding", desc: "Smart intake forms and a portal that does the back-and-forth for you." },
+  { icon: Repeat, title: "Retainers & recovery", desc: "Recurring revenue, automated renewals, and dunning recovery." },
+  { icon: Calendar, title: "Bookings & reminders", desc: "Public booking pages, reminders, and host notifications built in." },
+  { icon: Inbox, title: "Inbound email AI", desc: "Auto-reply to leads, draft follow-ups, and turn emails into deals." },
+  { icon: Brain, title: "AI coach & insights", desc: "Deal scores, churn risk, weekly briefings — your CRO in your pocket." },
 ];
 
 const deliverables = [
-  "A polished, client-ready proposal",
-  "One-click Accept & Pay flow",
-  "Automatic invoice & receipt",
-  "Money in your account, not chased",
+  "Win more deals with AI-crafted proposals",
+  "Get paid the moment a client accepts",
+  "Lock in recurring revenue with retainers",
+  "Spot churn and slipping deals before they happen",
 ];
 
 const plans = [
@@ -32,12 +43,12 @@ const plans = [
     name: "Free",
     price: "£0",
     period: "/month",
-    description: "Try it out — no card required",
+    description: "Try the platform — no card required",
     features: [
       "1 proposal per month",
       "Watermarked proposals",
       "No payment collection",
-      "No policy generator",
+      "Limited AI insights",
     ],
     cta: "Start Free",
     popular: false,
@@ -46,18 +57,18 @@ const plans = [
     name: "Pro",
     price: "£29",
     period: "/month",
-    description: "Get paid instantly. Turn leads into clients automatically.",
+    description: "The full platform to close clients and run accounts.",
     features: [
-      "Accept & Pay flow",
-      "Payment collection (Paddle)",
-      "Unlimited proposals",
-      "AI lead response",
-      "Policies auto-attach",
-      "No watermark",
+      "Unlimited proposals, contracts & invoices",
+      "One-click Accept & Pay (Paddle)",
+      "Retainers, bookings & client portal",
+      "Inbound email AI & lead assistant",
+      "AI coach: deal scores, churn risk, briefings",
+      "No watermark · priority support",
     ],
-    cta: "Get Paid Faster",
+    cta: "Start Closing & Operating",
     popular: true,
-    valueLine: "Close just one extra client and it pays for itself.",
+    valueLine: "One extra closed client more than pays for it.",
     trustItems: ["7-day free trial", "Cancel anytime", "Secure payments via Paddle"],
   },
 ];
