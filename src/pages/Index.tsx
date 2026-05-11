@@ -7,6 +7,7 @@ import { AnimateIn } from "@/hooks/use-scroll-animation";
 import LiveDemo from "@/components/landing/LiveDemo";
 import AIAssistant from "@/components/landing/AIAssistant";
 import RetainersSection from "@/components/landing/RetainersSection";
+import ClientPortalShowcase from "@/components/landing/ClientPortalShowcase";
 import { track } from "@/lib/landing-analytics";
 
 const steps = [
@@ -629,6 +630,9 @@ export default function Index() {
 
       {/* Retainers / Recurring Revenue */}
       <RetainersSection />
+
+      {/* Client Portal Showcase */}
+      <ClientPortalShowcase />
 
       {/* Pain Section */}
       <section className="py-16 px-4">
