@@ -365,6 +365,136 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Replace Multiple Tools */}
+      <section className="py-20 px-4 relative overflow-hidden">
+        <div aria-hidden className="absolute inset-0 -z-10 pointer-events-none">
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-3xl opacity-40"
+            style={{ background: "radial-gradient(closest-side, hsl(var(--accent) / 0.25), transparent 70%)" }}
+          />
+        </div>
+        <div className="container max-w-6xl">
+          <AnimateIn className="text-center mb-14">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/30 bg-accent/10 text-xs text-accent mb-4">
+              <Sparkles className="w-3 h-3" /> One connected workflow
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Stop paying for 7 tools. <span className="text-shimmer-gradient">Use one.</span>
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Consolidate your patchwork stack into a single AI-powered platform. Less software. Less switching. More closed clients.
+            </p>
+          </AnimateIn>
+
+          <div className="grid lg:grid-cols-[1fr_auto_1fr] gap-8 lg:gap-4 items-center max-w-5xl mx-auto">
+            {/* Left: tool stack collapsing */}
+            <AnimateIn direction="left">
+              <div className="space-y-2.5">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-3 text-center lg:text-left">
+                  Instead of paying for
+                </p>
+                {[
+                  { name: "Proposify", role: "Proposals" },
+                  { name: "DocuSign", role: "Contracts" },
+                  { name: "Stripe Invoicing", role: "Payments" },
+                  { name: "Calendly", role: "Bookings" },
+                  { name: "Notion / Forms", role: "Onboarding" },
+                  { name: "Chargebee", role: "Recurring billing" },
+                  { name: "Mailshake / Zapier", role: "Follow-ups" },
+                ].map((tool, i) => (
+                  <div
+                    key={tool.name}
+                    className="group relative flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-sm overflow-hidden hover:border-destructive/40 transition-all duration-500 animate-tool-drift"
+                    style={{
+                      animationDelay: `${i * 0.4}s`,
+                      transform: `translateX(${i % 2 === 0 ? "0" : "8px"})`,
+                    }}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-7 h-7 rounded-md bg-muted/40 border border-white/5 flex items-center justify-center flex-shrink-0">
+                        <span className="text-[10px] font-bold text-muted-foreground">
+                          {tool.name.charAt(0)}
+                        </span>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground/80 line-through decoration-destructive/60 decoration-1 truncate">
+                          {tool.name}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground truncate">{tool.role}</p>
+                      </div>
+                    </div>
+                    <XCircle className="w-3.5 h-3.5 text-destructive/60 flex-shrink-0" />
+                  </div>
+                ))}
+                <p className="text-center lg:text-left pt-3 text-xs text-muted-foreground">
+                  ≈ <span className="text-foreground font-semibold">$300+/mo</span> across 7 logins
+                </p>
+              </div>
+            </AnimateIn>
+
+            {/* Center: merging arrows */}
+            <div className="flex lg:flex-col items-center justify-center gap-2 py-4 lg:py-0 lg:px-2">
+              <div className="hidden lg:flex flex-col items-center gap-1.5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <ArrowRight
+                    key={i}
+                    className="w-5 h-5 text-accent animate-pulse"
+                    style={{ animationDelay: `${i * 0.15}s`, opacity: 0.4 + i * 0.12 }}
+                  />
+                ))}
+              </div>
+              <div className="lg:hidden flex items-center gap-1.5 rotate-90">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <ArrowRight
+                    key={i}
+                    className="w-5 h-5 text-accent animate-pulse"
+                    style={{ animationDelay: `${i * 0.15}s`, opacity: 0.4 + i * 0.12 }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Right: CloseSync orb */}
+            <AnimateIn direction="right">
+              <div className="relative">
+                <div className="absolute -inset-6 rounded-3xl bg-gradient-to-br from-accent/30 to-purple/30 blur-3xl opacity-70 animate-soft-pulse pointer-events-none" />
+                <div className="relative rounded-3xl border-2 border-accent/40 bg-card/80 backdrop-blur-xl p-8 shadow-2xl shadow-accent/30 animate-border-glow">
+                  <p className="text-[10px] uppercase tracking-widest text-accent mb-4 text-center">
+                    One connected workflow
+                  </p>
+                  <div className="flex items-center justify-center mb-5">
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent to-purple flex items-center justify-center shadow-[0_0_40px_hsl(var(--accent)/0.55)]">
+                      <Sparkles className="w-8 h-8 text-accent-foreground" />
+                    </div>
+                  </div>
+                  <p className="text-center text-xl font-bold text-foreground mb-1">
+                    Close<span className="text-gradient-sync">Sync</span> AI
+                  </p>
+                  <p className="text-center text-xs text-muted-foreground mb-6">
+                    Lead → Proposal → Contract → Payment → Onboarding → Retainer
+                  </p>
+                  <div className="space-y-2 pt-4 border-t border-white/10">
+                    {[
+                      "All 12 workflows in one place",
+                      "One login, one bill, one source of truth",
+                      "AI orchestrates every handoff",
+                    ].map((b) => (
+                      <div key={b} className="flex items-center gap-2">
+                        <CheckCircle className="w-3.5 h-3.5 text-accent flex-shrink-0" />
+                        <span className="text-xs text-foreground">{b}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-center pt-5 mt-5 border-t border-white/10 text-xs text-muted-foreground">
+                    From <span className="text-foreground font-semibold">£29/mo</span> · one login
+                  </p>
+                </div>
+              </div>
+            </AnimateIn>
+          </div>
+        </div>
+      </section>
+
       {/* Pain Section */}
       <section className="py-16 px-4">
         <AnimateIn className="container max-w-3xl text-center">
