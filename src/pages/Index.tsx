@@ -627,6 +627,9 @@ export default function Index() {
       {/* AI Assistant */}
       <AIAssistant />
 
+      {/* Retainers / Recurring Revenue */}
+      <RetainersSection />
+
       {/* Pain Section */}
       <section className="py-16 px-4">
         <AnimateIn className="container max-w-3xl text-center">
