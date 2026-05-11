@@ -172,23 +172,23 @@ export default function Index() {
           <div className="lg:col-span-7 text-center lg:text-left">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm text-xs text-muted-foreground mb-6 animate-hero-fade-up">
               <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-              The AI platform for closing &amp; client ops
+              The AI client workflow platform — replace 8 tools with one
             </div>
             <h1
               className="text-5xl sm:text-6xl lg:text-7xl font-bold text-foreground tracking-tight leading-[1.05] mb-6 animate-hero-fade-up"
               style={{ animationDelay: "0.1s" }}
             >
-              Close clients faster.
+              Run your entire client business.
               <br />
               <span className="bg-gradient-to-r from-accent via-purple to-accent bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-shift">
-                Run your business on autopilot.
+                From lead to retainer. On autopilot.
               </span>
             </h1>
             <p
               className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed animate-hero-fade-up"
               style={{ animationDelay: "0.2s" }}
             >
-              From first reply to recurring revenue — <span className="text-foreground font-semibold">proposals, contracts, payments, retainers, bookings and AI insights</span> in one platform.
+              CloseSync is the <span className="text-foreground font-semibold">AI-powered client operations platform</span> that replaces your proposal docs, e-sign tool, invoicing, CRM, onboarding forms, booking app and follow-up scripts — all in one workflow.
             </p>
             <div
               className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4 animate-hero-fade-up"
@@ -310,14 +310,28 @@ export default function Index() {
         <div className="container max-w-6xl">
           <AnimateIn className="text-center mb-12">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/30 bg-accent/10 text-xs text-accent mb-4">
-              <Sparkles className="w-3 h-3" /> One platform · eight workflows
+              <Sparkles className="w-3 h-3" /> Replace 8 tools with one AI platform
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Everything you need to <span className="text-shimmer-gradient">close and operate</span>
+              The complete <span className="text-shimmer-gradient">client operations</span> stack
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Replace your patchwork of proposal docs, e-sign tools, invoicing, CRM and follow-up scripts with one AI-powered platform built for client work.
+              Stop paying for — and switching between — Proposify, DocuSign, Stripe Invoicing, HubSpot, Calendly, Notion onboarding docs and a dozen Zapier hacks. CloseSync runs your entire client workflow from one place.
             </p>
+          </AnimateIn>
+
+          {/* Workflow chain */}
+          <AnimateIn className="mb-10">
+            <div className="flex items-center justify-center flex-wrap gap-2 sm:gap-3 max-w-4xl mx-auto px-2">
+              {["Lead", "Proposal", "Contract", "Payment", "Onboarding", "Retainer"].map((stage, i, arr) => (
+                <div key={stage} className="flex items-center gap-2 sm:gap-3">
+                  <span className="px-3 py-1.5 rounded-full border border-accent/30 bg-accent/5 text-xs sm:text-sm font-medium text-foreground backdrop-blur-sm">
+                    {stage}
+                  </span>
+                  {i < arr.length - 1 && <ArrowRight className="w-3.5 h-3.5 text-accent/60 flex-shrink-0" />}
+                </div>
+              ))}
+            </div>
           </AnimateIn>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
@@ -362,10 +376,9 @@ export default function Index() {
       <section className="py-16 px-4">
         <div className="container max-w-4xl">
           <AnimateIn className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">From <span className="text-shimmer-gradient">first reply</span> to recurring revenue</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Turn proposals into <span className="text-shimmer-gradient">paid, onboarded, retained clients</span></h2>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto leading-relaxed">
-              Capture leads, close deals, and run accounts —<br />
-              all from <span className="text-foreground font-semibold">one workspace.</span>
+              One AI workflow takes every client from <span className="text-foreground font-semibold">lead → proposal → contract → payment → onboarding → retainer</span> — without you stitching tools together.
             </p>
           </AnimateIn>
 
