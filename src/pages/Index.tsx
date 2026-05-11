@@ -2,29 +2,40 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText, Zap, AlertTriangle, Clock, XCircle, UserX, ArrowRight, CheckCircle, Briefcase, ShieldCheck, CreditCard, HandCoins, FileCheck, Star, Lock, PlayCircle } from "lucide-react";
+import { FileText, Zap, AlertTriangle, Clock, XCircle, UserX, ArrowRight, CheckCircle, Briefcase, ShieldCheck, CreditCard, HandCoins, FileCheck, Star, Lock, PlayCircle, MessageSquare, Repeat, Calendar, Users, Brain, Sparkles, PenLine, Inbox } from "lucide-react";
 import { AnimateIn } from "@/hooks/use-scroll-animation";
 import LiveDemo from "@/components/landing/LiveDemo";
 import { track } from "@/lib/landing-analytics";
 
 const steps = [
-  { number: "1", title: "Send your proposal", description: "Generate a polished proposal in seconds and share it with one link." },
-  { number: "2", title: "Client accepts it", description: "Your client reviews and accepts the proposal in one click — no email back-and-forth." },
-  { number: "3", title: "Client pays instantly", description: "Payment is collected automatically the moment they accept. No chasing invoices." },
+  { number: "1", title: "Capture & qualify leads", description: "AI replies to inbound emails, scores deals, and surfaces who's worth your time — no manual triage." },
+  { number: "2", title: "Close with proposals & contracts", description: "Generate a polished proposal, e-sign contract, and one-click Accept & Pay flow — all from one link." },
+  { number: "3", title: "Run & grow accounts", description: "Onboarding, retainers, bookings, churn alerts and AI insights keep every client moving forward." },
 ];
 
 const painPoints = [
   { icon: UserX, text: "Clients ghost after proposals" },
   { icon: Clock, text: "You chase invoices manually" },
   { icon: XCircle, text: "Deals fall through the cracks" },
-  { icon: AlertTriangle, text: "Payments are slow or missed" },
+  { icon: AlertTriangle, text: "Retainers churn without warning" },
+];
+
+const platform = [
+  { icon: FileText, title: "AI Proposals", desc: "Polished, on-brand proposals generated in seconds." },
+  { icon: PenLine, title: "Contracts & e-sign", desc: "Send, track and legally bind with one link." },
+  { icon: HandCoins, title: "One-click Accept & Pay", desc: "Clients accept and pay in the same flow. No invoicing." },
+  { icon: Users, title: "Client portal & onboarding", desc: "Smart intake forms and a portal that does the back-and-forth for you." },
+  { icon: Repeat, title: "Retainers & recovery", desc: "Recurring revenue, automated renewals, and dunning recovery." },
+  { icon: Calendar, title: "Bookings & reminders", desc: "Public booking pages, reminders, and host notifications built in." },
+  { icon: Inbox, title: "Inbound email AI", desc: "Auto-reply to leads, draft follow-ups, and turn emails into deals." },
+  { icon: Brain, title: "AI coach & insights", desc: "Deal scores, churn risk, weekly briefings — your CRO in your pocket." },
 ];
 
 const deliverables = [
-  "A polished, client-ready proposal",
-  "One-click Accept & Pay flow",
-  "Automatic invoice & receipt",
-  "Money in your account, not chased",
+  "Win more deals with AI-crafted proposals",
+  "Get paid the moment a client accepts",
+  "Lock in recurring revenue with retainers",
+  "Spot churn and slipping deals before they happen",
 ];
 
 const plans = [
@@ -32,12 +43,12 @@ const plans = [
     name: "Free",
     price: "£0",
     period: "/month",
-    description: "Try it out — no card required",
+    description: "Try the platform — no card required",
     features: [
       "1 proposal per month",
       "Watermarked proposals",
       "No payment collection",
-      "No policy generator",
+      "Limited AI insights",
     ],
     cta: "Start Free",
     popular: false,
@@ -46,18 +57,18 @@ const plans = [
     name: "Pro",
     price: "£29",
     period: "/month",
-    description: "Get paid instantly. Turn leads into clients automatically.",
+    description: "The full platform to close clients and run accounts.",
     features: [
-      "Accept & Pay flow",
-      "Payment collection (Paddle)",
-      "Unlimited proposals",
-      "AI lead response",
-      "Policies auto-attach",
-      "No watermark",
+      "Unlimited proposals, contracts & invoices",
+      "One-click Accept & Pay (Paddle)",
+      "Retainers, bookings & client portal",
+      "Inbound email AI & lead assistant",
+      "AI coach: deal scores, churn risk, briefings",
+      "No watermark · priority support",
     ],
-    cta: "Get Paid Faster",
+    cta: "Start Closing & Operating",
     popular: true,
-    valueLine: "Close just one extra client and it pays for itself.",
+    valueLine: "One extra closed client more than pays for it.",
     trustItems: ["7-day free trial", "Cancel anytime", "Secure payments via Paddle"],
   },
 ];
@@ -106,6 +117,7 @@ export default function Index() {
             <span className="hidden sm:inline text-[10px] uppercase tracking-widest text-muted-foreground">by CloseSync</span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
+            <a href="#platform" className="hover:text-foreground transition-colors">Platform</a>
             <a href="#live-demo" className="hover:text-foreground transition-colors">Demo</a>
             <a href="#how-it-works" className="hover:text-foreground transition-colors">How it works</a>
             <a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a>
@@ -116,7 +128,7 @@ export default function Index() {
               <Button variant="ghost" size="sm">Log in</Button>
             </Link>
             <Link to="/signup" onClick={() => track("cta_click", { location: "nav" })}>
-              <Button size="sm" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_20px_hsl(var(--accent)/0.45)] transition-all h-9">Get Paid Faster</Button>
+              <Button size="sm" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_20px_hsl(var(--accent)/0.45)] transition-all h-9">Start free</Button>
             </Link>
           </div>
         </div>
@@ -160,23 +172,23 @@ export default function Index() {
           <div className="lg:col-span-7 text-center lg:text-left">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm text-xs text-muted-foreground mb-6 animate-hero-fade-up">
               <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-              New — One-link Accept &amp; Pay flow
+              The AI platform for closing &amp; client ops
             </div>
             <h1
               className="text-5xl sm:text-6xl lg:text-7xl font-bold text-foreground tracking-tight leading-[1.05] mb-6 animate-hero-fade-up"
               style={{ animationDelay: "0.1s" }}
             >
-              Close deals faster.
+              Close clients faster.
               <br />
               <span className="bg-gradient-to-r from-accent via-purple to-accent bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-shift">
-                Get paid instantly.
+                Run your business on autopilot.
               </span>
             </h1>
             <p
               className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed animate-hero-fade-up"
               style={{ animationDelay: "0.2s" }}
             >
-              Send proposals your clients can accept and pay in one simple flow — <span className="text-foreground font-semibold">no chasing, no back-and-forth.</span>
+              From first reply to recurring revenue — <span className="text-foreground font-semibold">proposals, contracts, payments, retainers, bookings and AI insights</span> in one platform.
             </p>
             <div
               className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4 animate-hero-fade-up"
@@ -184,7 +196,7 @@ export default function Index() {
             >
               <Link to="/signup" className="w-full sm:w-auto" onClick={() => track("cta_click", { location: "hero" })}>
                 <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-accent to-purple text-accent-foreground bg-[length:200%_100%] hover:bg-[position:100%_0] transition-[background-position,transform,box-shadow] duration-500 hover:shadow-[0_0_36px_hsl(var(--accent)/0.55)] px-10 h-14 text-base gap-2 hover:scale-[1.03] hover:-translate-y-0.5">
-                  Get Paid Faster
+                  Start free
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
@@ -293,12 +305,43 @@ export default function Index() {
       {/* Live 60-second product demo */}
       <LiveDemo />
 
+      {/* Platform / Ecosystem */}
+      <section id="platform" className="py-20 px-4 scroll-mt-20">
+        <div className="container max-w-6xl">
+          <AnimateIn className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/30 bg-accent/10 text-xs text-accent mb-4">
+              <Sparkles className="w-3 h-3" /> One platform · eight workflows
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Everything you need to <span className="text-shimmer-gradient">close and operate</span>
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Replace your patchwork of proposal docs, e-sign tools, invoicing, CRM and follow-up scripts with one AI-powered platform built for client work.
+            </p>
+          </AnimateIn>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
+            {platform.map((p, i) => (
+              <AnimateIn key={p.title} delay={i * 80} direction="up">
+                <div className="group h-full p-5 rounded-2xl border border-border bg-card/60 backdrop-blur-sm hover:border-accent/40 hover:bg-card/80 hover:-translate-y-1 hover:shadow-[0_12px_40px_-15px_hsl(var(--accent)/0.35)] transition-all duration-300">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-purple/20 border border-accent/20 flex items-center justify-center mb-4 group-hover:shadow-[0_0_20px_hsl(var(--accent)/0.45)] transition-all">
+                    <p.icon className="w-5 h-5 text-accent" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-foreground mb-1.5">{p.title}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{p.desc}</p>
+                </div>
+              </AnimateIn>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Pain Section */}
       <section className="py-16 px-4">
         <AnimateIn className="container max-w-3xl text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Tired of chasing clients for money?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Tired of stitching together 8 tools to run client work?</h2>
           <p className="text-muted-foreground text-lg mb-12 max-w-xl mx-auto">
-            The gap between "yes" and getting paid is where most freelancers lose revenue.
+            The gap between "interested lead" and "happy retainer client" is where most agencies leak revenue.
           </p>
           <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {painPoints.map((p, i) => (
@@ -319,10 +362,10 @@ export default function Index() {
       <section className="py-16 px-4">
         <div className="container max-w-4xl">
           <AnimateIn className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Turn proposals into <span className="text-shimmer-gradient">paid deals</span></h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">From <span className="text-shimmer-gradient">first reply</span> to recurring revenue</h2>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto leading-relaxed">
-              Your client gets one link.<br />
-              They review, accept, and pay — <span className="text-foreground font-semibold">instantly.</span>
+              Capture leads, close deals, and run accounts —<br />
+              all from <span className="text-foreground font-semibold">one workspace.</span>
             </p>
           </AnimateIn>
 
@@ -332,9 +375,9 @@ export default function Index() {
               <div className="relative rounded-2xl border-2 border-accent/30 bg-card shadow-2xl shadow-accent/10 p-8 md:p-12">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-4">
                   {[
-                    { icon: FileText, label: "Proposal", sub: "Sent in minutes", color: "accent" },
-                    { icon: FileCheck, label: "Accept", sub: "One click", color: "accent" },
-                    { icon: HandCoins, label: "Payment", sub: "Money in", color: "accent" },
+                    { icon: MessageSquare, label: "Capture", sub: "AI replies & qualifies", color: "accent" },
+                    { icon: FileCheck, label: "Close", sub: "Sign & pay in one link", color: "accent" },
+                    { icon: Repeat, label: "Operate", sub: "Retain & grow", color: "accent" },
                   ].map((item, i, arr) => {
                     const isActive = activeStep === i;
                     return (
@@ -379,7 +422,7 @@ export default function Index() {
           <AnimateIn className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">How it works</h2>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Three steps from proposal to paid.
+              Three stages. One platform. Every client, end-to-end.
             </p>
           </AnimateIn>
 
@@ -401,7 +444,7 @@ export default function Index() {
 
           {/* What you get */}
           <AnimateIn className="max-w-3xl mx-auto text-center">
-            <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-8">What you get</h3>
+            <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-8">What you walk away with</h3>
             <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
               {deliverables.map((item, i) => (
                 <AnimateIn key={item} delay={i * 100} direction="up">
@@ -422,9 +465,9 @@ export default function Index() {
           <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-6">
             <Briefcase className="w-6 h-6 text-accent" />
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Built for freelancers and agencies that want to get paid</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Built for agencies and consultants who want to grow without the busywork</h2>
           <p className="text-muted-foreground text-lg leading-relaxed max-w-xl mx-auto">
-            Stop sending proposals into the void. Send proposals that close themselves.
+            Stop juggling docs, e-sign apps, invoice tools and spreadsheets. Run every client — from inbound lead to renewed retainer — in one place.
           </p>
         </AnimateIn>
       </section>
@@ -433,8 +476,8 @@ export default function Index() {
       <section className="py-16 px-4">
         <div className="container max-w-3xl">
           <AnimateIn className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">Trusted by freelancers and agencies</h2>
-            <p className="text-muted-foreground text-sm">Real outcomes from people who stopped chasing invoices.</p>
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">Trusted by agencies and consultants</h2>
+            <p className="text-muted-foreground text-sm">Real outcomes from operators who replaced their stack with CloseSync.</p>
           </AnimateIn>
           <AnimateIn direction="scale">
             <div className="rounded-2xl border border-border bg-card/60 backdrop-blur-sm p-8 md:p-10 text-center max-w-2xl mx-auto shadow-lg shadow-accent/5">
@@ -444,9 +487,9 @@ export default function Index() {
                 ))}
               </div>
               <blockquote className="text-lg md:text-xl text-foreground font-medium leading-relaxed mb-5">
-                “This helped me stop chasing invoices and close clients faster.”
+                “We retired three tools. Proposals, contracts, payments, retainers — it’s all in here, and the AI actually moves deals forward.”
               </blockquote>
-              <p className="text-sm text-muted-foreground">— Freelance Consultant</p>
+              <p className="text-sm text-muted-foreground">— Agency Founder</p>
             </div>
           </AnimateIn>
         </div>
@@ -510,7 +553,7 @@ export default function Index() {
           </div>
           <AnimateIn>
             <p className="text-center text-sm text-muted-foreground mt-12">
-              Close just one extra client and it pays for itself.
+              One closed deal more than covers the year. Everything else is upside.
             </p>
           </AnimateIn>
         </div>
@@ -524,14 +567,14 @@ export default function Index() {
               <CreditCard className="w-7 h-7 text-accent-foreground" />
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Stop chasing clients — <span className="text-shimmer-gradient">start closing deals</span>
+              Stop running your business in 8 tabs — <span className="text-shimmer-gradient">run it in CloseSync</span>
             </h2>
             <p className="text-muted-foreground text-lg mb-8 max-w-xl mx-auto">
-              Join freelancers and agencies who turned their proposals into a payment machine.
+              Join the agencies and consultants closing more, churning less, and shipping client work without the busywork.
             </p>
             <Link to="/signup" onClick={() => track("cta_click", { location: "final" })}>
               <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_24px_hsl(var(--accent)/0.5)] px-10 h-14 text-base gap-2 transition-all hover:scale-105">
-                Start closing deals
+                Start free
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
@@ -545,9 +588,9 @@ export default function Index() {
           <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-10 py-6 px-6 rounded-xl border border-border/60 bg-card/40 text-sm text-muted-foreground transition-all duration-500 hover:border-accent/30 hover:shadow-[0_10px_40px_-20px_hsl(var(--accent)/0.4)]">
             <span className="group flex items-center gap-2 transition-all duration-300 hover:text-foreground hover:-translate-y-0.5"><ShieldCheck className="w-4 h-4 text-accent transition-all duration-300 group-hover:drop-shadow-[0_0_6px_hsl(var(--accent)/0.7)]" /> Secure payments via Paddle</span>
             <span className="hidden md:inline-block w-px h-4 bg-border" />
-            <span className="group flex items-center gap-2 transition-all duration-300 hover:text-foreground hover:-translate-y-0.5"><FileText className="w-4 h-4 text-accent transition-all duration-300 group-hover:drop-shadow-[0_0_6px_hsl(var(--accent)/0.7)]" /> Professional client-ready proposals</span>
+            <span className="group flex items-center gap-2 transition-all duration-300 hover:text-foreground hover:-translate-y-0.5"><Brain className="w-4 h-4 text-accent transition-all duration-300 group-hover:drop-shadow-[0_0_6px_hsl(var(--accent)/0.7)]" /> AI-powered closing &amp; ops</span>
             <span className="hidden md:inline-block w-px h-4 bg-border" />
-            <span className="group flex items-center gap-2 transition-all duration-300 hover:text-foreground hover:-translate-y-0.5"><Zap className="w-4 h-4 text-accent transition-all duration-300 group-hover:drop-shadow-[0_0_6px_hsl(var(--accent)/0.7)]" /> Built for agencies & freelancers</span>
+            <span className="group flex items-center gap-2 transition-all duration-300 hover:text-foreground hover:-translate-y-0.5"><Zap className="w-4 h-4 text-accent transition-all duration-300 group-hover:drop-shadow-[0_0_6px_hsl(var(--accent)/0.7)]" /> Built for agencies &amp; consultants</span>
           </div>
         </AnimateIn>
       </section>
@@ -572,11 +615,11 @@ export default function Index() {
         style={{ willChange: "opacity, transform" }}
       >
         <div className="flex items-center justify-between gap-4 px-5 py-3 rounded-full border border-accent/30 bg-card/90 backdrop-blur-md shadow-2xl shadow-accent/20">
-          <p className="text-sm text-foreground font-medium hidden sm:block">Ready to close more deals?</p>
-          <p className="text-sm text-foreground font-medium sm:hidden">Close more deals</p>
+          <p className="text-sm text-foreground font-medium hidden sm:block">Ready to close more &amp; operate less?</p>
+          <p className="text-sm text-foreground font-medium sm:hidden">Close &amp; operate</p>
           <Link to="/signup" onClick={() => track("cta_click", { location: "sticky" })}>
             <Button size="sm" className="bg-gradient-to-r from-accent to-purple text-accent-foreground bg-[length:200%_100%] hover:bg-[position:100%_0] transition-[background-position,transform,box-shadow] duration-500 hover:shadow-[0_0_20px_hsl(var(--accent)/0.5)] h-9 px-5 gap-2 hover:-translate-y-0.5">
-              Get Paid Faster
+              Start free
               <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </Link>
