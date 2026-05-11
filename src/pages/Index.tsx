@@ -375,9 +375,9 @@ export default function Index() {
               <div className="relative rounded-2xl border-2 border-accent/30 bg-card shadow-2xl shadow-accent/10 p-8 md:p-12">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-4">
                   {[
-                    { icon: FileText, label: "Proposal", sub: "Sent in minutes", color: "accent" },
-                    { icon: FileCheck, label: "Accept", sub: "One click", color: "accent" },
-                    { icon: HandCoins, label: "Payment", sub: "Money in", color: "accent" },
+                    { icon: MessageSquare, label: "Capture", sub: "AI replies & qualifies", color: "accent" },
+                    { icon: FileCheck, label: "Close", sub: "Sign & pay in one link", color: "accent" },
+                    { icon: Repeat, label: "Operate", sub: "Retain & grow", color: "accent" },
                   ].map((item, i, arr) => {
                     const isActive = activeStep === i;
                     return (
