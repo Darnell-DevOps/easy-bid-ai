@@ -310,14 +310,28 @@ export default function Index() {
         <div className="container max-w-6xl">
           <AnimateIn className="text-center mb-12">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/30 bg-accent/10 text-xs text-accent mb-4">
-              <Sparkles className="w-3 h-3" /> One platform · eight workflows
+              <Sparkles className="w-3 h-3" /> Replace 8 tools with one AI platform
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Everything you need to <span className="text-shimmer-gradient">close and operate</span>
+              The complete <span className="text-shimmer-gradient">client operations</span> stack
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Replace your patchwork of proposal docs, e-sign tools, invoicing, CRM and follow-up scripts with one AI-powered platform built for client work.
+              Stop paying for — and switching between — Proposify, DocuSign, Stripe Invoicing, HubSpot, Calendly, Notion onboarding docs and a dozen Zapier hacks. CloseSync runs your entire client workflow from one place.
             </p>
+          </AnimateIn>
+
+          {/* Workflow chain */}
+          <AnimateIn className="mb-10">
+            <div className="flex items-center justify-center flex-wrap gap-2 sm:gap-3 max-w-4xl mx-auto px-2">
+              {["Lead", "Proposal", "Contract", "Payment", "Onboarding", "Retainer"].map((stage, i, arr) => (
+                <div key={stage} className="flex items-center gap-2 sm:gap-3">
+                  <span className="px-3 py-1.5 rounded-full border border-accent/30 bg-accent/5 text-xs sm:text-sm font-medium text-foreground backdrop-blur-sm">
+                    {stage}
+                  </span>
+                  {i < arr.length - 1 && <ArrowRight className="w-3.5 h-3.5 text-accent/60 flex-shrink-0" />}
+                </div>
+              ))}
+            </div>
           </AnimateIn>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
