@@ -202,6 +202,7 @@ export default {
         "soft-pulse": "soft-pulse 2.6s ease-in-out infinite",
         "border-glow": "border-glow 4s ease-in-out infinite",
         "arrow-slide": "arrow-slide 1.6s ease-in-out infinite",
+        "tool-drift": "tool-drift 5s ease-in-out infinite",
       },
     },
   },
