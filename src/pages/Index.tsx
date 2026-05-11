@@ -339,9 +339,9 @@ export default function Index() {
       {/* Pain Section */}
       <section className="py-16 px-4">
         <AnimateIn className="container max-w-3xl text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Tired of chasing clients for money?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Tired of stitching together 8 tools to run client work?</h2>
           <p className="text-muted-foreground text-lg mb-12 max-w-xl mx-auto">
-            The gap between "yes" and getting paid is where most freelancers lose revenue.
+            The gap between "interested lead" and "happy retainer client" is where most agencies leak revenue.
           </p>
           <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {painPoints.map((p, i) => (
