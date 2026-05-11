@@ -172,23 +172,23 @@ export default function Index() {
           <div className="lg:col-span-7 text-center lg:text-left">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm text-xs text-muted-foreground mb-6 animate-hero-fade-up">
               <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-              New — One-link Accept &amp; Pay flow
+              The AI platform for closing &amp; client ops
             </div>
             <h1
               className="text-5xl sm:text-6xl lg:text-7xl font-bold text-foreground tracking-tight leading-[1.05] mb-6 animate-hero-fade-up"
               style={{ animationDelay: "0.1s" }}
             >
-              Close deals faster.
+              Close clients faster.
               <br />
               <span className="bg-gradient-to-r from-accent via-purple to-accent bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-shift">
-                Get paid instantly.
+                Run your business on autopilot.
               </span>
             </h1>
             <p
               className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed animate-hero-fade-up"
               style={{ animationDelay: "0.2s" }}
             >
-              Send proposals your clients can accept and pay in one simple flow — <span className="text-foreground font-semibold">no chasing, no back-and-forth.</span>
+              From first reply to recurring revenue — <span className="text-foreground font-semibold">proposals, contracts, payments, retainers, bookings and AI insights</span> in one platform.
             </p>
             <div
               className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4 animate-hero-fade-up"
@@ -196,7 +196,7 @@ export default function Index() {
             >
               <Link to="/signup" className="w-full sm:w-auto" onClick={() => track("cta_click", { location: "hero" })}>
                 <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-accent to-purple text-accent-foreground bg-[length:200%_100%] hover:bg-[position:100%_0] transition-[background-position,transform,box-shadow] duration-500 hover:shadow-[0_0_36px_hsl(var(--accent)/0.55)] px-10 h-14 text-base gap-2 hover:scale-[1.03] hover:-translate-y-0.5">
-                  Get Paid Faster
+                  Start free
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
