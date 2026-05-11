@@ -176,6 +176,10 @@ export default {
           "0%, 100%": { transform: "translateX(0)", opacity: "0.85" },
           "50%": { transform: "translateX(4px)", opacity: "1" },
         },
+        "tool-drift": {
+          "0%, 100%": { transform: "translateX(0)", opacity: "0.85" },
+          "50%": { transform: "translateX(10px)", opacity: "1" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -198,6 +202,7 @@ export default {
         "soft-pulse": "soft-pulse 2.6s ease-in-out infinite",
         "border-glow": "border-glow 4s ease-in-out infinite",
         "arrow-slide": "arrow-slide 1.6s ease-in-out infinite",
+        "tool-drift": "tool-drift 5s ease-in-out infinite",
       },
     },
   },
