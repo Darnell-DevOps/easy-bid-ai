@@ -362,10 +362,10 @@ export default function Index() {
       <section className="py-16 px-4">
         <div className="container max-w-4xl">
           <AnimateIn className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Turn proposals into <span className="text-shimmer-gradient">paid deals</span></h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">From <span className="text-shimmer-gradient">first reply</span> to recurring revenue</h2>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto leading-relaxed">
-              Your client gets one link.<br />
-              They review, accept, and pay — <span className="text-foreground font-semibold">instantly.</span>
+              Capture leads, close deals, and run accounts —<br />
+              all from <span className="text-foreground font-semibold">one workspace.</span>
             </p>
           </AnimateIn>
 
