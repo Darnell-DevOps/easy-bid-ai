@@ -362,10 +362,9 @@ export default function Index() {
       <section className="py-16 px-4">
         <div className="container max-w-4xl">
           <AnimateIn className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">From <span className="text-shimmer-gradient">first reply</span> to recurring revenue</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Turn proposals into <span className="text-shimmer-gradient">paid, onboarded, retained clients</span></h2>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto leading-relaxed">
-              Capture leads, close deals, and run accounts —<br />
-              all from <span className="text-foreground font-semibold">one workspace.</span>
+              One AI workflow takes every client from <span className="text-foreground font-semibold">lead → proposal → contract → payment → onboarding → retainer</span> — without you stitching tools together.
             </p>
           </AnimateIn>
 
