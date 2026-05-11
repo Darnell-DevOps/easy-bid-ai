@@ -99,11 +99,6 @@ export default function Index() {
     return () => { clearInterval(id); clearInterval(j); };
   }, []);
 
-  // legacy cleanup return below replaced — keep behavior identical via the combined cleanup above
-  useEffect(() => {
-    return () => clearInterval(id);
-  }, []);
-
   useEffect(() => {
     const onScroll = () => setShowStickyCta(window.scrollY > 600);
     window.addEventListener("scroll", onScroll, { passive: true });
