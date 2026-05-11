@@ -36,6 +36,7 @@ const platform = [
   { icon: Upload, title: "File Uploads", desc: "Collect deliverables and assets without third-party tools." },
   { icon: RefreshCw, title: "Recurring Billing", desc: "Subscriptions, dunning recovery and renewal automation." },
   { icon: BarChart3, title: "Progress Tracking", desc: "Live dashboards for deals, revenue and time saved." },
+  { icon: Star, title: "Review Collection", desc: "Auto-request reviews after kickoff and turn happy clients into social proof." },
 ];
 
 const deliverables = [
