@@ -77,13 +77,30 @@ const plans = [
   },
 ];
 
+const journey = [
+  { icon: MessageSquare, title: "Lead", sub: "Inbound enquiry", desc: "AI replies, qualifies and scores the lead the moment it lands." },
+  { icon: FileText, title: "Proposal", sub: "Sent in minutes", desc: "Generate a polished, on-brand proposal from a short brief." },
+  { icon: PenLine, title: "Contract", sub: "E-signed", desc: "Send and legally bind your terms — no DocuSign required." },
+  { icon: HandCoins, title: "Payment", sub: "Collected", desc: "One-click Accept & Pay. Money lands the moment they sign." },
+  { icon: LayoutDashboard, title: "Onboarding", sub: "Auto-kickoff", desc: "Smart intake forms collect everything you need without back-and-forth." },
+  { icon: Repeat, title: "Retainer", sub: "Recurring revenue", desc: "Subscriptions, renewals and dunning recovery handled for you." },
+  { icon: Brain, title: "Ongoing Client", sub: "Managed by AI", desc: "Bookings, follow-ups, churn alerts and weekly briefings on autopilot." },
+];
+
 export default function Index() {
   const [activeStep, setActiveStep] = useState(0);
+  const [activeJourney, setActiveJourney] = useState(0);
   const [showStickyCta, setShowStickyCta] = useState(false);
 
   useEffect(() => {
     track("landing_view");
     const id = setInterval(() => setActiveStep((s) => (s + 1) % 3), 1600);
+    const j = setInterval(() => setActiveJourney((s) => (s + 1) % journey.length), 1800);
+    return () => { clearInterval(id); clearInterval(j); };
+  }, []);
+
+  // legacy cleanup return below replaced — keep behavior identical via the combined cleanup above
+  useEffect(() => {
     return () => clearInterval(id);
   }, []);
 
