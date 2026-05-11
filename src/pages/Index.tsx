@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FileText, Zap, AlertTriangle, Clock, XCircle, UserX, ArrowRight, CheckCircle, Briefcase, ShieldCheck, CreditCard, HandCoins, FileCheck, Star, Lock, PlayCircle, MessageSquare, Repeat, Calendar, Users, Brain, Sparkles, PenLine, Inbox, Upload, RefreshCw, BarChart3, Send, LayoutDashboard } from "lucide-react";
 import { AnimateIn } from "@/hooks/use-scroll-animation";
 import LiveDemo from "@/components/landing/LiveDemo";
+import AIAssistant from "@/components/landing/AIAssistant";
 import { track } from "@/lib/landing-analytics";
 
 const steps = [
@@ -134,6 +135,7 @@ export default function Index() {
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
             <a href="#platform" className="hover:text-foreground transition-colors">Platform</a>
+            <a href="#ai" className="hover:text-foreground transition-colors">AI</a>
             <a href="#live-demo" className="hover:text-foreground transition-colors">Demo</a>
             <a href="#how-it-works" className="hover:text-foreground transition-colors">How it works</a>
             <a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a>
@@ -620,6 +622,9 @@ export default function Index() {
           </AnimateIn>
         </div>
       </section>
+
+      {/* AI Assistant */}
+      <AIAssistant />
 
       {/* Pain Section */}
       <section className="py-16 px-4">
