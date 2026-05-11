@@ -6,6 +6,7 @@ import { FileText, Zap, AlertTriangle, Clock, XCircle, UserX, ArrowRight, CheckC
 import { AnimateIn } from "@/hooks/use-scroll-animation";
 import LiveDemo from "@/components/landing/LiveDemo";
 import AIAssistant from "@/components/landing/AIAssistant";
+import RetainersSection from "@/components/landing/RetainersSection";
 import { track } from "@/lib/landing-analytics";
 
 const steps = [
