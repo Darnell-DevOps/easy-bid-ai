@@ -6,6 +6,7 @@ import { FileText, Zap, AlertTriangle, Clock, XCircle, UserX, ArrowRight, CheckC
 import { AnimateIn } from "@/hooks/use-scroll-animation";
 import LiveDemo from "@/components/landing/LiveDemo";
 import AIAssistant from "@/components/landing/AIAssistant";
+import RetainersSection from "@/components/landing/RetainersSection";
 import { track } from "@/lib/landing-analytics";
 
 const steps = [
@@ -625,6 +626,9 @@ export default function Index() {
 
       {/* AI Assistant */}
       <AIAssistant />
+
+      {/* Retainers / Recurring Revenue */}
+      <RetainersSection />
 
       {/* Pain Section */}
       <section className="py-16 px-4">
