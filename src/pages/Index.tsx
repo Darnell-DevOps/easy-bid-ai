@@ -305,6 +305,37 @@ export default function Index() {
       {/* Live 60-second product demo */}
       <LiveDemo />
 
+      {/* Platform / Ecosystem */}
+      <section id="platform" className="py-20 px-4 scroll-mt-20">
+        <div className="container max-w-6xl">
+          <AnimateIn className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/30 bg-accent/10 text-xs text-accent mb-4">
+              <Sparkles className="w-3 h-3" /> One platform · eight workflows
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Everything you need to <span className="text-shimmer-gradient">close and operate</span>
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Replace your patchwork of proposal docs, e-sign tools, invoicing, CRM and follow-up scripts with one AI-powered platform built for client work.
+            </p>
+          </AnimateIn>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
+            {platform.map((p, i) => (
+              <AnimateIn key={p.title} delay={i * 80} direction="up">
+                <div className="group h-full p-5 rounded-2xl border border-border bg-card/60 backdrop-blur-sm hover:border-accent/40 hover:bg-card/80 hover:-translate-y-1 hover:shadow-[0_12px_40px_-15px_hsl(var(--accent)/0.35)] transition-all duration-300">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-purple/20 border border-accent/20 flex items-center justify-center mb-4 group-hover:shadow-[0_0_20px_hsl(var(--accent)/0.45)] transition-all">
+                    <p.icon className="w-5 h-5 text-accent" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-foreground mb-1.5">{p.title}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{p.desc}</p>
+                </div>
+              </AnimateIn>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Pain Section */}
       <section className="py-16 px-4">
         <AnimateIn className="container max-w-3xl text-center">
