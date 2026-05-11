@@ -444,7 +444,7 @@ export default function Index() {
 
           {/* What you get */}
           <AnimateIn className="max-w-3xl mx-auto text-center">
-            <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-8">What you get</h3>
+            <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-8">What you walk away with</h3>
             <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
               {deliverables.map((item, i) => (
                 <AnimateIn key={item} delay={i * 100} direction="up">
