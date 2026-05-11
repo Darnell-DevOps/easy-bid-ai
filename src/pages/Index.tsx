@@ -476,8 +476,8 @@ export default function Index() {
       <section className="py-16 px-4">
         <div className="container max-w-3xl">
           <AnimateIn className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">Trusted by freelancers and agencies</h2>
-            <p className="text-muted-foreground text-sm">Real outcomes from people who stopped chasing invoices.</p>
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">Trusted by agencies and consultants</h2>
+            <p className="text-muted-foreground text-sm">Real outcomes from operators who replaced their stack with CloseSync.</p>
           </AnimateIn>
           <AnimateIn direction="scale">
             <div className="rounded-2xl border border-border bg-card/60 backdrop-blur-sm p-8 md:p-10 text-center max-w-2xl mx-auto shadow-lg shadow-accent/5">
@@ -487,9 +487,9 @@ export default function Index() {
                 ))}
               </div>
               <blockquote className="text-lg md:text-xl text-foreground font-medium leading-relaxed mb-5">
-                “This helped me stop chasing invoices and close clients faster.”
+                “We retired three tools. Proposals, contracts, payments, retainers — it’s all in here, and the AI actually moves deals forward.”
               </blockquote>
-              <p className="text-sm text-muted-foreground">— Freelance Consultant</p>
+              <p className="text-sm text-muted-foreground">— Agency Founder</p>
             </div>
           </AnimateIn>
         </div>
