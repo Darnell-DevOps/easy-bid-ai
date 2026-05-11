@@ -465,9 +465,9 @@ export default function Index() {
           <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-6">
             <Briefcase className="w-6 h-6 text-accent" />
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Built for freelancers and agencies that want to get paid</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Built for agencies and consultants who want to grow without the busywork</h2>
           <p className="text-muted-foreground text-lg leading-relaxed max-w-xl mx-auto">
-            Stop sending proposals into the void. Send proposals that close themselves.
+            Stop juggling docs, e-sign apps, invoice tools and spreadsheets. Run every client — from inbound lead to renewed retainer — in one place.
           </p>
         </AnimateIn>
       </section>
