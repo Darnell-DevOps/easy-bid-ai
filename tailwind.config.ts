@@ -180,6 +180,12 @@ export default {
           "0%, 100%": { transform: "translateX(0)", opacity: "0.85" },
           "50%": { transform: "translateX(10px)", opacity: "1" },
         },
+        "spine-flow": {
+          "0%": { transform: "translateY(-30%)", opacity: "0" },
+          "20%": { opacity: "1" },
+          "80%": { opacity: "1" },
+          "100%": { transform: "translateY(120%)", opacity: "0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
