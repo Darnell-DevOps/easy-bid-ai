@@ -77,14 +77,26 @@ const plans = [
   },
 ];
 
+const journey = [
+  { icon: MessageSquare, title: "Lead", sub: "Inbound enquiry", desc: "AI replies, qualifies and scores the lead the moment it lands." },
+  { icon: FileText, title: "Proposal", sub: "Sent in minutes", desc: "Generate a polished, on-brand proposal from a short brief." },
+  { icon: PenLine, title: "Contract", sub: "E-signed", desc: "Send and legally bind your terms — no DocuSign required." },
+  { icon: HandCoins, title: "Payment", sub: "Collected", desc: "One-click Accept & Pay. Money lands the moment they sign." },
+  { icon: LayoutDashboard, title: "Onboarding", sub: "Auto-kickoff", desc: "Smart intake forms collect everything you need without back-and-forth." },
+  { icon: Repeat, title: "Retainer", sub: "Recurring revenue", desc: "Subscriptions, renewals and dunning recovery handled for you." },
+  { icon: Brain, title: "Ongoing Client", sub: "Managed by AI", desc: "Bookings, follow-ups, churn alerts and weekly briefings on autopilot." },
+];
+
 export default function Index() {
   const [activeStep, setActiveStep] = useState(0);
+  const [activeJourney, setActiveJourney] = useState(0);
   const [showStickyCta, setShowStickyCta] = useState(false);
 
   useEffect(() => {
     track("landing_view");
     const id = setInterval(() => setActiveStep((s) => (s + 1) % 3), 1600);
-    return () => clearInterval(id);
+    const j = setInterval(() => setActiveJourney((s) => (s + 1) % journey.length), 1800);
+    return () => { clearInterval(id); clearInterval(j); };
   }, []);
 
   useEffect(() => {
@@ -492,6 +504,120 @@ export default function Index() {
               </div>
             </AnimateIn>
           </div>
+        </div>
+      </section>
+
+      {/* Full Workflow Timeline */}
+      <section id="workflow" className="py-24 px-4 relative overflow-hidden scroll-mt-20">
+        <div aria-hidden className="absolute inset-0 -z-10 pointer-events-none">
+          <div
+            className="absolute top-1/3 -left-32 w-[500px] h-[500px] rounded-full blur-3xl opacity-30"
+            style={{ background: "radial-gradient(closest-side, hsl(var(--accent) / 0.45), transparent 70%)" }}
+          />
+          <div
+            className="absolute bottom-0 -right-32 w-[500px] h-[500px] rounded-full blur-3xl opacity-30"
+            style={{ background: "radial-gradient(closest-side, hsl(var(--purple) / 0.45), transparent 70%)" }}
+          />
+        </div>
+
+        <div className="container max-w-5xl">
+          <AnimateIn className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/30 bg-accent/10 text-xs text-accent mb-4">
+              <Sparkles className="w-3 h-3" /> The full client journey
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              From first hello to <span className="text-shimmer-gradient">lifetime client</span>
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              One AI workflow carries every client through seven stages — no manual handoffs, no dropped balls, no extra tools.
+            </p>
+          </AnimateIn>
+
+          <div className="relative max-w-3xl mx-auto">
+            {/* Center spine */}
+            <div
+              aria-hidden
+              className="absolute left-6 md:left-1/2 top-2 bottom-2 w-px md:-translate-x-1/2 bg-gradient-to-b from-accent/10 via-accent/40 to-purple/10 overflow-hidden"
+            >
+              <div
+                className="absolute inset-x-0 h-32 bg-gradient-to-b from-transparent via-accent to-transparent animate-spine-flow"
+                style={{ filter: "blur(1px)" }}
+              />
+            </div>
+
+            <div className="space-y-8 md:space-y-12">
+              {journey.map((stage, i) => {
+                const isActive = activeJourney === i;
+                const isLeft = i % 2 === 0;
+                const Icon = stage.icon;
+                return (
+                  <AnimateIn key={stage.title} delay={i * 80} direction={isLeft ? "left" : "right"}>
+                    <div
+                      className={`relative grid grid-cols-[3rem_1fr] md:grid-cols-2 items-center gap-6 ${
+                        isLeft ? "md:[&>*:first-child]:order-1 md:[&>*:last-child]:order-2" : "md:[&>*:first-child]:order-2 md:[&>*:last-child]:order-1"
+                      }`}
+                    >
+                      {/* Node dot (mobile + desktop center) */}
+                      <div className="relative flex items-center justify-center md:absolute md:left-1/2 md:-translate-x-1/2 md:z-10 md:col-span-2">
+                        <div
+                          className={`relative w-12 h-12 rounded-2xl border-2 flex items-center justify-center transition-all duration-700 ${
+                            isActive
+                              ? "border-accent bg-gradient-to-br from-accent/30 to-purple/30 scale-110 shadow-[0_0_32px_hsl(var(--accent)/0.7)]"
+                              : "border-accent/30 bg-card/80 backdrop-blur-sm"
+                          }`}
+                        >
+                          <Icon className={`w-5 h-5 transition-colors duration-500 ${isActive ? "text-accent" : "text-accent/70"}`} />
+                          {isActive && (
+                            <span className="absolute inset-0 rounded-2xl border-2 border-accent/60 animate-ping" />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Card */}
+                      <div className={`md:px-8 ${isLeft ? "md:text-right" : "md:text-left"}`}>
+                        <div
+                          className={`group relative inline-block w-full p-5 rounded-2xl border bg-card/60 backdrop-blur-xl transition-all duration-500 ${
+                            isActive
+                              ? "border-accent/50 shadow-[0_18px_60px_-15px_hsl(var(--accent)/0.55)] -translate-y-0.5"
+                              : "border-white/10 hover:border-accent/30 hover:-translate-y-0.5"
+                          }`}
+                        >
+                          <div className={`flex items-center gap-2 mb-2 ${isLeft ? "md:justify-end" : "md:justify-start"}`}>
+                            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                              Stage {String(i + 1).padStart(2, "0")}
+                            </span>
+                            <span
+                              className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full transition-colors duration-500 ${
+                                isActive ? "bg-accent/20 text-accent" : "bg-muted/30 text-muted-foreground"
+                              }`}
+                            >
+                              <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-accent animate-pulse" : "bg-muted-foreground/50"}`} />
+                              {isActive ? "Live" : "Ready"}
+                            </span>
+                          </div>
+                          <h3 className="text-base font-bold text-foreground mb-1">{stage.title}</h3>
+                          <p className="text-xs text-accent font-medium mb-2">{stage.sub}</p>
+                          <p className="text-sm text-muted-foreground leading-relaxed">{stage.desc}</p>
+                        </div>
+                      </div>
+
+                      {/* Spacer for alternating layout (desktop) */}
+                      <div className="hidden md:block" />
+                    </div>
+                  </AnimateIn>
+                );
+              })}
+            </div>
+          </div>
+
+          <AnimateIn className="text-center mt-14">
+            <Link to="/signup" onClick={() => track("cta_click", { location: "workflow" })}>
+              <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_28px_hsl(var(--accent)/0.55)] px-10 h-14 text-base gap-2 transition-all hover:scale-[1.03]">
+                Run your first client through it
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </AnimateIn>
         </div>
       </section>
 
