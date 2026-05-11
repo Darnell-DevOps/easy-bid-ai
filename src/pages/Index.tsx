@@ -567,14 +567,14 @@ export default function Index() {
               <CreditCard className="w-7 h-7 text-accent-foreground" />
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Stop chasing clients — <span className="text-shimmer-gradient">start closing deals</span>
+              Stop running your business in 8 tabs — <span className="text-shimmer-gradient">run it in CloseSync</span>
             </h2>
             <p className="text-muted-foreground text-lg mb-8 max-w-xl mx-auto">
-              Join freelancers and agencies who turned their proposals into a payment machine.
+              Join the agencies and consultants closing more, churning less, and shipping client work without the busywork.
             </p>
             <Link to="/signup" onClick={() => track("cta_click", { location: "final" })}>
               <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_24px_hsl(var(--accent)/0.5)] px-10 h-14 text-base gap-2 transition-all hover:scale-105">
-                Start closing deals
+                Start free
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
