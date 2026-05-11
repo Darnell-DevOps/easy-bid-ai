@@ -622,6 +622,9 @@ export default function Index() {
         </div>
       </section>
 
+      {/* AI Assistant */}
+      <AIAssistant />
+
       {/* Pain Section */}
       <section className="py-16 px-4">
         <AnimateIn className="container max-w-3xl text-center">
