@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText, Zap, AlertTriangle, Clock, XCircle, UserX, ArrowRight, CheckCircle, Briefcase, ShieldCheck, CreditCard, HandCoins, FileCheck, Star, Lock, PlayCircle, MessageSquare, Repeat, Calendar, Users, Brain, Sparkles, PenLine, Inbox } from "lucide-react";
+import { FileText, Zap, AlertTriangle, Clock, XCircle, UserX, ArrowRight, CheckCircle, Briefcase, ShieldCheck, CreditCard, HandCoins, FileCheck, Star, Lock, PlayCircle, MessageSquare, Repeat, Calendar, Users, Brain, Sparkles, PenLine, Inbox, Upload, RefreshCw, BarChart3, Send, LayoutDashboard } from "lucide-react";
 import { AnimateIn } from "@/hooks/use-scroll-animation";
 import LiveDemo from "@/components/landing/LiveDemo";
 import { track } from "@/lib/landing-analytics";
