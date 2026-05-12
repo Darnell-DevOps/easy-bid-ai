@@ -8,11 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { User, KeyRound, CreditCard, Palette, Lock, LifeBuoy, ExternalLink, Mail } from "lucide-react";
+import { User, KeyRound, CreditCard, Palette, Lock, LifeBuoy, ExternalLink, Mail, Sun, Moon } from "lucide-react";
 import InboundEmailSettings from "@/components/settings/InboundEmailSettings";
+import { Switch } from "@/components/ui/switch";
+import { useTheme } from "@/hooks/use-theme";
 
 export default function SettingsPage() {
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
   const [email, setEmail] = useState("");
   const [proposalCount, setProposalCount] = useState(0);
   const [loadingReset, setLoadingReset] = useState(false);
@@ -98,6 +101,46 @@ export default function SettingsPage() {
                   {loadingReset ? "Sending..." : "Reset Password"}
                 </Button>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Appearance Section */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center">
+                {theme === "dark" ? <Moon className="w-4 h-4 text-accent" /> : <Sun className="w-4 h-4 text-accent" />}
+              </div>
+              <div>
+                <h2 className="font-semibold text-foreground">Appearance</h2>
+                <p className="text-xs text-muted-foreground">Choose how CloseSync looks to you</p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {theme === "dark" ? (
+                  <Moon className="w-4 h-4 text-muted-foreground" />
+                ) : (
+                  <Sun className="w-4 h-4 text-muted-foreground" />
+                )}
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    {theme === "dark" ? "Dark mode" : "Light mode"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {theme === "dark"
+                      ? "Easier on the eyes in low light"
+                      : "Bright, clean interface for daytime use"}
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={theme === "dark"}
+                onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+                aria-label="Toggle dark mode"
+              />
             </div>
           </CardContent>
         </Card>
