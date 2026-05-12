@@ -16,7 +16,9 @@ import {
 } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Send, Loader2, AlertCircle, CheckCircle2, Ban, Clock } from "lucide-react";
+import { Mail, Send, Loader2, AlertCircle, CheckCircle2, Ban, Clock, FileText, List } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import TemplatesPanel from "@/components/emails/TemplatesPanel";
 
 type Range = "24h" | "7d" | "30d";
 
