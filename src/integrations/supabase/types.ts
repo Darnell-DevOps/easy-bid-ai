@@ -1182,6 +1182,51 @@ export type Database = {
         }
         Relationships: []
       }
+      sending_domains: {
+        Row: {
+          created_at: string
+          default_from_local: string
+          dns_records: Json
+          domain: string
+          id: string
+          is_default: boolean
+          last_checked_at: string | null
+          resend_domain_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          default_from_local?: string
+          dns_records?: Json
+          domain: string
+          id?: string
+          is_default?: boolean
+          last_checked_at?: string | null
+          resend_domain_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          default_from_local?: string
+          dns_records?: Json
+          domain?: string
+          id?: string
+          is_default?: boolean
+          last_checked_at?: string | null
+          resend_domain_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       testimonial_settings: {
         Row: {
           auto_request_on_contract_signed: boolean
