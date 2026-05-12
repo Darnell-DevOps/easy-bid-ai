@@ -11,6 +11,7 @@ import {
   CLIENT_TEMPLATES, ClientTemplate, ClientTemplateKey, TEMPLATE_BY_KEY, renderClientTemplate,
 } from "@/lib/email-templates-defaults";
 import BrandingCard, { Branding } from "./BrandingCard";
+import SendingDomainsCard from "./SendingDomainsCard";
 import { Loader2, RotateCcw, Save, Eye, Pencil } from "lucide-react";
 
 interface SavedRow {
