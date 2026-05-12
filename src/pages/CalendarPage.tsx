@@ -442,6 +442,13 @@ export default function CalendarPage() {
           </div>
         </div>
 
+        <Tabs defaultValue={initialTab} onValueChange={(v) => setSearchParams(v === "bookings" ? {} : { tab: v })}>
+          <TabsList>
+            <TabsTrigger value="bookings">Bookings</TabsTrigger>
+            <TabsTrigger value="deadlines">Deadlines</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="bookings" className="space-y-6 mt-4">
         {/* Calendar + day detail */}
         <div className="grid grid-cols-1 lg:grid-cols-[auto_1fr] gap-4">
           <Card>
