@@ -1005,7 +1005,7 @@ function InvoiceCard({
             <p className="text-xs text-muted-foreground mt-1 truncate">
               {retainer.title} ·{" "}
               {formatMoney(invoice.amount_cents, invoice.currency)} · due{" "}
-              {new Date(invoice.due_date).toLocaleDateString()}
+              {formatLocalDate(invoice.due_date)}
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
