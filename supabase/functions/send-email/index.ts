@@ -32,6 +32,11 @@ interface Body {
   from?: string;
   replyTo?: string;
   attachments?: Attachment[];
+  // Pre-rendered passthrough — when present, skip the system template registry.
+  // Used by the in-app SendEmailDialog after rendering with the user's saved
+  // template + branding.
+  prerendered?: { subject: string; html: string; text?: string };
+  meta?: Record<string, unknown>;
 }
 
 Deno.serve(async (req) => {
