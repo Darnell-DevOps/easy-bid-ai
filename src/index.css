@@ -152,6 +152,10 @@
     min-height: 100vh;
   }
 
+  .light body {
+    background: linear-gradient(to bottom right, hsl(210 40% 99%), hsl(210 30% 95%));
+  }
+
   .content-glow {
     position: relative;
   }
