@@ -95,6 +95,8 @@ function sameDay(a: Date, b: Date) {
 
 export default function CalendarPage() {
   const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") === "deadlines" ? "deadlines" : "bookings";
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [links, setLinks] = useState<BookingLinkRow[]>([]);
