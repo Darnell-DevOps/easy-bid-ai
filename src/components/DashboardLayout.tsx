@@ -8,7 +8,7 @@ import { useUnreadLeadsCount } from "@/hooks/use-unread-leads";
 
 const navItems = [
   { label: "New Proposal", icon: Plus, href: "/dashboard/new" },
-  { label: "Saved Proposals", icon: FileText, href: "/dashboard" },
+  { label: "Dashboard", icon: FileText, href: "/dashboard" },
   { label: "Clients", icon: Users, href: "/dashboard/clients" },
   { label: "Contracts", icon: FileSignature, href: "/dashboard/contracts" },
   { label: "Retainers", icon: Repeat, href: "/dashboard/retainers" },

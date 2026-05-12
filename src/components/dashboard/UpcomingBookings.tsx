@@ -17,6 +17,7 @@ export default function UpcomingBookings() {
         .from("bookings")
         .select("*")
         .gte("scheduled_at", new Date().toISOString())
+        .neq("status", "cancelled")
         .order("scheduled_at", { ascending: true })
         .limit(5);
       setBookings((data as BookingRow[]) || []);
