@@ -418,6 +418,75 @@ export type Database = {
         }
         Relationships: []
       }
+      deadlines: {
+        Row: {
+          booking_id: string | null
+          client_id: string | null
+          client_name: string | null
+          client_visible: boolean
+          completed_at: string | null
+          contract_id: string | null
+          created_at: string
+          due_date: string
+          id: string
+          notes: string | null
+          onboarding_form_id: string | null
+          priority: string
+          proposal_id: string | null
+          retainer_id: string | null
+          source: string
+          source_key: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          booking_id?: string | null
+          client_id?: string | null
+          client_name?: string | null
+          client_visible?: boolean
+          completed_at?: string | null
+          contract_id?: string | null
+          created_at?: string
+          due_date: string
+          id?: string
+          notes?: string | null
+          onboarding_form_id?: string | null
+          priority?: string
+          proposal_id?: string | null
+          retainer_id?: string | null
+          source?: string
+          source_key?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          booking_id?: string | null
+          client_id?: string | null
+          client_name?: string | null
+          client_visible?: boolean
+          completed_at?: string | null
+          contract_id?: string | null
+          created_at?: string
+          due_date?: string
+          id?: string
+          notes?: string | null
+          onboarding_form_id?: string | null
+          priority?: string
+          proposal_id?: string | null
+          retainer_id?: string | null
+          source?: string
+          source_key?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
