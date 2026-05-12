@@ -98,6 +98,31 @@ Deno.serve(async (req) => {
     return json({ error: "missing_credentials" }, 500);
   }
 
+  // If user has a verified custom sending domain, use it as the From address.
+  // Caller-supplied `from` always wins (e.g. SendEmailDialog already chose one).
+  let resolvedFrom = from || FROM_DEFAULT;
+  if (!from && userId) {
+    const { data: dom } = await supabase
+      .from("sending_domains")
+      .select("domain, default_from_local, is_default, verified_at")
+      .eq("user_id", userId)
+      .eq("status", "verified")
+      .order("is_default", { ascending: false })
+      .order("verified_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (dom?.domain) {
+      const { data: brand } = await supabase
+        .from("business_branding")
+        .select("default_sender_name, business_name")
+        .eq("user_id", userId)
+        .maybeSingle();
+      const name = brand?.default_sender_name || brand?.business_name || "CloseSync AI";
+      const local = (dom as any).default_from_local || "hello";
+      resolvedFrom = `${name} <${local}@${dom.domain}>`;
+    }
+  }
+
   try {
     const res = await fetch(`${GATEWAY_URL}/emails`, {
       method: "POST",
@@ -107,7 +132,7 @@ Deno.serve(async (req) => {
         "X-Connection-Api-Key": RESEND_KEY,
       },
       body: JSON.stringify({
-        from: from || FROM_DEFAULT,
+        from: resolvedFrom,
         to: [recipientEmail],
         subject: rendered.subject,
         html: rendered.html,
