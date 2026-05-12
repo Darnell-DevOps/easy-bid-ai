@@ -486,7 +486,7 @@ export default function RecoveryDashboard() {
             {dueSoonInvoices.map((inv) => {
               const r = retainersById.get(inv.retainer_id);
               if (!r) return null;
-              const due = new Date(inv.due_date);
+              const due = parseLocalDate(inv.due_date);
               const days = Math.max(
                 0,
                 Math.ceil((due.getTime() - today.getTime()) / 86400000),
