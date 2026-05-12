@@ -174,6 +174,14 @@ export default function EmailsDashboard() {
           <SendTestEmailButton onSent={fetchAll} />
         </div>
 
+        <Tabs defaultValue="logs" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="logs" className="gap-1.5"><List className="w-4 h-4" /> Logs</TabsTrigger>
+            <TabsTrigger value="templates" className="gap-1.5"><FileText className="w-4 h-4" /> Templates</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="logs" className="space-y-6">
+
         {/* Filters */}
         <Card>
           <CardContent className="p-4 flex flex-wrap items-center gap-3">
