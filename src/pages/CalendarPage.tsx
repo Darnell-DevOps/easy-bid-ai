@@ -672,6 +672,12 @@ export default function CalendarPage() {
             </CardContent>
           </Card>
         )}
+          </TabsContent>
+
+          <TabsContent value="deadlines" className="mt-4">
+            <DeadlinesPanel />
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Schedule meeting dialog */}
