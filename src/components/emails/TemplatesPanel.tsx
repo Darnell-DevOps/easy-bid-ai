@@ -162,6 +162,7 @@ export default function TemplatesPanel() {
   return (
     <div className="space-y-6">
       <BrandingCard onSaved={(b) => setBranding(b)} />
+      <SendingDomainsCard />
 
       <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6">
         {/* Sidebar list */}
