@@ -156,18 +156,25 @@ export default function RecoveryDashboard() {
     return m;
   }, [rows]);
 
-  // Invoice tracking — overdue + due soon (next 14 days)
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const in14 = new Date(today);
-  in14.setDate(in14.getDate() + 14);
+  // Invoice tracking — overdue + due soon (next 14 days).
+  // due_date is a Postgres DATE (YYYY-MM-DD). `new Date("YYYY-MM-DD")` parses
+  // as UTC midnight, which can land on the previous local day in negative
+  // offsets (Americas) and skew overdue/due-soon filtering. Parse as the
+  // user's local midnight instead so comparisons match what the client sees.
+  const { today, in14 } = useMemo(() => {
+    const t = new Date();
+    t.setHours(0, 0, 0, 0);
+    const f = new Date(t);
+    f.setDate(f.getDate() + 14);
+    return { today: t, in14: f };
+  }, []);
 
   const overdueInvoices = useMemo(
     () =>
       invoices.filter((i) => {
         if (i.paid_at) return false;
         if (i.status === "paid" || i.status === "cancelled") return false;
-        return new Date(i.due_date) < today;
+        return parseLocalDate(i.due_date) < today;
       }),
     [invoices, today],
   );
@@ -177,7 +184,7 @@ export default function RecoveryDashboard() {
       invoices.filter((i) => {
         if (i.paid_at) return false;
         if (i.status === "paid" || i.status === "cancelled") return false;
-        const d = new Date(i.due_date);
+        const d = parseLocalDate(i.due_date);
         return d >= today && d <= in14;
       }),
     [invoices, today, in14],
