@@ -1,107 +1,83 @@
-# SMS Notifications (Twilio) — Layer 1 Only
+## Customisable Client Email Templates
 
-Add Twilio SMS notifications for the four key booking events. WhatsApp and AI agent are explicitly deferred until there's revenue/demand to justify them.
+Add a Templates tab inside the Emails section letting users edit the subject, body, CTA, sign-off, and sender display name for every client-facing email CloseSync sends on their behalf. System emails (welcome, password reset, billing) remain untouched.
 
-## Scope — 4 SMS events
+### 1. Database
 
-1. **Booking confirmed** → SMS to client (when public booking is created)
-2. **Booking cancelled** → SMS to client (when host cancels in CalendarPage)
-3. **24h reminder** → SMS to client (via existing booking-reminder cron)
-4. **New booking alert** → SMS to host (you), so you get pinged on every fresh booking
+New table `email_templates`:
+- `id`, `user_id`, `template_key` (enum-like text), `subject`, `body` (markdown/plain with `{{vars}}`), `cta_text`, `cta_url_var` (which variable to use for the CTA link), `sign_off`, `sender_display_name`, `is_active`, `updated_at`, `created_at`.
+- Unique on `(user_id, template_key)`.
+- RLS: owner-only CRUD.
 
-Each event has a per-user on/off toggle. All four default OFF until the user enables them in Settings (no surprise SMS bills).
+New table `business_branding` (1 row per user) for shared brand fields used in templates:
+- `business_name`, `logo_url`, `brand_color`, `default_sender_name`, `default_sign_off`, `reply_to_email`.
+- RLS: owner-only.
 
-## Multi-tenancy model (start simple)
+Both tables fall back to hard-coded defaults when no row exists, so nothing breaks for existing users.
 
-**Shared Twilio account, shared "from" number** owned by CloseSync.
-- One Twilio connection at the workspace level.
-- All users send from the same `+1...` number.
-- Client SMS reads: `"Hi {client_name}, your meeting with {host_name} on {date} is confirmed. Reply STOP to opt out."` — host name is in the body, not the sender ID.
-- Host alerts go to the host's own phone number stored on their profile.
+### 2. Template keys (client-facing only)
 
-This is the cheapest, fastest path. When a user later asks "I want my own number," we add a Pro tier with bring-your-own-Twilio (out of scope for this plan).
+```
+proposal_sent
+contract_sent
+contract_reminder
+payment_request
+payment_reminder
+booking_confirmation
+onboarding_welcome
+onboarding_reminder
+retainer_renewal
+payment_failed_followup
+client_followup
+```
 
-## Database changes
+Each ships with a polished default (warm, professional, conversion-focused) defined in `src/lib/email-templates-defaults.ts` and mirrored in `supabase/functions/_shared/client-email-templates.ts` for edge functions.
 
-**`bookings`** — add column:
-- `client_phone` (text, nullable) — collected on the public booking form
+### 3. UI — Settings → Emails → Templates tab
 
-**`notification_preferences`** — new table (one row per user):
-- `user_id` (unique)
-- `host_phone` (text, nullable) — E.164, where host alerts go
-- `sms_client_confirm` (bool, default false)
-- `sms_client_cancel` (bool, default false)
-- `sms_client_reminder` (bool, default false)
-- `sms_host_new_booking` (bool, default false)
-- RLS: owner-only CRUD
+- Update `EmailsDashboard.tsx`: wrap content in `Tabs` with `Logs` (existing) and `Templates` (new).
+- New `src/components/emails/TemplatesPanel.tsx`:
+  - Left column: list of all 11 templates with status (custom / default).
+  - Right column: editor with fields Subject, Sender display name, Body (textarea), CTA button text, Sign-off.
+  - Variable chips beside the editor (click to insert at cursor) showing the variables relevant to that template.
+  - Live Preview pane that renders the email with sample data (and the user's branding).
+  - Save / Reset to default buttons.
+- New `src/components/emails/BrandingCard.tsx` at the top of the tab for business name, logo URL, brand colour, sender name, sign-off, reply-to.
 
-**`sms_send_log`** — new table (idempotency + audit + cost visibility):
-- `user_id`, `recipient`, `template`, `status` (pending/sent/failed), `provider_id` (Twilio SID), `error`, `idempotency_key` (unique), `meta` jsonb
-- RLS: owner-read-only (matches `email_send_log` pattern)
+### 4. Per-send preview & edit
 
-**`phone_suppressions`** — new table:
-- `phone` (PK), `reason`, `created_at`
-- Populated when Twilio reports STOP / undeliverable. No RLS needed (service-role-only writes).
+- New `src/components/emails/SendEmailDialog.tsx`: shared dialog used by proposal/contract/onboarding/payment/retainer flows. Loads the user's template for the given `template_key`, renders preview with real entity data, lets the user tweak subject/body before sending. "Send" calls the existing `send-email` edge function; "Copy" copies the rendered HTML to clipboard.
+- Wire into the existing "Send proposal", "Send contract", "Send onboarding", "Payment reminder", "Retainer renewal" actions in their current entry points (one-line dialog open replacing the direct send).
 
-## Edge function: `send-sms`
+### 5. Edge function changes
 
-One internal function called by other edge functions and triggers.
+- New shared helper `supabase/functions/_shared/client-email-templates.ts`:
+  - `renderClientTemplate(supabase, userId, key, vars)` → loads user template (or default), interpolates `{{var}}`, applies branding, returns `{ subject, html, fromName, replyTo }`.
+- Update `send-email` edge function: when `body.templateKey` matches a client-facing key, route through `renderClientTemplate` instead of the system template registry. System keys (`welcome`, `password-reset`, `payment-confirmation` for platform billing, etc.) keep their current path untouched.
+- All existing call sites (proposal-sent, contract-signature-reminder, booking-confirmation, retainer-notification, follow-up-reminder, payment-failed) keep working — defaults match current behaviour.
 
-- Validates input with Zod (`to`, `template`, `vars`, `user_id`, `idempotency_key`)
-- Checks `notification_preferences` for the relevant toggle — bails if off
-- Checks `phone_suppressions` — bails if suppressed
-- Renders template (4 short templates, ~140 chars each, all include "Reply STOP to opt out")
-- Calls Twilio gateway: `POST /Messages.json` with `URLSearchParams`
-- Writes `sms_send_log` row (idempotent on `idempotency_key`)
-- Returns `{ ok, sid }`
+### 6. Logs
 
-Twilio handles STOP/HELP automatically at the carrier level, but we still mirror suppressions locally to skip API calls.
+`email_send_log` already records template, recipient, subject, status, provider_id, error, timestamp. Templates panel does not change logging — the existing Logs tab is unchanged. Linked entity IDs go into the existing `meta` jsonb (`{proposal_id, contract_id, ...}`) when the dialog sends an email.
 
-## Wiring (3 touch points)
+### 7. Future-proofing
 
-1. **`src/pages/PublicBookingPage.tsx`** — add optional phone field; after booking insert, invoke `send-sms` for `client_confirm` and `host_new_booking`.
-2. **`src/pages/CalendarPage.tsx` `cancelBooking`** — invoke `send-sms` for `client_cancel` (mirrors the email we already added last session).
-3. **`booking-reminder` cron edge function** — for each booking 24h out with a phone on file, invoke `send-sms` for `client_reminder`.
+- `email_templates.template_key` is text (not enum) so new keys can be added.
+- `meta` jsonb on log + `is_active` flag on templates leave room for sequences, A/B variants, and AI rewriting later without schema changes.
 
-## UI
+### Files to create
+- `supabase/migrations/<ts>_email_templates.sql`
+- `src/lib/email-templates-defaults.ts`
+- `src/components/emails/TemplatesPanel.tsx`
+- `src/components/emails/BrandingCard.tsx`
+- `src/components/emails/SendEmailDialog.tsx`
+- `supabase/functions/_shared/client-email-templates.ts`
 
-New section in **Settings → Notifications** (or extend existing settings page):
-- Host phone input (E.164 with simple validation)
-- Four toggles for the four events
-- Small note: "SMS uses your CloseSync number. Standard SMS rates apply to your account when usage exceeds the free tier."
+### Files to edit
+- `src/pages/EmailsDashboard.tsx` (add Tabs)
+- `supabase/functions/send-email/index.ts` (route client-facing keys through new renderer)
+- Send entry points for proposal/contract/onboarding/payment/retainer to use `SendEmailDialog`
 
-## Setup steps (in order)
-
-1. Connect Twilio connector → user picks/creates a Twilio API Key in the picker.
-2. Ask user for the **Twilio "from" phone number** (stored as a project secret `TWILIO_FROM_NUMBER`, since it's not part of the connector key).
-3. Run migration (4 schema changes above).
-4. Build `send-sms` edge function.
-5. Wire the 3 touch points.
-6. Add Settings UI.
-7. Smoke-test end-to-end with a real phone number.
-
-## Explicitly out of scope (deferred)
-
-- WhatsApp channel (Layer 2)
-- Inbound WhatsApp AI agent (Layer 3)
-- Per-user Twilio numbers / bring-your-own-Twilio
-- SMS for proposal/contract/retainer events (can add later same pattern)
-- Two-way SMS replies / inbound webhook
-
-## Cost expectations to set with the user
-
-- US SMS: ~$0.0079 per segment outbound
-- Twilio US number rental: ~$1.15/month
-- Realistic cost for a user doing 50 bookings/month with all 4 toggles on: ~$1.50–2.00/month in SMS
-
-## Build order
-
-One round, in this order:
-1. Twilio connector + `TWILIO_FROM_NUMBER` secret
-2. Migration
-3. `send-sms` edge function
-4. Wire booking confirm + host alert in PublicBookingPage
-5. Wire cancel in CalendarPage
-6. Wire reminder in cron
-7. Settings UI
-8. Test
+### Out of scope (per request)
+- No changes to welcome / password-reset / verification / platform billing emails.
+- No automated sequences, A/B tests, AI rewriting, or custom sender domains in this pass — schema leaves room for them.

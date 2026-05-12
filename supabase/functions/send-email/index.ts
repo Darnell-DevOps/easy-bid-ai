@@ -32,6 +32,11 @@ interface Body {
   from?: string;
   replyTo?: string;
   attachments?: Attachment[];
+  // Pre-rendered passthrough — when present, skip the system template registry.
+  // Used by the in-app SendEmailDialog after rendering with the user's saved
+  // template + branding.
+  prerendered?: { subject: string; html: string; text?: string };
+  meta?: Record<string, unknown>;
 }
 
 Deno.serve(async (req) => {
@@ -47,7 +52,7 @@ Deno.serve(async (req) => {
     return json({ error: "invalid_json" }, 400);
   }
 
-  const { templateName, recipientEmail, data = {}, idempotencyKey, userId, from, replyTo, attachments } = body;
+  const { templateName, recipientEmail, data = {}, idempotencyKey, userId, from, replyTo, attachments, prerendered } = body;
   if (!templateName || !recipientEmail) {
     return json({ error: "missing_fields" }, 400);
   }
@@ -75,11 +80,16 @@ Deno.serve(async (req) => {
     return json({ ok: false, suppressed: true });
   }
 
-  let rendered;
-  try {
-    rendered = renderTemplate(templateName, data);
-  } catch (e: any) {
-    return json({ error: "render_failed", message: e?.message }, 400);
+  let rendered: { subject: string; html: string; text?: string };
+  if (prerendered && prerendered.subject && prerendered.html) {
+    // Pre-rendered by the in-app dialog using the user's template + branding.
+    rendered = { subject: prerendered.subject, html: prerendered.html, text: prerendered.text };
+  } else {
+    try {
+      rendered = renderTemplate(templateName, data);
+    } catch (e: any) {
+      return json({ error: "render_failed", message: e?.message }, 400);
+    }
   }
 
   const RESEND_KEY = Deno.env.get("RESEND_API_KEY");

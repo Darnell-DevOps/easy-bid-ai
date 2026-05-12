@@ -224,6 +224,45 @@ export type Database = {
         }
         Relationships: []
       }
+      business_branding: {
+        Row: {
+          brand_color: string | null
+          business_name: string | null
+          created_at: string
+          default_sender_name: string | null
+          default_sign_off: string | null
+          id: string
+          logo_url: string | null
+          reply_to_email: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand_color?: string | null
+          business_name?: string | null
+          created_at?: string
+          default_sender_name?: string | null
+          default_sign_off?: string | null
+          id?: string
+          logo_url?: string | null
+          reply_to_email?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand_color?: string | null
+          business_name?: string | null
+          created_at?: string
+          default_sender_name?: string | null
+          default_sign_off?: string | null
+          id?: string
+          logo_url?: string | null
+          reply_to_email?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           ai_recommendation: string | null
@@ -544,6 +583,51 @@ export type Database = {
           created_at?: string
           email?: string
           reason?: string
+        }
+        Relationships: []
+      }
+      email_templates: {
+        Row: {
+          body: string
+          created_at: string
+          cta_text: string | null
+          cta_url_var: string | null
+          id: string
+          is_active: boolean
+          sender_display_name: string | null
+          sign_off: string | null
+          subject: string
+          template_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          cta_text?: string | null
+          cta_url_var?: string | null
+          id?: string
+          is_active?: boolean
+          sender_display_name?: string | null
+          sign_off?: string | null
+          subject?: string
+          template_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          cta_text?: string | null
+          cta_url_var?: string | null
+          id?: string
+          is_active?: boolean
+          sender_display_name?: string | null
+          sign_off?: string | null
+          subject?: string
+          template_key?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
