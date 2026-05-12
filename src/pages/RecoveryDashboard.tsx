@@ -286,7 +286,7 @@ export default function RecoveryDashboard() {
       let count = 0;
       for (const inv of invoices) {
         if (inv.paid_at || inv.status === "paid" || inv.status === "cancelled") continue;
-        const due = new Date(inv.due_date);
+        const due = parseLocalDate(inv.due_date);
         if (due >= today && due <= limit) {
           cents += inv.amount_cents;
           count += 1;
