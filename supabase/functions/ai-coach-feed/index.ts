@@ -50,11 +50,16 @@ serve(async (req) => {
           .limit(30),
         supabase
           .from("bookings")
-          .select("scheduled_at, client_name, status")
+          .select("scheduled_at, client_name, meeting_name, status")
           .eq("user_id", userId)
-          .gte("scheduled_at", new Date(Date.now() - 7 * 86400000).toISOString())
+          .neq("status", "cancelled")
+          .gte("scheduled_at", new Date().toISOString())
+          .lte("scheduled_at", new Date(Date.now() + 7 * 86400000).toISOString())
+          .order("scheduled_at", { ascending: true })
           .limit(20),
       ]);
+
+    const upcomingBookings = bookings || [];
 
     const won = (proposals || []).filter((p) => p.client_paid).length;
     const lost = (proposals || []).filter((p) => p.status === "rejected").length;
@@ -77,7 +82,10 @@ Account snapshot (last 60d):
 - Active retainers: ${(retainers || []).filter((r) => r.status === "active").length}
 - Estimated MRR: ${(mrrCents / 100).toFixed(0)}
 - New leads: ${(clients || []).filter((c) => (c.status || "").toLowerCase() === "new").length}
-- Bookings next 7d: ${(bookings || []).length}
+- Confirmed bookings in next 7d: ${upcomingBookings.length}
+
+Upcoming bookings (next 7d, excludes cancelled):
+${upcomingBookings.length === 0 ? "NONE — do not suggest preparing for meetings or following up on calls." : JSON.stringify(upcomingBookings, null, 2)}
 
 Recent proposals (top 20):
 ${JSON.stringify((proposals || []).slice(0, 20), null, 2)}
@@ -93,7 +101,7 @@ ${JSON.stringify((clients || []).filter((c) => (c.status || "").toLowerCase() ==
     const feed = await callAITool({
       model: "google/gemini-2.5-pro",
       system:
-        "You are an elite sales coach embedded inside a proposal/CRM SaaS. You scan the user's actual data and produce 3-6 prioritised next actions that move money this week. Be specific, name clients/retainers, cite the data. No generic advice. No motivational fluff.",
+        "You are an elite sales coach embedded inside a proposal/CRM SaaS. You scan the user's actual data and produce 3-6 prioritised next actions that move money this week. STRICT RULES: (1) Every action MUST reference a specific entity (client name, proposal, retainer, or lead) that appears in the data provided. (2) NEVER invent meetings, bookings, calls, emails, or events that are not in the data. (3) If a category has no data (e.g. no upcoming bookings, no failed payments), do not produce actions for it. (4) If the account is mostly empty, return 1-3 onboarding-style actions like 'Create your first proposal' or 'Add your first client' instead of fabricating activity. (5) No motivational fluff, no generic advice. Cite numbers and names from the data.",
       user: summary,
       toolName: "build_coach_feed",
       toolDescription: "Return a ranked list of next actions for the user this week.",
@@ -138,7 +146,7 @@ ${JSON.stringify((clients || []).filter((c) => (c.status || "").toLowerCase() ==
     const briefing = await callAITool({
       model: "google/gemini-2.5-pro",
       system:
-        "You are an executive briefing writer. Produce a short weekly summary for a solo founder. 3 sentences max for the headline summary. Be specific and use numbers from the data.",
+        "You are an executive briefing writer. Produce a short weekly summary for a solo founder. 3 sentences max for the headline summary. Be specific and use numbers from the data. Never invent meetings, clients, or events that are not present in the data. If the account is nearly empty, say so honestly and suggest a starting action.",
       user: summary,
       toolName: "build_briefing",
       toolDescription: "Weekly executive briefing.",
