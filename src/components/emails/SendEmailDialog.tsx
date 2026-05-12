@@ -70,7 +70,7 @@ export default function SendEmailDialog(props: Props) {
         brand_color: branding?.brand_color || "#3b82f6",
         sender_name: branding?.default_sender_name || "",
         sign_off: branding?.default_sign_off || "",
-        reply_to_email: branding?.reply_to_email || "",
+        reply_to_email: branding?.reply_to_verified_email || "",
       },
     }, { subject, body, cta_text: ctaText, sign_off: signOff });
   }, [def, branding, subject, body, ctaText, signOff, props.recipientName, props.vars]);
