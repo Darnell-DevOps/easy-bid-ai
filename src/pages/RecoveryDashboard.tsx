@@ -453,7 +453,7 @@ export default function RecoveryDashboard() {
             {overdueInvoices.map((inv) => {
               const r = retainersById.get(inv.retainer_id);
               if (!r) return null;
-              const due = new Date(inv.due_date);
+              const due = parseLocalDate(inv.due_date);
               const daysOver = Math.floor(
                 (today.getTime() - due.getTime()) / 86400000,
               );
