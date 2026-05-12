@@ -105,6 +105,46 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
+        {/* Appearance Section */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center">
+                {theme === "dark" ? <Moon className="w-4 h-4 text-accent" /> : <Sun className="w-4 h-4 text-accent" />}
+              </div>
+              <div>
+                <h2 className="font-semibold text-foreground">Appearance</h2>
+                <p className="text-xs text-muted-foreground">Choose how CloseSync looks to you</p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {theme === "dark" ? (
+                  <Moon className="w-4 h-4 text-muted-foreground" />
+                ) : (
+                  <Sun className="w-4 h-4 text-muted-foreground" />
+                )}
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    {theme === "dark" ? "Dark mode" : "Light mode"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {theme === "dark"
+                      ? "Easier on the eyes in low light"
+                      : "Bright, clean interface for daytime use"}
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={theme === "dark"}
+                onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+                aria-label="Toggle dark mode"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Plan Section */}
         <Card>
           <CardContent className="p-6">
