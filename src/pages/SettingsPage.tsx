@@ -15,6 +15,7 @@ import { useTheme } from "@/hooks/use-theme";
 
 export default function SettingsPage() {
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
   const [email, setEmail] = useState("");
   const [proposalCount, setProposalCount] = useState(0);
   const [loadingReset, setLoadingReset] = useState(false);
