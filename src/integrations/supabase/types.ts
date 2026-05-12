@@ -234,6 +234,11 @@ export type Database = {
           id: string
           logo_url: string | null
           reply_to_email: string | null
+          reply_to_pending_email: string | null
+          reply_to_token_expires_at: string | null
+          reply_to_verification_token: string | null
+          reply_to_verified_at: string | null
+          reply_to_verified_email: string | null
           updated_at: string
           user_id: string
         }
@@ -246,6 +251,11 @@ export type Database = {
           id?: string
           logo_url?: string | null
           reply_to_email?: string | null
+          reply_to_pending_email?: string | null
+          reply_to_token_expires_at?: string | null
+          reply_to_verification_token?: string | null
+          reply_to_verified_at?: string | null
+          reply_to_verified_email?: string | null
           updated_at?: string
           user_id: string
         }
@@ -258,6 +268,11 @@ export type Database = {
           id?: string
           logo_url?: string | null
           reply_to_email?: string | null
+          reply_to_pending_email?: string | null
+          reply_to_token_expires_at?: string | null
+          reply_to_verification_token?: string | null
+          reply_to_verified_at?: string | null
+          reply_to_verified_email?: string | null
           updated_at?: string
           user_id?: string
         }
