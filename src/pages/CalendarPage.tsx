@@ -55,6 +55,9 @@ import {
   type BookingRow,
 } from "@/lib/bookings";
 import { sendEmail } from "@/lib/email";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import DeadlinesPanel from "@/components/calendar/DeadlinesPanel";
+import { useSearchParams } from "react-router-dom";
 
 interface AvailabilityRow {
   id: string;
@@ -92,6 +95,8 @@ function sameDay(a: Date, b: Date) {
 
 export default function CalendarPage() {
   const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") === "deadlines" ? "deadlines" : "bookings";
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [links, setLinks] = useState<BookingLinkRow[]>([]);
@@ -439,6 +444,13 @@ export default function CalendarPage() {
           </div>
         </div>
 
+        <Tabs defaultValue={initialTab} onValueChange={(v) => setSearchParams(v === "bookings" ? {} : { tab: v })}>
+          <TabsList>
+            <TabsTrigger value="bookings">Bookings</TabsTrigger>
+            <TabsTrigger value="deadlines">Deadlines</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="bookings" className="space-y-6 mt-4">
         {/* Calendar + day detail */}
         <div className="grid grid-cols-1 lg:grid-cols-[auto_1fr] gap-4">
           <Card>
@@ -662,6 +674,12 @@ export default function CalendarPage() {
             </CardContent>
           </Card>
         )}
+          </TabsContent>
+
+          <TabsContent value="deadlines" className="mt-4">
+            <DeadlinesPanel />
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Schedule meeting dialog */}
