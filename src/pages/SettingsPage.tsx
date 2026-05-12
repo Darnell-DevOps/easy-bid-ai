@@ -8,8 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { User, KeyRound, CreditCard, Palette, Lock, LifeBuoy, ExternalLink, Mail } from "lucide-react";
+import { User, KeyRound, CreditCard, Palette, Lock, LifeBuoy, ExternalLink, Mail, Sun, Moon } from "lucide-react";
 import InboundEmailSettings from "@/components/settings/InboundEmailSettings";
+import { Switch } from "@/components/ui/switch";
+import { useTheme } from "@/hooks/use-theme";
 
 export default function SettingsPage() {
   const { toast } = useToast();
