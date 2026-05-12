@@ -11,6 +11,7 @@ import {
   CLIENT_TEMPLATES, ClientTemplate, ClientTemplateKey, TEMPLATE_BY_KEY, renderClientTemplate,
 } from "@/lib/email-templates-defaults";
 import BrandingCard, { Branding } from "./BrandingCard";
+import SendingDomainsCard from "./SendingDomainsCard";
 import { Loader2, RotateCcw, Save, Eye, Pencil } from "lucide-react";
 
 interface SavedRow {
@@ -161,6 +162,7 @@ export default function TemplatesPanel() {
   return (
     <div className="space-y-6">
       <BrandingCard onSaved={(b) => setBranding(b)} />
+      <SendingDomainsCard />
 
       <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6">
         {/* Sidebar list */}
