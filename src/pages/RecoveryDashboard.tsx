@@ -87,6 +87,26 @@ interface MessageContext {
   defaultKind: RecoveryTemplateKind;
 }
 
+/**
+ * Parse a Postgres DATE ("YYYY-MM-DD") as local midnight.
+ * `new Date("YYYY-MM-DD")` parses as UTC midnight, which becomes the
+ * previous calendar day in negative-offset timezones (e.g. Americas) and
+ * causes overdue/due-soon comparisons to drift by a day. This forces the
+ * date to land on midnight in the user's local timezone.
+ */
+function parseLocalDate(value: string): Date {
+  if (!value) return new Date(NaN);
+  // Accept "YYYY-MM-DD" or full ISO strings — only the date portion matters.
+  const datePart = value.length >= 10 ? value.slice(0, 10) : value;
+  const [y, m, d] = datePart.split("-").map(Number);
+  if (!y || !m || !d) return new Date(value);
+  return new Date(y, m - 1, d, 0, 0, 0, 0);
+}
+
+function formatLocalDate(value: string): string {
+  return parseLocalDate(value).toLocaleDateString();
+}
+
 export default function RecoveryDashboard() {
   const [rows, setRows] = useState<RetainerRow[]>([]);
   const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
