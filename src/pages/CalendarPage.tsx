@@ -55,6 +55,9 @@ import {
   type BookingRow,
 } from "@/lib/bookings";
 import { sendEmail } from "@/lib/email";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import DeadlinesPanel from "@/components/calendar/DeadlinesPanel";
+import { useSearchParams } from "react-router-dom";
 
 interface AvailabilityRow {
   id: string;
