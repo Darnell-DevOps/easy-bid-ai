@@ -88,7 +88,7 @@ export default function SendEmailDialog(props: Props) {
         recipientEmail: recipient,
         idempotencyKey: props.idempotencyKey,
         from: `${fromName} <notify@closesync.io>`,
-        replyTo: branding?.reply_to_email || undefined,
+        replyTo: branding?.reply_to_verified_email || undefined,
         // Pre-rendered passthrough — edge function will use these directly.
         prerendered: { subject: rendered.subject, html: rendered.html, text: rendered.text },
         meta: props.meta,
