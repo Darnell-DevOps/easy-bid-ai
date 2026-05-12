@@ -87,6 +87,26 @@ interface MessageContext {
   defaultKind: RecoveryTemplateKind;
 }
 
+/**
+ * Parse a Postgres DATE ("YYYY-MM-DD") as local midnight.
+ * `new Date("YYYY-MM-DD")` parses as UTC midnight, which becomes the
+ * previous calendar day in negative-offset timezones (e.g. Americas) and
+ * causes overdue/due-soon comparisons to drift by a day. This forces the
+ * date to land on midnight in the user's local timezone.
+ */
+function parseLocalDate(value: string): Date {
+  if (!value) return new Date(NaN);
+  // Accept "YYYY-MM-DD" or full ISO strings — only the date portion matters.
+  const datePart = value.length >= 10 ? value.slice(0, 10) : value;
+  const [y, m, d] = datePart.split("-").map(Number);
+  if (!y || !m || !d) return new Date(value);
+  return new Date(y, m - 1, d, 0, 0, 0, 0);
+}
+
+function formatLocalDate(value: string): string {
+  return parseLocalDate(value).toLocaleDateString();
+}
+
 export default function RecoveryDashboard() {
   const [rows, setRows] = useState<RetainerRow[]>([]);
   const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
@@ -156,18 +176,25 @@ export default function RecoveryDashboard() {
     return m;
   }, [rows]);
 
-  // Invoice tracking — overdue + due soon (next 14 days)
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const in14 = new Date(today);
-  in14.setDate(in14.getDate() + 14);
+  // Invoice tracking — overdue + due soon (next 14 days).
+  // due_date is a Postgres DATE (YYYY-MM-DD). `new Date("YYYY-MM-DD")` parses
+  // as UTC midnight, which can land on the previous local day in negative
+  // offsets (Americas) and skew overdue/due-soon filtering. Parse as the
+  // user's local midnight instead so comparisons match what the client sees.
+  const { today, in14 } = useMemo(() => {
+    const t = new Date();
+    t.setHours(0, 0, 0, 0);
+    const f = new Date(t);
+    f.setDate(f.getDate() + 14);
+    return { today: t, in14: f };
+  }, []);
 
   const overdueInvoices = useMemo(
     () =>
       invoices.filter((i) => {
         if (i.paid_at) return false;
         if (i.status === "paid" || i.status === "cancelled") return false;
-        return new Date(i.due_date) < today;
+        return parseLocalDate(i.due_date) < today;
       }),
     [invoices, today],
   );
@@ -177,7 +204,7 @@ export default function RecoveryDashboard() {
       invoices.filter((i) => {
         if (i.paid_at) return false;
         if (i.status === "paid" || i.status === "cancelled") return false;
-        const d = new Date(i.due_date);
+        const d = parseLocalDate(i.due_date);
         return d >= today && d <= in14;
       }),
     [invoices, today, in14],
@@ -210,7 +237,7 @@ export default function RecoveryDashboard() {
         };
         byRetainer.set(inv.retainer_id, s);
       }
-      const due = new Date(inv.due_date);
+      const due = parseLocalDate(inv.due_date);
       if (inv.paid_at) {
         const paid = new Date(inv.paid_at);
         const daysLate = Math.floor(
@@ -259,7 +286,7 @@ export default function RecoveryDashboard() {
       let count = 0;
       for (const inv of invoices) {
         if (inv.paid_at || inv.status === "paid" || inv.status === "cancelled") continue;
-        const due = new Date(inv.due_date);
+        const due = parseLocalDate(inv.due_date);
         if (due >= today && due <= limit) {
           cents += inv.amount_cents;
           count += 1;
@@ -426,7 +453,7 @@ export default function RecoveryDashboard() {
             {overdueInvoices.map((inv) => {
               const r = retainersById.get(inv.retainer_id);
               if (!r) return null;
-              const due = new Date(inv.due_date);
+              const due = parseLocalDate(inv.due_date);
               const daysOver = Math.floor(
                 (today.getTime() - due.getTime()) / 86400000,
               );
@@ -459,7 +486,7 @@ export default function RecoveryDashboard() {
             {dueSoonInvoices.map((inv) => {
               const r = retainersById.get(inv.retainer_id);
               if (!r) return null;
-              const due = new Date(inv.due_date);
+              const due = parseLocalDate(inv.due_date);
               const days = Math.max(
                 0,
                 Math.ceil((due.getTime() - today.getTime()) / 86400000),
@@ -978,7 +1005,7 @@ function InvoiceCard({
             <p className="text-xs text-muted-foreground mt-1 truncate">
               {retainer.title} ·{" "}
               {formatMoney(invoice.amount_cents, invoice.currency)} · due{" "}
-              {new Date(invoice.due_date).toLocaleDateString()}
+              {formatLocalDate(invoice.due_date)}
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
