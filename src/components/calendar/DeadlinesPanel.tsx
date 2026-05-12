@@ -261,7 +261,7 @@ export default function DeadlinesPanel() {
   };
 
   const linkFor = (d: DeadlineRow): string | null => {
-    if (d.proposal_id) return `/dashboard/proposals/${d.proposal_id}`;
+    if (d.proposal_id) return `/dashboard/proposal/${d.proposal_id}`;
     if (d.contract_id) return `/dashboard/contracts/${d.contract_id}`;
     if (d.retainer_id) return `/dashboard/retainers/${d.retainer_id}`;
     if (d.client_id) return `/dashboard/clients/${d.client_id}`;
