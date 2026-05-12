@@ -237,7 +237,7 @@ export default function RecoveryDashboard() {
         };
         byRetainer.set(inv.retainer_id, s);
       }
-      const due = new Date(inv.due_date);
+      const due = parseLocalDate(inv.due_date);
       if (inv.paid_at) {
         const paid = new Date(inv.paid_at);
         const daysLate = Math.floor(
