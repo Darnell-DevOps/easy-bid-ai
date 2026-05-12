@@ -185,6 +185,7 @@ export default function Dashboard() {
         <CoachFeedWidget />
 
         {/* PRIORITY ACTIONS — top of the dashboard */}
+        <DeadlineAlerts />
         <PriorityActions
           proposals={proposals}
           clients={clients}
