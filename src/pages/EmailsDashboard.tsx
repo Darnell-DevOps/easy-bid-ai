@@ -295,6 +295,12 @@ export default function EmailsDashboard() {
             Next
           </Button>
         </div>
+          </TabsContent>
+
+          <TabsContent value="templates">
+            <TemplatesPanel />
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
