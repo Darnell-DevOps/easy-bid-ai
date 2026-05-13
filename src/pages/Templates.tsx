@@ -45,7 +45,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import TemplateEditorDialog from "@/components/templates/TemplateEditorDialog";
 import ContractTemplatesGallery from "@/components/templates/ContractTemplatesGallery";
+import RetainerTemplatesGallery from "@/components/templates/RetainerTemplatesGallery";
 import type { MergedContractTemplate } from "@/lib/contract-templates";
+import type { MergedRetainerTemplate } from "@/lib/retainer-templates";
 import {
   loadProposalTemplateRows,
   mergeTemplates,
