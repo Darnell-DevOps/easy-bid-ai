@@ -311,6 +311,10 @@ export default function Templates() {
     navigate("/dashboard/contracts", { state: { contractTemplate: t } });
   };
 
+  const handleUseRetainerTemplate = (t: MergedRetainerTemplate) => {
+    navigate("/dashboard/retainers/new", { state: { retainerTemplate: t } });
+  };
+
   return (
     <DashboardLayout>
       <div className="mb-6">
