@@ -91,7 +91,8 @@ Deno.serve(async (req) => {
   }
 
   if (action === "check") {
-    const id = body.id as string;
+    const id = body.id;
+    if (!isUuid(id)) return json({ error: "invalid_id" }, 400);
     const { data: row } = await admin.from("sending_domains")
       .select("*").eq("id", id).eq("user_id", userId).maybeSingle();
     if (!row) return json({ error: "not_found" }, 404);
@@ -110,24 +111,30 @@ Deno.serve(async (req) => {
     };
     if (newStatus === "verified" && !row.verified_at) update.verified_at = new Date().toISOString();
     const { data: upd } = await admin.from("sending_domains")
-      .update(update).eq("id", id).select("*").maybeSingle();
+      .update(update).eq("id", id).eq("user_id", userId).select("*").maybeSingle();
     return json({ domain: upd });
   }
 
   if (action === "remove") {
-    const id = body.id as string;
+    const id = body.id;
+    if (!isUuid(id)) return json({ error: "invalid_id" }, 400);
     const { data: row } = await admin.from("sending_domains")
       .select("*").eq("id", id).eq("user_id", userId).maybeSingle();
     if (!row) return json({ error: "not_found" }, 404);
     if (row.resend_domain_id) {
       await resend(`/domains/${row.resend_domain_id}`, { method: "DELETE" });
     }
-    await admin.from("sending_domains").delete().eq("id", id);
+    await admin.from("sending_domains").delete().eq("id", id).eq("user_id", userId);
     return json({ ok: true });
   }
 
   if (action === "set_default") {
-    const id = body.id as string;
+    const id = body.id;
+    if (!isUuid(id)) return json({ error: "invalid_id" }, 400);
+    // Confirm ownership before mutating any rows
+    const { data: own } = await admin.from("sending_domains")
+      .select("id").eq("id", id).eq("user_id", userId).maybeSingle();
+    if (!own) return json({ error: "not_found" }, 404);
     await admin.from("sending_domains").update({ is_default: false }).eq("user_id", userId);
     const { data: upd } = await admin.from("sending_domains")
       .update({ is_default: true }).eq("id", id).eq("user_id", userId).select("*").maybeSingle();
@@ -135,11 +142,13 @@ Deno.serve(async (req) => {
   }
 
   if (action === "set_local") {
-    const id = body.id as string;
+    const id = body.id;
+    if (!isUuid(id)) return json({ error: "invalid_id" }, 400);
     const local = String(body.local || "hello").trim().toLowerCase().replace(/[^a-z0-9._-]/g, "");
     if (!local) return json({ error: "invalid_local" }, 400);
     const { data: upd } = await admin.from("sending_domains")
       .update({ default_from_local: local }).eq("id", id).eq("user_id", userId).select("*").maybeSingle();
+    if (!upd) return json({ error: "not_found" }, 404);
     return json({ domain: upd });
   }
 
