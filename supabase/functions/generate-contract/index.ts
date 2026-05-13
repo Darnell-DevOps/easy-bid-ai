@@ -19,6 +19,34 @@ const CONTRACT_TYPES: Record<string, { title: string; intro: string }> = {
     title: "Retainer Agreement",
     intro: "This Retainer Agreement establishes ongoing services provided by the Service Provider on a recurring basis.",
   },
+  web_design_agreement: {
+    title: "Web Design Agreement",
+    intro: "This Web Design Agreement governs the design, development and launch of the Client's website by the Service Provider.",
+  },
+  marketing_agreement: {
+    title: "Marketing Services Agreement",
+    intro: "This Marketing Services Agreement sets out the marketing activities the Service Provider will deliver for the Client and the related performance commitments.",
+  },
+  consulting_agreement: {
+    title: "Consulting Agreement",
+    intro: "This Consulting Agreement governs the strategic advisory services the Service Provider will provide to the Client.",
+  },
+  maintenance_agreement: {
+    title: "Maintenance & Support Agreement",
+    intro: "This Maintenance & Support Agreement defines the ongoing support, monitoring and maintenance services provided to the Client.",
+  },
+  social_media_agreement: {
+    title: "Social Media Management Agreement",
+    intro: "This Social Media Management Agreement governs the planning, content creation, scheduling, community management and reporting of the Client's social media channels.",
+  },
+  freelancer_agreement: {
+    title: "Freelancer Agreement",
+    intro: "This Freelancer Agreement governs the freelance services provided by the Service Provider to the Client as an independent contractor.",
+  },
+  discovery_agreement: {
+    title: "Discovery Agreement",
+    intro: "This Discovery Agreement covers a paid discovery phase that produces a written recommendation and roadmap for a potential follow-on engagement.",
+  },
   nda: {
     title: "Mutual Non-Disclosure Agreement",
     intro: "This Agreement protects confidential information shared between both parties.",
@@ -49,6 +77,10 @@ function buildPrompt(payload: any) {
     `- Payment Terms: ${payload.payment_terms || "50% deposit, 50% on completion"}`,
     `- Effective Date: ${payload.effective_date || new Date().toISOString().slice(0, 10)}`,
   ];
+  if (payload.extra_clauses) {
+    lines.push("", "ADDITIONAL CLAUSES (must be incorporated naturally and faithfully into the relevant section):");
+    lines.push(payload.extra_clauses);
+  }
   if (payload.policies_text) {
     lines.push("", "ATTACHED POLICIES (incorporate naturally as clauses):");
     lines.push(payload.policies_text);
@@ -125,7 +157,7 @@ This agreement is governed by the laws applicable to the Service Provider's plac
 ## 12. Entire Agreement
 This document represents the full agreement between the parties and supersedes all prior discussions.
 
-${payload.policies_text ? `\n## Attached Policies\n${payload.policies_text}\n` : ""}
+${payload.extra_clauses ? `\n## Additional Clauses\n${payload.extra_clauses}\n` : ""}${payload.policies_text ? `\n## Attached Policies\n${payload.policies_text}\n` : ""}
 ## 13. Signatures
 By signing electronically below, both parties acknowledge they have read, understood, and agree to the terms set out in this agreement.`;
 }

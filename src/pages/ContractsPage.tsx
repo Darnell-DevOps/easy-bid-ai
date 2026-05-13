@@ -39,6 +39,8 @@ import {
   Trash2,
   Sparkles,
 } from "lucide-react";
+import ContractTemplatesGallery from "@/components/templates/ContractTemplatesGallery";
+import type { MergedContractTemplate } from "@/lib/contract-templates";
 
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -68,6 +70,18 @@ export default function ContractsPage() {
   const [timeline, setTimeline] = useState("");
   const [budget, setBudget] = useState("");
   const [paymentTerms, setPaymentTerms] = useState("50% deposit, 50% on completion");
+  const [extraClauses, setExtraClauses] = useState("");
+
+  const useTemplate = (t: MergedContractTemplate) => {
+    setContractType(t.contract_type);
+    setServiceType(t.service_type || "");
+    setScope(t.default_scope || "");
+    setTimeline(t.default_timeline || "");
+    setBudget(t.default_budget || "");
+    setPaymentTerms(t.default_payment_terms || "50% deposit, 50% on completion");
+    setExtraClauses(t.extra_clauses || "");
+    setOpenCreate(true);
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -143,6 +157,7 @@ export default function ContractsPage() {
           timeline,
           budget,
           payment_terms: paymentTerms,
+          extra_clauses: extraClauses,
           policies_text: policiesText,
           effective_date: new Date().toISOString().slice(0, 10),
         },
@@ -196,6 +211,7 @@ export default function ContractsPage() {
     setTimeline("");
     setBudget("");
     setPaymentTerms("50% deposit, 50% on completion");
+    setExtraClauses("");
   };
 
   const copySigningLink = async (token: string) => {
@@ -263,6 +279,8 @@ export default function ContractsPage() {
           <StatCard label="Awaiting Signature" value={stats.awaiting} icon={Send} accent="text-purple" />
           <StatCard label="Signed" value={stats.signed} icon={CheckCircle2} accent="text-emerald-500" />
         </div>
+
+        <ContractTemplatesGallery onUseTemplate={useTemplate} />
 
         <Card>
           <CardContent className="p-0">

@@ -406,6 +406,75 @@ export type Database = {
           },
         ]
       }
+      contract_templates: {
+        Row: {
+          accent: string | null
+          best_for: string | null
+          builtin_id: string | null
+          contract_type: string
+          created_at: string
+          default_budget: string
+          default_payment_terms: string
+          default_scope: string
+          default_timeline: string
+          description: string | null
+          extra_clauses: string
+          icon: string | null
+          id: string
+          is_archived: boolean
+          is_default: boolean
+          name: string
+          service_type: string | null
+          source: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accent?: string | null
+          best_for?: string | null
+          builtin_id?: string | null
+          contract_type?: string
+          created_at?: string
+          default_budget?: string
+          default_payment_terms?: string
+          default_scope?: string
+          default_timeline?: string
+          description?: string | null
+          extra_clauses?: string
+          icon?: string | null
+          id?: string
+          is_archived?: boolean
+          is_default?: boolean
+          name: string
+          service_type?: string | null
+          source?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accent?: string | null
+          best_for?: string | null
+          builtin_id?: string | null
+          contract_type?: string
+          created_at?: string
+          default_budget?: string
+          default_payment_terms?: string
+          default_scope?: string
+          default_timeline?: string
+          description?: string | null
+          extra_clauses?: string
+          icon?: string | null
+          id?: string
+          is_archived?: boolean
+          is_default?: boolean
+          name?: string
+          service_type?: string | null
+          source?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       contracts: {
         Row: {
           amount_cents: number | null
