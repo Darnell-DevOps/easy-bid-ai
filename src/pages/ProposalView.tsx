@@ -1046,6 +1046,15 @@ export default function ProposalView() {
                   {saving ? <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" /> : <Save className="w-3.5 h-3.5 shrink-0" />}
                   Save
                 </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSaveTemplateOpen(true)}
+                  className="gap-1.5 h-9"
+                  title="Reuse this proposal's setup as a template"
+                >
+                  <Bookmark className="w-3.5 h-3.5 shrink-0" /> Save as template
+                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" disabled={!!regenerating} className="gap-1.5 h-9">
