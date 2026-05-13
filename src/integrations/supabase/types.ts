@@ -805,6 +805,72 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_templates: {
+        Row: {
+          accent: string | null
+          best_for: string | null
+          builtin_id: string | null
+          created_at: string
+          deadlines: Json
+          description: string | null
+          fields: Json
+          file_requests: Json
+          icon: string | null
+          id: string
+          intro: string
+          is_archived: boolean
+          is_default: boolean
+          name: string
+          notes: string
+          service_type: string | null
+          source: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accent?: string | null
+          best_for?: string | null
+          builtin_id?: string | null
+          created_at?: string
+          deadlines?: Json
+          description?: string | null
+          fields?: Json
+          file_requests?: Json
+          icon?: string | null
+          id?: string
+          intro?: string
+          is_archived?: boolean
+          is_default?: boolean
+          name: string
+          notes?: string
+          service_type?: string | null
+          source?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accent?: string | null
+          best_for?: string | null
+          builtin_id?: string | null
+          created_at?: string
+          deadlines?: Json
+          description?: string | null
+          fields?: Json
+          file_requests?: Json
+          icon?: string | null
+          id?: string
+          intro?: string
+          is_archived?: boolean
+          is_default?: boolean
+          name?: string
+          notes?: string
+          service_type?: string | null
+          source?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       policies: {
         Row: {
           business_name: string
