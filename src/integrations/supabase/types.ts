@@ -787,6 +787,81 @@ export type Database = {
         }
         Relationships: []
       }
+      proposal_templates: {
+        Row: {
+          accent: string | null
+          best_for: string | null
+          budget: string
+          builtin_id: string | null
+          created_at: string
+          deal_size: string | null
+          default_deliverables: string | null
+          default_goals: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_archived: boolean
+          is_default: boolean
+          name: string
+          notes: string
+          project_scope: string
+          service_type: string | null
+          source: string
+          timeline: string
+          tone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accent?: string | null
+          best_for?: string | null
+          budget?: string
+          builtin_id?: string | null
+          created_at?: string
+          deal_size?: string | null
+          default_deliverables?: string | null
+          default_goals?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_archived?: boolean
+          is_default?: boolean
+          name: string
+          notes?: string
+          project_scope?: string
+          service_type?: string | null
+          source?: string
+          timeline?: string
+          tone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accent?: string | null
+          best_for?: string | null
+          budget?: string
+          builtin_id?: string | null
+          created_at?: string
+          deal_size?: string | null
+          default_deliverables?: string | null
+          default_goals?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_archived?: boolean
+          is_default?: boolean
+          name?: string
+          notes?: string
+          project_scope?: string
+          service_type?: string | null
+          source?: string
+          timeline?: string
+          tone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       proposals: {
         Row: {
           accepted_at: string | null

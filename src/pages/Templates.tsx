@@ -1,8 +1,26 @@
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Globe,
   Share2,
@@ -14,7 +32,24 @@ import {
   Wallet,
   Users,
   ShieldCheck,
+  MoreVertical,
+  Pencil,
+  Copy,
+  Trash2,
+  RotateCcw,
+  Plus,
+  Star,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import TemplateEditorDialog from "@/components/templates/TemplateEditorDialog";
+import {
+  loadProposalTemplateRows,
+  mergeTemplates,
+  type MergedTemplate,
+  type ProposalTemplateRow,
+  templateToForm,
+} from "@/lib/proposal-templates";
 
 export interface TemplateData {
   id: string;
@@ -27,7 +62,6 @@ export interface TemplateData {
   dealSize: string;
   timeSaved: string;
   popular?: boolean;
-  // Intelligence layer — drives auto-fill
   tone?: "professional" | "persuasive" | "concise";
   defaultGoals?: string;
   defaultDeliverables?: string;
@@ -141,32 +175,153 @@ export const templates: TemplateData[] = [
 
 export default function Templates() {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [rows, setRows] = useState<ProposalTemplateRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editorTarget, setEditorTarget] = useState<MergedTemplate | undefined>();
+  const [editorInitial, setEditorInitial] = useState<any>(undefined);
+  const [forceCreate, setForceCreate] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<MergedTemplate | null>(null);
 
-  const handleUseTemplate = (template: TemplateData) => {
-    navigate("/dashboard/new", { state: { template, autoGenerate: true } });
+  const reload = async () => {
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) return;
+      const r = await loadProposalTemplateRows(auth.user.id);
+      setRows(r);
+    } catch (e: any) {
+      toast({ title: "Failed to load templates", description: e.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleAIGenerate = () => {
-    navigate("/dashboard/new");
+  useEffect(() => {
+    reload();
+  }, []);
+
+  const merged = useMemo(() => mergeTemplates(rows), [rows]);
+  const defaultTpl = merged.find((m) => m.isDefault);
+
+  const handleUseTemplate = (t: MergedTemplate) => {
+    navigate("/dashboard/new", { state: { template: t, autoGenerate: true } });
   };
+
+  const handleEdit = (t: MergedTemplate) => {
+    setEditorTarget(t);
+    setEditorInitial(undefined);
+    setForceCreate(false);
+    setEditorOpen(true);
+  };
+
+  const handleDuplicate = (t: MergedTemplate) => {
+    setEditorTarget(t);
+    setEditorInitial({ ...templateToForm(t), name: `${t.name} (copy)` });
+    setForceCreate(true);
+    setEditorOpen(true);
+  };
+
+  const handleCreate = () => {
+    setEditorTarget(undefined);
+    setEditorInitial(undefined);
+    setForceCreate(false);
+    setEditorOpen(true);
+  };
+
+  const handleResetBuiltin = async (t: MergedTemplate) => {
+    if (!t.rowId) return;
+    const { error } = await supabase.from("proposal_templates").delete().eq("id", t.rowId);
+    if (error) {
+      toast({ title: "Failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Reset to default" });
+    reload();
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget?.rowId) return;
+    const { error } = await supabase.from("proposal_templates").delete().eq("id", deleteTarget.rowId);
+    if (error) {
+      toast({ title: "Failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Template deleted" });
+    setDeleteTarget(null);
+    reload();
+  };
+
+  const handleSetDefault = async (t: MergedTemplate) => {
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const userId = auth.user?.id;
+      if (!userId) throw new Error("Not signed in");
+
+      // Clear current default
+      await supabase
+        .from("proposal_templates")
+        .update({ is_default: false })
+        .eq("user_id", userId)
+        .eq("is_default", true);
+
+      if (t.rowId) {
+        await supabase.from("proposal_templates").update({ is_default: true }).eq("id", t.rowId);
+      } else {
+        // Built-in without a row yet — create an override row carrying the default flag.
+        await supabase.from("proposal_templates").insert({
+          user_id: userId,
+          name: t.name,
+          description: t.description,
+          service_type: t.serviceType,
+          best_for: t.bestFor,
+          deal_size: t.dealSize,
+          tone: t.tone || "professional",
+          default_goals: t.defaultGoals || null,
+          default_deliverables: t.defaultDeliverables || null,
+          project_scope: t.prefill.project_scope,
+          budget: t.prefill.budget,
+          timeline: t.prefill.timeline,
+          notes: t.prefill.notes,
+          icon: "sparkles",
+          accent: t.accent,
+          source: "builtin_override",
+          builtin_id: t.id,
+          is_default: true,
+        });
+      }
+      toast({ title: "Default template set" });
+      reload();
+    } catch (e: any) {
+      toast({ title: "Failed", description: e.message, variant: "destructive" });
+    }
+  };
+
+  const handleAIGenerate = () => navigate("/dashboard/new");
+
+  const builtinList = merged.filter((m) => m.source === "builtin" || m.source === "builtin_override");
+  const customList = merged.filter((m) => m.source === "custom" || m.source === "from_proposal");
 
   return (
     <DashboardLayout>
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-          Start your proposal in seconds
-        </h1>
-        <p className="text-sm text-muted-foreground mt-2 max-w-2xl">
-          Use proven, high-converting templates designed to help you win clients faster.
-        </p>
-        <p className="text-xs text-muted-foreground/80 mt-1 flex items-center gap-1.5">
-          <Clock className="w-3.5 h-3.5" />
-          Create a ready-to-send proposal in under 60 seconds.
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+            Start your proposal in seconds
+          </h1>
+          <p className="text-sm text-muted-foreground mt-2 max-w-2xl">
+            Use proven, high-converting templates designed to help you win clients faster.
+          </p>
+          <p className="text-xs text-muted-foreground/80 mt-1 flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5" />
+            Create a ready-to-send proposal in under 60 seconds.
+          </p>
+        </div>
+        <Button variant="outline" onClick={handleCreate} className="gap-2">
+          <Plus className="w-4 h-4" /> New custom template
+        </Button>
       </div>
 
-      {/* Primary AI CTA */}
       <Card className="mb-6 border-accent/30 bg-gradient-to-br from-accent/5 via-purple/5 to-transparent overflow-hidden relative">
         <CardContent className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -193,62 +348,214 @@ export default function Templates() {
         </CardContent>
       </Card>
 
-      {/* Social proof */}
       <div className="flex items-center gap-2 mb-4 text-xs text-muted-foreground">
         <ShieldCheck className="w-3.5 h-3.5 text-accent" />
         <span>Based on proven client-winning proposal structures</span>
+        {defaultTpl && (
+          <span className="ml-auto inline-flex items-center gap-1">
+            <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+            Default: {defaultTpl.name}
+          </span>
+        )}
       </div>
 
-      {/* Templates grid */}
+      <h2 className="text-sm font-semibold text-foreground mb-3">Built-in templates</h2>
+      <TemplateGrid
+        items={builtinList}
+        loading={loading}
+        onUse={handleUseTemplate}
+        onEdit={handleEdit}
+        onDuplicate={handleDuplicate}
+        onSetDefault={handleSetDefault}
+        onResetBuiltin={handleResetBuiltin}
+        onDelete={(t) => setDeleteTarget(t)}
+      />
+
+      <div className="mt-8">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-foreground">Your templates</h2>
+          <Button size="sm" variant="ghost" onClick={handleCreate} className="gap-1.5 text-xs">
+            <Plus className="w-3.5 h-3.5" /> New
+          </Button>
+        </div>
+        {customList.length === 0 ? (
+          <Card className="border-dashed">
+            <CardContent className="py-10 text-center">
+              <p className="text-sm text-muted-foreground mb-3">No custom templates yet.</p>
+              <Button variant="outline" onClick={handleCreate} className="gap-2">
+                <Plus className="w-4 h-4" /> Create your first custom template
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <TemplateGrid
+            items={customList}
+            loading={false}
+            onUse={handleUseTemplate}
+            onEdit={handleEdit}
+            onDuplicate={handleDuplicate}
+            onSetDefault={handleSetDefault}
+            onDelete={(t) => setDeleteTarget(t)}
+          />
+        )}
+      </div>
+
+      <TemplateEditorDialog
+        open={editorOpen}
+        onOpenChange={setEditorOpen}
+        template={editorTarget}
+        initial={editorInitial}
+        forceCreate={forceCreate}
+        onSaved={reload}
+      />
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this template?</AlertDialogTitle>
+            <AlertDialogDescription>
+              "{deleteTarget?.name}" will be permanently removed. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </DashboardLayout>
+  );
+}
+
+interface GridProps {
+  items: MergedTemplate[];
+  loading: boolean;
+  onUse: (t: MergedTemplate) => void;
+  onEdit: (t: MergedTemplate) => void;
+  onDuplicate: (t: MergedTemplate) => void;
+  onSetDefault: (t: MergedTemplate) => void;
+  onResetBuiltin?: (t: MergedTemplate) => void;
+  onDelete: (t: MergedTemplate) => void;
+}
+
+function TemplateGrid({
+  items,
+  loading,
+  onUse,
+  onEdit,
+  onDuplicate,
+  onSetDefault,
+  onResetBuiltin,
+  onDelete,
+}: GridProps) {
+  if (loading) {
+    return (
       <div className="grid sm:grid-cols-2 gap-4">
-        {templates.map((t) => (
+        {[0, 1].map((i) => (
+          <Card key={i} className="animate-pulse">
+            <CardContent className="p-6 h-40" />
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid sm:grid-cols-2 gap-4">
+      {items.map((t) => {
+        const Icon = t.icon;
+        const isCustomized = t.source === "builtin_override";
+        const isCustom = t.source === "custom" || t.source === "from_proposal";
+        return (
           <Card
-            key={t.id}
+            key={t.rowId || t.id}
             role="button"
             tabIndex={0}
-            onClick={() => handleUseTemplate(t)}
+            onClick={() => onUse(t)}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
-                handleUseTemplate(t);
+                onUse(t);
               }
             }}
             className="group relative cursor-pointer hover:shadow-xl hover:border-accent/40 hover:-translate-y-1 transition-all duration-300 flex flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
-            {t.popular && (
-              <div className="absolute -top-2 left-4 z-10">
-                <Badge className="bg-gradient-to-r from-orange-500 to-rose-500 text-white border-transparent shadow-md text-[10px] px-2 py-0.5">
-                  🔥 Most Popular
+            <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+              {t.isDefault && (
+                <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 text-[10px] px-2 py-0.5 gap-1">
+                  <Star className="w-2.5 h-2.5 fill-current" /> Default
                 </Badge>
-              </div>
-            )}
+              )}
+              {isCustomized && (
+                <Badge variant="secondary" className="text-[10px] px-2 py-0.5">Customized</Badge>
+              )}
+              {isCustom && (
+                <Badge variant="outline" className="text-[10px] px-2 py-0.5">Custom</Badge>
+              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7">
+                    <MoreVertical className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => onEdit(t)} className="gap-2">
+                    <Pencil className="w-4 h-4" /> {t.source === "builtin" ? "Customize" : "Edit"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onDuplicate(t)} className="gap-2">
+                    <Copy className="w-4 h-4" /> Duplicate
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onSetDefault(t)} className="gap-2" disabled={t.isDefault}>
+                    <Star className="w-4 h-4" /> Set as default
+                  </DropdownMenuItem>
+                  {isCustomized && onResetBuiltin && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => onResetBuiltin(t)} className="gap-2">
+                        <RotateCcw className="w-4 h-4" /> Reset to default
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  {isCustom && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => onDelete(t)} className="gap-2 text-destructive focus:text-destructive">
+                        <Trash2 className="w-4 h-4" /> Delete
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
             <CardContent className="p-5 sm:p-6 flex flex-col h-full">
-              <div className="flex items-start gap-4 mb-4">
+              <div className="flex items-start gap-4 mb-4 pr-24">
                 <div
                   className={`w-11 h-11 rounded-lg bg-gradient-to-br ${t.accent} flex items-center justify-center flex-shrink-0 opacity-90 group-hover:opacity-100 transition-opacity shadow-md`}
                 >
-                  <t.icon className="w-5 h-5 text-white" />
+                  <Icon className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-foreground text-sm leading-tight">
-                    {t.name}
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                  <h3 className="font-semibold text-foreground text-sm leading-tight">{t.name}</h3>
+                  <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed line-clamp-3">
                     {t.description}
                   </p>
                 </div>
               </div>
 
-              {/* Meta info */}
               <div className="flex flex-wrap gap-2 mb-4">
-                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground bg-muted/60 rounded-full px-2 py-1">
-                  <Users className="w-3 h-3" />
-                  Best for: {t.bestFor}
-                </span>
-                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground bg-muted/60 rounded-full px-2 py-1">
-                  <Wallet className="w-3 h-3" />
-                  {t.dealSize}
-                </span>
+                {t.bestFor && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground bg-muted/60 rounded-full px-2 py-1">
+                    <Users className="w-3 h-3" />
+                    {t.bestFor}
+                  </span>
+                )}
+                {t.dealSize && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground bg-muted/60 rounded-full px-2 py-1">
+                    <Wallet className="w-3 h-3" />
+                    {t.dealSize}
+                  </span>
+                )}
                 <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 rounded-full px-2 py-1">
                   <Clock className="w-3 h-3" />
                   Saves {t.timeSaved}
@@ -259,7 +566,7 @@ export default function Templates() {
                 <Button
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleUseTemplate(t);
+                    onUse(t);
                   }}
                   className="w-full gap-2 bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 group-hover:shadow-md transition-shadow"
                 >
@@ -269,8 +576,8 @@ export default function Templates() {
               </div>
             </CardContent>
           </Card>
-        ))}
-      </div>
-    </DashboardLayout>
+        );
+      })}
+    </div>
   );
 }

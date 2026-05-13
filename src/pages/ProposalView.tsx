@@ -23,6 +23,8 @@ import UpgradeModal from "@/components/plan/UpgradeModal";
 import ProposalWatermark from "@/components/plan/ProposalWatermark";
 import DealScoreBadge from "@/components/ai/DealScoreBadge";
 import ProposalAuditPanel from "@/components/ai/ProposalAuditPanel";
+import TemplateEditorDialog from "@/components/templates/TemplateEditorDialog";
+import { Bookmark } from "lucide-react";
 
 interface ProposalData {
   id: string;
@@ -98,6 +100,7 @@ export default function ProposalView() {
   const [saving, setSaving] = useState(false);
   const [editMode, setEditMode] = useState<Record<string, boolean>>({});
   const [regenerating, setRegenerating] = useState<string | null>(null);
+  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
 
   const [editedProposal, setEditedProposal] = useState("");
   const [editedPricing, setEditedPricing] = useState("");
@@ -1043,6 +1046,15 @@ export default function ProposalView() {
                   {saving ? <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" /> : <Save className="w-3.5 h-3.5 shrink-0" />}
                   Save
                 </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSaveTemplateOpen(true)}
+                  className="gap-1.5 h-9"
+                  title="Reuse this proposal's setup as a template"
+                >
+                  <Bookmark className="w-3.5 h-3.5 shrink-0" /> Save as template
+                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" disabled={!!regenerating} className="gap-1.5 h-9">
@@ -1216,6 +1228,20 @@ export default function ProposalView() {
           }}
         />
       )}
+      <TemplateEditorDialog
+        open={saveTemplateOpen}
+        onOpenChange={setSaveTemplateOpen}
+        forceCreate
+        initial={{
+          name: `${proposal.service_type || "Proposal"} – ${proposal.client_name || "Template"}`,
+          description: `Saved from "${proposal.client_name}" proposal.`,
+          service_type: proposal.service_type || "",
+          project_scope: proposal.project_scope || "",
+          budget: proposal.budget || "",
+          timeline: proposal.timeline || "",
+          notes: proposal.notes || "",
+        }}
+      />
     </DashboardLayout>
   );
 }
