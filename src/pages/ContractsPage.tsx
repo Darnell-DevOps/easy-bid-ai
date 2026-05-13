@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -39,7 +39,6 @@ import {
   Trash2,
   Sparkles,
 } from "lucide-react";
-import ContractTemplatesGallery from "@/components/templates/ContractTemplatesGallery";
 import type { MergedContractTemplate } from "@/lib/contract-templates";
 
 const STATUS_STYLES: Record<string, string> = {
@@ -52,6 +51,7 @@ const STATUS_STYLES: Record<string, string> = {
 export default function ContractsPage() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const [contracts, setContracts] = useState<ContractRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -106,6 +106,17 @@ export default function ContractsPage() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Apply contract template passed via navigation state (from Templates page)
+  useEffect(() => {
+    const tpl = (location.state as any)?.contractTemplate as MergedContractTemplate | undefined;
+    if (tpl) {
+      useTemplate(tpl);
+      // clear state so it doesn't reapply on back-nav
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
 
   const stats = useMemo(() => {
     const pending = contracts.filter((c) => c.status !== "signed").length;
@@ -279,8 +290,6 @@ export default function ContractsPage() {
           <StatCard label="Awaiting Signature" value={stats.awaiting} icon={Send} accent="text-purple" />
           <StatCard label="Signed" value={stats.signed} icon={CheckCircle2} accent="text-emerald-500" />
         </div>
-
-        <ContractTemplatesGallery onUseTemplate={useTemplate} />
 
         <Card>
           <CardContent className="p-0">
