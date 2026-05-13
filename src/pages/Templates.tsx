@@ -426,6 +426,10 @@ export default function Templates() {
         <TabsContent value="contracts" className="mt-0">
           <ContractTemplatesGallery onUseTemplate={handleUseContractTemplate} />
         </TabsContent>
+
+        <TabsContent value="retainers" className="mt-0">
+          <RetainerTemplatesGallery onUseTemplate={handleUseRetainerTemplate} />
+        </TabsContent>
       </Tabs>
 
       <TemplateEditorDialog
