@@ -100,6 +100,7 @@ export default function ProposalView() {
   const [saving, setSaving] = useState(false);
   const [editMode, setEditMode] = useState<Record<string, boolean>>({});
   const [regenerating, setRegenerating] = useState<string | null>(null);
+  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
 
   const [editedProposal, setEditedProposal] = useState("");
   const [editedPricing, setEditedPricing] = useState("");
