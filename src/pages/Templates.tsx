@@ -45,7 +45,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import TemplateEditorDialog from "@/components/templates/TemplateEditorDialog";
 import ContractTemplatesGallery from "@/components/templates/ContractTemplatesGallery";
+import RetainerTemplatesGallery from "@/components/templates/RetainerTemplatesGallery";
 import type { MergedContractTemplate } from "@/lib/contract-templates";
+import type { MergedRetainerTemplate } from "@/lib/retainer-templates";
 import {
   loadProposalTemplateRows,
   mergeTemplates,
@@ -309,6 +311,10 @@ export default function Templates() {
     navigate("/dashboard/contracts", { state: { contractTemplate: t } });
   };
 
+  const handleUseRetainerTemplate = (t: MergedRetainerTemplate) => {
+    navigate("/dashboard/retainers/new", { state: { retainerTemplate: t } });
+  };
+
   return (
     <DashboardLayout>
       <div className="mb-6">
@@ -324,6 +330,7 @@ export default function Templates() {
         <TabsList className="mb-6">
           <TabsTrigger value="proposals">Proposals</TabsTrigger>
           <TabsTrigger value="contracts">Contracts</TabsTrigger>
+          <TabsTrigger value="retainers">Retainers</TabsTrigger>
         </TabsList>
 
         <TabsContent value="proposals" className="mt-0 space-y-0">
@@ -418,6 +425,10 @@ export default function Templates() {
 
         <TabsContent value="contracts" className="mt-0">
           <ContractTemplatesGallery onUseTemplate={handleUseContractTemplate} />
+        </TabsContent>
+
+        <TabsContent value="retainers" className="mt-0">
+          <RetainerTemplatesGallery onUseTemplate={handleUseRetainerTemplate} />
         </TabsContent>
       </Tabs>
 

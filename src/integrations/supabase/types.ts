@@ -1119,6 +1119,75 @@ export type Database = {
         }
         Relationships: []
       }
+      retainer_templates: {
+        Row: {
+          accent: string | null
+          best_for: string | null
+          builtin_id: string | null
+          created_at: string
+          default_amount_cents: number
+          default_bullets: string
+          default_currency: string
+          default_custom_days: number | null
+          default_interval: string
+          description: string | null
+          icon: string | null
+          id: string
+          is_archived: boolean
+          is_default: boolean
+          name: string
+          notes: string
+          service_type: string | null
+          source: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accent?: string | null
+          best_for?: string | null
+          builtin_id?: string | null
+          created_at?: string
+          default_amount_cents?: number
+          default_bullets?: string
+          default_currency?: string
+          default_custom_days?: number | null
+          default_interval?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_archived?: boolean
+          is_default?: boolean
+          name: string
+          notes?: string
+          service_type?: string | null
+          source?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accent?: string | null
+          best_for?: string | null
+          builtin_id?: string | null
+          created_at?: string
+          default_amount_cents?: number
+          default_bullets?: string
+          default_currency?: string
+          default_custom_days?: number | null
+          default_interval?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_archived?: boolean
+          is_default?: boolean
+          name?: string
+          notes?: string
+          service_type?: string | null
+          source?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       retainers: {
         Row: {
           access_token: string

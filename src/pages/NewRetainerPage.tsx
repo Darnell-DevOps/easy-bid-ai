@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -37,6 +37,7 @@ const todayISO = () => new Date().toISOString().slice(0, 10);
 
 export default function NewRetainerPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [clients, setClients] = useState<ClientLite[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -68,6 +69,23 @@ export default function NewRetainerPage() {
         .order("name");
       setClients((data as ClientLite[]) || []);
     })();
+  }, []);
+
+  // Pre-fill from a template passed via navigation state (from /dashboard/templates).
+  useEffect(() => {
+    const t = (location.state as any)?.retainerTemplate;
+    if (!t) return;
+    setTemplateKey(t.id || "custom");
+    setTitle(t.name || "Monthly Retainer");
+    setDescription(t.description || "");
+    if (t.default_amount_cents) setAmount((t.default_amount_cents / 100).toFixed(0));
+    if (t.default_currency) setCurrency(t.default_currency);
+    if (t.default_interval) setBillingInterval(t.default_interval);
+    if (t.default_custom_days) setCustomDays(String(t.default_custom_days));
+    if (t.notes) setNotes(t.notes);
+    // Clear nav state so refresh does not re-apply.
+    navigate(location.pathname, { replace: true, state: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const pickTemplate = (key: string) => {
