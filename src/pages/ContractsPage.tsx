@@ -281,8 +281,13 @@ export default function ContractsPage() {
         </div>
 
         <ContractTemplatesGallery onUseTemplate={useTemplate} />
+
+        <Card>
+          <CardContent className="p-0">
+            {loading ? (
               <div className="p-12 flex justify-center">
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              </div>
               </div>
             ) : contracts.length === 0 ? (
               <div className="p-12 text-center">
