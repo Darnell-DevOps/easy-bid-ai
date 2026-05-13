@@ -39,6 +39,8 @@ import {
   Trash2,
   Sparkles,
 } from "lucide-react";
+import ContractTemplatesGallery from "@/components/templates/ContractTemplatesGallery";
+import type { MergedContractTemplate } from "@/lib/contract-templates";
 
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
