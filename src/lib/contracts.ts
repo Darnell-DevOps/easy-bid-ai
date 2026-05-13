@@ -2,6 +2,13 @@ export const CONTRACT_TYPES = [
   { value: "service_agreement", label: "Service Agreement" },
   { value: "project_agreement", label: "Project Agreement" },
   { value: "retainer_agreement", label: "Retainer Agreement" },
+  { value: "web_design_agreement", label: "Web Design Agreement" },
+  { value: "marketing_agreement", label: "Marketing Services Agreement" },
+  { value: "consulting_agreement", label: "Consulting Agreement" },
+  { value: "maintenance_agreement", label: "Maintenance & Support Agreement" },
+  { value: "social_media_agreement", label: "Social Media Management Agreement" },
+  { value: "freelancer_agreement", label: "Freelancer Agreement" },
+  { value: "discovery_agreement", label: "Discovery / Pre-Project Agreement" },
   { value: "nda", label: "Non-Disclosure Agreement" },
   { value: "scope_of_work", label: "Scope of Work" },
 ] as const;
