@@ -288,7 +288,6 @@ export default function ContractsPage() {
               <div className="p-12 flex justify-center">
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
-              </div>
             ) : contracts.length === 0 ? (
               <div className="p-12 text-center">
                 <FileSignature className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
