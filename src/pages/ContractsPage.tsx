@@ -211,6 +211,7 @@ export default function ContractsPage() {
     setTimeline("");
     setBudget("");
     setPaymentTerms("50% deposit, 50% on completion");
+    setExtraClauses("");
   };
 
   const copySigningLink = async (token: string) => {
