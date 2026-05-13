@@ -157,6 +157,7 @@ export default function ContractsPage() {
           timeline,
           budget,
           payment_terms: paymentTerms,
+          extra_clauses: extraClauses,
           policies_text: policiesText,
           effective_date: new Date().toISOString().slice(0, 10),
         },
