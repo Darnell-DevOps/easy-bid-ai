@@ -19,6 +19,8 @@ const GATEWAY = "https://connector-gateway.lovable.dev/resend";
 const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
 const DOMAIN_RE = /^(?!-)[a-z0-9-]+(\.[a-z0-9-]+)+$/i;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const isUuid = (v: unknown): v is string => typeof v === "string" && UUID_RE.test(v);
 
 async function resend(path: string, init: RequestInit = {}) {
   const res = await fetch(`${GATEWAY}${path}`, {
