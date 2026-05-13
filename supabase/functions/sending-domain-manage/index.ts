@@ -42,16 +42,23 @@ Deno.serve(async (req) => {
 
   if (!RESEND_KEY || !LOVABLE_KEY) return json({ error: "missing_credentials" }, 500);
 
+  // Authenticate via JWT (verify_jwt also enforced at the platform level by default).
+  const authHeader = req.headers.get("Authorization") || "";
+  if (!authHeader.toLowerCase().startsWith("bearer ")) {
+    return json({ error: "unauthorized" }, 401);
+  }
   const userClient = createClient(SUPABASE_URL, ANON_KEY, {
-    global: { headers: { Authorization: req.headers.get("Authorization") || "" } },
+    global: { headers: { Authorization: authHeader } },
   });
-  const { data: u } = await userClient.auth.getUser();
-  if (!u.user) return json({ error: "unauthorized" }, 401);
+  const { data: u, error: authErr } = await userClient.auth.getUser();
+  if (authErr || !u?.user) return json({ error: "unauthorized" }, 401);
   const userId = u.user.id;
 
   let body: any;
   try { body = await req.json(); } catch { body = {}; }
-  const action = body.action as string;
+  const action = String(body?.action || "");
+  const allowed = new Set(["list", "add", "check", "remove", "set_default", "set_local"]);
+  if (!allowed.has(action)) return json({ error: "unknown_action" }, 400);
 
   if (action === "list") {
     const { data } = await admin.from("sending_domains")
