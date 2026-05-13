@@ -42,7 +42,10 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import TemplateEditorDialog from "@/components/templates/TemplateEditorDialog";
+import ContractTemplatesGallery from "@/components/templates/ContractTemplatesGallery";
+import type { MergedContractTemplate } from "@/lib/contract-templates";
 import {
   loadProposalTemplateRows,
   mergeTemplates,
@@ -302,103 +305,121 @@ export default function Templates() {
   const builtinList = merged.filter((m) => m.source === "builtin" || m.source === "builtin_override");
   const customList = merged.filter((m) => m.source === "custom" || m.source === "from_proposal");
 
+  const handleUseContractTemplate = (t: MergedContractTemplate) => {
+    navigate("/dashboard/contracts", { state: { contractTemplate: t } });
+  };
+
   return (
     <DashboardLayout>
-      <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-            Start your proposal in seconds
-          </h1>
-          <p className="text-sm text-muted-foreground mt-2 max-w-2xl">
-            Use proven, high-converting templates designed to help you win clients faster.
-          </p>
-          <p className="text-xs text-muted-foreground/80 mt-1 flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5" />
-            Create a ready-to-send proposal in under 60 seconds.
-          </p>
-        </div>
-        <Button variant="outline" onClick={handleCreate} className="gap-2">
-          <Plus className="w-4 h-4" /> New custom template
-        </Button>
+      <div className="mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+          Templates
+        </h1>
+        <p className="text-sm text-muted-foreground mt-2 max-w-2xl">
+          Reusable, high-converting templates for every part of your client workflow.
+        </p>
       </div>
 
-      <Card className="mb-6 border-accent/30 bg-gradient-to-br from-accent/5 via-purple/5 to-transparent overflow-hidden relative">
-        <CardContent className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="flex items-start gap-3 flex-1 min-w-0">
-            <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-accent to-purple flex items-center justify-center flex-shrink-0 shadow-md">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
-            <div className="min-w-0">
-              <h2 className="font-semibold text-foreground text-base leading-tight">
-                Generate Proposal with AI
-              </h2>
-              <p className="text-xs text-muted-foreground mt-1">
-                Let AI pick the best structure for you
-              </p>
-            </div>
+      <Tabs defaultValue="proposals" className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger value="proposals">Proposals</TabsTrigger>
+          <TabsTrigger value="contracts">Contracts</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="proposals" className="mt-0 space-y-0">
+          <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
+            <p className="text-xs text-muted-foreground/80 flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5" />
+              Create a ready-to-send proposal in under 60 seconds.
+            </p>
+            <Button variant="outline" onClick={handleCreate} className="gap-2">
+              <Plus className="w-4 h-4" /> New custom template
+            </Button>
           </div>
-          <Button
-            onClick={handleAIGenerate}
-            className="w-full sm:w-auto gap-2 bg-gradient-to-r from-accent to-purple text-white hover:brightness-110"
-          >
-            <Sparkles className="w-4 h-4" />
-            Generate with AI
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Button>
-        </CardContent>
-      </Card>
 
-      <div className="flex items-center gap-2 mb-4 text-xs text-muted-foreground">
-        <ShieldCheck className="w-3.5 h-3.5 text-accent" />
-        <span>Based on proven client-winning proposal structures</span>
-        {defaultTpl && (
-          <span className="ml-auto inline-flex items-center gap-1">
-            <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-            Default: {defaultTpl.name}
-          </span>
-        )}
-      </div>
-
-      <h2 className="text-sm font-semibold text-foreground mb-3">Built-in templates</h2>
-      <TemplateGrid
-        items={builtinList}
-        loading={loading}
-        onUse={handleUseTemplate}
-        onEdit={handleEdit}
-        onDuplicate={handleDuplicate}
-        onSetDefault={handleSetDefault}
-        onResetBuiltin={handleResetBuiltin}
-        onDelete={(t) => setDeleteTarget(t)}
-      />
-
-      <div className="mt-8">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-foreground">Your templates</h2>
-          <Button size="sm" variant="ghost" onClick={handleCreate} className="gap-1.5 text-xs">
-            <Plus className="w-3.5 h-3.5" /> New
-          </Button>
-        </div>
-        {customList.length === 0 ? (
-          <Card className="border-dashed">
-            <CardContent className="py-10 text-center">
-              <p className="text-sm text-muted-foreground mb-3">No custom templates yet.</p>
-              <Button variant="outline" onClick={handleCreate} className="gap-2">
-                <Plus className="w-4 h-4" /> Create your first custom template
+          <Card className="mb-6 border-accent/30 bg-gradient-to-br from-accent/5 via-purple/5 to-transparent overflow-hidden relative">
+            <CardContent className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="flex items-start gap-3 flex-1 min-w-0">
+                <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-accent to-purple flex items-center justify-center flex-shrink-0 shadow-md">
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="font-semibold text-foreground text-base leading-tight">
+                    Generate Proposal with AI
+                  </h2>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Let AI pick the best structure for you
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={handleAIGenerate}
+                className="w-full sm:w-auto gap-2 bg-gradient-to-r from-accent to-purple text-white hover:brightness-110"
+              >
+                <Sparkles className="w-4 h-4" />
+                Generate with AI
+                <ArrowRight className="w-3.5 h-3.5" />
               </Button>
             </CardContent>
           </Card>
-        ) : (
+
+          <div className="flex items-center gap-2 mb-4 text-xs text-muted-foreground">
+            <ShieldCheck className="w-3.5 h-3.5 text-accent" />
+            <span>Based on proven client-winning proposal structures</span>
+            {defaultTpl && (
+              <span className="ml-auto inline-flex items-center gap-1">
+                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                Default: {defaultTpl.name}
+              </span>
+            )}
+          </div>
+
+          <h2 className="text-sm font-semibold text-foreground mb-3">Built-in templates</h2>
           <TemplateGrid
-            items={customList}
-            loading={false}
+            items={builtinList}
+            loading={loading}
             onUse={handleUseTemplate}
             onEdit={handleEdit}
             onDuplicate={handleDuplicate}
             onSetDefault={handleSetDefault}
+            onResetBuiltin={handleResetBuiltin}
             onDelete={(t) => setDeleteTarget(t)}
           />
-        )}
-      </div>
+
+          <div className="mt-8">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-foreground">Your templates</h2>
+              <Button size="sm" variant="ghost" onClick={handleCreate} className="gap-1.5 text-xs">
+                <Plus className="w-3.5 h-3.5" /> New
+              </Button>
+            </div>
+            {customList.length === 0 ? (
+              <Card className="border-dashed">
+                <CardContent className="py-10 text-center">
+                  <p className="text-sm text-muted-foreground mb-3">No custom templates yet.</p>
+                  <Button variant="outline" onClick={handleCreate} className="gap-2">
+                    <Plus className="w-4 h-4" /> Create your first custom template
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <TemplateGrid
+                items={customList}
+                loading={false}
+                onUse={handleUseTemplate}
+                onEdit={handleEdit}
+                onDuplicate={handleDuplicate}
+                onSetDefault={handleSetDefault}
+                onDelete={(t) => setDeleteTarget(t)}
+              />
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="contracts" className="mt-0">
+          <ContractTemplatesGallery onUseTemplate={handleUseContractTemplate} />
+        </TabsContent>
+      </Tabs>
 
       <TemplateEditorDialog
         open={editorOpen}
