@@ -280,9 +280,7 @@ export default function ContractsPage() {
           <StatCard label="Signed" value={stats.signed} icon={CheckCircle2} accent="text-emerald-500" />
         </div>
 
-        <Card>
-          <CardContent className="p-0">
-            {loading ? (
+        <ContractTemplatesGallery onUseTemplate={useTemplate} />
               <div className="p-12 flex justify-center">
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
