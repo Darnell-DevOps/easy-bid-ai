@@ -19,6 +19,8 @@ const GATEWAY = "https://connector-gateway.lovable.dev/resend";
 const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
 const DOMAIN_RE = /^(?!-)[a-z0-9-]+(\.[a-z0-9-]+)+$/i;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const isUuid = (v: unknown): v is string => typeof v === "string" && UUID_RE.test(v);
 
 async function resend(path: string, init: RequestInit = {}) {
   const res = await fetch(`${GATEWAY}${path}`, {
@@ -40,16 +42,23 @@ Deno.serve(async (req) => {
 
   if (!RESEND_KEY || !LOVABLE_KEY) return json({ error: "missing_credentials" }, 500);
 
+  // Authenticate via JWT (verify_jwt also enforced at the platform level by default).
+  const authHeader = req.headers.get("Authorization") || "";
+  if (!authHeader.toLowerCase().startsWith("bearer ")) {
+    return json({ error: "unauthorized" }, 401);
+  }
   const userClient = createClient(SUPABASE_URL, ANON_KEY, {
-    global: { headers: { Authorization: req.headers.get("Authorization") || "" } },
+    global: { headers: { Authorization: authHeader } },
   });
-  const { data: u } = await userClient.auth.getUser();
-  if (!u.user) return json({ error: "unauthorized" }, 401);
+  const { data: u, error: authErr } = await userClient.auth.getUser();
+  if (authErr || !u?.user) return json({ error: "unauthorized" }, 401);
   const userId = u.user.id;
 
   let body: any;
   try { body = await req.json(); } catch { body = {}; }
-  const action = body.action as string;
+  const action = String(body?.action || "");
+  const allowed = new Set(["list", "add", "check", "remove", "set_default", "set_local"]);
+  if (!allowed.has(action)) return json({ error: "unknown_action" }, 400);
 
   if (action === "list") {
     const { data } = await admin.from("sending_domains")
@@ -82,7 +91,8 @@ Deno.serve(async (req) => {
   }
 
   if (action === "check") {
-    const id = body.id as string;
+    const id = body.id;
+    if (!isUuid(id)) return json({ error: "invalid_id" }, 400);
     const { data: row } = await admin.from("sending_domains")
       .select("*").eq("id", id).eq("user_id", userId).maybeSingle();
     if (!row) return json({ error: "not_found" }, 404);
@@ -101,24 +111,30 @@ Deno.serve(async (req) => {
     };
     if (newStatus === "verified" && !row.verified_at) update.verified_at = new Date().toISOString();
     const { data: upd } = await admin.from("sending_domains")
-      .update(update).eq("id", id).select("*").maybeSingle();
+      .update(update).eq("id", id).eq("user_id", userId).select("*").maybeSingle();
     return json({ domain: upd });
   }
 
   if (action === "remove") {
-    const id = body.id as string;
+    const id = body.id;
+    if (!isUuid(id)) return json({ error: "invalid_id" }, 400);
     const { data: row } = await admin.from("sending_domains")
       .select("*").eq("id", id).eq("user_id", userId).maybeSingle();
     if (!row) return json({ error: "not_found" }, 404);
     if (row.resend_domain_id) {
       await resend(`/domains/${row.resend_domain_id}`, { method: "DELETE" });
     }
-    await admin.from("sending_domains").delete().eq("id", id);
+    await admin.from("sending_domains").delete().eq("id", id).eq("user_id", userId);
     return json({ ok: true });
   }
 
   if (action === "set_default") {
-    const id = body.id as string;
+    const id = body.id;
+    if (!isUuid(id)) return json({ error: "invalid_id" }, 400);
+    // Confirm ownership before mutating any rows
+    const { data: own } = await admin.from("sending_domains")
+      .select("id").eq("id", id).eq("user_id", userId).maybeSingle();
+    if (!own) return json({ error: "not_found" }, 404);
     await admin.from("sending_domains").update({ is_default: false }).eq("user_id", userId);
     const { data: upd } = await admin.from("sending_domains")
       .update({ is_default: true }).eq("id", id).eq("user_id", userId).select("*").maybeSingle();
@@ -126,11 +142,13 @@ Deno.serve(async (req) => {
   }
 
   if (action === "set_local") {
-    const id = body.id as string;
+    const id = body.id;
+    if (!isUuid(id)) return json({ error: "invalid_id" }, 400);
     const local = String(body.local || "hello").trim().toLowerCase().replace(/[^a-z0-9._-]/g, "");
     if (!local) return json({ error: "invalid_local" }, 400);
     const { data: upd } = await admin.from("sending_domains")
       .update({ default_from_local: local }).eq("id", id).eq("user_id", userId).select("*").maybeSingle();
+    if (!upd) return json({ error: "not_found" }, 404);
     return json({ domain: upd });
   }
 
