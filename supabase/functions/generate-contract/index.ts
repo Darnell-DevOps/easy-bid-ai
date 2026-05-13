@@ -77,6 +77,10 @@ function buildPrompt(payload: any) {
     `- Payment Terms: ${payload.payment_terms || "50% deposit, 50% on completion"}`,
     `- Effective Date: ${payload.effective_date || new Date().toISOString().slice(0, 10)}`,
   ];
+  if (payload.extra_clauses) {
+    lines.push("", "ADDITIONAL CLAUSES (must be incorporated naturally and faithfully into the relevant section):");
+    lines.push(payload.extra_clauses);
+  }
   if (payload.policies_text) {
     lines.push("", "ATTACHED POLICIES (incorporate naturally as clauses):");
     lines.push(payload.policies_text);
