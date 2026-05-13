@@ -1228,6 +1228,20 @@ export default function ProposalView() {
           }}
         />
       )}
+      <TemplateEditorDialog
+        open={saveTemplateOpen}
+        onOpenChange={setSaveTemplateOpen}
+        forceCreate
+        initial={{
+          name: `${proposal.service_type || "Proposal"} – ${proposal.client_name || "Template"}`,
+          description: `Saved from "${proposal.client_name}" proposal.`,
+          service_type: proposal.service_type || "",
+          project_scope: proposal.project_scope || "",
+          budget: proposal.budget || "",
+          timeline: proposal.timeline || "",
+          notes: proposal.notes || "",
+        }}
+      />
     </DashboardLayout>
   );
 }
