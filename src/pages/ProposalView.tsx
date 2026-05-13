@@ -23,6 +23,8 @@ import UpgradeModal from "@/components/plan/UpgradeModal";
 import ProposalWatermark from "@/components/plan/ProposalWatermark";
 import DealScoreBadge from "@/components/ai/DealScoreBadge";
 import ProposalAuditPanel from "@/components/ai/ProposalAuditPanel";
+import TemplateEditorDialog from "@/components/templates/TemplateEditorDialog";
+import { Bookmark } from "lucide-react";
 
 interface ProposalData {
   id: string;
