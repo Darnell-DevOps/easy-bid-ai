@@ -70,6 +70,18 @@ export default function ContractsPage() {
   const [timeline, setTimeline] = useState("");
   const [budget, setBudget] = useState("");
   const [paymentTerms, setPaymentTerms] = useState("50% deposit, 50% on completion");
+  const [extraClauses, setExtraClauses] = useState("");
+
+  const useTemplate = (t: MergedContractTemplate) => {
+    setContractType(t.contract_type);
+    setServiceType(t.service_type || "");
+    setScope(t.default_scope || "");
+    setTimeline(t.default_timeline || "");
+    setBudget(t.default_budget || "");
+    setPaymentTerms(t.default_payment_terms || "50% deposit, 50% on completion");
+    setExtraClauses(t.extra_clauses || "");
+    setOpenCreate(true);
+  };
 
   const fetchData = async () => {
     setLoading(true);
