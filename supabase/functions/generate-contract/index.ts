@@ -157,7 +157,7 @@ This agreement is governed by the laws applicable to the Service Provider's plac
 ## 12. Entire Agreement
 This document represents the full agreement between the parties and supersedes all prior discussions.
 
-${payload.policies_text ? `\n## Attached Policies\n${payload.policies_text}\n` : ""}
+${payload.extra_clauses ? `\n## Additional Clauses\n${payload.extra_clauses}\n` : ""}${payload.policies_text ? `\n## Attached Policies\n${payload.policies_text}\n` : ""}
 ## 13. Signatures
 By signing electronically below, both parties acknowledge they have read, understood, and agree to the terms set out in this agreement.`;
 }
