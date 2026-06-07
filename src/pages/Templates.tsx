@@ -432,6 +432,10 @@ export default function Templates() {
         <TabsContent value="retainers" className="mt-0">
           <RetainerTemplatesGallery onUseTemplate={handleUseRetainerTemplate} />
         </TabsContent>
+
+        <TabsContent value="onboarding" className="mt-0">
+          <OnboardingTemplatesGallery />
+        </TabsContent>
       </Tabs>
 
       <TemplateEditorDialog
