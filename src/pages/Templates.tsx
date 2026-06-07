@@ -211,7 +211,11 @@ export default function Templates() {
   const defaultTpl = merged.find((m) => m.isDefault);
 
   const handleUseTemplate = (t: MergedTemplate) => {
-    navigate("/dashboard/new", { state: { template: t, autoGenerate: true } });
+    // Strip non-serializable fields (lucide icon = function) — history state
+    // must be structured-cloneable or navigation throws silently.
+    const { icon: _icon, ...rest } = t;
+    const serialisable = JSON.parse(JSON.stringify(rest));
+    navigate("/dashboard/new", { state: { template: serialisable, autoGenerate: true } });
   };
 
   const handleEdit = (t: MergedTemplate) => {
@@ -309,11 +313,15 @@ export default function Templates() {
   const customList = merged.filter((m) => m.source === "custom" || m.source === "from_proposal");
 
   const handleUseContractTemplate = (t: MergedContractTemplate) => {
-    navigate("/dashboard/contracts", { state: { contractTemplate: t } });
+    const { icon: _i, ...rest } = t as any;
+    const safe = JSON.parse(JSON.stringify(rest));
+    navigate("/dashboard/contracts", { state: { contractTemplate: safe } });
   };
 
   const handleUseRetainerTemplate = (t: MergedRetainerTemplate) => {
-    navigate("/dashboard/retainers/new", { state: { retainerTemplate: t } });
+    const { icon: _i, ...rest } = t as any;
+    const safe = JSON.parse(JSON.stringify(rest));
+    navigate("/dashboard/retainers/new", { state: { retainerTemplate: safe } });
   };
 
   return (
