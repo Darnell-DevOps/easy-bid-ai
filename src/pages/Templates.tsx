@@ -313,11 +313,15 @@ export default function Templates() {
   const customList = merged.filter((m) => m.source === "custom" || m.source === "from_proposal");
 
   const handleUseContractTemplate = (t: MergedContractTemplate) => {
-    navigate("/dashboard/contracts", { state: { contractTemplate: t } });
+    const { icon: _i, ...rest } = t as any;
+    const safe = JSON.parse(JSON.stringify(rest));
+    navigate("/dashboard/contracts", { state: { contractTemplate: safe } });
   };
 
   const handleUseRetainerTemplate = (t: MergedRetainerTemplate) => {
-    navigate("/dashboard/retainers/new", { state: { retainerTemplate: t } });
+    const { icon: _i, ...rest } = t as any;
+    const safe = JSON.parse(JSON.stringify(rest));
+    navigate("/dashboard/retainers/new", { state: { retainerTemplate: safe } });
   };
 
   return (
