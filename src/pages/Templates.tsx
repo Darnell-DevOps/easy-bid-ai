@@ -211,7 +211,11 @@ export default function Templates() {
   const defaultTpl = merged.find((m) => m.isDefault);
 
   const handleUseTemplate = (t: MergedTemplate) => {
-    navigate("/dashboard/new", { state: { template: t, autoGenerate: true } });
+    // Strip non-serializable fields (lucide icon = function) — history state
+    // must be structured-cloneable or navigation throws silently.
+    const { icon: _icon, ...rest } = t;
+    const serialisable = JSON.parse(JSON.stringify(rest));
+    navigate("/dashboard/new", { state: { template: serialisable, autoGenerate: true } });
   };
 
   const handleEdit = (t: MergedTemplate) => {
