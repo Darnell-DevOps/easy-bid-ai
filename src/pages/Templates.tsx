@@ -332,6 +332,7 @@ export default function Templates() {
           <TabsTrigger value="proposals">Proposals</TabsTrigger>
           <TabsTrigger value="contracts">Contracts</TabsTrigger>
           <TabsTrigger value="retainers">Retainers</TabsTrigger>
+          <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
         </TabsList>
 
         <TabsContent value="proposals" className="mt-0 space-y-0">
