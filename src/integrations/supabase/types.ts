@@ -71,6 +71,75 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_preferences: {
+        Row: {
+          business_ideal_client: string | null
+          business_services: string | null
+          business_target_audience: string | null
+          business_what_you_do: string | null
+          contract_detail: string
+          contract_include_cancellation: boolean
+          contract_include_payment_terms: boolean
+          contract_include_revision_limits: boolean
+          created_at: string
+          custom_instructions: string | null
+          default_tone: string
+          email_length: string
+          email_tone: string
+          id: string
+          lead_reply_length: string
+          lead_reply_tone: string
+          proposal_length: string
+          proposal_style: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_ideal_client?: string | null
+          business_services?: string | null
+          business_target_audience?: string | null
+          business_what_you_do?: string | null
+          contract_detail?: string
+          contract_include_cancellation?: boolean
+          contract_include_payment_terms?: boolean
+          contract_include_revision_limits?: boolean
+          created_at?: string
+          custom_instructions?: string | null
+          default_tone?: string
+          email_length?: string
+          email_tone?: string
+          id?: string
+          lead_reply_length?: string
+          lead_reply_tone?: string
+          proposal_length?: string
+          proposal_style?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_ideal_client?: string | null
+          business_services?: string | null
+          business_target_audience?: string | null
+          business_what_you_do?: string | null
+          contract_detail?: string
+          contract_include_cancellation?: boolean
+          contract_include_payment_terms?: boolean
+          contract_include_revision_limits?: boolean
+          created_at?: string
+          custom_instructions?: string | null
+          default_tone?: string
+          email_length?: string
+          email_tone?: string
+          id?: string
+          lead_reply_length?: string
+          lead_reply_tone?: string
+          proposal_length?: string
+          proposal_style?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       automation_preferences: {
         Row: {
           created_at: string
