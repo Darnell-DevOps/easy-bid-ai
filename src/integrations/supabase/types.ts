@@ -1818,6 +1818,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_notifications: {
+        Row: {
+          body: string | null
+          category: string
+          created_at: string
+          id: string
+          key: string
+          link_url: string | null
+          metadata: Json
+          read_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          category: string
+          created_at?: string
+          id?: string
+          key: string
+          link_url?: string | null
+          metadata?: Json
+          read_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          key?: string
+          link_url?: string | null
+          metadata?: Json
+          read_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           business_name: string | null
@@ -1911,6 +1950,22 @@ export type Database = {
         }[]
       }
       admin_user_stats: { Args: never; Returns: Json }
+      automation_enabled: {
+        Args: { _key: string; _user_id: string }
+        Returns: boolean
+      }
+      automations_handle_payment_event: {
+        Args: {
+          _amount_cents?: number
+          _currency?: string
+          _kind: string
+          _proposal_id?: string
+          _retainer_id?: string
+          _user_id: string
+        }
+        Returns: Json
+      }
+      automations_run_user_ticks: { Args: { _user_id: string }; Returns: Json }
       booking_reschedule: {
         Args: { _new_at: string; _token: string }
         Returns: string
