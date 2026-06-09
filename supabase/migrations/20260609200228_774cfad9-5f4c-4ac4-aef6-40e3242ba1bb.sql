@@ -1,0 +1,15 @@
+ALTER TABLE public.business_branding
+  ADD COLUMN IF NOT EXISTS tagline TEXT,
+  ADD COLUMN IF NOT EXISTS favicon_url TEXT,
+  ADD COLUMN IF NOT EXISTS welcome_message TEXT,
+  ADD COLUMN IF NOT EXISTS show_logo_on_proposals BOOLEAN NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS show_logo_on_contracts BOOLEAN NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS show_logo_on_invoices BOOLEAN NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS show_logo_on_portal BOOLEAN NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS show_logo_on_onboarding BOOLEAN NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS proposal_cover_show_name BOOLEAN NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS proposal_cover_show_tagline BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS proposal_cover_show_date BOOLEAN NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS contract_cover_show_name BOOLEAN NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS contract_cover_show_title BOOLEAN NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS contract_cover_show_details BOOLEAN NOT NULL DEFAULT true;
