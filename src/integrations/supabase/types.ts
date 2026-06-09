@@ -1954,6 +1954,18 @@ export type Database = {
         Args: { _key: string; _user_id: string }
         Returns: boolean
       }
+      automations_handle_payment_event: {
+        Args: {
+          _amount_cents?: number
+          _currency?: string
+          _kind: string
+          _proposal_id?: string
+          _retainer_id?: string
+          _user_id: string
+        }
+        Returns: Json
+      }
+      automations_run_user_ticks: { Args: { _user_id: string }; Returns: Json }
       booking_reschedule: {
         Args: { _new_at: string; _token: string }
         Returns: string
