@@ -13,6 +13,7 @@ import { useTheme } from "@/hooks/use-theme";
 import InboundEmailSettings from "@/components/settings/InboundEmailSettings";
 import ProfileSettings from "@/components/settings/ProfileSettings";
 import BrandingSettings from "@/components/settings/BrandingSettings";
+import NotificationsSettings from "@/components/settings/NotificationsSettings";
 import {
   User,
   Palette,
@@ -330,17 +331,7 @@ export default function SettingsPage() {
 
             {active === "email" && <InboundEmailSettings />}
 
-            {active === "notifications" && (
-              <Card>
-                <CardContent className="p-6 space-y-1">
-                  <ToggleRow title="Proposal viewed" description="Email me when a client opens a proposal" />
-                  <ToggleRow title="Proposal accepted" description="Email me when a client accepts" defaultChecked />
-                  <ToggleRow title="Contract signed" description="Email me when a contract is signed" defaultChecked />
-                  <ToggleRow title="New booking" description="Email me when someone books a call" defaultChecked />
-                  <ToggleRow title="Weekly briefing" description="Friday summary of your pipeline" />
-                </CardContent>
-              </Card>
-            )}
+            {active === "notifications" && <NotificationsSettings />}
 
             {active === "business" && (
               <ComingSoonCard
