@@ -115,6 +115,17 @@ const CATEGORIES: CategoryDef[] = [
   },
 ];
 
+// Future delivery channels — architecture placeholder.
+// Automations will be routable to any of these once integrations ship.
+const FUTURE_CHANNELS: { id: string; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { id: "zapier", label: "Zapier", icon: Zap },
+  { id: "make", label: "Make.com", icon: Sparkles },
+  { id: "webhooks", label: "Webhooks", icon: Webhook },
+  { id: "slack", label: "Slack", icon: Slack },
+  { id: "teams", label: "Microsoft Teams", icon: MessageSquare },
+  { id: "whatsapp", label: "WhatsApp", icon: MessageSquare },
+];
+
 type PrefsMap = Record<string, boolean>;
 
 function buildDefaults(): PrefsMap {
