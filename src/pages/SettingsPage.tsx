@@ -370,12 +370,7 @@ export default function SettingsPage() {
                 description="Customise the welcome message, accent colour and sections shown to clients in their portal."
               />
             )}
-            {active === "automations" && (
-              <ComingSoonCard
-                title="Automations"
-                description="Configure follow-up cadences, reminder schedules and automatic recovery flows."
-              />
-            )}
+            {active === "automations" && <AutomationsSettings />}
             {active === "ai" && (
               <ComingSoonCard
                 title="AI Preferences"
