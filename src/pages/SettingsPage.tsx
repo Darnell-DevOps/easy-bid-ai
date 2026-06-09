@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/use-theme";
 import InboundEmailSettings from "@/components/settings/InboundEmailSettings";
+import ProfileSettings from "@/components/settings/ProfileSettings";
 import {
   User,
   Palette,
