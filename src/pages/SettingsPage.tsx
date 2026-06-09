@@ -14,6 +14,7 @@ import InboundEmailSettings from "@/components/settings/InboundEmailSettings";
 import ProfileSettings from "@/components/settings/ProfileSettings";
 import BrandingSettings from "@/components/settings/BrandingSettings";
 import NotificationsSettings from "@/components/settings/NotificationsSettings";
+import AutomationsSettings from "@/components/settings/AutomationsSettings";
 import {
   User,
   Palette,
@@ -370,12 +371,7 @@ export default function SettingsPage() {
                 description="Customise the welcome message, accent colour and sections shown to clients in their portal."
               />
             )}
-            {active === "automations" && (
-              <ComingSoonCard
-                title="Automations"
-                description="Configure follow-up cadences, reminder schedules and automatic recovery flows."
-              />
-            )}
+            {active === "automations" && <AutomationsSettings />}
             {active === "ai" && (
               <ComingSoonCard
                 title="AI Preferences"
