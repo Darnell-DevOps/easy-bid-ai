@@ -229,58 +229,100 @@ export type Database = {
           brand_color: string | null
           brand_secondary_color: string | null
           business_name: string | null
+          contract_cover_show_details: boolean
+          contract_cover_show_name: boolean
+          contract_cover_show_title: boolean
           created_at: string
           default_sender_name: string | null
           default_sign_off: string | null
           email_signature: string | null
+          favicon_url: string | null
           id: string
           logo_url: string | null
+          proposal_cover_show_date: boolean
+          proposal_cover_show_name: boolean
+          proposal_cover_show_tagline: boolean
           reply_to_email: string | null
           reply_to_pending_email: string | null
           reply_to_token_expires_at: string | null
           reply_to_verification_token: string | null
           reply_to_verified_at: string | null
           reply_to_verified_email: string | null
+          show_logo_on_contracts: boolean
+          show_logo_on_invoices: boolean
+          show_logo_on_onboarding: boolean
+          show_logo_on_portal: boolean
+          show_logo_on_proposals: boolean
+          tagline: string | null
           updated_at: string
           user_id: string
+          welcome_message: string | null
         }
         Insert: {
           brand_color?: string | null
           brand_secondary_color?: string | null
           business_name?: string | null
+          contract_cover_show_details?: boolean
+          contract_cover_show_name?: boolean
+          contract_cover_show_title?: boolean
           created_at?: string
           default_sender_name?: string | null
           default_sign_off?: string | null
           email_signature?: string | null
+          favicon_url?: string | null
           id?: string
           logo_url?: string | null
+          proposal_cover_show_date?: boolean
+          proposal_cover_show_name?: boolean
+          proposal_cover_show_tagline?: boolean
           reply_to_email?: string | null
           reply_to_pending_email?: string | null
           reply_to_token_expires_at?: string | null
           reply_to_verification_token?: string | null
           reply_to_verified_at?: string | null
           reply_to_verified_email?: string | null
+          show_logo_on_contracts?: boolean
+          show_logo_on_invoices?: boolean
+          show_logo_on_onboarding?: boolean
+          show_logo_on_portal?: boolean
+          show_logo_on_proposals?: boolean
+          tagline?: string | null
           updated_at?: string
           user_id: string
+          welcome_message?: string | null
         }
         Update: {
           brand_color?: string | null
           brand_secondary_color?: string | null
           business_name?: string | null
+          contract_cover_show_details?: boolean
+          contract_cover_show_name?: boolean
+          contract_cover_show_title?: boolean
           created_at?: string
           default_sender_name?: string | null
           default_sign_off?: string | null
           email_signature?: string | null
+          favicon_url?: string | null
           id?: string
           logo_url?: string | null
+          proposal_cover_show_date?: boolean
+          proposal_cover_show_name?: boolean
+          proposal_cover_show_tagline?: boolean
           reply_to_email?: string | null
           reply_to_pending_email?: string | null
           reply_to_token_expires_at?: string | null
           reply_to_verification_token?: string | null
           reply_to_verified_at?: string | null
           reply_to_verified_email?: string | null
+          show_logo_on_contracts?: boolean
+          show_logo_on_invoices?: boolean
+          show_logo_on_onboarding?: boolean
+          show_logo_on_portal?: boolean
+          show_logo_on_proposals?: boolean
+          tagline?: string | null
           updated_at?: string
           user_id?: string
+          welcome_message?: string | null
         }
         Relationships: []
       }
