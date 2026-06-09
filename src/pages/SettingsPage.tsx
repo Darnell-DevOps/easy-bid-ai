@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/use-theme";
 import InboundEmailSettings from "@/components/settings/InboundEmailSettings";
+import ProfileSettings from "@/components/settings/ProfileSettings";
 import {
   User,
   Palette,
@@ -260,47 +261,7 @@ export default function SettingsPage() {
           </div>
 
           <div className="space-y-6">
-            {active === "profile" && (
-              <Card>
-                <CardContent className="p-6 space-y-4">
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Email address</Label>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <Mail className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm text-foreground">{email || "—"}</span>
-                    </div>
-                  </div>
-                  <Separator />
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Appearance</Label>
-                    <div className="mt-3 flex items-center justify-between rounded-lg border border-border p-4">
-                      <div className="flex items-center gap-3">
-                        {theme === "dark" ? (
-                          <Moon className="w-4 h-4 text-muted-foreground" />
-                        ) : (
-                          <Sun className="w-4 h-4 text-muted-foreground" />
-                        )}
-                        <div>
-                          <p className="text-sm font-medium text-foreground">
-                            {theme === "dark" ? "Dark mode" : "Light mode"}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {theme === "dark"
-                              ? "Easier on the eyes in low light"
-                              : "Bright, clean interface for daytime use"}
-                          </p>
-                        </div>
-                      </div>
-                      <Switch
-                        checked={theme === "dark"}
-                        onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
-                        aria-label="Toggle dark mode"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            {active === "profile" && <ProfileSettings />}
 
             {active === "security" && (
               <Card>

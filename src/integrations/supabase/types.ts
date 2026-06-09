@@ -1653,6 +1653,51 @@ export type Database = {
         }
         Relationships: []
       }
+      user_profiles: {
+        Row: {
+          business_name: string | null
+          created_at: string
+          default_currency: string
+          first_name: string | null
+          id: string
+          language: string
+          last_name: string | null
+          phone: string | null
+          timezone: string
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          business_name?: string | null
+          created_at?: string
+          default_currency?: string
+          first_name?: string | null
+          id?: string
+          language?: string
+          last_name?: string | null
+          phone?: string | null
+          timezone?: string
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          business_name?: string | null
+          created_at?: string
+          default_currency?: string
+          first_name?: string | null
+          id?: string
+          language?: string
+          last_name?: string | null
+          phone?: string | null
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
