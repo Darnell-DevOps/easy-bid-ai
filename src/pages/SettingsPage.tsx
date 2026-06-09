@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,16 +6,111 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { User, KeyRound, CreditCard, Palette, Lock, LifeBuoy, ExternalLink, Mail, Sun, Moon } from "lucide-react";
-import InboundEmailSettings from "@/components/settings/InboundEmailSettings";
-import { Switch } from "@/components/ui/switch";
 import { useTheme } from "@/hooks/use-theme";
+import InboundEmailSettings from "@/components/settings/InboundEmailSettings";
+import {
+  User,
+  Palette,
+  Building2,
+  Mail,
+  Calendar,
+  CreditCard,
+  FileText,
+  FileSignature,
+  Globe,
+  Bell,
+  Zap,
+  Sparkles,
+  Plug,
+  Shield,
+  Receipt,
+  Database,
+  KeyRound,
+  Sun,
+  Moon,
+  Lock,
+  LifeBuoy,
+  ExternalLink,
+  ChevronRight,
+  Search,
+} from "lucide-react";
+
+type SectionId =
+  | "profile"
+  | "branding"
+  | "business"
+  | "email"
+  | "calendar"
+  | "payments"
+  | "proposals"
+  | "contracts"
+  | "portal"
+  | "notifications"
+  | "automations"
+  | "ai"
+  | "integrations"
+  | "security"
+  | "billing"
+  | "data";
+
+type SectionGroup = {
+  label: string;
+  items: { id: SectionId; label: string; icon: React.ComponentType<{ className?: string }>; description: string }[];
+};
+
+const SECTION_GROUPS: SectionGroup[] = [
+  {
+    label: "Account",
+    items: [
+      { id: "profile", label: "Profile", icon: User, description: "Your personal account details" },
+      { id: "security", label: "Security", icon: Shield, description: "Password and account protection" },
+      { id: "billing", label: "Billing", icon: Receipt, description: "Plan, usage and invoices" },
+      { id: "notifications", label: "Notifications", icon: Bell, description: "How and when we contact you" },
+    ],
+  },
+  {
+    label: "Workspace",
+    items: [
+      { id: "branding", label: "Branding", icon: Palette, description: "Logo, colours and proposal styling" },
+      { id: "business", label: "Business Information", icon: Building2, description: "Company details shown to clients" },
+      { id: "email", label: "Email", icon: Mail, description: "Sending domains and inbound replies" },
+      { id: "calendar", label: "Calendar", icon: Calendar, description: "Availability and booking links" },
+    ],
+  },
+  {
+    label: "Product",
+    items: [
+      { id: "proposals", label: "Proposals", icon: FileText, description: "Defaults for new proposals" },
+      { id: "contracts", label: "Contracts", icon: FileSignature, description: "Signing and contract defaults" },
+      { id: "portal", label: "Client Portal", icon: Globe, description: "What your clients see" },
+      { id: "payments", label: "Payments", icon: CreditCard, description: "Connect a payment processor" },
+    ],
+  },
+  {
+    label: "Advanced",
+    items: [
+      { id: "automations", label: "Automations", icon: Zap, description: "Follow-ups, reminders and triggers" },
+      { id: "ai", label: "AI Preferences", icon: Sparkles, description: "Tone, model and assistant behaviour" },
+      { id: "integrations", label: "Integrations", icon: Plug, description: "Third-party connections" },
+      { id: "data", label: "Data & Exports", icon: Database, description: "Export, import and delete your data" },
+    ],
+  },
+];
+
+const ALL_SECTIONS = SECTION_GROUPS.flatMap((g) => g.items);
 
 export default function SettingsPage() {
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
+  const [active, setActive] = useState<SectionId>(() => {
+    if (typeof window === "undefined") return "profile";
+    const hash = window.location.hash.replace("#", "") as SectionId;
+    return ALL_SECTIONS.some((s) => s.id === hash) ? hash : "profile";
+  });
+  const [search, setSearch] = useState("");
   const [email, setEmail] = useState("");
   const [proposalCount, setProposalCount] = useState(0);
   const [loadingReset, setLoadingReset] = useState(false);
@@ -25,8 +120,6 @@ export default function SettingsPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setEmail(user.email || "");
-
-        // Count proposals this month
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
         const { count } = await supabase
@@ -38,6 +131,12 @@ export default function SettingsPage() {
     };
     load();
   }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.history.replaceState(null, "", `#${active}`);
+    }
+  }, [active]);
 
   const handleResetPassword = async () => {
     setLoadingReset(true);
@@ -52,221 +151,428 @@ export default function SettingsPage() {
     }
   };
 
-  const currentPlan = "Free";
-  const proposalLimit = 3;
+  const currentSection = ALL_SECTIONS.find((s) => s.id === active)!;
+
+  const filteredGroups = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return SECTION_GROUPS;
+    return SECTION_GROUPS.map((g) => ({
+      ...g,
+      items: g.items.filter(
+        (i) => i.label.toLowerCase().includes(q) || i.description.toLowerCase().includes(q),
+      ),
+    })).filter((g) => g.items.length > 0);
+  }, [search]);
 
   return (
     <DashboardLayout>
-      <div className="mb-8">
+      <div className="mb-6 md:mb-8">
         <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-        <p className="text-sm text-muted-foreground mt-1">Manage your account, plan, and preferences</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Manage your account, workspace and product preferences
+        </p>
       </div>
 
-      <div className="space-y-6 max-w-2xl">
-        {/* Account Section */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center">
-                <User className="w-4 h-4 text-accent" />
-              </div>
-              <div>
-                <h2 className="font-semibold text-foreground">Account</h2>
-                <p className="text-xs text-muted-foreground">Your login details</p>
-              </div>
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6 lg:gap-10">
+        {/* Settings sidebar */}
+        <aside className="lg:sticky lg:top-6 lg:self-start">
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search settings"
+              className="pl-9 h-9"
+            />
+          </div>
 
-            <div className="space-y-4">
-              <div>
-                <Label className="text-xs text-muted-foreground">Email address</Label>
-                <div className="flex items-center gap-2 mt-1.5">
-                  <Mail className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm text-foreground">{email}</span>
+          {/* Mobile select-style top bar */}
+          <div className="lg:hidden mb-4 -mx-1 overflow-x-auto">
+            <div className="flex gap-2 px-1 pb-1">
+              {ALL_SECTIONS.map((s) => {
+                const isActive = s.id === active;
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => setActive(s.id)}
+                    className={`flex items-center gap-2 whitespace-nowrap px-3 py-2 rounded-md text-xs border transition-colors ${
+                      isActive
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground border-sidebar-accent"
+                        : "bg-card text-muted-foreground border-border hover:text-foreground"
+                    }`}
+                  >
+                    <s.icon className="w-3.5 h-3.5" />
+                    {s.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <nav className="hidden lg:block space-y-6">
+            {filteredGroups.map((group) => (
+              <div key={group.label}>
+                <p className="px-2 mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/80">
+                  {group.label}
+                </p>
+                <div className="space-y-0.5">
+                  {group.items.map((item) => {
+                    const isActive = item.id === active;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => setActive(item.id)}
+                        className={`w-full group flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+                          isActive
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                            : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/40"
+                        }`}
+                      >
+                        <item.icon className={`w-4 h-4 ${isActive ? "text-accent" : ""}`} />
+                        <span className="flex-1 text-left">{item.label}</span>
+                        <ChevronRight
+                          className={`w-3.5 h-3.5 transition-opacity ${
+                            isActive ? "opacity-100" : "opacity-0 group-hover:opacity-50"
+                          }`}
+                        />
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
+            ))}
+            {filteredGroups.length === 0 && (
+              <p className="px-2 text-xs text-muted-foreground">No settings match "{search}".</p>
+            )}
+          </nav>
+        </aside>
 
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <KeyRound className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Password</span>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleResetPassword}
-                  disabled={loadingReset}
-                >
-                  {loadingReset ? "Sending..." : "Reset Password"}
-                </Button>
-              </div>
+        {/* Content area */}
+        <div className="min-w-0 max-w-3xl">
+          <div className="mb-6 flex items-start gap-3">
+            <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
+              <currentSection.icon className="w-5 h-5 text-accent" />
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Appearance Section */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center">
-                {theme === "dark" ? <Moon className="w-4 h-4 text-accent" /> : <Sun className="w-4 h-4 text-accent" />}
-              </div>
-              <div>
-                <h2 className="font-semibold text-foreground">Appearance</h2>
-                <p className="text-xs text-muted-foreground">Choose how CloseSync looks to you</p>
-              </div>
+            <div>
+              <h2 className="text-xl font-semibold text-foreground">{currentSection.label}</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">{currentSection.description}</p>
             </div>
+          </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {theme === "dark" ? (
-                  <Moon className="w-4 h-4 text-muted-foreground" />
-                ) : (
-                  <Sun className="w-4 h-4 text-muted-foreground" />
-                )}
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    {theme === "dark" ? "Dark mode" : "Light mode"}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {theme === "dark"
-                      ? "Easier on the eyes in low light"
-                      : "Bright, clean interface for daytime use"}
-                  </p>
-                </div>
-              </div>
-              <Switch
-                checked={theme === "dark"}
-                onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
-                aria-label="Toggle dark mode"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Plan Section */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center">
-                <CreditCard className="w-4 h-4 text-accent" />
-              </div>
-              <div>
-                <h2 className="font-semibold text-foreground">Plan</h2>
-                <p className="text-xs text-muted-foreground">Your current subscription</p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-foreground">{currentPlan} Plan</span>
-                    <Badge variant="secondary" className="text-xs">Current</Badge>
+          <div className="space-y-6">
+            {active === "profile" && (
+              <Card>
+                <CardContent className="p-6 space-y-4">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Email address</Label>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <Mail className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm text-foreground">{email || "—"}</span>
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">£0/month</p>
-                </div>
-              </div>
+                  <Separator />
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Appearance</Label>
+                    <div className="mt-3 flex items-center justify-between rounded-lg border border-border p-4">
+                      <div className="flex items-center gap-3">
+                        {theme === "dark" ? (
+                          <Moon className="w-4 h-4 text-muted-foreground" />
+                        ) : (
+                          <Sun className="w-4 h-4 text-muted-foreground" />
+                        )}
+                        <div>
+                          <p className="text-sm font-medium text-foreground">
+                            {theme === "dark" ? "Dark mode" : "Light mode"}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {theme === "dark"
+                              ? "Easier on the eyes in low light"
+                              : "Bright, clean interface for daytime use"}
+                          </p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={theme === "dark"}
+                        onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+                        aria-label="Toggle dark mode"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-              <Separator />
-
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-muted-foreground">Proposals this month</span>
-                  <span className="text-sm font-medium text-foreground">
-                    {proposalCount} / {proposalLimit}
-                  </span>
-                </div>
-                <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-accent transition-all"
-                    style={{ width: `${Math.min((proposalCount / proposalLimit) * 100, 100)}%` }}
+            {active === "security" && (
+              <Card>
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <KeyRound className="w-4 h-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Password</p>
+                        <p className="text-xs text-muted-foreground">Send yourself a reset link</p>
+                      </div>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={handleResetPassword} disabled={loadingReset}>
+                      {loadingReset ? "Sending..." : "Reset Password"}
+                    </Button>
+                  </div>
+                  <Separator />
+                  <ComingSoonRow
+                    title="Two-factor authentication"
+                    description="Add an extra layer of security with an authenticator app"
                   />
+                  <ComingSoonRow title="Active sessions" description="Sign out other devices currently using your account" />
+                </CardContent>
+              </Card>
+            )}
+
+            {active === "billing" && (
+              <Card>
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-foreground">Free Plan</span>
+                        <Badge variant="secondary" className="text-xs">Current</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">£0/month</p>
+                    </div>
+                  </div>
+                  <Separator />
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-muted-foreground">Proposals this month</span>
+                      <span className="text-sm font-medium text-foreground">{proposalCount} / 3</span>
+                    </div>
+                    <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-accent transition-all"
+                        style={{ width: `${Math.min((proposalCount / 3) * 100, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    className="w-full bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110"
+                    onClick={() =>
+                      toast({ title: "Coming soon", description: "Pro plan payments will be available shortly." })
+                    }
+                  >
+                    Upgrade to Pro — £9/month
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {active === "branding" && (
+              <Card>
+                <CardContent className="p-6">
+                  <div className="space-y-3 opacity-60 pointer-events-none select-none">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Company Name</Label>
+                      <Input placeholder="Your company name" disabled className="mt-1.5" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Logo</Label>
+                      <div className="mt-1.5 h-20 rounded-lg border border-dashed border-border flex items-center justify-center">
+                        <span className="text-xs text-muted-foreground">Upload your logo</span>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Brand colour</Label>
+                      <Input placeholder="#7c3aed" disabled className="mt-1.5" />
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center gap-2 text-sm">
+                    <Lock className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Available on</span>
+                    <Badge variant="outline" className="border-accent/30 text-accent text-xs">Pro</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {active === "email" && <InboundEmailSettings />}
+
+            {active === "notifications" && (
+              <Card>
+                <CardContent className="p-6 space-y-1">
+                  <ToggleRow title="Proposal viewed" description="Email me when a client opens a proposal" />
+                  <ToggleRow title="Proposal accepted" description="Email me when a client accepts" defaultChecked />
+                  <ToggleRow title="Contract signed" description="Email me when a contract is signed" defaultChecked />
+                  <ToggleRow title="New booking" description="Email me when someone books a call" defaultChecked />
+                  <ToggleRow title="Weekly briefing" description="Friday summary of your pipeline" />
+                </CardContent>
+              </Card>
+            )}
+
+            {active === "business" && (
+              <ComingSoonCard
+                title="Business Information"
+                description="Soon you'll be able to set your trading name, address, VAT number and registration details — used automatically on invoices, contracts and proposals."
+              />
+            )}
+            {active === "calendar" && (
+              <ComingSoonCard
+                title="Calendar defaults"
+                description="Manage availability, buffers and timezone defaults here. For now, edit per booking link on the Calendar page."
+                action={{ label: "Go to Calendar", href: "/dashboard/calendar" }}
+              />
+            )}
+            {active === "payments" && (
+              <ComingSoonCard
+                title="Payments"
+                description="Connect Stripe or Paddle to accept payments on proposals, retainers and invoices."
+              />
+            )}
+            {active === "proposals" && (
+              <ComingSoonCard
+                title="Proposal defaults"
+                description="Set default currency, validity period, footer text and tone for newly generated proposals."
+              />
+            )}
+            {active === "contracts" && (
+              <ComingSoonCard
+                title="Contract defaults"
+                description="Default signing order, witness requirements, expiry windows and auto-reminders."
+              />
+            )}
+            {active === "portal" && (
+              <ComingSoonCard
+                title="Client Portal"
+                description="Customise the welcome message, accent colour and sections shown to clients in their portal."
+              />
+            )}
+            {active === "automations" && (
+              <ComingSoonCard
+                title="Automations"
+                description="Configure follow-up cadences, reminder schedules and automatic recovery flows."
+              />
+            )}
+            {active === "ai" && (
+              <ComingSoonCard
+                title="AI Preferences"
+                description="Choose tone of voice, default model, and how much the AI assistant should act on its own."
+              />
+            )}
+            {active === "integrations" && (
+              <ComingSoonCard
+                title="Integrations"
+                description="Connect Slack, Zapier, HubSpot, Notion and more. Webhook support coming soon."
+              />
+            )}
+            {active === "data" && (
+              <ComingSoonCard
+                title="Data & Exports"
+                description="Export your clients, proposals and contracts as CSV. Request a full data wipe at any time."
+              />
+            )}
+
+            {/* Support always at bottom */}
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center">
+                    <LifeBuoy className="w-4 h-4 text-accent" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground text-sm">Need a hand?</h3>
+                    <p className="text-xs text-muted-foreground">We usually reply within a few hours</p>
+                  </div>
                 </div>
-                {proposalCount >= proposalLimit && (
-                  <p className="text-xs text-destructive mt-2">You've reached your free limit this month.</p>
-                )}
-              </div>
-
-              <Button
-                className="w-full bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 gap-2"
-                onClick={() => toast({ title: "Coming soon", description: "Pro plan payments will be available shortly." })}
-              >
-                Upgrade to Pro — £9/month
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <InboundEmailSettings />
-
-        {/* Branding Section */}
-        <Card className="relative overflow-hidden">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center">
-                <Palette className="w-4 h-4 text-accent" />
-              </div>
-              <div>
-                <h2 className="font-semibold text-foreground">Branding</h2>
-                <p className="text-xs text-muted-foreground">Customise your proposal look</p>
-              </div>
-            </div>
-
-            <div className="space-y-3 opacity-50 pointer-events-none select-none">
-              <div>
-                <Label className="text-xs text-muted-foreground">Company Name</Label>
-                <Input placeholder="Your company name" disabled className="mt-1.5" />
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground">Logo</Label>
-                <div className="mt-1.5 h-20 rounded-lg border border-dashed border-border flex items-center justify-center">
-                  <span className="text-xs text-muted-foreground">Upload your logo</span>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    variant="outline"
+                    className="gap-2 flex-1"
+                    onClick={() => window.open("mailto:support@closesync.io", "_blank")}
+                  >
+                    <Mail className="w-4 h-4" /> Contact Support
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="gap-2 flex-1"
+                    onClick={() => toast({ title: "Coming soon", description: "Help centre is being built." })}
+                  >
+                    <ExternalLink className="w-4 h-4" /> Help & FAQ
+                  </Button>
                 </div>
-              </div>
-            </div>
-
-            <div className="mt-4 flex items-center gap-2 text-sm">
-              <Lock className="w-4 h-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Available on</span>
-              <Badge variant="outline" className="border-accent/30 text-accent text-xs">Pro</Badge>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Support Section */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center">
-                <LifeBuoy className="w-4 h-4 text-accent" />
-              </div>
-              <div>
-                <h2 className="font-semibold text-foreground">Support</h2>
-                <p className="text-xs text-muted-foreground">Get help when you need it</p>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                variant="outline"
-                className="gap-2 flex-1"
-                onClick={() => window.open("mailto:support@closesync.io", "_blank")}
-              >
-                <Mail className="w-4 h-4" /> Contact Support
-              </Button>
-              <Button
-                variant="outline"
-                className="gap-2 flex-1"
-                onClick={() => toast({ title: "Coming soon", description: "Help centre is being built." })}
-              >
-                <ExternalLink className="w-4 h-4" /> Help & FAQ
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </DashboardLayout>
+  );
+}
+
+function ToggleRow({
+  title,
+  description,
+  defaultChecked,
+}: {
+  title: string;
+  description: string;
+  defaultChecked?: boolean;
+}) {
+  const [on, setOn] = useState(!!defaultChecked);
+  return (
+    <div className="flex items-center justify-between py-3 border-b border-border last:border-0">
+      <div>
+        <p className="text-sm font-medium text-foreground">{title}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+      </div>
+      <Switch checked={on} onCheckedChange={setOn} />
+    </div>
+  );
+}
+
+function ComingSoonRow({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm font-medium text-foreground">{title}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+      </div>
+      <Badge variant="outline" className="text-xs">Coming soon</Badge>
+    </div>
+  );
+}
+
+function ComingSoonCard({
+  title,
+  description,
+  action,
+}: {
+  title: string;
+  description: string;
+  action?: { label: string; href: string };
+}) {
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+              <Badge variant="outline" className="text-[10px] border-accent/30 text-accent">
+                Coming soon
+              </Badge>
+            </div>
+            <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{description}</p>
+            {action && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4 gap-2"
+                onClick={() => (window.location.href = action.href)}
+              >
+                {action.label}
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Button>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
