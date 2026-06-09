@@ -16,6 +16,11 @@ import {
   Loader2,
   Sparkles,
   Zap,
+  Check,
+  Plug,
+  Webhook,
+  MessageSquare,
+  Slack,
 } from "lucide-react";
 
 type AutomationDef = {
