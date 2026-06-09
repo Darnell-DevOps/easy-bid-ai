@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/use-theme";
 import InboundEmailSettings from "@/components/settings/InboundEmailSettings";
 import ProfileSettings from "@/components/settings/ProfileSettings";
+import BrandingSettings from "@/components/settings/BrandingSettings";
 import {
   User,
   Palette,
