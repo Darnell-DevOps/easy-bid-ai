@@ -16,6 +16,7 @@ import BrandingSettings from "@/components/settings/BrandingSettings";
 import NotificationsSettings from "@/components/settings/NotificationsSettings";
 import AutomationsSettings from "@/components/settings/AutomationsSettings";
 import AiPreferencesSettings from "@/components/settings/AiPreferencesSettings";
+import IntegrationsSettings from "@/components/settings/IntegrationsSettings";
 import {
   User,
   Palette,
@@ -374,12 +375,7 @@ export default function SettingsPage() {
             )}
             {active === "automations" && <AutomationsSettings />}
             {active === "ai" && <AiPreferencesSettings />}
-            {active === "integrations" && (
-              <ComingSoonCard
-                title="Integrations"
-                description="Connect Slack, Zapier, HubSpot, Notion and more. Webhook support coming soon."
-              />
-            )}
+            {active === "integrations" && <IntegrationsSettings />}
             {active === "data" && (
               <ComingSoonCard
                 title="Data & Exports"
