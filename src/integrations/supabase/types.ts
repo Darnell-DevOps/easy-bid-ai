@@ -227,10 +227,12 @@ export type Database = {
       business_branding: {
         Row: {
           brand_color: string | null
+          brand_secondary_color: string | null
           business_name: string | null
           created_at: string
           default_sender_name: string | null
           default_sign_off: string | null
+          email_signature: string | null
           id: string
           logo_url: string | null
           reply_to_email: string | null
@@ -244,10 +246,12 @@ export type Database = {
         }
         Insert: {
           brand_color?: string | null
+          brand_secondary_color?: string | null
           business_name?: string | null
           created_at?: string
           default_sender_name?: string | null
           default_sign_off?: string | null
+          email_signature?: string | null
           id?: string
           logo_url?: string | null
           reply_to_email?: string | null
@@ -261,10 +265,12 @@ export type Database = {
         }
         Update: {
           brand_color?: string | null
+          brand_secondary_color?: string | null
           business_name?: string | null
           created_at?: string
           default_sender_name?: string | null
           default_sign_off?: string | null
+          email_signature?: string | null
           id?: string
           logo_url?: string | null
           reply_to_email?: string | null
