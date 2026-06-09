@@ -1,83 +1,58 @@
-## Customisable Client Email Templates
+## Goal
 
-Add a Templates tab inside the Emails section letting users edit the subject, body, CTA, sign-off, and sender display name for every client-facing email CloseSync sends on their behalf. System emails (welcome, password reset, billing) remain untouched.
+Make every toggle in **Settings → Automations** actually change behaviour, then verify enable/disable produces a different outcome for each one.
 
-### 1. Database
+Today, `automation_preferences` is only read by its own settings UI. None of the **26** toggles are consumed anywhere else. This plan wires each one to a real trigger point and tests it on and off.
 
-New table `email_templates`:
-- `id`, `user_id`, `template_key` (enum-like text), `subject`, `body` (markdown/plain with `{{vars}}`), `cta_text`, `cta_url_var` (which variable to use for the CTA link), `sign_off`, `sender_display_name`, `is_active`, `updated_at`, `created_at`.
-- Unique on `(user_id, template_key)`.
-- RLS: owner-only CRUD.
+## The 26 toggles
 
-New table `business_branding` (1 row per user) for shared brand fields used in templates:
-- `business_name`, `logo_url`, `brand_color`, `default_sender_name`, `default_sign_off`, `reply_to_email`.
-- RLS: owner-only.
+- **Proposals (5)**: auto-send, follow-up reminder, create deadline from timeline, notify viewed, notify expired
+- **Contracts (4)**: auto-generate after acceptance, auto-send after acceptance, follow-up if unsigned, notify signed
+- **Payments (5)**: auto-send payment request after signing, auto-send payment confirmation, notify received, notify failed, follow-up reminder for unpaid invoices
+- **Onboarding (4)**: auto-send after payment, auto-create onboarding task, notify completed, remind client if incomplete
+- **Retainers (4)**: renewal reminder, notify before renewal, notify recurring payment failed, generate renewal proposal draft
+- **Deadlines (4)**: from contracts, from proposals, notify before, notify overdue
 
-Both tables fall back to hard-coded defaults when no row exists, so nothing breaks for existing users.
+Total: 5 + 4 + 5 + 4 + 4 + 4 = **26**.
 
-### 2. Template keys (client-facing only)
+## Trigger-point map
 
-```
-proposal_sent
-contract_sent
-contract_reminder
-payment_request
-payment_reminder
-booking_confirmation
-onboarding_welcome
-onboarding_reminder
-retainer_renewal
-payment_failed_followup
-client_followup
-```
+| Trigger (existing code)                              | Toggles wired here |
+| ---------------------------------------------------- | ------------------ |
+| `generate-proposal` / proposal-create flow           | proposal_auto_send, proposal_create_deadline, proposal_follow_up |
+| `client_portal_respond` RPC (proposal accepted)      | contract_auto_generate, contract_auto_send, deadlines_from_proposals |
+| Proposal view tracker + new expiry cron              | proposal_notify_viewed, proposal_notify_expired |
+| `contract_sign` RPC                                  | payment_auto_request, contract_follow_up (cancel reminder), contract_notify_signed, deadlines_from_contracts |
+| `payments-webhook` `transaction.completed`           | payment_auto_confirmation, payment_notify_received, onboarding_auto_send, onboarding_auto_task |
+| `payments-webhook` `transaction.payment_failed`      | payment_notify_failed, retainer_notify_failed |
+| New unpaid-invoice cron                              | payment_follow_up_unpaid |
+| `onboarding_submit` RPC                              | onboarding_notify_completed |
+| New onboarding reminder cron                         | onboarding_remind_client |
+| New retainer renewal cron (or extend recovery cron)  | retainer_renewal_reminder, retainer_notify_before_renewal, retainer_generate_proposal_draft |
+| New deadline cron                                    | deadlines_notify_before, deadlines_notify_overdue |
 
-Each ships with a polished default (warm, professional, conversion-focused) defined in `src/lib/email-templates-defaults.ts` and mirrored in `supabase/functions/_shared/client-email-templates.ts` for edge functions.
+## Approach
 
-### 3. UI — Settings → Emails → Templates tab
+1. **DB helper** `public.automation_enabled(_user_id uuid, _key text) returns boolean` — reads `automation_preferences.preferences ->> _key`, falling back to the same defaults as the UI. Used by SECURITY DEFINER RPCs and triggers.
+2. **Edge helper** `_shared/automations.ts` exposing `isAutomationEnabled(userId, key)` — same defaults, single source of truth for edge functions.
+3. Wire every toggle at exactly one trigger point, guarded by the helper.
+4. Add the small number of crons that don't yet exist (expiry, unpaid invoices, onboarding reminder, deadline reminders, renewal reminder).
 
-- Update `EmailsDashboard.tsx`: wrap content in `Tabs` with `Logs` (existing) and `Templates` (new).
-- New `src/components/emails/TemplatesPanel.tsx`:
-  - Left column: list of all 11 templates with status (custom / default).
-  - Right column: editor with fields Subject, Sender display name, Body (textarea), CTA button text, Sign-off.
-  - Variable chips beside the editor (click to insert at cursor) showing the variables relevant to that template.
-  - Live Preview pane that renders the email with sample data (and the user's branding).
-  - Save / Reset to default buttons.
-- New `src/components/emails/BrandingCard.tsx` at the top of the tab for business name, logo URL, brand colour, sender name, sign-off, reply-to.
+## Verification
 
-### 4. Per-send preview & edit
+For every toggle, two automated runs:
+- Run 1: set toggle **on** → fire the trigger via `curl_edge_functions` or direct SQL → assert the expected side effect happened (row inserted, email enqueued, notification created).
+- Run 2: set toggle **off** → fire the same trigger → assert the side effect did **not** happen.
 
-- New `src/components/emails/SendEmailDialog.tsx`: shared dialog used by proposal/contract/onboarding/payment/retainer flows. Loads the user's template for the given `template_key`, renders preview with real entity data, lets the user tweak subject/body before sending. "Send" calls the existing `send-email` edge function; "Copy" copies the rendered HTML to clipboard.
-- Wire into the existing "Send proposal", "Send contract", "Send onboarding", "Payment reminder", "Retainer renewal" actions in their current entry points (one-line dialog open replacing the direct send).
+Results written to `/mnt/documents/automation-test-results.md` with pass/fail for each of the 26 toggles (52 runs total).
 
-### 5. Edge function changes
+## Important caveats
 
-- New shared helper `supabase/functions/_shared/client-email-templates.ts`:
-  - `renderClientTemplate(supabase, userId, key, vars)` → loads user template (or default), interpolates `{{var}}`, applies branding, returns `{ subject, html, fromName, replyTo }`.
-- Update `send-email` edge function: when `body.templateKey` matches a client-facing key, route through `renderClientTemplate` instead of the system template registry. System keys (`welcome`, `password-reset`, `payment-confirmation` for platform billing, etc.) keep their current path untouched.
-- All existing call sites (proposal-sent, contract-signature-reminder, booking-confirmation, retainer-notification, follow-up-reminder, payment-failed) keep working — defaults match current behaviour.
+This is a large change: ~10 edge functions touched, several new cron jobs, a DB helper, light updates to a few RPCs. Expect multiple migration approvals.
 
-### 6. Logs
+A few toggles touch features that aren't fully built yet — I'll wire the trigger and stub the side effect minimally rather than build new product surface:
+- **`payment_follow_up_unpaid`**: no unpaid-invoice table for proposals yet — wired for `retainer_invoices`, with a stub hook for proposals.
+- **`onboarding_remind_client`**: new lightweight cron that uses existing email infra.
+- **`retainer_generate_proposal_draft`**: creates a draft proposal row via `generate-proposal`; no auto-send.
 
-`email_send_log` already records template, recipient, subject, status, provider_id, error, timestamp. Templates panel does not change logging — the existing Logs tab is unchanged. Linked entity IDs go into the existing `meta` jsonb (`{proposal_id, contract_id, ...}`) when the dialog sends an email.
-
-### 7. Future-proofing
-
-- `email_templates.template_key` is text (not enum) so new keys can be added.
-- `meta` jsonb on log + `is_active` flag on templates leave room for sequences, A/B variants, and AI rewriting later without schema changes.
-
-### Files to create
-- `supabase/migrations/<ts>_email_templates.sql`
-- `src/lib/email-templates-defaults.ts`
-- `src/components/emails/TemplatesPanel.tsx`
-- `src/components/emails/BrandingCard.tsx`
-- `src/components/emails/SendEmailDialog.tsx`
-- `supabase/functions/_shared/client-email-templates.ts`
-
-### Files to edit
-- `src/pages/EmailsDashboard.tsx` (add Tabs)
-- `supabase/functions/send-email/index.ts` (route client-facing keys through new renderer)
-- Send entry points for proposal/contract/onboarding/payment/retainer to use `SendEmailDialog`
-
-### Out of scope (per request)
-- No changes to welcome / password-reset / verification / platform billing emails.
-- No automated sequences, A/B tests, AI rewriting, or custom sender domains in this pass — schema leaves room for them.
+If you'd rather cut scope (e.g. wire Payments + Contracts + Onboarding end-to-end first, defer cron-only toggles), say so and I'll re-plan tighter. Otherwise on approval I'll execute the full plan.
