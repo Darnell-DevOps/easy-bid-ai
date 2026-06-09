@@ -233,6 +233,80 @@ export default function AutomationsSettings() {
         </CardContent>
       </Card>
 
+      {/* Active automations summary */}
+      <Card>
+        <CardContent className="p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Active automations</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                What CloseSync is doing for you right now.
+              </p>
+            </div>
+            <Badge variant="secondary" className="text-[10px]">{enabledCount} running</Badge>
+          </div>
+          {enabledCount === 0 ? (
+            <div className="rounded-lg border border-dashed border-border p-6 text-center">
+              <p className="text-sm text-muted-foreground">
+                No automations are active. Toggle any item below to let CloseSync run it for you.
+              </p>
+            </div>
+          ) : (
+            <ul className="space-y-1.5">
+              {CATEGORIES.flatMap((c) => c.items.filter((i) => prefs[i.id]).map((i) => ({ cat: c, item: i })))
+                .slice(0, 8)
+                .map(({ cat, item }) => (
+                  <li key={item.id} className="flex items-start gap-2.5 text-sm">
+                    <div className="w-4 h-4 rounded-full bg-emerald-500/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="w-2.5 h-2.5 text-emerald-400" />
+                    </div>
+                    <span className="text-foreground/90">{item.label}</span>
+                    <span className="ml-auto text-[10px] uppercase tracking-wider text-muted-foreground flex-shrink-0">
+                      {cat.label.replace(" Automations", "")}
+                    </span>
+                  </li>
+                ))}
+              {enabledCount > 8 && (
+                <li className="text-xs text-muted-foreground pl-6 pt-1">
+                  + {enabledCount - 8} more active
+                </li>
+              )}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Future integrations / delivery channels */}
+      <Card>
+        <CardContent className="p-5">
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
+                <Plug className="w-4 h-4 text-accent" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">Send automations elsewhere</h3>
+                <p className="text-xs text-muted-foreground mt-0.5 max-w-md">
+                  Soon you'll be able to route any automation through external tools and channels.
+                </p>
+              </div>
+            </div>
+            <Badge variant="outline" className="text-[10px] border-accent/30 text-accent">Coming soon</Badge>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {FUTURE_CHANNELS.map((ch) => (
+              <div
+                key={ch.id}
+                className="flex items-center gap-2.5 p-3 rounded-lg border border-border bg-muted/20 opacity-70"
+              >
+                <ch.icon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                <span className="text-sm text-foreground/80 truncate">{ch.label}</span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {CATEGORIES.map((cat) => {
         const Icon = cat.icon;
         const allOn = cat.items.every((i) => prefs[i.id]);
