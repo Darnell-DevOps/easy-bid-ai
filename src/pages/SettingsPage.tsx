@@ -14,6 +14,7 @@ import InboundEmailSettings from "@/components/settings/InboundEmailSettings";
 import ProfileSettings from "@/components/settings/ProfileSettings";
 import BrandingSettings from "@/components/settings/BrandingSettings";
 import NotificationsSettings from "@/components/settings/NotificationsSettings";
+import AutomationsSettings from "@/components/settings/AutomationsSettings";
 import {
   User,
   Palette,
