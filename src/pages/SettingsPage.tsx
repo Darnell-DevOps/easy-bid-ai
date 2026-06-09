@@ -15,6 +15,7 @@ import ProfileSettings from "@/components/settings/ProfileSettings";
 import BrandingSettings from "@/components/settings/BrandingSettings";
 import NotificationsSettings from "@/components/settings/NotificationsSettings";
 import AutomationsSettings from "@/components/settings/AutomationsSettings";
+import AiPreferencesSettings from "@/components/settings/AiPreferencesSettings";
 import {
   User,
   Palette,
@@ -372,12 +373,7 @@ export default function SettingsPage() {
               />
             )}
             {active === "automations" && <AutomationsSettings />}
-            {active === "ai" && (
-              <ComingSoonCard
-                title="AI Preferences"
-                description="Choose tone of voice, default model, and how much the AI assistant should act on its own."
-              />
-            )}
+            {active === "ai" && <AiPreferencesSettings />}
             {active === "integrations" && (
               <ComingSoonCard
                 title="Integrations"
