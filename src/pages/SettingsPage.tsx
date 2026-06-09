@@ -326,33 +326,7 @@ export default function SettingsPage() {
               </Card>
             )}
 
-            {active === "branding" && (
-              <Card>
-                <CardContent className="p-6">
-                  <div className="space-y-3 opacity-60 pointer-events-none select-none">
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Company Name</Label>
-                      <Input placeholder="Your company name" disabled className="mt-1.5" />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Logo</Label>
-                      <div className="mt-1.5 h-20 rounded-lg border border-dashed border-border flex items-center justify-center">
-                        <span className="text-xs text-muted-foreground">Upload your logo</span>
-                      </div>
-                    </div>
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Brand colour</Label>
-                      <Input placeholder="#7c3aed" disabled className="mt-1.5" />
-                    </div>
-                  </div>
-                  <div className="mt-4 flex items-center gap-2 text-sm">
-                    <Lock className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Available on</span>
-                    <Badge variant="outline" className="border-accent/30 text-accent text-xs">Pro</Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            {active === "branding" && <BrandingSettings />}
 
             {active === "email" && <InboundEmailSettings />}
 
