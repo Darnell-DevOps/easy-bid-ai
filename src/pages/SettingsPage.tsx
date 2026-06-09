@@ -16,6 +16,7 @@ import BrandingSettings from "@/components/settings/BrandingSettings";
 import NotificationsSettings from "@/components/settings/NotificationsSettings";
 import AutomationsSettings from "@/components/settings/AutomationsSettings";
 import AiPreferencesSettings from "@/components/settings/AiPreferencesSettings";
+import IntegrationsSettings from "@/components/settings/IntegrationsSettings";
 import {
   User,
   Palette,
