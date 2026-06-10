@@ -83,10 +83,21 @@ export default function SecuritySettings() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [savingPw, setSavingPw] = useState(false);
 
-  // 2FA (UI scaffold)
+  // 2FA (Supabase MFA / TOTP)
   const [twoFAEnabled, setTwoFAEnabled] = useState(false);
+  const [twoFAFactorId, setTwoFAFactorId] = useState<string | null>(null);
   const [twoFASetupAt, setTwoFASetupAt] = useState<string | null>(null);
+  const [twoFALoading, setTwoFALoading] = useState(true);
   const [twoFADialog, setTwoFADialog] = useState(false);
+  const [enrollStep, setEnrollStep] = useState<"scan" | "verify" | "codes">("scan");
+  const [enrollFactorId, setEnrollFactorId] = useState<string | null>(null);
+  const [enrollQr, setEnrollQr] = useState<string | null>(null);
+  const [enrollSecret, setEnrollSecret] = useState<string | null>(null);
+  const [enrollCode, setEnrollCode] = useState("");
+  const [enrollBusy, setEnrollBusy] = useState(false);
+  const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
+  const [recoveryDialog, setRecoveryDialog] = useState(false);
+  const [disableDialog, setDisableDialog] = useState(false);
 
   // alerts
   const [alerts, setAlerts] = useState<AlertPrefs>(DEFAULT_ALERTS);
