@@ -507,22 +507,42 @@ export default function SecuritySettings() {
               <p className="text-xs text-muted-foreground mt-0.5">
                 {twoFAEnabled && twoFASetupAt
                   ? `Set up ${new Date(twoFASetupAt).toLocaleDateString()}`
-                  : "Compatible with Google Authenticator, 1Password, Authy"}
+                  : "Works with Google Authenticator, 1Password, Authy and more"}
               </p>
             </div>
-            <Switch checked={twoFAEnabled} onCheckedChange={toggle2FA} />
+            <Switch
+              checked={twoFAEnabled}
+              disabled={twoFALoading || enrollBusy}
+              onCheckedChange={(v) => {
+                if (v) beginEnroll2FA();
+                else setDisableDialog(true);
+              }}
+            />
           </div>
 
           {twoFAEnabled && (
             <div className="flex items-center justify-between py-3 border-t border-border">
               <div>
                 <p className="text-sm font-medium text-foreground">Backup recovery codes</p>
-                <p className="text-xs text-muted-foreground mt-0.5">10 single-use codes available</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {recoveryCodes.length > 0
+                    ? `${recoveryCodes.length} single-use codes available`
+                    : "Generate codes to use if you lose your authenticator"}
+                </p>
               </div>
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => toast({ title: "Coming soon", description: "Recovery code download will be available with full 2FA rollout." })}>
-                <Download className="w-3.5 h-3.5" />
-                Download
-              </Button>
+              <div className="flex gap-2">
+                {recoveryCodes.length > 0 ? (
+                  <Button variant="outline" size="sm" className="gap-2" onClick={() => setRecoveryDialog(true)}>
+                    <KeyRound className="w-3.5 h-3.5" />
+                    View codes
+                  </Button>
+                ) : (
+                  <Button variant="outline" size="sm" className="gap-2" onClick={regenerateRecoveryCodes}>
+                    <KeyRound className="w-3.5 h-3.5" />
+                    Generate codes
+                  </Button>
+                )}
+              </div>
             </div>
           )}
         </CardContent>
