@@ -269,30 +269,7 @@ export default function SettingsPage() {
           <div className="space-y-6">
             {active === "profile" && <ProfileSettings />}
 
-            {active === "security" && (
-              <Card>
-                <CardContent className="p-6 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <KeyRound className="w-4 h-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm font-medium text-foreground">Password</p>
-                        <p className="text-xs text-muted-foreground">Send yourself a reset link</p>
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm" onClick={handleResetPassword} disabled={loadingReset}>
-                      {loadingReset ? "Sending..." : "Reset Password"}
-                    </Button>
-                  </div>
-                  <Separator />
-                  <ComingSoonRow
-                    title="Two-factor authentication"
-                    description="Add an extra layer of security with an authenticator app"
-                  />
-                  <ComingSoonRow title="Active sessions" description="Sign out other devices currently using your account" />
-                </CardContent>
-              </Card>
-            )}
+            {active === "security" && <SecuritySettings />}
 
             {active === "billing" && (
               <Card>
