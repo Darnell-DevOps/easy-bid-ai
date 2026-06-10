@@ -37,6 +37,34 @@ async function sendEmail(args: {
   }
 }
 
+async function automationsHandlePaymentEvent(args: {
+  userId: string;
+  kind: "proposal_paid" | "retainer_paid" | "proposal_failed" | "retainer_failed";
+  proposalId?: string | null;
+  retainerId?: string | null;
+  amountCents?: number;
+  currency?: string;
+}): Promise<Record<string, boolean>> {
+  try {
+    const { data, error } = await supabase.rpc("automations_handle_payment_event", {
+      _user_id: args.userId,
+      _kind: args.kind,
+      _proposal_id: args.proposalId ?? null,
+      _retainer_id: args.retainerId ?? null,
+      _amount_cents: args.amountCents ?? 0,
+      _currency: args.currency ?? "USD",
+    });
+    if (error) {
+      console.error("automations_handle_payment_event error:", error.message);
+      return {};
+    }
+    return (data as Record<string, boolean>) || {};
+  } catch (e: any) {
+    console.error("automations_handle_payment_event exception:", e?.message || e);
+    return {};
+  }
+}
+
 async function handleTransactionCompleted(data: any) {
   const cd = data?.customData || {};
   // Proposal one-off payments
@@ -47,7 +75,6 @@ async function handleTransactionCompleted(data: any) {
     });
     if (error) console.error("mark_proposal_paid error:", error.message);
 
-    // Send payment-confirmation to client
     const { data: prop } = await supabase
       .from("proposals")
       .select("user_id, client_id, client_name, service_type, amount_cents, currency")
@@ -58,7 +85,20 @@ async function handleTransactionCompleted(data: any) {
       const { data: c } = await supabase.from("clients").select("email").eq("id", prop.client_id).maybeSingle();
       clientEmail = c?.email || null;
     }
-    if (clientEmail && prop) {
+
+    // Run automation side-effects (notifications, onboarding auto-send/task)
+    const ran = prop?.user_id
+      ? await automationsHandlePaymentEvent({
+          userId: prop.user_id,
+          kind: "proposal_paid",
+          proposalId: cd.proposalId,
+          amountCents: prop.amount_cents || 0,
+          currency: prop.currency || "USD",
+        })
+      : {};
+
+    // Send payment-confirmation to client only if automation enabled
+    if (clientEmail && prop && ran.payment_auto_confirmation) {
       await sendEmail({
         templateName: "payment-confirmation",
         recipientEmail: clientEmail,
@@ -136,8 +176,15 @@ async function handleTransactionCompleted(data: any) {
       .in("kind", ["payment_failed", "payment_final"])
       .eq("status", "pending");
 
-    // Email payment confirmation to the client
-    if (ret.client_email) {
+    // Email payment confirmation to the client (gated by automation)
+    const ran = await automationsHandlePaymentEvent({
+      userId: ret.user_id,
+      kind: "retainer_paid",
+      retainerId,
+      amountCents: amount,
+      currency,
+    });
+    if (ret.client_email && ran.payment_auto_confirmation !== false) {
       await sendEmail({
         templateName: "payment-confirmation",
         recipientEmail: ret.client_email,
@@ -219,22 +266,33 @@ async function handleTransactionPaymentFailed(data: any) {
     { onConflict: "retainer_id,kind" },
   );
 
-  // Email the owner immediately
-  const to = await ownerEmail(ret.user_id);
-  if (to) {
-    await sendEmail({
-      templateName: "payment-failed",
-      recipientEmail: to,
-      userId: ret.user_id,
-      idempotencyKey: `payfail-${retainerId}-${newRetryCount}`,
-      data: {
-        client_name: ret.client_name,
-        amount: fmtMoney(amount, currency),
-        reason,
-        severity: newRetryCount >= 3 ? "final" : "warning",
-        url: `https://app.closesync.io/recovery`,
-      },
-    });
+  // Run automation side-effects (owner notification gated by retainer_notify_failed)
+  const ran = await automationsHandlePaymentEvent({
+    userId: ret.user_id,
+    kind: "retainer_failed",
+    retainerId,
+    amountCents: amount,
+    currency,
+  });
+
+  // Email the owner only if the failure notification automation is enabled
+  if (ran.retainer_notify_failed) {
+    const to = await ownerEmail(ret.user_id);
+    if (to) {
+      await sendEmail({
+        templateName: "payment-failed",
+        recipientEmail: to,
+        userId: ret.user_id,
+        idempotencyKey: `payfail-${retainerId}-${newRetryCount}`,
+        data: {
+          client_name: ret.client_name,
+          amount: fmtMoney(amount, currency),
+          reason,
+          severity: newRetryCount >= 3 ? "final" : "warning",
+          url: `https://app.closesync.io/recovery`,
+        },
+      });
+    }
   }
 }
 
