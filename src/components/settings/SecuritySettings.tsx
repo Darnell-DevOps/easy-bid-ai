@@ -112,6 +112,36 @@ export default function SecuritySettings() {
 
   const pwStrength = useMemo(() => scorePassword(newPw), [newPw]);
 
+  const refreshFactors = async () => {
+    setTwoFALoading(true);
+    const { data, error } = await supabase.auth.mfa.listFactors();
+    if (error) {
+      setTwoFALoading(false);
+      return;
+    }
+    const verified = (data?.totp || []).find((f: any) => f.status === "verified");
+    if (verified) {
+      setTwoFAEnabled(true);
+      setTwoFAFactorId(verified.id);
+      setTwoFASetupAt(verified.created_at || verified.updated_at || null);
+    } else {
+      setTwoFAEnabled(false);
+      setTwoFAFactorId(null);
+      setTwoFASetupAt(null);
+      // clean up any leftover unverified factors
+      for (const f of data?.totp || []) {
+        if (f.status !== "verified") {
+          await supabase.auth.mfa.unenroll({ factorId: f.id });
+        }
+      }
+    }
+    try {
+      const codesRaw = localStorage.getItem("security_2fa_codes");
+      if (codesRaw) setRecoveryCodes(JSON.parse(codesRaw));
+    } catch {}
+    setTwoFALoading(false);
+  };
+
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -122,13 +152,8 @@ export default function SecuritySettings() {
       try {
         const raw = localStorage.getItem("security_alert_prefs");
         if (raw) setAlerts({ ...DEFAULT_ALERTS, ...JSON.parse(raw) });
-        const twofa = localStorage.getItem("security_2fa");
-        if (twofa) {
-          const parsed = JSON.parse(twofa);
-          setTwoFAEnabled(!!parsed.enabled);
-          setTwoFASetupAt(parsed.setupAt || null);
-        }
       } catch {}
+      await refreshFactors();
     })();
   }, []);
 
