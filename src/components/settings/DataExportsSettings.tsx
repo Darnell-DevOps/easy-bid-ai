@@ -88,12 +88,9 @@ const LS_LAST_EXPORT = "data:lastExport";
 
 function toCSV(rows: any[]): string {
   if (!rows || rows.length === 0) return "";
-  const headers = Array.from(
-    rows.reduce((set: Set<string>, r) => {
-      Object.keys(r || {}).forEach((k) => set.add(k));
-      return set;
-    }, new Set<string>()),
-  );
+  const headerSet = new Set<string>();
+  rows.forEach((r) => Object.keys(r || {}).forEach((k) => headerSet.add(k)));
+  const headers = Array.from(headerSet);
   const esc = (v: any) => {
     if (v === null || v === undefined) return "";
     if (typeof v === "object") v = JSON.stringify(v);
