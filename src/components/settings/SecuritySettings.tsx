@@ -748,23 +748,146 @@ export default function SecuritySettings() {
         </DialogContent>
       </Dialog>
 
-      {/* 2FA enable dialog */}
-      <Dialog open={twoFADialog} onOpenChange={setTwoFADialog}>
+      {/* 2FA enrollment dialog */}
+      <Dialog open={twoFADialog} onOpenChange={(o) => { if (!o) cancelEnroll(); else setTwoFADialog(true); }}>
+        <DialogContent className="max-w-md">
+          {enrollStep !== "codes" ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>Enable two-factor authentication</DialogTitle>
+                <DialogDescription>
+                  Scan the QR code with your authenticator app, then enter the 6-digit code it generates.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4">
+                <div className="flex justify-center bg-white rounded-lg p-4">
+                  {enrollQr ? (
+                    <img src={enrollQr} alt="2FA QR code" className="w-44 h-44" />
+                  ) : (
+                    <div className="w-44 h-44 flex items-center justify-center">
+                      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+
+                {enrollSecret && (
+                  <div>
+                    <Label className="text-xs">Or enter this code manually</Label>
+                    <div className="mt-1.5 flex gap-2">
+                      <Input value={enrollSecret} readOnly className="font-mono text-xs" />
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={async () => {
+                          await navigator.clipboard.writeText(enrollSecret);
+                          toast({ title: "Copied" });
+                        }}
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <Label htmlFor="totp-code" className="text-xs">6-digit verification code</Label>
+                  <Input
+                    id="totp-code"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    maxLength={6}
+                    value={enrollCode}
+                    onChange={(e) => setEnrollCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    placeholder="123456"
+                    className="mt-1.5 tracking-[0.5em] text-center font-mono text-lg"
+                  />
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={cancelEnroll} disabled={enrollBusy}>Cancel</Button>
+                <Button onClick={verifyEnroll2FA} disabled={enrollBusy || enrollCode.length !== 6}>
+                  {enrollBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify & enable"}
+                </Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                  Save your recovery codes
+                </DialogTitle>
+                <DialogDescription>
+                  Store these somewhere safe. Each code can be used once if you lose access to your authenticator.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid grid-cols-2 gap-2 bg-muted/40 rounded-md p-4 font-mono text-sm">
+                {recoveryCodes.map((c) => (
+                  <div key={c} className="text-foreground">{c}</div>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1 gap-2" onClick={downloadRecoveryCodes}>
+                  <Download className="w-4 h-4" /> Download
+                </Button>
+                <Button variant="outline" className="flex-1 gap-2" onClick={copyRecoveryCodes}>
+                  <Copy className="w-4 h-4" /> Copy
+                </Button>
+              </div>
+              <DialogFooter>
+                <Button onClick={finishEnroll}>Done</Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* 2FA disable confirmation */}
+      <Dialog open={disableDialog} onOpenChange={setDisableDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Enable two-factor authentication</DialogTitle>
+            <DialogTitle>Disable two-factor authentication?</DialogTitle>
             <DialogDescription>
-              Full TOTP setup is being rolled out. For now we'll mark 2FA as enabled on your account and surface the option on sign in once available.
+              Your account will only be protected by your password. We strongly recommend keeping 2FA enabled.
             </DialogDescription>
           </DialogHeader>
-          <div className="bg-muted/40 rounded-md p-4 text-xs text-muted-foreground space-y-1">
-            <p>· Scan QR code with your authenticator app</p>
-            <p>· Enter the 6-digit code to confirm</p>
-            <p>· Download 10 backup codes</p>
-          </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setTwoFADialog(false)}>Cancel</Button>
-            <Button onClick={confirmEnable2FA}>Enable 2FA</Button>
+            <Button variant="outline" onClick={() => setDisableDialog(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={disable2FA} disabled={enrollBusy}>
+              {enrollBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : "Disable 2FA"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Recovery codes view dialog */}
+      <Dialog open={recoveryDialog} onOpenChange={setRecoveryDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="w-5 h-5 text-accent" /> Recovery codes
+            </DialogTitle>
+            <DialogDescription>
+              Each code can be used once. Regenerate if you suspect they've been compromised.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-2 bg-muted/40 rounded-md p-4 font-mono text-sm">
+            {recoveryCodes.map((c) => (
+              <div key={c} className="text-foreground">{c}</div>
+            ))}
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" className="gap-2" onClick={downloadRecoveryCodes}>
+              <Download className="w-4 h-4" /> Download
+            </Button>
+            <Button variant="outline" className="gap-2" onClick={copyRecoveryCodes}>
+              <Copy className="w-4 h-4" /> Copy
+            </Button>
+            <Button variant="outline" className="gap-2" onClick={regenerateRecoveryCodes}>
+              Regenerate
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
