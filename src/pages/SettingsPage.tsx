@@ -17,6 +17,7 @@ import NotificationsSettings from "@/components/settings/NotificationsSettings";
 import AutomationsSettings from "@/components/settings/AutomationsSettings";
 import AiPreferencesSettings from "@/components/settings/AiPreferencesSettings";
 import IntegrationsSettings from "@/components/settings/IntegrationsSettings";
+import SecuritySettings from "@/components/settings/SecuritySettings";
 import {
   User,
   Palette,
