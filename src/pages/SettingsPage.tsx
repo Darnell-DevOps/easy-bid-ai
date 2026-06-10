@@ -18,6 +18,7 @@ import AutomationsSettings from "@/components/settings/AutomationsSettings";
 import AiPreferencesSettings from "@/components/settings/AiPreferencesSettings";
 import IntegrationsSettings from "@/components/settings/IntegrationsSettings";
 import SecuritySettings from "@/components/settings/SecuritySettings";
+import BillingSettings from "@/components/settings/BillingSettings";
 import {
   User,
   Palette,
@@ -271,42 +272,7 @@ export default function SettingsPage() {
 
             {active === "security" && <SecuritySettings />}
 
-            {active === "billing" && (
-              <Card>
-                <CardContent className="p-6 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-foreground">Free Plan</span>
-                        <Badge variant="secondary" className="text-xs">Current</Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">£0/month</p>
-                    </div>
-                  </div>
-                  <Separator />
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-muted-foreground">Proposals this month</span>
-                      <span className="text-sm font-medium text-foreground">{proposalCount} / 3</span>
-                    </div>
-                    <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-accent transition-all"
-                        style={{ width: `${Math.min((proposalCount / 3) * 100, 100)}%` }}
-                      />
-                    </div>
-                  </div>
-                  <Button
-                    className="w-full bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110"
-                    onClick={() =>
-                      toast({ title: "Coming soon", description: "Pro plan payments will be available shortly." })
-                    }
-                  >
-                    Upgrade to Pro — £9/month
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
+            {active === "billing" && <BillingSettings />}
 
             {active === "branding" && <BrandingSettings />}
 
