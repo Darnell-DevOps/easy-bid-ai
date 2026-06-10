@@ -266,22 +266,33 @@ async function handleTransactionPaymentFailed(data: any) {
     { onConflict: "retainer_id,kind" },
   );
 
-  // Email the owner immediately
-  const to = await ownerEmail(ret.user_id);
-  if (to) {
-    await sendEmail({
-      templateName: "payment-failed",
-      recipientEmail: to,
-      userId: ret.user_id,
-      idempotencyKey: `payfail-${retainerId}-${newRetryCount}`,
-      data: {
-        client_name: ret.client_name,
-        amount: fmtMoney(amount, currency),
-        reason,
-        severity: newRetryCount >= 3 ? "final" : "warning",
-        url: `https://app.closesync.io/recovery`,
-      },
-    });
+  // Run automation side-effects (owner notification gated by retainer_notify_failed)
+  const ran = await automationsHandlePaymentEvent({
+    userId: ret.user_id,
+    kind: "retainer_failed",
+    retainerId,
+    amountCents: amount,
+    currency,
+  });
+
+  // Email the owner only if the failure notification automation is enabled
+  if (ran.retainer_notify_failed) {
+    const to = await ownerEmail(ret.user_id);
+    if (to) {
+      await sendEmail({
+        templateName: "payment-failed",
+        recipientEmail: to,
+        userId: ret.user_id,
+        idempotencyKey: `payfail-${retainerId}-${newRetryCount}`,
+        data: {
+          client_name: ret.client_name,
+          amount: fmtMoney(amount, currency),
+          reason,
+          severity: newRetryCount >= 3 ? "final" : "warning",
+          url: `https://app.closesync.io/recovery`,
+        },
+      });
+    }
   }
 }
 
