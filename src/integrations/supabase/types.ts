@@ -319,22 +319,38 @@ export type Database = {
       }
       business_branding: {
         Row: {
+          address_line1: string | null
+          address_line2: string | null
           brand_color: string | null
           brand_secondary_color: string | null
+          business_description: string | null
+          business_email: string | null
           business_name: string | null
+          business_phone: string | null
+          city: string | null
           contract_cover_show_details: boolean
           contract_cover_show_name: boolean
           contract_cover_show_title: boolean
+          country: string | null
           created_at: string
+          default_currency: string | null
+          default_invoice_due_days: number | null
+          default_invoice_grace_days: number | null
+          default_payment_terms: string | null
+          default_proposal_expiry_days: number | null
           default_sender_name: string | null
           default_sign_off: string | null
+          default_tax_rate: number | null
           email_signature: string | null
           favicon_url: string | null
           id: string
+          legal_name: string | null
           logo_url: string | null
+          postcode: string | null
           proposal_cover_show_date: boolean
           proposal_cover_show_name: boolean
           proposal_cover_show_tagline: boolean
+          registration_number: string | null
           reply_to_email: string | null
           reply_to_pending_email: string | null
           reply_to_token_expires_at: string | null
@@ -346,28 +362,49 @@ export type Database = {
           show_logo_on_onboarding: boolean
           show_logo_on_portal: boolean
           show_logo_on_proposals: boolean
+          state_region: string | null
           tagline: string | null
+          tax_number: string | null
+          trading_name: string | null
           updated_at: string
           user_id: string
+          vat_number: string | null
+          website_url: string | null
           welcome_message: string | null
         }
         Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
           brand_color?: string | null
           brand_secondary_color?: string | null
+          business_description?: string | null
+          business_email?: string | null
           business_name?: string | null
+          business_phone?: string | null
+          city?: string | null
           contract_cover_show_details?: boolean
           contract_cover_show_name?: boolean
           contract_cover_show_title?: boolean
+          country?: string | null
           created_at?: string
+          default_currency?: string | null
+          default_invoice_due_days?: number | null
+          default_invoice_grace_days?: number | null
+          default_payment_terms?: string | null
+          default_proposal_expiry_days?: number | null
           default_sender_name?: string | null
           default_sign_off?: string | null
+          default_tax_rate?: number | null
           email_signature?: string | null
           favicon_url?: string | null
           id?: string
+          legal_name?: string | null
           logo_url?: string | null
+          postcode?: string | null
           proposal_cover_show_date?: boolean
           proposal_cover_show_name?: boolean
           proposal_cover_show_tagline?: boolean
+          registration_number?: string | null
           reply_to_email?: string | null
           reply_to_pending_email?: string | null
           reply_to_token_expires_at?: string | null
@@ -379,28 +416,49 @@ export type Database = {
           show_logo_on_onboarding?: boolean
           show_logo_on_portal?: boolean
           show_logo_on_proposals?: boolean
+          state_region?: string | null
           tagline?: string | null
+          tax_number?: string | null
+          trading_name?: string | null
           updated_at?: string
           user_id: string
+          vat_number?: string | null
+          website_url?: string | null
           welcome_message?: string | null
         }
         Update: {
+          address_line1?: string | null
+          address_line2?: string | null
           brand_color?: string | null
           brand_secondary_color?: string | null
+          business_description?: string | null
+          business_email?: string | null
           business_name?: string | null
+          business_phone?: string | null
+          city?: string | null
           contract_cover_show_details?: boolean
           contract_cover_show_name?: boolean
           contract_cover_show_title?: boolean
+          country?: string | null
           created_at?: string
+          default_currency?: string | null
+          default_invoice_due_days?: number | null
+          default_invoice_grace_days?: number | null
+          default_payment_terms?: string | null
+          default_proposal_expiry_days?: number | null
           default_sender_name?: string | null
           default_sign_off?: string | null
+          default_tax_rate?: number | null
           email_signature?: string | null
           favicon_url?: string | null
           id?: string
+          legal_name?: string | null
           logo_url?: string | null
+          postcode?: string | null
           proposal_cover_show_date?: boolean
           proposal_cover_show_name?: boolean
           proposal_cover_show_tagline?: boolean
+          registration_number?: string | null
           reply_to_email?: string | null
           reply_to_pending_email?: string | null
           reply_to_token_expires_at?: string | null
@@ -412,9 +470,14 @@ export type Database = {
           show_logo_on_onboarding?: boolean
           show_logo_on_portal?: boolean
           show_logo_on_proposals?: boolean
+          state_region?: string | null
           tagline?: string | null
+          tax_number?: string | null
+          trading_name?: string | null
           updated_at?: string
           user_id?: string
+          vat_number?: string | null
+          website_url?: string | null
           welcome_message?: string | null
         }
         Relationships: []
