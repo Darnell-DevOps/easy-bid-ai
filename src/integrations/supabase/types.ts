@@ -1965,6 +1965,7 @@ export type Database = {
         }
         Returns: Json
       }
+      automations_run_all_ticks: { Args: never; Returns: Json }
       automations_run_user_ticks: { Args: { _user_id: string }; Returns: Json }
       booking_reschedule: {
         Args: { _new_at: string; _token: string }
