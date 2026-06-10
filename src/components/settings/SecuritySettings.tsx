@@ -35,6 +35,8 @@ import {
   Trash2,
   History,
   Bell,
+  Copy,
+  Loader2,
 } from "lucide-react";
 
 type AlertPrefs = {
