@@ -176,8 +176,15 @@ async function handleTransactionCompleted(data: any) {
       .in("kind", ["payment_failed", "payment_final"])
       .eq("status", "pending");
 
-    // Email payment confirmation to the client
-    if (ret.client_email) {
+    // Email payment confirmation to the client (gated by automation)
+    const ran = await automationsHandlePaymentEvent({
+      userId: ret.user_id,
+      kind: "retainer_paid",
+      retainerId,
+      amountCents: amount,
+      currency,
+    });
+    if (ret.client_email && ran.payment_auto_confirmation !== false) {
       await sendEmail({
         templateName: "payment-confirmation",
         recipientEmail: ret.client_email,
