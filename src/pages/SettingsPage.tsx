@@ -19,6 +19,7 @@ import AiPreferencesSettings from "@/components/settings/AiPreferencesSettings";
 import IntegrationsSettings from "@/components/settings/IntegrationsSettings";
 import SecuritySettings from "@/components/settings/SecuritySettings";
 import BillingSettings from "@/components/settings/BillingSettings";
+import DataExportsSettings from "@/components/settings/DataExportsSettings";
 import {
   User,
   Palette,
@@ -320,12 +321,7 @@ export default function SettingsPage() {
             {active === "automations" && <AutomationsSettings />}
             {active === "ai" && <AiPreferencesSettings />}
             {active === "integrations" && <IntegrationsSettings />}
-            {active === "data" && (
-              <ComingSoonCard
-                title="Data & Exports"
-                description="Export your clients, proposals and contracts as CSV. Request a full data wipe at any time."
-              />
-            )}
+            {active === "data" && <DataExportsSettings />}
 
             {/* Support always at bottom */}
             <Card>
