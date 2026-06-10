@@ -20,6 +20,7 @@ import IntegrationsSettings from "@/components/settings/IntegrationsSettings";
 import SecuritySettings from "@/components/settings/SecuritySettings";
 import BillingSettings from "@/components/settings/BillingSettings";
 import DataExportsSettings from "@/components/settings/DataExportsSettings";
+import BusinessInformationSettings from "@/components/settings/BusinessInformationSettings";
 import {
   User,
   Palette,
