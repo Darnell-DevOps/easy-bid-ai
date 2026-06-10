@@ -233,25 +233,125 @@ export default function SecuritySettings() {
     else toast({ title: "Reset email sent", description: "Check your inbox for the reset link." });
   };
 
-  const toggle2FA = () => {
-    if (twoFAEnabled) {
-      // disable
-      setTwoFAEnabled(false);
-      setTwoFASetupAt(null);
-      localStorage.setItem("security_2fa", JSON.stringify({ enabled: false }));
-      toast({ title: "Two-factor authentication disabled" });
-    } else {
-      setTwoFADialog(true);
+  const genRecoveryCodes = () => {
+    const out: string[] = [];
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    for (let i = 0; i < 10; i++) {
+      let c = "";
+      for (let j = 0; j < 10; j++) c += chars[Math.floor(Math.random() * chars.length)];
+      out.push(c.slice(0, 5) + "-" + c.slice(5));
     }
+    return out;
   };
 
-  const confirmEnable2FA = () => {
-    const now = new Date().toISOString();
-    setTwoFAEnabled(true);
-    setTwoFASetupAt(now);
-    localStorage.setItem("security_2fa", JSON.stringify({ enabled: true, setupAt: now }));
+  const beginEnroll2FA = async () => {
+    setEnrollBusy(true);
+    setEnrollCode("");
+    setEnrollStep("scan");
+    const { data, error } = await supabase.auth.mfa.enroll({
+      factorType: "totp",
+      friendlyName: `CloseSync ${new Date().toISOString().slice(0, 10)}`,
+    });
+    setEnrollBusy(false);
+    if (error || !data) {
+      toast({ title: "Couldn't start 2FA setup", description: error?.message, variant: "destructive" });
+      return;
+    }
+    setEnrollFactorId(data.id);
+    setEnrollQr((data as any).totp?.qr_code ?? null);
+    setEnrollSecret((data as any).totp?.secret ?? null);
+    setTwoFADialog(true);
+  };
+
+  const verifyEnroll2FA = async () => {
+    if (!enrollFactorId || enrollCode.length !== 6) return;
+    setEnrollBusy(true);
+    const { data: ch, error: chErr } = await supabase.auth.mfa.challenge({ factorId: enrollFactorId });
+    if (chErr || !ch) {
+      setEnrollBusy(false);
+      toast({ title: "Verification failed", description: chErr?.message, variant: "destructive" });
+      return;
+    }
+    const { error: vErr } = await supabase.auth.mfa.verify({
+      factorId: enrollFactorId,
+      challengeId: ch.id,
+      code: enrollCode,
+    });
+    setEnrollBusy(false);
+    if (vErr) {
+      toast({ title: "Invalid code", description: vErr.message, variant: "destructive" });
+      return;
+    }
+    const codes = genRecoveryCodes();
+    setRecoveryCodes(codes);
+    localStorage.setItem("security_2fa_codes", JSON.stringify(codes));
+    setEnrollStep("codes");
+    await refreshFactors();
+    toast({ title: "Two-factor authentication enabled" });
+  };
+
+  const cancelEnroll = async () => {
+    if (enrollFactorId && !twoFAEnabled) {
+      await supabase.auth.mfa.unenroll({ factorId: enrollFactorId });
+    }
     setTwoFADialog(false);
-    toast({ title: "Two-factor authentication enabled", description: "Store your backup codes somewhere safe." });
+    setEnrollFactorId(null);
+    setEnrollQr(null);
+    setEnrollSecret(null);
+    setEnrollCode("");
+    setEnrollStep("scan");
+  };
+
+  const finishEnroll = () => {
+    setTwoFADialog(false);
+    setEnrollFactorId(null);
+    setEnrollQr(null);
+    setEnrollSecret(null);
+    setEnrollCode("");
+    setEnrollStep("scan");
+  };
+
+  const disable2FA = async () => {
+    if (!twoFAFactorId) return;
+    setEnrollBusy(true);
+    const { error } = await supabase.auth.mfa.unenroll({ factorId: twoFAFactorId });
+    setEnrollBusy(false);
+    setDisableDialog(false);
+    if (error) {
+      toast({ title: "Couldn't disable 2FA", description: error.message, variant: "destructive" });
+      return;
+    }
+    localStorage.removeItem("security_2fa_codes");
+    setRecoveryCodes([]);
+    await refreshFactors();
+    toast({ title: "Two-factor authentication disabled" });
+  };
+
+  const downloadRecoveryCodes = () => {
+    const text =
+      "CloseSync AI — Two-factor recovery codes\n" +
+      "Generated: " + new Date().toLocaleString() + "\n\n" +
+      recoveryCodes.join("\n") + "\n\n" +
+      "Keep these somewhere safe. Each code can only be used once.\n";
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "closesync-recovery-codes.txt";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const copyRecoveryCodes = async () => {
+    await navigator.clipboard.writeText(recoveryCodes.join("\n"));
+    toast({ title: "Copied to clipboard" });
+  };
+
+  const regenerateRecoveryCodes = () => {
+    const codes = genRecoveryCodes();
+    setRecoveryCodes(codes);
+    localStorage.setItem("security_2fa_codes", JSON.stringify(codes));
+    toast({ title: "New recovery codes generated", description: "Previous codes are no longer valid." });
   };
 
   // mock login history
