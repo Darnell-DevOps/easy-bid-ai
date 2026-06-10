@@ -37,6 +37,34 @@ async function sendEmail(args: {
   }
 }
 
+async function automationsHandlePaymentEvent(args: {
+  userId: string;
+  kind: "proposal_paid" | "retainer_paid" | "proposal_failed" | "retainer_failed";
+  proposalId?: string | null;
+  retainerId?: string | null;
+  amountCents?: number;
+  currency?: string;
+}): Promise<Record<string, boolean>> {
+  try {
+    const { data, error } = await supabase.rpc("automations_handle_payment_event", {
+      _user_id: args.userId,
+      _kind: args.kind,
+      _proposal_id: args.proposalId ?? null,
+      _retainer_id: args.retainerId ?? null,
+      _amount_cents: args.amountCents ?? 0,
+      _currency: args.currency ?? "USD",
+    });
+    if (error) {
+      console.error("automations_handle_payment_event error:", error.message);
+      return {};
+    }
+    return (data as Record<string, boolean>) || {};
+  } catch (e: any) {
+    console.error("automations_handle_payment_event exception:", e?.message || e);
+    return {};
+  }
+}
+
 async function handleTransactionCompleted(data: any) {
   const cd = data?.customData || {};
   // Proposal one-off payments
@@ -47,7 +75,6 @@ async function handleTransactionCompleted(data: any) {
     });
     if (error) console.error("mark_proposal_paid error:", error.message);
 
-    // Send payment-confirmation to client
     const { data: prop } = await supabase
       .from("proposals")
       .select("user_id, client_id, client_name, service_type, amount_cents, currency")
@@ -58,7 +85,20 @@ async function handleTransactionCompleted(data: any) {
       const { data: c } = await supabase.from("clients").select("email").eq("id", prop.client_id).maybeSingle();
       clientEmail = c?.email || null;
     }
-    if (clientEmail && prop) {
+
+    // Run automation side-effects (notifications, onboarding auto-send/task)
+    const ran = prop?.user_id
+      ? await automationsHandlePaymentEvent({
+          userId: prop.user_id,
+          kind: "proposal_paid",
+          proposalId: cd.proposalId,
+          amountCents: prop.amount_cents || 0,
+          currency: prop.currency || "USD",
+        })
+      : {};
+
+    // Send payment-confirmation to client only if automation enabled
+    if (clientEmail && prop && ran.payment_auto_confirmation) {
       await sendEmail({
         templateName: "payment-confirmation",
         recipientEmail: clientEmail,
