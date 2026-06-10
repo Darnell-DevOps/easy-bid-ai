@@ -1,0 +1,23 @@
+
+ALTER TABLE public.business_branding
+  ADD COLUMN IF NOT EXISTS legal_name text,
+  ADD COLUMN IF NOT EXISTS trading_name text,
+  ADD COLUMN IF NOT EXISTS address_line1 text,
+  ADD COLUMN IF NOT EXISTS address_line2 text,
+  ADD COLUMN IF NOT EXISTS city text,
+  ADD COLUMN IF NOT EXISTS state_region text,
+  ADD COLUMN IF NOT EXISTS postcode text,
+  ADD COLUMN IF NOT EXISTS country text,
+  ADD COLUMN IF NOT EXISTS registration_number text,
+  ADD COLUMN IF NOT EXISTS vat_number text,
+  ADD COLUMN IF NOT EXISTS tax_number text,
+  ADD COLUMN IF NOT EXISTS business_email text,
+  ADD COLUMN IF NOT EXISTS business_phone text,
+  ADD COLUMN IF NOT EXISTS website_url text,
+  ADD COLUMN IF NOT EXISTS business_description text,
+  ADD COLUMN IF NOT EXISTS default_proposal_expiry_days integer DEFAULT 30,
+  ADD COLUMN IF NOT EXISTS default_currency text DEFAULT 'USD',
+  ADD COLUMN IF NOT EXISTS default_payment_terms text DEFAULT 'net_14',
+  ADD COLUMN IF NOT EXISTS default_invoice_due_days integer DEFAULT 14,
+  ADD COLUMN IF NOT EXISTS default_invoice_grace_days integer DEFAULT 7,
+  ADD COLUMN IF NOT EXISTS default_tax_rate numeric(5,2);

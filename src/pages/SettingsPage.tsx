@@ -20,6 +20,7 @@ import IntegrationsSettings from "@/components/settings/IntegrationsSettings";
 import SecuritySettings from "@/components/settings/SecuritySettings";
 import BillingSettings from "@/components/settings/BillingSettings";
 import DataExportsSettings from "@/components/settings/DataExportsSettings";
+import BusinessInformationSettings from "@/components/settings/BusinessInformationSettings";
 import {
   User,
   Palette,
@@ -281,12 +282,7 @@ export default function SettingsPage() {
 
             {active === "notifications" && <NotificationsSettings />}
 
-            {active === "business" && (
-              <ComingSoonCard
-                title="Business Information"
-                description="Soon you'll be able to set your trading name, address, VAT number and registration details — used automatically on invoices, contracts and proposals."
-              />
-            )}
+            {active === "business" && <BusinessInformationSettings />}
             {active === "calendar" && (
               <ComingSoonCard
                 title="Calendar defaults"
