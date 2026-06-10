@@ -35,6 +35,8 @@ import {
   Trash2,
   History,
   Bell,
+  Copy,
+  Loader2,
 } from "lucide-react";
 
 type AlertPrefs = {
@@ -81,10 +83,21 @@ export default function SecuritySettings() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [savingPw, setSavingPw] = useState(false);
 
-  // 2FA (UI scaffold)
+  // 2FA (Supabase MFA / TOTP)
   const [twoFAEnabled, setTwoFAEnabled] = useState(false);
+  const [twoFAFactorId, setTwoFAFactorId] = useState<string | null>(null);
   const [twoFASetupAt, setTwoFASetupAt] = useState<string | null>(null);
+  const [twoFALoading, setTwoFALoading] = useState(true);
   const [twoFADialog, setTwoFADialog] = useState(false);
+  const [enrollStep, setEnrollStep] = useState<"scan" | "verify" | "codes">("scan");
+  const [enrollFactorId, setEnrollFactorId] = useState<string | null>(null);
+  const [enrollQr, setEnrollQr] = useState<string | null>(null);
+  const [enrollSecret, setEnrollSecret] = useState<string | null>(null);
+  const [enrollCode, setEnrollCode] = useState("");
+  const [enrollBusy, setEnrollBusy] = useState(false);
+  const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
+  const [recoveryDialog, setRecoveryDialog] = useState(false);
+  const [disableDialog, setDisableDialog] = useState(false);
 
   // alerts
   const [alerts, setAlerts] = useState<AlertPrefs>(DEFAULT_ALERTS);
@@ -99,6 +112,36 @@ export default function SecuritySettings() {
 
   const pwStrength = useMemo(() => scorePassword(newPw), [newPw]);
 
+  const refreshFactors = async () => {
+    setTwoFALoading(true);
+    const { data, error } = await supabase.auth.mfa.listFactors();
+    if (error) {
+      setTwoFALoading(false);
+      return;
+    }
+    const verified = (data?.totp || []).find((f: any) => f.status === "verified");
+    if (verified) {
+      setTwoFAEnabled(true);
+      setTwoFAFactorId(verified.id);
+      setTwoFASetupAt(verified.created_at || verified.updated_at || null);
+    } else {
+      setTwoFAEnabled(false);
+      setTwoFAFactorId(null);
+      setTwoFASetupAt(null);
+      // clean up any leftover unverified factors
+      for (const f of data?.totp || []) {
+        if (f.status !== "verified") {
+          await supabase.auth.mfa.unenroll({ factorId: f.id });
+        }
+      }
+    }
+    try {
+      const codesRaw = localStorage.getItem("security_2fa_codes");
+      if (codesRaw) setRecoveryCodes(JSON.parse(codesRaw));
+    } catch {}
+    setTwoFALoading(false);
+  };
+
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -109,13 +152,8 @@ export default function SecuritySettings() {
       try {
         const raw = localStorage.getItem("security_alert_prefs");
         if (raw) setAlerts({ ...DEFAULT_ALERTS, ...JSON.parse(raw) });
-        const twofa = localStorage.getItem("security_2fa");
-        if (twofa) {
-          const parsed = JSON.parse(twofa);
-          setTwoFAEnabled(!!parsed.enabled);
-          setTwoFASetupAt(parsed.setupAt || null);
-        }
       } catch {}
+      await refreshFactors();
     })();
   }, []);
 
@@ -195,25 +233,125 @@ export default function SecuritySettings() {
     else toast({ title: "Reset email sent", description: "Check your inbox for the reset link." });
   };
 
-  const toggle2FA = () => {
-    if (twoFAEnabled) {
-      // disable
-      setTwoFAEnabled(false);
-      setTwoFASetupAt(null);
-      localStorage.setItem("security_2fa", JSON.stringify({ enabled: false }));
-      toast({ title: "Two-factor authentication disabled" });
-    } else {
-      setTwoFADialog(true);
+  const genRecoveryCodes = () => {
+    const out: string[] = [];
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    for (let i = 0; i < 10; i++) {
+      let c = "";
+      for (let j = 0; j < 10; j++) c += chars[Math.floor(Math.random() * chars.length)];
+      out.push(c.slice(0, 5) + "-" + c.slice(5));
     }
+    return out;
   };
 
-  const confirmEnable2FA = () => {
-    const now = new Date().toISOString();
-    setTwoFAEnabled(true);
-    setTwoFASetupAt(now);
-    localStorage.setItem("security_2fa", JSON.stringify({ enabled: true, setupAt: now }));
+  const beginEnroll2FA = async () => {
+    setEnrollBusy(true);
+    setEnrollCode("");
+    setEnrollStep("scan");
+    const { data, error } = await supabase.auth.mfa.enroll({
+      factorType: "totp",
+      friendlyName: `CloseSync ${new Date().toISOString().slice(0, 10)}`,
+    });
+    setEnrollBusy(false);
+    if (error || !data) {
+      toast({ title: "Couldn't start 2FA setup", description: error?.message, variant: "destructive" });
+      return;
+    }
+    setEnrollFactorId(data.id);
+    setEnrollQr((data as any).totp?.qr_code ?? null);
+    setEnrollSecret((data as any).totp?.secret ?? null);
+    setTwoFADialog(true);
+  };
+
+  const verifyEnroll2FA = async () => {
+    if (!enrollFactorId || enrollCode.length !== 6) return;
+    setEnrollBusy(true);
+    const { data: ch, error: chErr } = await supabase.auth.mfa.challenge({ factorId: enrollFactorId });
+    if (chErr || !ch) {
+      setEnrollBusy(false);
+      toast({ title: "Verification failed", description: chErr?.message, variant: "destructive" });
+      return;
+    }
+    const { error: vErr } = await supabase.auth.mfa.verify({
+      factorId: enrollFactorId,
+      challengeId: ch.id,
+      code: enrollCode,
+    });
+    setEnrollBusy(false);
+    if (vErr) {
+      toast({ title: "Invalid code", description: vErr.message, variant: "destructive" });
+      return;
+    }
+    const codes = genRecoveryCodes();
+    setRecoveryCodes(codes);
+    localStorage.setItem("security_2fa_codes", JSON.stringify(codes));
+    setEnrollStep("codes");
+    await refreshFactors();
+    toast({ title: "Two-factor authentication enabled" });
+  };
+
+  const cancelEnroll = async () => {
+    if (enrollFactorId && !twoFAEnabled) {
+      await supabase.auth.mfa.unenroll({ factorId: enrollFactorId });
+    }
     setTwoFADialog(false);
-    toast({ title: "Two-factor authentication enabled", description: "Store your backup codes somewhere safe." });
+    setEnrollFactorId(null);
+    setEnrollQr(null);
+    setEnrollSecret(null);
+    setEnrollCode("");
+    setEnrollStep("scan");
+  };
+
+  const finishEnroll = () => {
+    setTwoFADialog(false);
+    setEnrollFactorId(null);
+    setEnrollQr(null);
+    setEnrollSecret(null);
+    setEnrollCode("");
+    setEnrollStep("scan");
+  };
+
+  const disable2FA = async () => {
+    if (!twoFAFactorId) return;
+    setEnrollBusy(true);
+    const { error } = await supabase.auth.mfa.unenroll({ factorId: twoFAFactorId });
+    setEnrollBusy(false);
+    setDisableDialog(false);
+    if (error) {
+      toast({ title: "Couldn't disable 2FA", description: error.message, variant: "destructive" });
+      return;
+    }
+    localStorage.removeItem("security_2fa_codes");
+    setRecoveryCodes([]);
+    await refreshFactors();
+    toast({ title: "Two-factor authentication disabled" });
+  };
+
+  const downloadRecoveryCodes = () => {
+    const text =
+      "CloseSync AI — Two-factor recovery codes\n" +
+      "Generated: " + new Date().toLocaleString() + "\n\n" +
+      recoveryCodes.join("\n") + "\n\n" +
+      "Keep these somewhere safe. Each code can only be used once.\n";
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "closesync-recovery-codes.txt";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const copyRecoveryCodes = async () => {
+    await navigator.clipboard.writeText(recoveryCodes.join("\n"));
+    toast({ title: "Copied to clipboard" });
+  };
+
+  const regenerateRecoveryCodes = () => {
+    const codes = genRecoveryCodes();
+    setRecoveryCodes(codes);
+    localStorage.setItem("security_2fa_codes", JSON.stringify(codes));
+    toast({ title: "New recovery codes generated", description: "Previous codes are no longer valid." });
   };
 
   // mock login history
@@ -369,22 +507,42 @@ export default function SecuritySettings() {
               <p className="text-xs text-muted-foreground mt-0.5">
                 {twoFAEnabled && twoFASetupAt
                   ? `Set up ${new Date(twoFASetupAt).toLocaleDateString()}`
-                  : "Compatible with Google Authenticator, 1Password, Authy"}
+                  : "Works with Google Authenticator, 1Password, Authy and more"}
               </p>
             </div>
-            <Switch checked={twoFAEnabled} onCheckedChange={toggle2FA} />
+            <Switch
+              checked={twoFAEnabled}
+              disabled={twoFALoading || enrollBusy}
+              onCheckedChange={(v) => {
+                if (v) beginEnroll2FA();
+                else setDisableDialog(true);
+              }}
+            />
           </div>
 
           {twoFAEnabled && (
             <div className="flex items-center justify-between py-3 border-t border-border">
               <div>
                 <p className="text-sm font-medium text-foreground">Backup recovery codes</p>
-                <p className="text-xs text-muted-foreground mt-0.5">10 single-use codes available</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {recoveryCodes.length > 0
+                    ? `${recoveryCodes.length} single-use codes available`
+                    : "Generate codes to use if you lose your authenticator"}
+                </p>
               </div>
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => toast({ title: "Coming soon", description: "Recovery code download will be available with full 2FA rollout." })}>
-                <Download className="w-3.5 h-3.5" />
-                Download
-              </Button>
+              <div className="flex gap-2">
+                {recoveryCodes.length > 0 ? (
+                  <Button variant="outline" size="sm" className="gap-2" onClick={() => setRecoveryDialog(true)}>
+                    <KeyRound className="w-3.5 h-3.5" />
+                    View codes
+                  </Button>
+                ) : (
+                  <Button variant="outline" size="sm" className="gap-2" onClick={regenerateRecoveryCodes}>
+                    <KeyRound className="w-3.5 h-3.5" />
+                    Generate codes
+                  </Button>
+                )}
+              </div>
             </div>
           )}
         </CardContent>
@@ -590,23 +748,146 @@ export default function SecuritySettings() {
         </DialogContent>
       </Dialog>
 
-      {/* 2FA enable dialog */}
-      <Dialog open={twoFADialog} onOpenChange={setTwoFADialog}>
+      {/* 2FA enrollment dialog */}
+      <Dialog open={twoFADialog} onOpenChange={(o) => { if (!o) cancelEnroll(); else setTwoFADialog(true); }}>
+        <DialogContent className="max-w-md">
+          {enrollStep !== "codes" ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>Enable two-factor authentication</DialogTitle>
+                <DialogDescription>
+                  Scan the QR code with your authenticator app, then enter the 6-digit code it generates.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4">
+                <div className="flex justify-center bg-white rounded-lg p-4">
+                  {enrollQr ? (
+                    <img src={enrollQr} alt="2FA QR code" className="w-44 h-44" />
+                  ) : (
+                    <div className="w-44 h-44 flex items-center justify-center">
+                      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+
+                {enrollSecret && (
+                  <div>
+                    <Label className="text-xs">Or enter this code manually</Label>
+                    <div className="mt-1.5 flex gap-2">
+                      <Input value={enrollSecret} readOnly className="font-mono text-xs" />
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={async () => {
+                          await navigator.clipboard.writeText(enrollSecret);
+                          toast({ title: "Copied" });
+                        }}
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <Label htmlFor="totp-code" className="text-xs">6-digit verification code</Label>
+                  <Input
+                    id="totp-code"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    maxLength={6}
+                    value={enrollCode}
+                    onChange={(e) => setEnrollCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    placeholder="123456"
+                    className="mt-1.5 tracking-[0.5em] text-center font-mono text-lg"
+                  />
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={cancelEnroll} disabled={enrollBusy}>Cancel</Button>
+                <Button onClick={verifyEnroll2FA} disabled={enrollBusy || enrollCode.length !== 6}>
+                  {enrollBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify & enable"}
+                </Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                  Save your recovery codes
+                </DialogTitle>
+                <DialogDescription>
+                  Store these somewhere safe. Each code can be used once if you lose access to your authenticator.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid grid-cols-2 gap-2 bg-muted/40 rounded-md p-4 font-mono text-sm">
+                {recoveryCodes.map((c) => (
+                  <div key={c} className="text-foreground">{c}</div>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1 gap-2" onClick={downloadRecoveryCodes}>
+                  <Download className="w-4 h-4" /> Download
+                </Button>
+                <Button variant="outline" className="flex-1 gap-2" onClick={copyRecoveryCodes}>
+                  <Copy className="w-4 h-4" /> Copy
+                </Button>
+              </div>
+              <DialogFooter>
+                <Button onClick={finishEnroll}>Done</Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* 2FA disable confirmation */}
+      <Dialog open={disableDialog} onOpenChange={setDisableDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Enable two-factor authentication</DialogTitle>
+            <DialogTitle>Disable two-factor authentication?</DialogTitle>
             <DialogDescription>
-              Full TOTP setup is being rolled out. For now we'll mark 2FA as enabled on your account and surface the option on sign in once available.
+              Your account will only be protected by your password. We strongly recommend keeping 2FA enabled.
             </DialogDescription>
           </DialogHeader>
-          <div className="bg-muted/40 rounded-md p-4 text-xs text-muted-foreground space-y-1">
-            <p>· Scan QR code with your authenticator app</p>
-            <p>· Enter the 6-digit code to confirm</p>
-            <p>· Download 10 backup codes</p>
-          </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setTwoFADialog(false)}>Cancel</Button>
-            <Button onClick={confirmEnable2FA}>Enable 2FA</Button>
+            <Button variant="outline" onClick={() => setDisableDialog(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={disable2FA} disabled={enrollBusy}>
+              {enrollBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : "Disable 2FA"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Recovery codes view dialog */}
+      <Dialog open={recoveryDialog} onOpenChange={setRecoveryDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="w-5 h-5 text-accent" /> Recovery codes
+            </DialogTitle>
+            <DialogDescription>
+              Each code can be used once. Regenerate if you suspect they've been compromised.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-2 bg-muted/40 rounded-md p-4 font-mono text-sm">
+            {recoveryCodes.map((c) => (
+              <div key={c} className="text-foreground">{c}</div>
+            ))}
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" className="gap-2" onClick={downloadRecoveryCodes}>
+              <Download className="w-4 h-4" /> Download
+            </Button>
+            <Button variant="outline" className="gap-2" onClick={copyRecoveryCodes}>
+              <Copy className="w-4 h-4" /> Copy
+            </Button>
+            <Button variant="outline" className="gap-2" onClick={regenerateRecoveryCodes}>
+              Regenerate
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
