@@ -380,7 +380,7 @@ export default function ClientPortal() {
   const isAccepted = status === "accepted";
   const isRejected = status === "rejected";
   const isPaid = proposal.client_paid;
-  const stage = deriveFullStage(proposal, contract, onboarding, hasBooking);
+  const stage = deriveProjectStage(proposal, contract, onboarding, hasBooking);
   const onboardingComplete = onboarding?.status === "completed";
   const onboardingStarted = onboarding?.status === "in_progress";
   const isContractSigned = contract?.status === "signed";
@@ -388,6 +388,80 @@ export default function ClientPortal() {
   const readyToPay = isAccepted && isContractSigned && !isPaid;
   const acceptedNotPaid = isAccepted && !isPaid;
   const hasPrice = !!proposal.amount_cents && proposal.amount_cents >= 70;
+
+  // Build activity timeline events
+  const activityEvents: { id: string; iso: string; label: string; tone: "blue" | "purple" | "emerald" | "amber" | "rose" }[] = [];
+  if (proposal.sent_at) activityEvents.push({ id: "sent", iso: proposal.sent_at, label: "Proposal sent", tone: "blue" });
+  if (proposal.viewed_at) activityEvents.push({ id: "viewed", iso: proposal.viewed_at, label: "Proposal viewed", tone: "amber" });
+  if (proposal.accepted_at) activityEvents.push({ id: "accepted", iso: proposal.accepted_at, label: "Proposal accepted", tone: "emerald" });
+  if (proposal.rejected_at) activityEvents.push({ id: "rejected", iso: proposal.rejected_at, label: "Proposal declined", tone: "rose" });
+  if (contract?.signed_at) activityEvents.push({ id: "contract-signed", iso: contract.signed_at, label: "Contract signed", tone: "purple" });
+  if (isPaid && proposal.accepted_at) {
+    // Use accepted_at as a fallback; payment timestamp isn't on the public row
+    activityEvents.push({ id: "paid", iso: contract?.signed_at || proposal.accepted_at, label: "Payment received", tone: "emerald" });
+  }
+  if ((onboarding as any)?.submitted_at) {
+    activityEvents.push({ id: "onboarding-done", iso: (onboarding as any).submitted_at, label: "Onboarding completed", tone: "emerald" });
+  }
+  for (const b of bookings) {
+    if (b.status !== "cancelled") {
+      activityEvents.push({ id: `booking-${b.id}`, iso: b.created_at, label: "Kickoff call booked", tone: "purple" });
+    }
+  }
+  activityEvents.sort((a, b) => new Date(b.iso).getTime() - new Date(a.iso).getTime());
+
+  // Upcoming booking (first scheduled in the future, not cancelled)
+  const nowMs = Date.now();
+  const upcomingBooking = bookings.find((b) => b.status !== "cancelled" && new Date(b.scheduled_at).getTime() >= nowMs) || null;
+
+  // Next action card content
+  let nextAction: React.ComponentProps<typeof ProjectOverview>["nextAction"] = null;
+  if (!isRejected) {
+    if (stage === "proposal") {
+      nextAction = {
+        title: "Review and accept your proposal",
+        description: "Look through the details below, then accept to receive your contract.",
+        icon: FileCheck,
+        ctaLabel: "Review proposal",
+        onClick: () => document.getElementById("accept-section")?.scrollIntoView({ behavior: "smooth", block: "start" }),
+      };
+    } else if (stage === "contract" && contract) {
+      nextAction = {
+        title: "Sign your contract",
+        description: "Review the agreement and add your signature to unlock payment.",
+        icon: FileSignature,
+        ctaLabel: "Review & sign",
+        href: `/sign/${contract.signing_token}`,
+      };
+    } else if (stage === "payment") {
+      nextAction = {
+        title: "Complete payment",
+        description: formattedTotal ? `Pay ${formattedTotal} to secure your slot and begin work.` : "Complete payment to secure your slot.",
+        icon: CreditCard,
+        ctaLabel: "Pay now",
+        onClick: handlePayAgain,
+        disabled: payLoading,
+      };
+    } else if (stage === "onboarding" && onboarding) {
+      nextAction = {
+        title: onboardingStarted ? "Continue your onboarding" : "Complete your onboarding",
+        description: "Tell us about your project so we can hit the ground running. Takes 3–5 minutes.",
+        icon: ClipboardList,
+        ctaLabel: onboardingStarted ? "Continue" : "Start onboarding",
+        href: `/onboard/${onboarding.access_token}`,
+      };
+    } else if (stage === "kickoff" && bookingLink) {
+      nextAction = {
+        title: "Book your kickoff call",
+        description: "Pick a time that works for you and we'll get started.",
+        icon: CalendarPlus,
+        ctaLabel: "Schedule call",
+        href: `/book/${bookingLink.slug}?proposal=${proposal.id}`,
+      };
+    }
+  }
+
+  const projectName = proposal.service_type;
 
   return (
     <div className="min-h-screen bg-background pb-24 sm:pb-8">
