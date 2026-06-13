@@ -17,6 +17,7 @@ import SettingsPage from "./pages/SettingsPage";
 import SampleProposal from "./pages/SampleProposal";
 import Templates from "./pages/Templates";
 import RevenueDashboard from "./pages/RevenueDashboard";
+import ClientPortalLauncher from "./pages/ClientPortalLauncher";
 import ProposalsDashboard from "./pages/ProposalsDashboard";
 import Clients from "./pages/Clients";
 import NewClient from "./pages/NewClient";
@@ -95,6 +96,7 @@ const App = () => (
            <Route path="/dashboard/templates" element={<AuthGuard><Templates /></AuthGuard>} />
            <Route path="/dashboard/emails" element={<AuthGuard><EmailsDashboard /></AuthGuard>} />
             <Route path="/dashboard/revenue" element={<AuthGuard><RevenueDashboard /></AuthGuard>} />
+            <Route path="/dashboard/client-portal" element={<AuthGuard><ClientPortalLauncher /></AuthGuard>} />
             <Route path="/dashboard/proposals" element={<AuthGuard><ProposalsDashboard /></AuthGuard>} />
             <Route path="/dashboard/clients" element={<AuthGuard><Clients /></AuthGuard>} />
             <Route path="/dashboard/clients/new" element={<AuthGuard><NewClient /></AuthGuard>} />
