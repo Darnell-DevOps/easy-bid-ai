@@ -99,7 +99,7 @@ export default function RevenueDashboard() {
         supabase
           .from("retainers")
           .select(
-            "id, client_name, amount_cents, currency, billing_interval, custom_interval_days, status, has_failed_payment, failed_payment_at, renewed_at, next_billing_date, last_billed_date"
+            "id, client_name, amount_cents, currency, billing_interval, custom_interval_days, status, has_failed_payment, failed_payment_at, renewed_at, next_billing_date, last_billed_date, service_type, total_billed_cents"
           ),
         supabase
           .from("retainer_invoices")
