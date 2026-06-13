@@ -189,14 +189,16 @@ export default function ClientPortal() {
           if (ob) setOnboarding(ob as unknown as OnboardingFormRow);
         });
 
-      // Has booking?
+      // Fetch bookings for this proposal
       supabase
         .from("bookings")
-        .select("id")
+        .select("id, scheduled_at, meeting_name, status, created_at")
         .eq("proposal_id", id)
-        .limit(1)
+        .order("scheduled_at", { ascending: true })
         .then(({ data: bk }) => {
-          if (bk && bk.length > 0) setHasBooking(true);
+          const rows = (bk || []) as BookingLite[];
+          setBookings(rows);
+          if (rows.length > 0) setHasBooking(true);
         });
 
       // Auto-mark as viewed (non-blocking)
