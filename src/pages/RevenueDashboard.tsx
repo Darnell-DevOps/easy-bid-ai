@@ -683,9 +683,7 @@ export default function RevenueDashboard() {
                 ))}
               </div>
             ) : activityEvents.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-8 text-center">
-                No recent activity yet. Payments and renewals will appear here.
-              </p>
+              <RevenueEmptyState />
             ) : (
               <div className="space-y-2">
                 {activityEvents.map((e) => {
