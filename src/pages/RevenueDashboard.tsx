@@ -499,7 +499,7 @@ export default function RevenueDashboard() {
     return Object.entries(buckets)
       .filter(([, v]) => v > 0)
       .map(([name, value]) => ({ name, value, color: colors[name] }));
-  }, [paidProposals, retainers, retainerInvoices]);
+  }, [filteredPaidProposals, filteredInvoices, retainers]);
 
   const breakdownTotal = useMemo(
     () => breakdownData.reduce((acc, b) => acc + b.value, 0),
