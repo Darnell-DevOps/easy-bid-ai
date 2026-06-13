@@ -888,7 +888,7 @@ export default function RevenueDashboard() {
                 <h2 className="text-lg font-semibold text-foreground">Revenue Breakdown</h2>
                 <p className="text-xs text-muted-foreground mt-0.5">Where your revenue is coming from</p>
               </div>
-              <span className="text-xs text-muted-foreground">All time</span>
+              <span className="text-xs text-muted-foreground">{filterLabel}</span>
             </div>
             {loading ? (
               <div className="h-64 bg-muted animate-pulse rounded-lg" />
