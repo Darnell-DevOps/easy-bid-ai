@@ -3,6 +3,10 @@ import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft,
@@ -24,6 +28,8 @@ import {
   CalendarClock,
   FilePlus,
   ArrowUpRight,
+  Filter,
+  CalendarRange,
 } from "lucide-react";
 import {
   ChartContainer,
@@ -33,6 +39,8 @@ import {
 } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { monthlyEquivalentCents, formatMoney } from "@/lib/retainers";
+
+type FilterPreset = "30d" | "90d" | "12m" | "custom";
 
 interface PaidProposal {
   id: string;
