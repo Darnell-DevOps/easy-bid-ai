@@ -379,8 +379,11 @@ export default function RevenueDashboard() {
       }
     });
 
-    return events.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, 12);
-  }, [paidProposals, retainerInvoices, retainers]);
+    return events
+      .filter((e) => inRange(e.timestamp))
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, 12);
+  }, [paidProposals, retainerInvoices, retainers, filterRange]);
 
   const activityStyle = (t: ActivityEvent["type"]) => {
     switch (t) {
