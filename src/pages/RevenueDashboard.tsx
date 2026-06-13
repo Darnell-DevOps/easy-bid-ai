@@ -1333,6 +1333,7 @@ export default function RevenueDashboard() {
             </CardContent>
           </Card>
         </div>
+      </div>
     </DashboardLayout>
   );
 }
