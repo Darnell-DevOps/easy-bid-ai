@@ -50,6 +50,8 @@ interface RetainerRow {
   renewed_at: string | null;
   next_billing_date: string | null;
   last_billed_date: string | null;
+  service_type: string | null;
+  total_billed_cents: number | null;
 }
 
 interface RetainerInvoiceRow {
