@@ -44,6 +44,8 @@ interface RetainerRow {
   id: string;
   client_name: string;
   client_id: string | null;
+  title: string;
+  company_name: string | null;
   amount_cents: number;
   currency: string;
   billing_interval: string;
@@ -112,7 +114,7 @@ export default function RevenueDashboard() {
         supabase
           .from("retainers")
           .select(
-            "id, client_name, client_id, amount_cents, currency, billing_interval, custom_interval_days, status, has_failed_payment, failed_payment_at, renewed_at, next_billing_date, last_billed_date, service_type, total_billed_cents"
+            "id, client_name, client_id, title, company_name, amount_cents, currency, billing_interval, custom_interval_days, status, has_failed_payment, failed_payment_at, renewed_at, next_billing_date, last_billed_date, service_type, total_billed_cents"
           ),
         supabase
           .from("retainer_invoices")
@@ -416,6 +418,26 @@ export default function RevenueDashboard() {
 
     return entries;
   }, [paidProposals, retainerInvoices, retainers, clients]);
+
+  // ---- Upcoming Renewals ----
+  const upcomingRenewals = useMemo(() => {
+    const future = activeRetainers
+      .filter((r) => r.next_billing_date)
+      .map((r) => {
+        const next = new Date(r.next_billing_date!);
+        const days = Math.ceil((next.getTime() - now.getTime()) / 86400000);
+        return { ...r, next, days };
+      })
+      .filter((r) => r.days >= 0)
+      .sort((a, b) => a.days - b.days);
+    return future;
+  }, [activeRetainers]);
+
+  const renewalUrgency = (days: number) => {
+    if (days <= 7) return { label: "7 days", color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20" };
+    if (days <= 14) return { label: "14 days", color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20" };
+    return { label: "30 days", color: "text-sky-400", bg: "bg-sky-500/10", border: "border-sky-500/20" };
+  };
 
   const primaryCards = [
     {
