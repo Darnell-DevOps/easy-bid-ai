@@ -14,6 +14,11 @@ import {
   AlertTriangle,
   AlertCircle,
   Clock,
+  CheckCircle2,
+  FileCheck,
+  RefreshCw,
+  BellRing,
+  Activity,
 } from "lucide-react";
 import {
   ChartContainer,
