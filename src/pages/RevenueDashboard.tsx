@@ -22,6 +22,8 @@ import {
   Users,
   ExternalLink,
   CalendarClock,
+  FilePlus,
+  ArrowUpRight,
 } from "lucide-react";
 import {
   ChartContainer,
