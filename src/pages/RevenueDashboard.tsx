@@ -209,6 +209,106 @@ export default function RevenueDashboard() {
   const fmt = (n: number) =>
     n >= 1000 ? `$${(n / 1000).toFixed(1)}k` : `$${n.toLocaleString()}`;
 
+  // ---- Activity feed ----
+  const activityEvents = useMemo<ActivityEvent[]>(() => {
+    const events: ActivityEvent[] = [];
+    const retainerById = new Map(retainers.map((r) => [r.id, r] as const));
+
+    paidProposals.forEach((p) => {
+      events.push({
+        id: `prop-${p.id}`,
+        type: "payment_received",
+        client: p.client_name,
+        amount: `$${parseBudget(p.budget).toLocaleString()}`,
+        timestamp: new Date(p.created_at),
+        detail: "Proposal paid",
+      });
+    });
+
+    retainerInvoices.forEach((inv) => {
+      const r = retainerById.get(inv.retainer_id);
+      const client = r?.client_name || "Client";
+      if (inv.paid_at) {
+        events.push({
+          id: `inv-paid-${inv.id}`,
+          type: "invoice_paid",
+          client,
+          amount: formatMoney(inv.amount_cents, inv.currency),
+          timestamp: new Date(inv.paid_at),
+          detail: "Retainer invoice paid",
+        });
+      } else if (inv.failed_at) {
+        events.push({
+          id: `inv-failed-${inv.id}`,
+          type: "payment_failed",
+          client,
+          amount: formatMoney(inv.amount_cents, inv.currency),
+          timestamp: new Date(inv.failed_at),
+          detail: inv.failure_reason || "Payment failed",
+        });
+      }
+    });
+
+    retainers.forEach((r) => {
+      if (r.renewed_at) {
+        events.push({
+          id: `ren-${r.id}`,
+          type: "retainer_renewed",
+          client: r.client_name,
+          amount: formatMoney(r.amount_cents, r.currency),
+          timestamp: new Date(r.renewed_at),
+          detail: "Retainer renewed",
+        });
+      }
+      if (r.status === "active" && r.next_billing_date) {
+        const next = new Date(r.next_billing_date);
+        const days = Math.ceil((next.getTime() - now.getTime()) / 86400000);
+        if (days >= 0 && days <= 7) {
+          events.push({
+            id: `upc-${r.id}`,
+            type: "renewal_approaching",
+            client: r.client_name,
+            amount: formatMoney(r.amount_cents, r.currency),
+            timestamp: next,
+            detail: days === 0 ? "Renews today" : `Renews in ${days} day${days === 1 ? "" : "s"}`,
+          });
+        }
+      }
+    });
+
+    return events.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, 12);
+  }, [paidProposals, retainerInvoices, retainers]);
+
+  const activityStyle = (t: ActivityEvent["type"]) => {
+    switch (t) {
+      case "payment_received":
+        return { icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-500/10", label: "Payment received" };
+      case "invoice_paid":
+        return { icon: FileCheck, color: "text-emerald-400", bg: "bg-emerald-500/10", label: "Invoice paid" };
+      case "retainer_renewed":
+        return { icon: RefreshCw, color: "text-purple-400", bg: "bg-purple-500/10", label: "Retainer renewed" };
+      case "payment_failed":
+        return { icon: AlertTriangle, color: "text-rose-400", bg: "bg-rose-500/10", label: "Payment failed" };
+      case "renewal_approaching":
+        return { icon: BellRing, color: "text-amber-400", bg: "bg-amber-500/10", label: "Renewal approaching" };
+    }
+  };
+
+  const formatRelative = (d: Date) => {
+    const diff = d.getTime() - now.getTime();
+    const abs = Math.abs(diff);
+    const mins = Math.round(abs / 60000);
+    const hrs = Math.round(abs / 3600000);
+    const days = Math.round(abs / 86400000);
+    const suffix = diff < 0 ? "ago" : "from now";
+    if (mins < 1) return "Just now";
+    if (mins < 60) return `${mins}m ${suffix}`;
+    if (hrs < 24) return `${hrs}h ${suffix}`;
+    if (days < 30) return `${days}d ${suffix}`;
+    return d.toLocaleDateString();
+  };
+
+
   const primaryCards = [
     {
       label: "Total Revenue",
