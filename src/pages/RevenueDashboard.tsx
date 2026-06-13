@@ -989,9 +989,7 @@ export default function RevenueDashboard() {
               )}
             </h2>
             {paidProposals.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-8 text-center">
-                No paid proposals yet. Mark proposals as paid to track revenue.
-              </p>
+              <RevenueEmptyState />
             ) : (
               <div className="space-y-2">
                 {[...paidProposals].reverse().slice(0, 10).map((p) => (
