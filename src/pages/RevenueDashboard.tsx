@@ -95,6 +95,7 @@ export default function RevenueDashboard() {
   const [proposals, setProposals] = useState<PaidProposal[]>([]);
   const [retainers, setRetainers] = useState<RetainerRow[]>([]);
   const [retainerInvoices, setRetainerInvoices] = useState<RetainerInvoiceRow[]>([]);
+  const [clients, setClients] = useState<ClientRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
