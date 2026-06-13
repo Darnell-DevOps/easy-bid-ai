@@ -21,6 +21,7 @@ import {
   Activity,
   Users,
   ExternalLink,
+  CalendarClock,
 } from "lucide-react";
 import {
   ChartContainer,
@@ -827,6 +828,72 @@ export default function RevenueDashboard() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Upcoming Renewals */}
+        <Card>
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                  <CalendarClock className="w-4 h-4 text-purple-400" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Upcoming Renewals</h2>
+                  <p className="text-xs text-muted-foreground">Active retainer billing schedule</p>
+                </div>
+              </div>
+              {upcomingRenewals.length > 0 && (
+                <span className="text-xs text-muted-foreground">{upcomingRenewals.length} upcoming</span>
+              )}
+            </div>
+            {loading ? (
+              <div className="space-y-2">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-14 bg-muted animate-pulse rounded-lg" />
+                ))}
+              </div>
+            ) : upcomingRenewals.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-8 text-center">
+                No upcoming renewals. Active retainers with billing dates will appear here.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {upcomingRenewals.map((r) => {
+                  const urgency = renewalUrgency(r.days);
+                  return (
+                    <div
+                      key={r.id}
+                      className={`flex items-center gap-3 p-3 rounded-lg border ${urgency.border} ${urgency.bg} hover:brightness-110 transition-all cursor-pointer group`}
+                      onClick={() => navigate(`/dashboard/retainers/${r.id}`)}
+                    >
+                      <div className={`w-9 h-9 rounded-lg bg-background/50 flex items-center justify-center shrink-0`}>
+                        <Repeat className={`w-4 h-4 ${urgency.color}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-medium text-foreground truncate">{r.client_name}</p>
+                          <span className={`text-[10px] uppercase tracking-wider font-medium ${urgency.color} bg-background/50 px-1.5 py-0.5 rounded`}>
+                            {r.days === 0 ? "Today" : r.days === 1 ? "1 day" : `${r.days} days`}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {r.title}
+                          {r.company_name ? ` · ${r.company_name}` : ""}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0 flex items-center gap-2">
+                        <p className="text-sm font-semibold text-foreground">
+                          {formatMoney(r.amount_cents, r.currency)}
+                        </p>
+                        <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </CardContent>
