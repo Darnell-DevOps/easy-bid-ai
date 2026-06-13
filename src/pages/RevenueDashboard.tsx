@@ -479,24 +479,16 @@ export default function RevenueDashboard() {
       "Maintenance": 0,
       "Other": 0,
     };
-    paidProposals.forEach((p) => {
+    filteredPaidProposals.forEach((p) => {
       buckets["One-Time Projects"] += parseBudget(p.budget);
     });
-    // Use actual paid retainer invoices for accuracy
+    // Use actual paid retainer invoices for accuracy (filtered by range)
     const retainerById = new Map(retainers.map((r) => [r.id, r] as const));
-    retainerInvoices.forEach((inv) => {
-      if (!inv.paid_at) return;
+    filteredInvoices.forEach((inv) => {
       const r = retainerById.get(inv.retainer_id);
       const cat = categoriseRetainer(r?.service_type ?? null);
       buckets[cat] += (inv.amount_cents || 0) / 100;
     });
-    // Fallback: if no invoices but retainers have total_billed_cents
-    if (retainerInvoices.filter((i) => i.paid_at).length === 0) {
-      retainers.forEach((r) => {
-        const cat = categoriseRetainer(r.service_type);
-        buckets[cat] += (r.total_billed_cents || 0) / 100;
-      });
-    }
     const colors: Record<string, string> = {
       "One-Time Projects": "hsl(var(--accent))",
       "Retainers": "hsl(262 83% 65%)",
