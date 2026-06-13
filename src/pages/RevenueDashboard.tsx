@@ -1092,7 +1092,7 @@ export default function RevenueDashboard() {
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-foreground">Revenue Over Time</h2>
-              <span className="text-xs text-muted-foreground">Last 6 months</span>
+              <span className="text-xs text-muted-foreground">{filterLabel}</span>
             </div>
             {loading ? (
               <div className="h-64 bg-muted animate-pulse rounded-lg" />
