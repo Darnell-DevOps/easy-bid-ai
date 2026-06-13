@@ -84,11 +84,12 @@ export default function RevenueDashboard() {
   const navigate = useNavigate();
   const [proposals, setProposals] = useState<PaidProposal[]>([]);
   const [retainers, setRetainers] = useState<RetainerRow[]>([]);
+  const [retainerInvoices, setRetainerInvoices] = useState<RetainerInvoiceRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetch = async () => {
-      const [proposalsRes, retainersRes] = await Promise.all([
+      const [proposalsRes, retainersRes, invoicesRes] = await Promise.all([
         supabase
           .from("proposals")
           .select("id, client_name, budget, created_at, client_paid")
@@ -96,11 +97,17 @@ export default function RevenueDashboard() {
         supabase
           .from("retainers")
           .select(
-            "id, client_name, amount_cents, currency, billing_interval, custom_interval_days, status, has_failed_payment"
+            "id, client_name, amount_cents, currency, billing_interval, custom_interval_days, status, has_failed_payment, failed_payment_at, renewed_at, next_billing_date, last_billed_date"
           ),
+        supabase
+          .from("retainer_invoices")
+          .select("id, retainer_id, amount_cents, currency, status, paid_at, failed_at, failure_reason, created_at")
+          .order("created_at", { ascending: false })
+          .limit(50),
       ]);
       setProposals((proposalsRes.data as PaidProposal[]) || []);
       setRetainers((retainersRes.data as RetainerRow[]) || []);
+      setRetainerInvoices((invoicesRes.data as RetainerInvoiceRow[]) || []);
       setLoading(false);
     };
     fetch();
