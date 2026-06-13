@@ -26,7 +26,8 @@ import { Link as RouterLink } from "react-router-dom";
 import PremiumProposalRenderer from "@/components/proposal/PremiumProposalRenderer";
 import PremiumPricingRenderer from "@/components/proposal/PremiumPricingRenderer";
 import StatusBadge, { normalizeStatus } from "@/components/proposal/StatusBadge";
-import OnboardingProgressTracker, { type FullStage } from "@/components/onboarding/OnboardingProgressTracker";
+import ProjectProgressTracker, { type ProjectStage } from "@/components/portal/ProjectProgressTracker";
+import ProjectOverview from "@/components/portal/ProjectOverview";
 import { useToast } from "@/hooks/use-toast";
 import { useProposalCheckout } from "@/hooks/use-proposal-checkout";
 import { cn } from "@/lib/utils";
@@ -58,6 +59,14 @@ interface BookingLinkLite {
   name: string;
 }
 
+interface BookingLite {
+  id: string;
+  scheduled_at: string;
+  meeting_name: string | null;
+  status: string | null;
+  created_at: string;
+}
+
 interface ContractLite {
   id: string;
   title: string;
@@ -85,16 +94,27 @@ function formatAmount(cents: number | null, currency: string | null) {
   return `${symbol}${value}`;
 }
 
-function deriveFullStage(p: PublicProposal, contract: ContractLite | null, onboarding: OnboardingFormRow | null, hasBooking: boolean): FullStage {
-  if (onboarding?.status === "completed") return "ready";
-  if (p.client_paid) {
-    if (hasBooking) return "onboarding";
-    return "booking";
-  }
+function deriveProjectStage(
+  p: PublicProposal,
+  contract: ContractLite | null,
+  onboarding: OnboardingFormRow | null,
+  hasBooking: boolean,
+): ProjectStage {
+  if (onboarding?.status === "completed") return hasBooking ? "active" : "kickoff";
+  if (p.client_paid) return "onboarding";
   if (contract?.status === "signed") return "payment";
   if (p.status === "accepted" || p.accepted_at) return "contract";
   return "proposal";
 }
+
+const STAGE_LABEL: Record<ProjectStage, string> = {
+  proposal: "Awaiting review",
+  contract: "Awaiting signature",
+  payment: "Awaiting payment",
+  onboarding: "Onboarding",
+  kickoff: "Ready for kickoff",
+  active: "Project active",
+};
 
 export default function ClientPortal() {
   const { id } = useParams();
@@ -109,6 +129,7 @@ export default function ClientPortal() {
   const [contract, setContract] = useState<ContractLite | null>(null);
   const [onboarding, setOnboarding] = useState<OnboardingFormRow | null>(null);
   const [hasBooking, setHasBooking] = useState(false);
+  const [bookings, setBookings] = useState<BookingLite[]>([]);
   const { openCheckout, loading: payLoading, available: paymentsAvailable } = useProposalCheckout();
 
   useEffect(() => {
@@ -168,14 +189,16 @@ export default function ClientPortal() {
           if (ob) setOnboarding(ob as unknown as OnboardingFormRow);
         });
 
-      // Has booking?
+      // Fetch bookings for this proposal
       supabase
         .from("bookings")
-        .select("id")
+        .select("id, scheduled_at, meeting_name, status, created_at")
         .eq("proposal_id", id)
-        .limit(1)
+        .order("scheduled_at", { ascending: true })
         .then(({ data: bk }) => {
-          if (bk && bk.length > 0) setHasBooking(true);
+          const rows = (bk || []) as BookingLite[];
+          setBookings(rows);
+          if (rows.length > 0) setHasBooking(true);
         });
 
       // Auto-mark as viewed (non-blocking)
@@ -357,7 +380,7 @@ export default function ClientPortal() {
   const isAccepted = status === "accepted";
   const isRejected = status === "rejected";
   const isPaid = proposal.client_paid;
-  const stage = deriveFullStage(proposal, contract, onboarding, hasBooking);
+  const stage = deriveProjectStage(proposal, contract, onboarding, hasBooking);
   const onboardingComplete = onboarding?.status === "completed";
   const onboardingStarted = onboarding?.status === "in_progress";
   const isContractSigned = contract?.status === "signed";
@@ -365,6 +388,80 @@ export default function ClientPortal() {
   const readyToPay = isAccepted && isContractSigned && !isPaid;
   const acceptedNotPaid = isAccepted && !isPaid;
   const hasPrice = !!proposal.amount_cents && proposal.amount_cents >= 70;
+
+  // Build activity timeline events
+  const activityEvents: { id: string; iso: string; label: string; tone: "blue" | "purple" | "emerald" | "amber" | "rose" }[] = [];
+  if (proposal.sent_at) activityEvents.push({ id: "sent", iso: proposal.sent_at, label: "Proposal sent", tone: "blue" });
+  if (proposal.viewed_at) activityEvents.push({ id: "viewed", iso: proposal.viewed_at, label: "Proposal viewed", tone: "amber" });
+  if (proposal.accepted_at) activityEvents.push({ id: "accepted", iso: proposal.accepted_at, label: "Proposal accepted", tone: "emerald" });
+  if (proposal.rejected_at) activityEvents.push({ id: "rejected", iso: proposal.rejected_at, label: "Proposal declined", tone: "rose" });
+  if (contract?.signed_at) activityEvents.push({ id: "contract-signed", iso: contract.signed_at, label: "Contract signed", tone: "purple" });
+  if (isPaid && proposal.accepted_at) {
+    // Use accepted_at as a fallback; payment timestamp isn't on the public row
+    activityEvents.push({ id: "paid", iso: contract?.signed_at || proposal.accepted_at, label: "Payment received", tone: "emerald" });
+  }
+  if ((onboarding as any)?.submitted_at) {
+    activityEvents.push({ id: "onboarding-done", iso: (onboarding as any).submitted_at, label: "Onboarding completed", tone: "emerald" });
+  }
+  for (const b of bookings) {
+    if (b.status !== "cancelled") {
+      activityEvents.push({ id: `booking-${b.id}`, iso: b.created_at, label: "Kickoff call booked", tone: "purple" });
+    }
+  }
+  activityEvents.sort((a, b) => new Date(b.iso).getTime() - new Date(a.iso).getTime());
+
+  // Upcoming booking (first scheduled in the future, not cancelled)
+  const nowMs = Date.now();
+  const upcomingBooking = bookings.find((b) => b.status !== "cancelled" && new Date(b.scheduled_at).getTime() >= nowMs) || null;
+
+  // Next action card content
+  let nextAction: React.ComponentProps<typeof ProjectOverview>["nextAction"] = null;
+  if (!isRejected) {
+    if (stage === "proposal") {
+      nextAction = {
+        title: "Review and accept your proposal",
+        description: "Look through the details below, then accept to receive your contract.",
+        icon: FileCheck,
+        ctaLabel: "Review proposal",
+        onClick: () => document.getElementById("accept-section")?.scrollIntoView({ behavior: "smooth", block: "start" }),
+      };
+    } else if (stage === "contract" && contract) {
+      nextAction = {
+        title: "Sign your contract",
+        description: "Review the agreement and add your signature to unlock payment.",
+        icon: FileSignature,
+        ctaLabel: "Review & sign",
+        href: `/sign/${contract.signing_token}`,
+      };
+    } else if (stage === "payment") {
+      nextAction = {
+        title: "Complete payment",
+        description: formattedTotal ? `Pay ${formattedTotal} to secure your slot and begin work.` : "Complete payment to secure your slot.",
+        icon: CreditCard,
+        ctaLabel: "Pay now",
+        onClick: handlePayAgain,
+        disabled: payLoading,
+      };
+    } else if (stage === "onboarding" && onboarding) {
+      nextAction = {
+        title: onboardingStarted ? "Continue your onboarding" : "Complete your onboarding",
+        description: "Tell us about your project so we can hit the ground running. Takes 3–5 minutes.",
+        icon: ClipboardList,
+        ctaLabel: onboardingStarted ? "Continue" : "Start onboarding",
+        href: `/onboard/${onboarding.access_token}`,
+      };
+    } else if (stage === "kickoff" && bookingLink) {
+      nextAction = {
+        title: "Book your kickoff call",
+        description: "Pick a time that works for you and we'll get started.",
+        icon: CalendarPlus,
+        ctaLabel: "Schedule call",
+        href: `/book/${bookingLink.slug}?proposal=${proposal.id}`,
+      };
+    }
+  }
+
+  const projectName = proposal.service_type;
 
   return (
     <div className="min-h-screen bg-background pb-24 sm:pb-8">
@@ -382,8 +479,22 @@ export default function ClientPortal() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 lg:py-10 space-y-6 lg:space-y-8">
-        {/* Deal Progress Tracker */}
-        {!isRejected && <OnboardingProgressTracker currentStage={stage} />}
+        {/* Project Overview */}
+        {!isRejected && (
+          <>
+            <ProjectOverview
+              clientName={proposal.client_name}
+              projectName={projectName}
+              stage={stage}
+              stageLabel={STAGE_LABEL[stage]}
+              nextAction={nextAction}
+              upcomingBooking={upcomingBooking}
+              upcomingDeadline={null}
+              activity={activityEvents}
+            />
+            <ProjectProgressTracker currentStage={stage} />
+          </>
+        )}
 
         {/* Hero / Summary */}
         <section className="rounded-xl border border-border bg-card p-6 lg:p-10">
@@ -701,7 +812,8 @@ export default function ClientPortal() {
             )}
           </section>
         ) : !isAccepted ? (
-          <section className="rounded-xl border border-border bg-card p-6 lg:p-10">
+          <section id="accept-section" className="rounded-xl border border-border bg-card p-6 lg:p-10 scroll-mt-24">
+
             <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-2">
               Ready to move forward?
             </h2>
