@@ -738,6 +738,78 @@ export default function RevenueDashboard() {
           </CardContent>
         </Card>
 
+        {/* Top Clients */}
+        <Card>
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Users className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Top Clients</h2>
+                  <p className="text-xs text-muted-foreground">Highest revenue generators</p>
+                </div>
+              </div>
+              {topClients.length > 0 && (
+                <span className="text-xs text-muted-foreground">Top {topClients.length}</span>
+              )}
+            </div>
+            {loading ? (
+              <div className="space-y-2">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="h-14 bg-muted animate-pulse rounded-lg" />
+                ))}
+              </div>
+            ) : topClients.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-8 text-center">
+                No revenue data yet. Paid proposals and retainers will appear here.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {topClients.map((client, index) => (
+                  <div
+                    key={client.key}
+                    className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors cursor-pointer group"
+                    onClick={() => {
+                      if (client.clientId) navigate(`/dashboard/clients/${client.clientId}`);
+                    }}
+                  >
+                    <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-xs font-bold text-primary">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-medium text-foreground truncate">{client.displayName}</p>
+                        {client.isActive ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-medium text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                            <span className="w-1 h-1 rounded-full bg-emerald-400" />
+                            Active
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                            <span className="w-1 h-1 rounded-full bg-muted-foreground" />
+                            Inactive
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {client.clientId ? "Click to view client record" : "Client record not linked"}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0 flex items-center gap-2">
+                      <p className="text-sm font-semibold text-foreground">{fmt(client.revenue)}</p>
+                      {client.clientId && (
+                        <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Chart */}
         <Card>
           <CardContent className="p-4 sm:p-6">
