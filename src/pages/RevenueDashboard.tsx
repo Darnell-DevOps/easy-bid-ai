@@ -30,6 +30,9 @@ import {
   ArrowUpRight,
   Filter,
   CalendarRange,
+  Sparkles,
+  TrendingDown,
+  Minus,
 } from "lucide-react";
 import {
   ChartContainer,
