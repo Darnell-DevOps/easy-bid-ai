@@ -674,7 +674,81 @@ export default function RevenueDashboard() {
           )}
         </div>
 
-        {/* Primary KPI row */}
+        {/* Revenue Filters */}
+        <Card className="border-border/60 bg-card/40 backdrop-blur-sm">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground/80 font-medium pr-2 border-r border-border/50">
+                <Filter className="w-3.5 h-3.5" />
+                Filter
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {([
+                  { id: "30d", label: "Last 30 Days" },
+                  { id: "90d", label: "Last 90 Days" },
+                  { id: "12m", label: "Last 12 Months" },
+                ] as { id: FilterPreset; label: string }[]).map((opt) => {
+                  const active = filterPreset === opt.id;
+                  return (
+                    <Button
+                      key={opt.id}
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setFilterPreset(opt.id)}
+                      className={cn(
+                        "h-8 text-xs transition-all",
+                        active
+                          ? "border-primary/40 bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary shadow-[0_0_20px_-8px_hsl(var(--primary)/0.6)]"
+                          : "border-border/60 hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
+                      )}
+                    >
+                      {opt.label}
+                    </Button>
+                  );
+                })}
+                <Popover open={customOpen} onOpenChange={setCustomOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setFilterPreset("custom")}
+                      className={cn(
+                        "h-8 text-xs transition-all gap-1.5",
+                        filterPreset === "custom"
+                          ? "border-primary/40 bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary shadow-[0_0_20px_-8px_hsl(var(--primary)/0.6)]"
+                          : "border-border/60 hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
+                      )}
+                    >
+                      <CalendarRange className="w-3.5 h-3.5" />
+                      {filterPreset === "custom" && customRange.from
+                        ? customRange.to
+                          ? `${format(customRange.from, "MMM d")} – ${format(customRange.to, "MMM d")}`
+                          : format(customRange.from, "MMM d, yyyy")
+                        : "Custom Range"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarPicker
+                      mode="range"
+                      selected={{ from: customRange.from, to: customRange.to } as any}
+                      onSelect={(range: any) => {
+                        setCustomRange({ from: range?.from, to: range?.to });
+                        if (range?.from && range?.to) setCustomOpen(false);
+                      }}
+                      numberOfMonths={2}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="ml-auto text-xs text-muted-foreground hidden sm:block">
+                Showing <span className="text-foreground font-medium">{filterLabel}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {primaryCards.map((s) => (
             <Card
