@@ -22,6 +22,8 @@ import {
   Users,
   ExternalLink,
   CalendarClock,
+  FilePlus,
+  ArrowUpRight,
 } from "lucide-react";
 import {
   ChartContainer,
@@ -331,6 +333,53 @@ export default function RevenueDashboard() {
     return d.toLocaleDateString();
   };
 
+  // ---- Empty State Component ----
+  const RevenueEmptyState = () => (
+    <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
+      <div className="w-16 h-16 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-center mb-4">
+        <DollarSign className="w-7 h-7 text-primary/40" />
+      </div>
+      <p className="text-sm font-medium text-foreground mb-1">
+        Your revenue data will appear here as clients begin paying.
+      </p>
+      <p className="text-xs text-muted-foreground mb-5 max-w-xs">
+        Get started by creating proposals, setting up retainers, or managing your client list.
+      </p>
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 text-xs border-primary/20 hover:bg-primary/10 hover:text-primary"
+          onClick={() => navigate("/dashboard/new")}
+        >
+          <FilePlus className="w-3.5 h-3.5 mr-1.5" />
+          Create Proposal
+          <ArrowUpRight className="w-3 h-3 ml-1 opacity-50" />
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 text-xs border-primary/20 hover:bg-primary/10 hover:text-primary"
+          onClick={() => navigate("/dashboard/retainers/new")}
+        >
+          <Repeat className="w-3.5 h-3.5 mr-1.5" />
+          Create Retainer
+          <ArrowUpRight className="w-3 h-3 ml-1 opacity-50" />
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 text-xs border-primary/20 hover:bg-primary/10 hover:text-primary"
+          onClick={() => navigate("/dashboard/clients")}
+        >
+          <Users className="w-3.5 h-3.5 mr-1.5" />
+          View Clients
+          <ArrowUpRight className="w-3 h-3 ml-1 opacity-50" />
+        </Button>
+      </div>
+    </div>
+  );
+
   // ---- Revenue Breakdown ----
   const categoriseRetainer = (svc: string | null): "Retainers" | "Consulting" | "Maintenance" | "Other" => {
     const s = (svc || "").toLowerCase();
@@ -634,9 +683,7 @@ export default function RevenueDashboard() {
                 ))}
               </div>
             ) : activityEvents.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-8 text-center">
-                No recent activity yet. Payments and renewals will appear here.
-              </p>
+              <RevenueEmptyState />
             ) : (
               <div className="space-y-2">
                 {activityEvents.map((e) => {
@@ -699,9 +746,7 @@ export default function RevenueDashboard() {
             {loading ? (
               <div className="h-64 bg-muted animate-pulse rounded-lg" />
             ) : breakdownData.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-8 text-center">
-                No revenue yet. Paid proposals and retainers will appear here.
-              </p>
+              <RevenueEmptyState />
             ) : (
               <div className="grid md:grid-cols-2 gap-6 items-center">
                 <div className="relative h-64">
@@ -785,9 +830,7 @@ export default function RevenueDashboard() {
                 ))}
               </div>
             ) : topClients.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-8 text-center">
-                No revenue data yet. Paid proposals and retainers will appear here.
-              </p>
+              <RevenueEmptyState />
             ) : (
               <div className="space-y-2">
                 {topClients.map((client, index) => (
@@ -857,9 +900,7 @@ export default function RevenueDashboard() {
                 ))}
               </div>
             ) : upcomingRenewals.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-8 text-center">
-                No upcoming renewals. Active retainers with billing dates will appear here.
-              </p>
+              <RevenueEmptyState />
             ) : (
               <div className="space-y-2">
                 {upcomingRenewals.map((r) => {
@@ -948,9 +989,7 @@ export default function RevenueDashboard() {
               )}
             </h2>
             {paidProposals.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-8 text-center">
-                No paid proposals yet. Mark proposals as paid to track revenue.
-              </p>
+              <RevenueEmptyState />
             ) : (
               <div className="space-y-2">
                 {[...paidProposals].reverse().slice(0, 10).map((p) => (
