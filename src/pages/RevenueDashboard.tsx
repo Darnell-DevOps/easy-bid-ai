@@ -66,6 +66,14 @@ interface RetainerInvoiceRow {
   created_at: string;
 }
 
+interface ClientRow {
+  id: string;
+  name: string;
+  company: string | null;
+  is_active: boolean;
+  status: string | null;
+}
+
 type ActivityEvent = {
   id: string;
   type: "payment_received" | "retainer_renewed" | "invoice_paid" | "payment_failed" | "renewal_approaching";
