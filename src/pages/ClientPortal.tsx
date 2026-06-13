@@ -479,8 +479,22 @@ export default function ClientPortal() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 lg:py-10 space-y-6 lg:space-y-8">
-        {/* Deal Progress Tracker */}
-        {!isRejected && <OnboardingProgressTracker currentStage={stage} />}
+        {/* Project Overview */}
+        {!isRejected && (
+          <>
+            <ProjectOverview
+              clientName={proposal.client_name}
+              projectName={projectName}
+              stage={stage}
+              stageLabel={STAGE_LABEL[stage]}
+              nextAction={nextAction}
+              upcomingBooking={upcomingBooking}
+              upcomingDeadline={null}
+              activity={activityEvents}
+            />
+            <ProjectProgressTracker currentStage={stage} />
+          </>
+        )}
 
         {/* Hero / Summary */}
         <section className="rounded-xl border border-border bg-card p-6 lg:p-10">
