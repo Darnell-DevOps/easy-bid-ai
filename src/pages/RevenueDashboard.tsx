@@ -19,6 +19,8 @@ import {
   RefreshCw,
   BellRing,
   Activity,
+  Users,
+  ExternalLink,
 } from "lucide-react";
 import {
   ChartContainer,
