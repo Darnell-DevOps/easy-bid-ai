@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   FileText, Plus, Settings, LogOut, Menu, X, LayoutTemplate, Users, Sparkles,
   ScrollText, Calendar, FileSignature, ClipboardList, Repeat, LifeBuoy, Mail,
-  Shield, Star, ChevronLeft, ChevronRight, CreditCard, TrendingUp,
+  Shield, Star, ChevronLeft, ChevronRight, CreditCard, TrendingUp, Eye,
 } from "lucide-react";
 import { useIsSuperAdmin } from "@/hooks/useIsSuperAdmin";
 import { useUnreadLeadsCount } from "@/hooks/use-unread-leads";
@@ -29,6 +29,12 @@ const navGroups: NavGroup[] = [
       { label: "Lead Assistant", icon: Sparkles, href: "/dashboard/leads", badgeKey: "leads" },
       { label: "Proposals", icon: FileText, href: "/dashboard/proposals" },
       { label: "Contracts", icon: FileSignature, href: "/dashboard/contracts" },
+    ],
+  },
+  {
+    label: "Client Portal",
+    items: [
+      { label: "Open Client Portal", icon: Eye, href: "/dashboard/client-portal" },
     ],
   },
   {
