@@ -479,6 +479,82 @@ export default function RevenueDashboard() {
           </div>
         </div>
 
+        {/* Recent Revenue Activity */}
+        <Card>
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                  <Activity className="w-4 h-4 text-accent" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Recent Revenue Activity</h2>
+                  <p className="text-xs text-muted-foreground">Live feed of payments, renewals & alerts</p>
+                </div>
+              </div>
+              {activityEvents.length > 0 && (
+                <span className="text-xs text-muted-foreground">{activityEvents.length} event{activityEvents.length === 1 ? "" : "s"}</span>
+              )}
+            </div>
+            {loading ? (
+              <div className="space-y-2">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-14 bg-muted animate-pulse rounded-lg" />
+                ))}
+              </div>
+            ) : activityEvents.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-8 text-center">
+                No recent activity yet. Payments and renewals will appear here.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {activityEvents.map((e) => {
+                  const s = activityStyle(e.type);
+                  const Icon = s.icon;
+                  const isAlert = e.type === "payment_failed" || e.type === "renewal_approaching";
+                  return (
+                    <div
+                      key={e.id}
+                      className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                        isAlert
+                          ? e.type === "payment_failed"
+                            ? "border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10"
+                            : "border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10"
+                          : "border-transparent bg-secondary/30 hover:bg-secondary/50"
+                      }`}
+                    >
+                      <div className={`w-9 h-9 rounded-lg ${s.bg} flex items-center justify-center shrink-0`}>
+                        <Icon className={`w-4 h-4 ${s.color}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-medium text-foreground truncate">{e.client}</p>
+                          <span className={`text-[10px] uppercase tracking-wider font-medium ${s.color}`}>
+                            {s.label}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate">{e.detail}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        {e.amount && (
+                          <p className={`text-sm font-semibold ${
+                            e.type === "payment_failed" ? "text-rose-400" :
+                            e.type === "renewal_approaching" ? "text-amber-400" :
+                            "text-emerald-400"
+                          }`}>
+                            {e.amount}
+                          </p>
+                        )}
+                        <p className="text-[11px] text-muted-foreground mt-0.5">{formatRelative(e.timestamp)}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Chart */}
         <Card>
           <CardContent className="p-4 sm:p-6">
