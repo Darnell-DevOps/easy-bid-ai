@@ -46,7 +46,32 @@ interface RetainerRow {
   custom_interval_days: number | null;
   status: string;
   has_failed_payment: boolean;
+  failed_payment_at: string | null;
+  renewed_at: string | null;
+  next_billing_date: string | null;
+  last_billed_date: string | null;
 }
+
+interface RetainerInvoiceRow {
+  id: string;
+  retainer_id: string;
+  amount_cents: number;
+  currency: string;
+  status: string;
+  paid_at: string | null;
+  failed_at: string | null;
+  failure_reason: string | null;
+  created_at: string;
+}
+
+type ActivityEvent = {
+  id: string;
+  type: "payment_received" | "retainer_renewed" | "invoice_paid" | "payment_failed" | "renewal_approaching";
+  client: string;
+  amount?: string;
+  timestamp: Date;
+  detail?: string;
+};
 
 const chartConfig: ChartConfig = {
   revenue: {
