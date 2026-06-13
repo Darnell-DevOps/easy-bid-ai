@@ -812,7 +812,8 @@ export default function ClientPortal() {
             )}
           </section>
         ) : !isAccepted ? (
-          <section className="rounded-xl border border-border bg-card p-6 lg:p-10">
+          <section id="accept-section" className="rounded-xl border border-border bg-card p-6 lg:p-10 scroll-mt-24">
+
             <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-2">
               Ready to move forward?
             </h2>
