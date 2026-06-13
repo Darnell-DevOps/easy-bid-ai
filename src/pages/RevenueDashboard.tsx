@@ -19,6 +19,8 @@ import {
   RefreshCw,
   BellRing,
   Activity,
+  Users,
+  ExternalLink,
 } from "lucide-react";
 import {
   ChartContainer,
@@ -32,6 +34,7 @@ import { monthlyEquivalentCents, formatMoney } from "@/lib/retainers";
 interface PaidProposal {
   id: string;
   client_name: string;
+  client_id: string | null;
   budget: string;
   created_at: string;
   client_paid: boolean;
@@ -40,6 +43,7 @@ interface PaidProposal {
 interface RetainerRow {
   id: string;
   client_name: string;
+  client_id: string | null;
   amount_cents: number;
   currency: string;
   billing_interval: string;
@@ -66,6 +70,14 @@ interface RetainerInvoiceRow {
   created_at: string;
 }
 
+interface ClientRow {
+  id: string;
+  name: string;
+  company: string | null;
+  is_active: boolean;
+  status: string | null;
+}
+
 type ActivityEvent = {
   id: string;
   type: "payment_received" | "retainer_renewed" | "invoice_paid" | "payment_failed" | "renewal_approaching";
@@ -87,29 +99,35 @@ export default function RevenueDashboard() {
   const [proposals, setProposals] = useState<PaidProposal[]>([]);
   const [retainers, setRetainers] = useState<RetainerRow[]>([]);
   const [retainerInvoices, setRetainerInvoices] = useState<RetainerInvoiceRow[]>([]);
+  const [clients, setClients] = useState<ClientRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetch = async () => {
-      const [proposalsRes, retainersRes, invoicesRes] = await Promise.all([
+      const [proposalsRes, retainersRes, invoicesRes, clientsRes] = await Promise.all([
         supabase
           .from("proposals")
-          .select("id, client_name, budget, created_at, client_paid")
+          .select("id, client_name, client_id, budget, created_at, client_paid")
           .order("created_at", { ascending: true }),
         supabase
           .from("retainers")
           .select(
-            "id, client_name, amount_cents, currency, billing_interval, custom_interval_days, status, has_failed_payment, failed_payment_at, renewed_at, next_billing_date, last_billed_date, service_type, total_billed_cents"
+            "id, client_name, client_id, amount_cents, currency, billing_interval, custom_interval_days, status, has_failed_payment, failed_payment_at, renewed_at, next_billing_date, last_billed_date, service_type, total_billed_cents"
           ),
         supabase
           .from("retainer_invoices")
           .select("id, retainer_id, amount_cents, currency, status, paid_at, failed_at, failure_reason, created_at")
           .order("created_at", { ascending: false })
           .limit(50),
+        supabase
+          .from("clients")
+          .select("id, name, company, is_active, status")
+          .order("created_at", { ascending: false }),
       ]);
       setProposals((proposalsRes.data as PaidProposal[]) || []);
       setRetainers((retainersRes.data as RetainerRow[]) || []);
       setRetainerInvoices((invoicesRes.data as RetainerInvoiceRow[]) || []);
+      setClients((clientsRes.data as ClientRow[]) || []);
       setLoading(false);
     };
     fetch();
@@ -363,8 +381,41 @@ export default function RevenueDashboard() {
     [breakdownData]
   );
 
+  // ---- Top Clients ----
+  const topClients = useMemo(() => {
+    const revenueByClientId = new Map<string, number>();
+    const nameByClientId = new Map<string, string>();
 
+    paidProposals.forEach((p) => {
+      const key = p.client_id || p.client_name;
+      revenueByClientId.set(key, (revenueByClientId.get(key) || 0) + parseBudget(p.budget));
+      if (!nameByClientId.has(key)) nameByClientId.set(key, p.client_name);
+    });
 
+    const retainerById = new Map(retainers.map((r) => [r.id, r] as const));
+    retainerInvoices.forEach((inv) => {
+      if (!inv.paid_at) return;
+      const r = retainerById.get(inv.retainer_id);
+      const key = r?.client_id || r?.client_name || inv.retainer_id;
+      if (!key) return;
+      revenueByClientId.set(key, (revenueByClientId.get(key) || 0) + (inv.amount_cents || 0) / 100);
+      if (!nameByClientId.has(key)) nameByClientId.set(key, r?.client_name || "Client");
+    });
+
+    const clientMap = new Map(clients.map((c) => [c.id, c] as const));
+    const entries = Array.from(revenueByClientId.entries())
+      .map(([key, revenue]) => {
+        const clientRecord = clientMap.get(key);
+        const displayName = clientRecord?.name || clientRecord?.company || nameByClientId.get(key) || key;
+        const isActive = clientRecord ? clientRecord.is_active : true;
+        const clientId = clientRecord?.id || null;
+        return { key, displayName, revenue, isActive, clientId };
+      })
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5);
+
+    return entries;
+  }, [paidProposals, retainerInvoices, retainers, clients]);
 
   const primaryCards = [
     {
@@ -682,6 +733,78 @@ export default function RevenueDashboard() {
                       );
                     })}
                 </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Top Clients */}
+        <Card>
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Users className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Top Clients</h2>
+                  <p className="text-xs text-muted-foreground">Highest revenue generators</p>
+                </div>
+              </div>
+              {topClients.length > 0 && (
+                <span className="text-xs text-muted-foreground">Top {topClients.length}</span>
+              )}
+            </div>
+            {loading ? (
+              <div className="space-y-2">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="h-14 bg-muted animate-pulse rounded-lg" />
+                ))}
+              </div>
+            ) : topClients.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-8 text-center">
+                No revenue data yet. Paid proposals and retainers will appear here.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {topClients.map((client, index) => (
+                  <div
+                    key={client.key}
+                    className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors cursor-pointer group"
+                    onClick={() => {
+                      if (client.clientId) navigate(`/dashboard/clients/${client.clientId}`);
+                    }}
+                  >
+                    <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-xs font-bold text-primary">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-medium text-foreground truncate">{client.displayName}</p>
+                        {client.isActive ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-medium text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                            <span className="w-1 h-1 rounded-full bg-emerald-400" />
+                            Active
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                            <span className="w-1 h-1 rounded-full bg-muted-foreground" />
+                            Inactive
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {client.clientId ? "Click to view client record" : "Client record not linked"}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0 flex items-center gap-2">
+                      <p className="text-sm font-semibold text-foreground">{fmt(client.revenue)}</p>
+                      {client.clientId && (
+                        <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </CardContent>
