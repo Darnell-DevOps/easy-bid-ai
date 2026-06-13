@@ -32,6 +32,7 @@ import { monthlyEquivalentCents, formatMoney } from "@/lib/retainers";
 interface PaidProposal {
   id: string;
   client_name: string;
+  client_id: string | null;
   budget: string;
   created_at: string;
   client_paid: boolean;
