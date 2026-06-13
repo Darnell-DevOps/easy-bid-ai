@@ -94,16 +94,27 @@ function formatAmount(cents: number | null, currency: string | null) {
   return `${symbol}${value}`;
 }
 
-function deriveFullStage(p: PublicProposal, contract: ContractLite | null, onboarding: OnboardingFormRow | null, hasBooking: boolean): FullStage {
-  if (onboarding?.status === "completed") return "ready";
-  if (p.client_paid) {
-    if (hasBooking) return "onboarding";
-    return "booking";
-  }
+function deriveProjectStage(
+  p: PublicProposal,
+  contract: ContractLite | null,
+  onboarding: OnboardingFormRow | null,
+  hasBooking: boolean,
+): ProjectStage {
+  if (onboarding?.status === "completed") return hasBooking ? "active" : "kickoff";
+  if (p.client_paid) return "onboarding";
   if (contract?.status === "signed") return "payment";
   if (p.status === "accepted" || p.accepted_at) return "contract";
   return "proposal";
 }
+
+const STAGE_LABEL: Record<ProjectStage, string> = {
+  proposal: "Awaiting review",
+  contract: "Awaiting signature",
+  payment: "Awaiting payment",
+  onboarding: "Onboarding",
+  kickoff: "Ready for kickoff",
+  active: "Project active",
+};
 
 export default function ClientPortal() {
   const { id } = useParams();
