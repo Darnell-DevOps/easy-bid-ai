@@ -310,6 +310,61 @@ export default function RevenueDashboard() {
     return d.toLocaleDateString();
   };
 
+  // ---- Revenue Breakdown ----
+  const categoriseRetainer = (svc: string | null): "Retainers" | "Consulting" | "Maintenance" | "Other" => {
+    const s = (svc || "").toLowerCase();
+    if (!s) return "Retainers";
+    if (/(consult|advisor|advisory|strateg|coach)/.test(s)) return "Consulting";
+    if (/(maint|support|hosting|care|managed)/.test(s)) return "Maintenance";
+    if (/(retain|monthly|subscription)/.test(s)) return "Retainers";
+    return "Other";
+  };
+
+  const breakdownData = useMemo(() => {
+    const buckets: Record<string, number> = {
+      "One-Time Projects": 0,
+      "Retainers": 0,
+      "Consulting": 0,
+      "Maintenance": 0,
+      "Other": 0,
+    };
+    paidProposals.forEach((p) => {
+      buckets["One-Time Projects"] += parseBudget(p.budget);
+    });
+    // Use actual paid retainer invoices for accuracy
+    const retainerById = new Map(retainers.map((r) => [r.id, r] as const));
+    retainerInvoices.forEach((inv) => {
+      if (!inv.paid_at) return;
+      const r = retainerById.get(inv.retainer_id);
+      const cat = categoriseRetainer(r?.service_type ?? null);
+      buckets[cat] += (inv.amount_cents || 0) / 100;
+    });
+    // Fallback: if no invoices but retainers have total_billed_cents
+    if (retainerInvoices.filter((i) => i.paid_at).length === 0) {
+      retainers.forEach((r) => {
+        const cat = categoriseRetainer(r.service_type);
+        buckets[cat] += (r.total_billed_cents || 0) / 100;
+      });
+    }
+    const colors: Record<string, string> = {
+      "One-Time Projects": "hsl(var(--accent))",
+      "Retainers": "hsl(262 83% 65%)",
+      "Consulting": "hsl(199 89% 60%)",
+      "Maintenance": "hsl(160 84% 50%)",
+      "Other": "hsl(38 92% 60%)",
+    };
+    return Object.entries(buckets)
+      .filter(([, v]) => v > 0)
+      .map(([name, value]) => ({ name, value, color: colors[name] }));
+  }, [paidProposals, retainers, retainerInvoices]);
+
+  const breakdownTotal = useMemo(
+    () => breakdownData.reduce((acc, b) => acc + b.value, 0),
+    [breakdownData]
+  );
+
+
+
 
   const primaryCards = [
     {
