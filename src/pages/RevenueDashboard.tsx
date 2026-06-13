@@ -746,9 +746,7 @@ export default function RevenueDashboard() {
             {loading ? (
               <div className="h-64 bg-muted animate-pulse rounded-lg" />
             ) : breakdownData.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-8 text-center">
-                No revenue yet. Paid proposals and retainers will appear here.
-              </p>
+              <RevenueEmptyState />
             ) : (
               <div className="grid md:grid-cols-2 gap-6 items-center">
                 <div className="relative h-64">
