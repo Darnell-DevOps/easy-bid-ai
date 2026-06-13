@@ -3,6 +3,10 @@ import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft,
@@ -24,6 +28,8 @@ import {
   CalendarClock,
   FilePlus,
   ArrowUpRight,
+  Filter,
+  CalendarRange,
 } from "lucide-react";
 import {
   ChartContainer,
@@ -33,6 +39,8 @@ import {
 } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { monthlyEquivalentCents, formatMoney } from "@/lib/retainers";
+
+type FilterPreset = "30d" | "90d" | "12m" | "custom";
 
 interface PaidProposal {
   id: string;
@@ -106,6 +114,9 @@ export default function RevenueDashboard() {
   const [retainerInvoices, setRetainerInvoices] = useState<RetainerInvoiceRow[]>([]);
   const [clients, setClients] = useState<ClientRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filterPreset, setFilterPreset] = useState<FilterPreset>("12m");
+  const [customRange, setCustomRange] = useState<{ from?: Date; to?: Date }>({});
+  const [customOpen, setCustomOpen] = useState(false);
 
   useEffect(() => {
     const fetch = async () => {
@@ -179,24 +190,91 @@ export default function RevenueDashboard() {
       .reduce((acc, p) => acc + parseBudget(p.budget), 0);
   }, [paidProposals]);
 
-  // Build monthly chart data for last 6 months
-  const chartData = useMemo(() => {
-    const months: { name: string; revenue: number }[] = [];
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthName = d.toLocaleString("default", { month: "short" });
-      const year = d.getFullYear();
-      const month = d.getMonth();
-      const rev = paidProposals
-        .filter((p) => {
-          const pd = new Date(p.created_at);
-          return pd.getMonth() === month && pd.getFullYear() === year;
-        })
-        .reduce((acc, p) => acc + parseBudget(p.budget), 0);
-      months.push({ name: monthName, revenue: rev });
+  // ---- Filter range ----
+  const filterRange = useMemo(() => {
+    const end = new Date();
+    const start = new Date();
+    if (filterPreset === "30d") start.setDate(end.getDate() - 30);
+    else if (filterPreset === "90d") start.setDate(end.getDate() - 90);
+    else if (filterPreset === "12m") start.setMonth(end.getMonth() - 12);
+    else if (filterPreset === "custom") {
+      return {
+        start: customRange.from || new Date(end.getFullYear(), end.getMonth() - 1, 1),
+        end: customRange.to || end,
+      };
     }
-    return months;
-  }, [paidProposals]);
+    return { start, end };
+  }, [filterPreset, customRange]);
+
+  const filterLabel = useMemo(() => {
+    if (filterPreset === "30d") return "Last 30 days";
+    if (filterPreset === "90d") return "Last 90 days";
+    if (filterPreset === "12m") return "Last 12 months";
+    if (customRange.from && customRange.to)
+      return `${format(customRange.from, "MMM d")} – ${format(customRange.to, "MMM d, yyyy")}`;
+    if (customRange.from) return `From ${format(customRange.from, "MMM d, yyyy")}`;
+    return "Custom range";
+  }, [filterPreset, customRange]);
+
+  const inRange = (d: Date) => d >= filterRange.start && d <= filterRange.end;
+
+  const filteredPaidProposals = useMemo(
+    () => paidProposals.filter((p) => inRange(new Date(p.created_at))),
+    [paidProposals, filterRange]
+  );
+
+  const filteredInvoices = useMemo(
+    () => retainerInvoices.filter((i) => i.paid_at && inRange(new Date(i.paid_at))),
+    [retainerInvoices, filterRange]
+  );
+
+  // Build chart data dynamically based on range
+  const chartData = useMemo(() => {
+    const { start, end } = filterRange;
+    const days = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / 86400000));
+    const useMonthly = days > 120;
+    const buckets: { name: string; revenue: number; key: string }[] = [];
+
+    if (useMonthly) {
+      const cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+      const endCursor = new Date(end.getFullYear(), end.getMonth(), 1);
+      while (cursor <= endCursor) {
+        buckets.push({
+          name: cursor.toLocaleString("default", { month: "short" }),
+          key: `${cursor.getFullYear()}-${cursor.getMonth()}`,
+          revenue: 0,
+        });
+        cursor.setMonth(cursor.getMonth() + 1);
+      }
+      filteredPaidProposals.forEach((p) => {
+        const d = new Date(p.created_at);
+        const key = `${d.getFullYear()}-${d.getMonth()}`;
+        const b = buckets.find((x) => x.key === key);
+        if (b) b.revenue += parseBudget(p.budget);
+      });
+    } else {
+      const weekMs = 7 * 86400000;
+      const numWeeks = Math.max(1, Math.ceil(days / 7));
+      for (let i = numWeeks - 1; i >= 0; i--) {
+        const bEnd = new Date(end.getTime() - i * weekMs);
+        buckets.push({
+          name: bEnd.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+          key: String(i),
+          revenue: 0,
+        });
+      }
+      filteredPaidProposals.forEach((p) => {
+        const d = new Date(p.created_at);
+        const ageDays = Math.floor((end.getTime() - d.getTime()) / 86400000);
+        const weekIdx = Math.floor(ageDays / 7);
+        const bucketIdx = numWeeks - 1 - weekIdx;
+        if (bucketIdx >= 0 && bucketIdx < buckets.length) {
+          buckets[bucketIdx].revenue += parseBudget(p.budget);
+        }
+      });
+    }
+    return buckets;
+  }, [filteredPaidProposals, filterRange]);
 
   // ---- New KPI computations ----
   const activeRetainers = useMemo(
@@ -301,8 +379,11 @@ export default function RevenueDashboard() {
       }
     });
 
-    return events.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, 12);
-  }, [paidProposals, retainerInvoices, retainers]);
+    return events
+      .filter((e) => inRange(e.timestamp))
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, 12);
+  }, [paidProposals, retainerInvoices, retainers, filterRange]);
 
   const activityStyle = (t: ActivityEvent["type"]) => {
     switch (t) {
@@ -398,24 +479,16 @@ export default function RevenueDashboard() {
       "Maintenance": 0,
       "Other": 0,
     };
-    paidProposals.forEach((p) => {
+    filteredPaidProposals.forEach((p) => {
       buckets["One-Time Projects"] += parseBudget(p.budget);
     });
-    // Use actual paid retainer invoices for accuracy
+    // Use actual paid retainer invoices for accuracy (filtered by range)
     const retainerById = new Map(retainers.map((r) => [r.id, r] as const));
-    retainerInvoices.forEach((inv) => {
-      if (!inv.paid_at) return;
+    filteredInvoices.forEach((inv) => {
       const r = retainerById.get(inv.retainer_id);
       const cat = categoriseRetainer(r?.service_type ?? null);
       buckets[cat] += (inv.amount_cents || 0) / 100;
     });
-    // Fallback: if no invoices but retainers have total_billed_cents
-    if (retainerInvoices.filter((i) => i.paid_at).length === 0) {
-      retainers.forEach((r) => {
-        const cat = categoriseRetainer(r.service_type);
-        buckets[cat] += (r.total_billed_cents || 0) / 100;
-      });
-    }
     const colors: Record<string, string> = {
       "One-Time Projects": "hsl(var(--accent))",
       "Retainers": "hsl(262 83% 65%)",
@@ -426,7 +499,7 @@ export default function RevenueDashboard() {
     return Object.entries(buckets)
       .filter(([, v]) => v > 0)
       .map(([name, value]) => ({ name, value, color: colors[name] }));
-  }, [paidProposals, retainers, retainerInvoices]);
+  }, [filteredPaidProposals, filteredInvoices, retainers]);
 
   const breakdownTotal = useMemo(
     () => breakdownData.reduce((acc, b) => acc + b.value, 0),
@@ -601,7 +674,81 @@ export default function RevenueDashboard() {
           )}
         </div>
 
-        {/* Primary KPI row */}
+        {/* Revenue Filters */}
+        <Card className="border-border/60 bg-card/40 backdrop-blur-sm">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground/80 font-medium pr-2 border-r border-border/50">
+                <Filter className="w-3.5 h-3.5" />
+                Filter
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {([
+                  { id: "30d", label: "Last 30 Days" },
+                  { id: "90d", label: "Last 90 Days" },
+                  { id: "12m", label: "Last 12 Months" },
+                ] as { id: FilterPreset; label: string }[]).map((opt) => {
+                  const active = filterPreset === opt.id;
+                  return (
+                    <Button
+                      key={opt.id}
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setFilterPreset(opt.id)}
+                      className={cn(
+                        "h-8 text-xs transition-all",
+                        active
+                          ? "border-primary/40 bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary shadow-[0_0_20px_-8px_hsl(var(--primary)/0.6)]"
+                          : "border-border/60 hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
+                      )}
+                    >
+                      {opt.label}
+                    </Button>
+                  );
+                })}
+                <Popover open={customOpen} onOpenChange={setCustomOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setFilterPreset("custom")}
+                      className={cn(
+                        "h-8 text-xs transition-all gap-1.5",
+                        filterPreset === "custom"
+                          ? "border-primary/40 bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary shadow-[0_0_20px_-8px_hsl(var(--primary)/0.6)]"
+                          : "border-border/60 hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
+                      )}
+                    >
+                      <CalendarRange className="w-3.5 h-3.5" />
+                      {filterPreset === "custom" && customRange.from
+                        ? customRange.to
+                          ? `${format(customRange.from, "MMM d")} – ${format(customRange.to, "MMM d")}`
+                          : format(customRange.from, "MMM d, yyyy")
+                        : "Custom Range"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarPicker
+                      mode="range"
+                      selected={{ from: customRange.from, to: customRange.to } as any}
+                      onSelect={(range: any) => {
+                        setCustomRange({ from: range?.from, to: range?.to });
+                        if (range?.from && range?.to) setCustomOpen(false);
+                      }}
+                      numberOfMonths={2}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="ml-auto text-xs text-muted-foreground hidden sm:block">
+                Showing <span className="text-foreground font-medium">{filterLabel}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {primaryCards.map((s) => (
             <Card
@@ -741,7 +888,7 @@ export default function RevenueDashboard() {
                 <h2 className="text-lg font-semibold text-foreground">Revenue Breakdown</h2>
                 <p className="text-xs text-muted-foreground mt-0.5">Where your revenue is coming from</p>
               </div>
-              <span className="text-xs text-muted-foreground">All time</span>
+              <span className="text-xs text-muted-foreground">{filterLabel}</span>
             </div>
             {loading ? (
               <div className="h-64 bg-muted animate-pulse rounded-lg" />
@@ -945,7 +1092,7 @@ export default function RevenueDashboard() {
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-foreground">Revenue Over Time</h2>
-              <span className="text-xs text-muted-foreground">Last 6 months</span>
+              <span className="text-xs text-muted-foreground">{filterLabel}</span>
             </div>
             {loading ? (
               <div className="h-64 bg-muted animate-pulse rounded-lg" />
