@@ -830,9 +830,7 @@ export default function RevenueDashboard() {
                 ))}
               </div>
             ) : topClients.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-8 text-center">
-                No revenue data yet. Paid proposals and retainers will appear here.
-              </p>
+              <RevenueEmptyState />
             ) : (
               <div className="space-y-2">
                 {topClients.map((client, index) => (
