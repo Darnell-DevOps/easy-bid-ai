@@ -14,6 +14,11 @@ import {
   AlertTriangle,
   AlertCircle,
   Clock,
+  CheckCircle2,
+  FileCheck,
+  RefreshCw,
+  BellRing,
+  Activity,
 } from "lucide-react";
 import {
   ChartContainer,
@@ -41,7 +46,32 @@ interface RetainerRow {
   custom_interval_days: number | null;
   status: string;
   has_failed_payment: boolean;
+  failed_payment_at: string | null;
+  renewed_at: string | null;
+  next_billing_date: string | null;
+  last_billed_date: string | null;
 }
+
+interface RetainerInvoiceRow {
+  id: string;
+  retainer_id: string;
+  amount_cents: number;
+  currency: string;
+  status: string;
+  paid_at: string | null;
+  failed_at: string | null;
+  failure_reason: string | null;
+  created_at: string;
+}
+
+type ActivityEvent = {
+  id: string;
+  type: "payment_received" | "retainer_renewed" | "invoice_paid" | "payment_failed" | "renewal_approaching";
+  client: string;
+  amount?: string;
+  timestamp: Date;
+  detail?: string;
+};
 
 const chartConfig: ChartConfig = {
   revenue: {
@@ -54,11 +84,12 @@ export default function RevenueDashboard() {
   const navigate = useNavigate();
   const [proposals, setProposals] = useState<PaidProposal[]>([]);
   const [retainers, setRetainers] = useState<RetainerRow[]>([]);
+  const [retainerInvoices, setRetainerInvoices] = useState<RetainerInvoiceRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetch = async () => {
-      const [proposalsRes, retainersRes] = await Promise.all([
+      const [proposalsRes, retainersRes, invoicesRes] = await Promise.all([
         supabase
           .from("proposals")
           .select("id, client_name, budget, created_at, client_paid")
@@ -66,11 +97,17 @@ export default function RevenueDashboard() {
         supabase
           .from("retainers")
           .select(
-            "id, client_name, amount_cents, currency, billing_interval, custom_interval_days, status, has_failed_payment"
+            "id, client_name, amount_cents, currency, billing_interval, custom_interval_days, status, has_failed_payment, failed_payment_at, renewed_at, next_billing_date, last_billed_date"
           ),
+        supabase
+          .from("retainer_invoices")
+          .select("id, retainer_id, amount_cents, currency, status, paid_at, failed_at, failure_reason, created_at")
+          .order("created_at", { ascending: false })
+          .limit(50),
       ]);
       setProposals((proposalsRes.data as PaidProposal[]) || []);
       setRetainers((retainersRes.data as RetainerRow[]) || []);
+      setRetainerInvoices((invoicesRes.data as RetainerInvoiceRow[]) || []);
       setLoading(false);
     };
     fetch();
@@ -171,6 +208,106 @@ export default function RevenueDashboard() {
 
   const fmt = (n: number) =>
     n >= 1000 ? `$${(n / 1000).toFixed(1)}k` : `$${n.toLocaleString()}`;
+
+  // ---- Activity feed ----
+  const activityEvents = useMemo<ActivityEvent[]>(() => {
+    const events: ActivityEvent[] = [];
+    const retainerById = new Map(retainers.map((r) => [r.id, r] as const));
+
+    paidProposals.forEach((p) => {
+      events.push({
+        id: `prop-${p.id}`,
+        type: "payment_received",
+        client: p.client_name,
+        amount: `$${parseBudget(p.budget).toLocaleString()}`,
+        timestamp: new Date(p.created_at),
+        detail: "Proposal paid",
+      });
+    });
+
+    retainerInvoices.forEach((inv) => {
+      const r = retainerById.get(inv.retainer_id);
+      const client = r?.client_name || "Client";
+      if (inv.paid_at) {
+        events.push({
+          id: `inv-paid-${inv.id}`,
+          type: "invoice_paid",
+          client,
+          amount: formatMoney(inv.amount_cents, inv.currency),
+          timestamp: new Date(inv.paid_at),
+          detail: "Retainer invoice paid",
+        });
+      } else if (inv.failed_at) {
+        events.push({
+          id: `inv-failed-${inv.id}`,
+          type: "payment_failed",
+          client,
+          amount: formatMoney(inv.amount_cents, inv.currency),
+          timestamp: new Date(inv.failed_at),
+          detail: inv.failure_reason || "Payment failed",
+        });
+      }
+    });
+
+    retainers.forEach((r) => {
+      if (r.renewed_at) {
+        events.push({
+          id: `ren-${r.id}`,
+          type: "retainer_renewed",
+          client: r.client_name,
+          amount: formatMoney(r.amount_cents, r.currency),
+          timestamp: new Date(r.renewed_at),
+          detail: "Retainer renewed",
+        });
+      }
+      if (r.status === "active" && r.next_billing_date) {
+        const next = new Date(r.next_billing_date);
+        const days = Math.ceil((next.getTime() - now.getTime()) / 86400000);
+        if (days >= 0 && days <= 7) {
+          events.push({
+            id: `upc-${r.id}`,
+            type: "renewal_approaching",
+            client: r.client_name,
+            amount: formatMoney(r.amount_cents, r.currency),
+            timestamp: next,
+            detail: days === 0 ? "Renews today" : `Renews in ${days} day${days === 1 ? "" : "s"}`,
+          });
+        }
+      }
+    });
+
+    return events.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, 12);
+  }, [paidProposals, retainerInvoices, retainers]);
+
+  const activityStyle = (t: ActivityEvent["type"]) => {
+    switch (t) {
+      case "payment_received":
+        return { icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-500/10", label: "Payment received" };
+      case "invoice_paid":
+        return { icon: FileCheck, color: "text-emerald-400", bg: "bg-emerald-500/10", label: "Invoice paid" };
+      case "retainer_renewed":
+        return { icon: RefreshCw, color: "text-purple-400", bg: "bg-purple-500/10", label: "Retainer renewed" };
+      case "payment_failed":
+        return { icon: AlertTriangle, color: "text-rose-400", bg: "bg-rose-500/10", label: "Payment failed" };
+      case "renewal_approaching":
+        return { icon: BellRing, color: "text-amber-400", bg: "bg-amber-500/10", label: "Renewal approaching" };
+    }
+  };
+
+  const formatRelative = (d: Date) => {
+    const diff = d.getTime() - now.getTime();
+    const abs = Math.abs(diff);
+    const mins = Math.round(abs / 60000);
+    const hrs = Math.round(abs / 3600000);
+    const days = Math.round(abs / 86400000);
+    const suffix = diff < 0 ? "ago" : "from now";
+    if (mins < 1) return "Just now";
+    if (mins < 60) return `${mins}m ${suffix}`;
+    if (hrs < 24) return `${hrs}h ${suffix}`;
+    if (days < 30) return `${days}d ${suffix}`;
+    return d.toLocaleDateString();
+  };
+
 
   const primaryCards = [
     {
@@ -341,6 +478,82 @@ export default function RevenueDashboard() {
             ))}
           </div>
         </div>
+
+        {/* Recent Revenue Activity */}
+        <Card>
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                  <Activity className="w-4 h-4 text-accent" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Recent Revenue Activity</h2>
+                  <p className="text-xs text-muted-foreground">Live feed of payments, renewals & alerts</p>
+                </div>
+              </div>
+              {activityEvents.length > 0 && (
+                <span className="text-xs text-muted-foreground">{activityEvents.length} event{activityEvents.length === 1 ? "" : "s"}</span>
+              )}
+            </div>
+            {loading ? (
+              <div className="space-y-2">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-14 bg-muted animate-pulse rounded-lg" />
+                ))}
+              </div>
+            ) : activityEvents.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-8 text-center">
+                No recent activity yet. Payments and renewals will appear here.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {activityEvents.map((e) => {
+                  const s = activityStyle(e.type);
+                  const Icon = s.icon;
+                  const isAlert = e.type === "payment_failed" || e.type === "renewal_approaching";
+                  return (
+                    <div
+                      key={e.id}
+                      className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                        isAlert
+                          ? e.type === "payment_failed"
+                            ? "border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10"
+                            : "border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10"
+                          : "border-transparent bg-secondary/30 hover:bg-secondary/50"
+                      }`}
+                    >
+                      <div className={`w-9 h-9 rounded-lg ${s.bg} flex items-center justify-center shrink-0`}>
+                        <Icon className={`w-4 h-4 ${s.color}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-medium text-foreground truncate">{e.client}</p>
+                          <span className={`text-[10px] uppercase tracking-wider font-medium ${s.color}`}>
+                            {s.label}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate">{e.detail}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        {e.amount && (
+                          <p className={`text-sm font-semibold ${
+                            e.type === "payment_failed" ? "text-rose-400" :
+                            e.type === "renewal_approaching" ? "text-amber-400" :
+                            "text-emerald-400"
+                          }`}>
+                            {e.amount}
+                          </p>
+                        )}
+                        <p className="text-[11px] text-muted-foreground mt-0.5">{formatRelative(e.timestamp)}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Chart */}
         <Card>
