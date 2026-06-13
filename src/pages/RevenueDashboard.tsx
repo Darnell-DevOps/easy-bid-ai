@@ -41,6 +41,7 @@ interface PaidProposal {
 interface RetainerRow {
   id: string;
   client_name: string;
+  client_id: string | null;
   amount_cents: number;
   currency: string;
   billing_interval: string;
