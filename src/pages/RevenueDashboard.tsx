@@ -30,6 +30,9 @@ import {
   ArrowUpRight,
   Filter,
   CalendarRange,
+  Sparkles,
+  TrendingDown,
+  Minus,
 } from "lucide-react";
 import {
   ChartContainer,
@@ -562,6 +565,111 @@ export default function RevenueDashboard() {
     return { label: "30 days", color: "text-sky-400", bg: "bg-sky-500/10", border: "border-sky-500/20" };
   };
 
+  // ---- Revenue Insights ----
+  const revenueInsights = useMemo(() => {
+    const insights: { id: string; text: string; tone: "positive" | "warning" | "neutral" | "negative"; icon: typeof TrendingUp }[] = [];
+
+    // 1. Top revenue source
+    if (breakdownData.length > 0) {
+      const topSource = [...breakdownData].sort((a, b) => b.value - a.value)[0];
+      const pct = breakdownTotal > 0 ? ((topSource.value / breakdownTotal) * 100).toFixed(0) : "0";
+      insights.push({
+        id: "top-source",
+        text: `Most revenue comes from ${topSource.name} (${pct}%)`,
+        tone: "positive",
+        icon: TrendingUp,
+      });
+    }
+
+    // 2. Month-over-month revenue change (using paid proposals as proxy)
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+    const currMonthRev = paidProposals
+      .filter((p) => {
+        const d = new Date(p.created_at);
+        return d >= currentMonthStart;
+      })
+      .reduce((acc, p) => acc + parseBudget(p.budget), 0);
+    const prevMonthRev = paidProposals
+      .filter((p) => {
+        const d = new Date(p.created_at);
+        return d >= prevMonthStart && d <= prevMonthEnd;
+      })
+      .reduce((acc, p) => acc + parseBudget(p.budget), 0);
+
+    if (prevMonthRev > 0) {
+      const change = ((currMonthRev - prevMonthRev) / prevMonthRev) * 100;
+      const absChange = Math.abs(change).toFixed(0);
+      if (change > 0) {
+        insights.push({
+          id: "mom-up",
+          text: `Revenue increased ${absChange}% compared to last month`,
+          tone: "positive",
+          icon: TrendingUp,
+        });
+      } else if (change < 0) {
+        insights.push({
+          id: "mom-down",
+          text: `Revenue decreased ${absChange}% compared to last month`,
+          tone: "negative",
+          icon: TrendingDown,
+        });
+      } else {
+        insights.push({
+          id: "mom-flat",
+          text: `Revenue is flat compared to last month`,
+          tone: "neutral",
+          icon: Minus,
+        });
+      }
+    }
+
+    // 3. Upcoming renewals count (next 14 days)
+    const renewals14Days = upcomingRenewals.filter((r) => r.days <= 14).length;
+    if (renewals14Days > 0) {
+      insights.push({
+        id: "renewals",
+        text: `${renewals14Days} renewal${renewals14Days === 1 ? "" : "s"} due in the next 14 days`,
+        tone: "warning",
+        icon: BellRing,
+      });
+    }
+
+    // 4. Outstanding payments
+    if (outstandingAmount > 0) {
+      insights.push({
+        id: "outstanding",
+        text: `Outstanding payments total ${fmt(outstandingAmount)}`,
+        tone: "warning",
+        icon: Clock,
+      });
+    }
+
+    // 5. Failed payments
+    if (failedPayments.length > 0) {
+      insights.push({
+        id: "failed",
+        text: `${failedPayments.length} failed payment${failedPayments.length === 1 ? "" : "s"} need${failedPayments.length === 1 ? "s" : ""} attention`,
+        tone: "negative",
+        icon: AlertTriangle,
+      });
+    }
+
+    // 6. Top client
+    if (topClients.length > 0) {
+      const top = topClients[0];
+      insights.push({
+        id: "top-client",
+        text: `${top.displayName} is your top revenue generator`,
+        tone: "positive",
+        icon: Users,
+      });
+    }
+
+    return insights.slice(0, 4);
+  }, [breakdownData, breakdownTotal, paidProposals, upcomingRenewals, outstandingAmount, failedPayments, topClients]);
+
   const primaryCards = [
     {
       label: "Total Revenue",
@@ -748,6 +856,57 @@ export default function RevenueDashboard() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Revenue Insights */}
+        {revenueInsights.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+            {revenueInsights.map((insight) => {
+              const toneStyles = {
+                positive: {
+                  border: "border-emerald-500/20",
+                  bg: "bg-emerald-500/5",
+                  iconBg: "bg-emerald-500/10",
+                  iconColor: "text-emerald-400",
+                },
+                warning: {
+                  border: "border-amber-500/20",
+                  bg: "bg-amber-500/5",
+                  iconBg: "bg-amber-500/10",
+                  iconColor: "text-amber-400",
+                },
+                neutral: {
+                  border: "border-border/40",
+                  bg: "bg-secondary/20",
+                  iconBg: "bg-muted",
+                  iconColor: "text-muted-foreground",
+                },
+                negative: {
+                  border: "border-rose-500/20",
+                  bg: "bg-rose-500/5",
+                  iconBg: "bg-rose-500/10",
+                  iconColor: "text-rose-400",
+                },
+              };
+              const style = toneStyles[insight.tone];
+              const Icon = insight.icon;
+              return (
+                <Card
+                  key={insight.id}
+                  className={`border ${style.border} ${style.bg} hover:brightness-110 transition-all`}
+                >
+                  <CardContent className="p-3 flex items-start gap-3">
+                    <div className={`w-8 h-8 rounded-lg ${style.iconBg} flex items-center justify-center shrink-0 mt-0.5`}>
+                      <Icon className={`w-4 h-4 ${style.iconColor}`} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground leading-snug">{insight.text}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {primaryCards.map((s) => (
