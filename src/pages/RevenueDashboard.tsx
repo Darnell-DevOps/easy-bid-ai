@@ -857,6 +857,57 @@ export default function RevenueDashboard() {
           </CardContent>
         </Card>
 
+        {/* Revenue Insights */}
+        {revenueInsights.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+            {revenueInsights.map((insight) => {
+              const toneStyles = {
+                positive: {
+                  border: "border-emerald-500/20",
+                  bg: "bg-emerald-500/5",
+                  iconBg: "bg-emerald-500/10",
+                  iconColor: "text-emerald-400",
+                },
+                warning: {
+                  border: "border-amber-500/20",
+                  bg: "bg-amber-500/5",
+                  iconBg: "bg-amber-500/10",
+                  iconColor: "text-amber-400",
+                },
+                neutral: {
+                  border: "border-border/40",
+                  bg: "bg-secondary/20",
+                  iconBg: "bg-muted",
+                  iconColor: "text-muted-foreground",
+                },
+                negative: {
+                  border: "border-rose-500/20",
+                  bg: "bg-rose-500/5",
+                  iconBg: "bg-rose-500/10",
+                  iconColor: "text-rose-400",
+                },
+              };
+              const style = toneStyles[insight.tone];
+              const Icon = insight.icon;
+              return (
+                <Card
+                  key={insight.id}
+                  className={`border ${style.border} ${style.bg} hover:brightness-110 transition-all`}
+                >
+                  <CardContent className="p-3 flex items-start gap-3">
+                    <div className={`w-8 h-8 rounded-lg ${style.iconBg} flex items-center justify-center shrink-0 mt-0.5`}>
+                      <Icon className={`w-4 h-4 ${style.iconColor}`} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground leading-snug">{insight.text}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {primaryCards.map((s) => (
             <Card
