@@ -114,6 +114,9 @@ export default function RevenueDashboard() {
   const [retainerInvoices, setRetainerInvoices] = useState<RetainerInvoiceRow[]>([]);
   const [clients, setClients] = useState<ClientRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filterPreset, setFilterPreset] = useState<FilterPreset>("12m");
+  const [customRange, setCustomRange] = useState<{ from?: Date; to?: Date }>({});
+  const [customOpen, setCustomOpen] = useState(false);
 
   useEffect(() => {
     const fetch = async () => {
