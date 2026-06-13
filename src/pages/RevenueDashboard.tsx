@@ -900,9 +900,7 @@ export default function RevenueDashboard() {
                 ))}
               </div>
             ) : upcomingRenewals.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-8 text-center">
-                No upcoming renewals. Active retainers with billing dates will appear here.
-              </p>
+              <RevenueEmptyState />
             ) : (
               <div className="space-y-2">
                 {upcomingRenewals.map((r) => {
