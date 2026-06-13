@@ -129,6 +129,7 @@ export default function ClientPortal() {
   const [contract, setContract] = useState<ContractLite | null>(null);
   const [onboarding, setOnboarding] = useState<OnboardingFormRow | null>(null);
   const [hasBooking, setHasBooking] = useState(false);
+  const [bookings, setBookings] = useState<BookingLite[]>([]);
   const { openCheckout, loading: payLoading, available: paymentsAvailable } = useProposalCheckout();
 
   useEffect(() => {
