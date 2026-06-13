@@ -565,6 +565,111 @@ export default function RevenueDashboard() {
     return { label: "30 days", color: "text-sky-400", bg: "bg-sky-500/10", border: "border-sky-500/20" };
   };
 
+  // ---- Revenue Insights ----
+  const revenueInsights = useMemo(() => {
+    const insights: { id: string; text: string; tone: "positive" | "warning" | "neutral" | "negative"; icon: typeof TrendingUp }[] = [];
+
+    // 1. Top revenue source
+    if (breakdownData.length > 0) {
+      const topSource = [...breakdownData].sort((a, b) => b.value - a.value)[0];
+      const pct = breakdownTotal > 0 ? ((topSource.value / breakdownTotal) * 100).toFixed(0) : "0";
+      insights.push({
+        id: "top-source",
+        text: `Most revenue comes from ${topSource.name} (${pct}%)`,
+        tone: "positive",
+        icon: TrendingUp,
+      });
+    }
+
+    // 2. Month-over-month revenue change (using paid proposals as proxy)
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+    const currMonthRev = paidProposals
+      .filter((p) => {
+        const d = new Date(p.created_at);
+        return d >= currentMonthStart;
+      })
+      .reduce((acc, p) => acc + parseBudget(p.budget), 0);
+    const prevMonthRev = paidProposals
+      .filter((p) => {
+        const d = new Date(p.created_at);
+        return d >= prevMonthStart && d <= prevMonthEnd;
+      })
+      .reduce((acc, p) => acc + parseBudget(p.budget), 0);
+
+    if (prevMonthRev > 0) {
+      const change = ((currMonthRev - prevMonthRev) / prevMonthRev) * 100;
+      const absChange = Math.abs(change).toFixed(0);
+      if (change > 0) {
+        insights.push({
+          id: "mom-up",
+          text: `Revenue increased ${absChange}% compared to last month`,
+          tone: "positive",
+          icon: TrendingUp,
+        });
+      } else if (change < 0) {
+        insights.push({
+          id: "mom-down",
+          text: `Revenue decreased ${absChange}% compared to last month`,
+          tone: "negative",
+          icon: TrendingDown,
+        });
+      } else {
+        insights.push({
+          id: "mom-flat",
+          text: `Revenue is flat compared to last month`,
+          tone: "neutral",
+          icon: Minus,
+        });
+      }
+    }
+
+    // 3. Upcoming renewals count (next 14 days)
+    const renewals14Days = upcomingRenewals.filter((r) => r.days <= 14).length;
+    if (renewals14Days > 0) {
+      insights.push({
+        id: "renewals",
+        text: `${renewals14Days} renewal${renewals14Days === 1 ? "" : "s"} due in the next 14 days`,
+        tone: "warning",
+        icon: BellRing,
+      });
+    }
+
+    // 4. Outstanding payments
+    if (outstandingAmount > 0) {
+      insights.push({
+        id: "outstanding",
+        text: `Outstanding payments total ${fmt(outstandingAmount)}`,
+        tone: "warning",
+        icon: Clock,
+      });
+    }
+
+    // 5. Failed payments
+    if (failedPayments.length > 0) {
+      insights.push({
+        id: "failed",
+        text: `${failedPayments.length} failed payment${failedPayments.length === 1 ? "" : "s"} need${failedPayments.length === 1 ? "s" : ""} attention`,
+        tone: "negative",
+        icon: AlertTriangle,
+      });
+    }
+
+    // 6. Top client
+    if (topClients.length > 0) {
+      const top = topClients[0];
+      insights.push({
+        id: "top-client",
+        text: `${top.displayName} is your top revenue generator`,
+        tone: "positive",
+        icon: Users,
+      });
+    }
+
+    return insights.slice(0, 4);
+  }, [breakdownData, breakdownTotal, paidProposals, upcomingRenewals, outstandingAmount, failedPayments, topClients]);
+
   const primaryCards = [
     {
       label: "Total Revenue",
