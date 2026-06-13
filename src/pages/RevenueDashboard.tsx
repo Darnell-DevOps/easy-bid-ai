@@ -190,24 +190,91 @@ export default function RevenueDashboard() {
       .reduce((acc, p) => acc + parseBudget(p.budget), 0);
   }, [paidProposals]);
 
-  // Build monthly chart data for last 6 months
-  const chartData = useMemo(() => {
-    const months: { name: string; revenue: number }[] = [];
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthName = d.toLocaleString("default", { month: "short" });
-      const year = d.getFullYear();
-      const month = d.getMonth();
-      const rev = paidProposals
-        .filter((p) => {
-          const pd = new Date(p.created_at);
-          return pd.getMonth() === month && pd.getFullYear() === year;
-        })
-        .reduce((acc, p) => acc + parseBudget(p.budget), 0);
-      months.push({ name: monthName, revenue: rev });
+  // ---- Filter range ----
+  const filterRange = useMemo(() => {
+    const end = new Date();
+    const start = new Date();
+    if (filterPreset === "30d") start.setDate(end.getDate() - 30);
+    else if (filterPreset === "90d") start.setDate(end.getDate() - 90);
+    else if (filterPreset === "12m") start.setMonth(end.getMonth() - 12);
+    else if (filterPreset === "custom") {
+      return {
+        start: customRange.from || new Date(end.getFullYear(), end.getMonth() - 1, 1),
+        end: customRange.to || end,
+      };
     }
-    return months;
-  }, [paidProposals]);
+    return { start, end };
+  }, [filterPreset, customRange]);
+
+  const filterLabel = useMemo(() => {
+    if (filterPreset === "30d") return "Last 30 days";
+    if (filterPreset === "90d") return "Last 90 days";
+    if (filterPreset === "12m") return "Last 12 months";
+    if (customRange.from && customRange.to)
+      return `${format(customRange.from, "MMM d")} – ${format(customRange.to, "MMM d, yyyy")}`;
+    if (customRange.from) return `From ${format(customRange.from, "MMM d, yyyy")}`;
+    return "Custom range";
+  }, [filterPreset, customRange]);
+
+  const inRange = (d: Date) => d >= filterRange.start && d <= filterRange.end;
+
+  const filteredPaidProposals = useMemo(
+    () => paidProposals.filter((p) => inRange(new Date(p.created_at))),
+    [paidProposals, filterRange]
+  );
+
+  const filteredInvoices = useMemo(
+    () => retainerInvoices.filter((i) => i.paid_at && inRange(new Date(i.paid_at))),
+    [retainerInvoices, filterRange]
+  );
+
+  // Build chart data dynamically based on range
+  const chartData = useMemo(() => {
+    const { start, end } = filterRange;
+    const days = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / 86400000));
+    const useMonthly = days > 120;
+    const buckets: { name: string; revenue: number; key: string }[] = [];
+
+    if (useMonthly) {
+      const cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+      const endCursor = new Date(end.getFullYear(), end.getMonth(), 1);
+      while (cursor <= endCursor) {
+        buckets.push({
+          name: cursor.toLocaleString("default", { month: "short" }),
+          key: `${cursor.getFullYear()}-${cursor.getMonth()}`,
+          revenue: 0,
+        });
+        cursor.setMonth(cursor.getMonth() + 1);
+      }
+      filteredPaidProposals.forEach((p) => {
+        const d = new Date(p.created_at);
+        const key = `${d.getFullYear()}-${d.getMonth()}`;
+        const b = buckets.find((x) => x.key === key);
+        if (b) b.revenue += parseBudget(p.budget);
+      });
+    } else {
+      const weekMs = 7 * 86400000;
+      const numWeeks = Math.max(1, Math.ceil(days / 7));
+      for (let i = numWeeks - 1; i >= 0; i--) {
+        const bEnd = new Date(end.getTime() - i * weekMs);
+        buckets.push({
+          name: bEnd.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+          key: String(i),
+          revenue: 0,
+        });
+      }
+      filteredPaidProposals.forEach((p) => {
+        const d = new Date(p.created_at);
+        const ageDays = Math.floor((end.getTime() - d.getTime()) / 86400000);
+        const weekIdx = Math.floor(ageDays / 7);
+        const bucketIdx = numWeeks - 1 - weekIdx;
+        if (bucketIdx >= 0 && bucketIdx < buckets.length) {
+          buckets[bucketIdx].revenue += parseBudget(p.budget);
+        }
+      });
+    }
+    return buckets;
+  }, [filteredPaidProposals, filterRange]);
 
   // ---- New KPI computations ----
   const activeRetainers = useMemo(
