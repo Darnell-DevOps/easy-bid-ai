@@ -381,8 +381,41 @@ export default function RevenueDashboard() {
     [breakdownData]
   );
 
+  // ---- Top Clients ----
+  const topClients = useMemo(() => {
+    const revenueByClientId = new Map<string, number>();
+    const nameByClientId = new Map<string, string>();
 
+    paidProposals.forEach((p) => {
+      const key = p.client_id || p.client_name;
+      revenueByClientId.set(key, (revenueByClientId.get(key) || 0) + parseBudget(p.budget));
+      if (!nameByClientId.has(key)) nameByClientId.set(key, p.client_name);
+    });
 
+    const retainerById = new Map(retainers.map((r) => [r.id, r] as const));
+    retainerInvoices.forEach((inv) => {
+      if (!inv.paid_at) return;
+      const r = retainerById.get(inv.retainer_id);
+      const key = r?.client_id || r?.client_name || inv.retainer_id;
+      if (!key) return;
+      revenueByClientId.set(key, (revenueByClientId.get(key) || 0) + (inv.amount_cents || 0) / 100);
+      if (!nameByClientId.has(key)) nameByClientId.set(key, r?.client_name || "Client");
+    });
+
+    const clientMap = new Map(clients.map((c) => [c.id, c] as const));
+    const entries = Array.from(revenueByClientId.entries())
+      .map(([key, revenue]) => {
+        const clientRecord = clientMap.get(key);
+        const displayName = clientRecord?.name || clientRecord?.company || nameByClientId.get(key) || key;
+        const isActive = clientRecord ? clientRecord.is_active : true;
+        const clientId = clientRecord?.id || null;
+        return { key, displayName, revenue, isActive, clientId };
+      })
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5);
+
+    return entries;
+  }, [paidProposals, retainerInvoices, retainers, clients]);
 
   const primaryCards = [
     {
