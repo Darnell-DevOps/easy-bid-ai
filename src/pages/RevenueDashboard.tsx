@@ -26,7 +26,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { monthlyEquivalentCents, formatMoney } from "@/lib/retainers";
 
 interface PaidProposal {
@@ -50,6 +50,8 @@ interface RetainerRow {
   renewed_at: string | null;
   next_billing_date: string | null;
   last_billed_date: string | null;
+  service_type: string | null;
+  total_billed_cents: number | null;
 }
 
 interface RetainerInvoiceRow {
@@ -97,7 +99,7 @@ export default function RevenueDashboard() {
         supabase
           .from("retainers")
           .select(
-            "id, client_name, amount_cents, currency, billing_interval, custom_interval_days, status, has_failed_payment, failed_payment_at, renewed_at, next_billing_date, last_billed_date"
+            "id, client_name, amount_cents, currency, billing_interval, custom_interval_days, status, has_failed_payment, failed_payment_at, renewed_at, next_billing_date, last_billed_date, service_type, total_billed_cents"
           ),
         supabase
           .from("retainer_invoices")
@@ -307,6 +309,61 @@ export default function RevenueDashboard() {
     if (days < 30) return `${days}d ${suffix}`;
     return d.toLocaleDateString();
   };
+
+  // ---- Revenue Breakdown ----
+  const categoriseRetainer = (svc: string | null): "Retainers" | "Consulting" | "Maintenance" | "Other" => {
+    const s = (svc || "").toLowerCase();
+    if (!s) return "Retainers";
+    if (/(consult|advisor|advisory|strateg|coach)/.test(s)) return "Consulting";
+    if (/(maint|support|hosting|care|managed)/.test(s)) return "Maintenance";
+    if (/(retain|monthly|subscription)/.test(s)) return "Retainers";
+    return "Other";
+  };
+
+  const breakdownData = useMemo(() => {
+    const buckets: Record<string, number> = {
+      "One-Time Projects": 0,
+      "Retainers": 0,
+      "Consulting": 0,
+      "Maintenance": 0,
+      "Other": 0,
+    };
+    paidProposals.forEach((p) => {
+      buckets["One-Time Projects"] += parseBudget(p.budget);
+    });
+    // Use actual paid retainer invoices for accuracy
+    const retainerById = new Map(retainers.map((r) => [r.id, r] as const));
+    retainerInvoices.forEach((inv) => {
+      if (!inv.paid_at) return;
+      const r = retainerById.get(inv.retainer_id);
+      const cat = categoriseRetainer(r?.service_type ?? null);
+      buckets[cat] += (inv.amount_cents || 0) / 100;
+    });
+    // Fallback: if no invoices but retainers have total_billed_cents
+    if (retainerInvoices.filter((i) => i.paid_at).length === 0) {
+      retainers.forEach((r) => {
+        const cat = categoriseRetainer(r.service_type);
+        buckets[cat] += (r.total_billed_cents || 0) / 100;
+      });
+    }
+    const colors: Record<string, string> = {
+      "One-Time Projects": "hsl(var(--accent))",
+      "Retainers": "hsl(262 83% 65%)",
+      "Consulting": "hsl(199 89% 60%)",
+      "Maintenance": "hsl(160 84% 50%)",
+      "Other": "hsl(38 92% 60%)",
+    };
+    return Object.entries(buckets)
+      .filter(([, v]) => v > 0)
+      .map(([name, value]) => ({ name, value, color: colors[name] }));
+  }, [paidProposals, retainers, retainerInvoices]);
+
+  const breakdownTotal = useMemo(
+    () => breakdownData.reduce((acc, b) => acc + b.value, 0),
+    [breakdownData]
+  );
+
+
 
 
   const primaryCards = [
@@ -550,6 +607,81 @@ export default function RevenueDashboard() {
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Revenue Breakdown */}
+        <Card>
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-lg font-semibold text-foreground">Revenue Breakdown</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Where your revenue is coming from</p>
+              </div>
+              <span className="text-xs text-muted-foreground">All time</span>
+            </div>
+            {loading ? (
+              <div className="h-64 bg-muted animate-pulse rounded-lg" />
+            ) : breakdownData.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-8 text-center">
+                No revenue yet. Paid proposals and retainers will appear here.
+              </p>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-6 items-center">
+                <div className="relative h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={breakdownData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={62}
+                        outerRadius={95}
+                        paddingAngle={2}
+                        stroke="hsl(var(--background))"
+                        strokeWidth={2}
+                      >
+                        {breakdownData.map((entry, i) => (
+                          <Cell key={i} fill={entry.color} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-medium">Total</span>
+                    <span className="text-2xl font-bold text-foreground">{fmt(breakdownTotal)}</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {breakdownData
+                    .slice()
+                    .sort((a, b) => b.value - a.value)
+                    .map((b) => {
+                      const pct = breakdownTotal > 0 ? (b.value / breakdownTotal) * 100 : 0;
+                      return (
+                        <div
+                          key={b.name}
+                          className="flex items-center justify-between p-3 rounded-lg bg-secondary/30"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span
+                              className="w-2.5 h-2.5 rounded-full shrink-0"
+                              style={{ backgroundColor: b.color }}
+                            />
+                            <span className="text-sm font-medium text-foreground truncate">{b.name}</span>
+                          </div>
+                          <div className="text-right shrink-0 ml-3">
+                            <p className="text-sm font-semibold text-foreground">{fmt(b.value)}</p>
+                            <p className="text-[11px] text-muted-foreground">{pct.toFixed(1)}%</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
               </div>
             )}
           </CardContent>
