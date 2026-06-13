@@ -59,6 +59,14 @@ interface BookingLinkLite {
   name: string;
 }
 
+interface BookingLite {
+  id: string;
+  scheduled_at: string;
+  meeting_name: string | null;
+  status: string | null;
+  created_at: string;
+}
+
 interface ContractLite {
   id: string;
   title: string;
