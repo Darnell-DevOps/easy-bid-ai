@@ -965,361 +965,374 @@ export default function RevenueDashboard() {
           </div>
         </div>
 
-        {/* Recent Revenue Activity */}
-        <Card>
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
-                  <Activity className="w-4 h-4 text-accent" />
-                </div>
+        {/* Row: Chart (2/3) + Revenue Breakdown (1/3) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Chart */}
+          <Card className="lg:col-span-2">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-lg font-semibold text-foreground">Recent Revenue Activity</h2>
-                  <p className="text-xs text-muted-foreground">Live feed of payments, renewals & alerts</p>
+                  <h2 className="text-lg font-semibold text-foreground">Revenue Over Time</h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">Trends and growth across the selected window</p>
                 </div>
+                <span className="text-xs text-muted-foreground">{filterLabel}</span>
               </div>
-              {activityEvents.length > 0 && (
-                <span className="text-xs text-muted-foreground">{activityEvents.length} event{activityEvents.length === 1 ? "" : "s"}</span>
+              {loading ? (
+                <div className="h-72 bg-muted animate-pulse rounded-lg" />
+              ) : (
+                <ChartContainer config={chartConfig} className="h-72 w-full">
+                  <BarChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                    <XAxis
+                      dataKey="name"
+                      className="text-xs"
+                      tick={{ fill: "hsl(var(--muted-foreground))" }}
+                    />
+                    <YAxis
+                      tick={{ fill: "hsl(var(--muted-foreground))" }}
+                      tickFormatter={(v) => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
+                      className="text-xs"
+                    />
+                    <ChartTooltip
+                      content={
+                        <ChartTooltipContent
+                          formatter={(value) => `$${Number(value).toLocaleString()}`}
+                        />
+                      }
+                    />
+                    <Bar dataKey="revenue" fill="var(--color-revenue)" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ChartContainer>
               )}
-            </div>
-            {loading ? (
-              <div className="space-y-2">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="h-14 bg-muted animate-pulse rounded-lg" />
-                ))}
-              </div>
-            ) : activityEvents.length === 0 ? (
-              <RevenueEmptyState />
-            ) : (
-              <div className="space-y-2">
-                {activityEvents.map((e) => {
-                  const s = activityStyle(e.type);
-                  const Icon = s.icon;
-                  const isAlert = e.type === "payment_failed" || e.type === "renewal_approaching";
-                  return (
-                    <div
-                      key={e.id}
-                      className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
-                        isAlert
-                          ? e.type === "payment_failed"
-                            ? "border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10"
-                            : "border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10"
-                          : "border-transparent bg-secondary/30 hover:bg-secondary/50"
-                      }`}
-                    >
-                      <div className={`w-9 h-9 rounded-lg ${s.bg} flex items-center justify-center shrink-0`}>
-                        <Icon className={`w-4 h-4 ${s.color}`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-sm font-medium text-foreground truncate">{e.client}</p>
-                          <span className={`text-[10px] uppercase tracking-wider font-medium ${s.color}`}>
-                            {s.label}
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground truncate">{e.detail}</p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        {e.amount && (
-                          <p className={`text-sm font-semibold ${
-                            e.type === "payment_failed" ? "text-rose-400" :
-                            e.type === "renewal_approaching" ? "text-amber-400" :
-                            "text-emerald-400"
-                          }`}>
-                            {e.amount}
-                          </p>
-                        )}
-                        <p className="text-[11px] text-muted-foreground mt-0.5">{formatRelative(e.timestamp)}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* Revenue Breakdown */}
-        <Card>
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-lg font-semibold text-foreground">Revenue Breakdown</h2>
-                <p className="text-xs text-muted-foreground mt-0.5">Where your revenue is coming from</p>
-              </div>
-              <span className="text-xs text-muted-foreground">{filterLabel}</span>
-            </div>
-            {loading ? (
-              <div className="h-64 bg-muted animate-pulse rounded-lg" />
-            ) : breakdownData.length === 0 ? (
-              <RevenueEmptyState />
-            ) : (
-              <div className="grid md:grid-cols-2 gap-6 items-center">
-                <div className="relative h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={breakdownData}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={62}
-                        outerRadius={95}
-                        paddingAngle={2}
-                        stroke="hsl(var(--background))"
-                        strokeWidth={2}
-                      >
-                        {breakdownData.map((entry, i) => (
-                          <Cell key={i} fill={entry.color} />
-                        ))}
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-medium">Total</span>
-                    <span className="text-2xl font-bold text-foreground">{fmt(breakdownTotal)}</span>
-                  </div>
+          {/* Revenue Breakdown */}
+          <Card>
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Breakdown</h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">Revenue by source</p>
                 </div>
-                <div className="space-y-2">
-                  {breakdownData
-                    .slice()
-                    .sort((a, b) => b.value - a.value)
-                    .map((b) => {
-                      const pct = breakdownTotal > 0 ? (b.value / breakdownTotal) * 100 : 0;
-                      return (
-                        <div
-                          key={b.name}
-                          className="flex items-center justify-between p-3 rounded-lg bg-secondary/30"
+              </div>
+              {loading ? (
+                <div className="h-72 bg-muted animate-pulse rounded-lg" />
+              ) : breakdownData.length === 0 ? (
+                <RevenueEmptyState />
+              ) : (
+                <div className="space-y-4">
+                  <div className="relative h-44">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={breakdownData}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={52}
+                          outerRadius={80}
+                          paddingAngle={2}
+                          stroke="hsl(var(--background))"
+                          strokeWidth={2}
                         >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <span
-                              className="w-2.5 h-2.5 rounded-full shrink-0"
-                              style={{ backgroundColor: b.color }}
-                            />
-                            <span className="text-sm font-medium text-foreground truncate">{b.name}</span>
-                          </div>
-                          <div className="text-right shrink-0 ml-3">
-                            <p className="text-sm font-semibold text-foreground">{fmt(b.value)}</p>
-                            <p className="text-[11px] text-muted-foreground">{pct.toFixed(1)}%</p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Top Clients */}
-        <Card>
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Users className="w-4 h-4 text-primary" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-foreground">Top Clients</h2>
-                  <p className="text-xs text-muted-foreground">Highest revenue generators</p>
-                </div>
-              </div>
-              {topClients.length > 0 && (
-                <span className="text-xs text-muted-foreground">Top {topClients.length}</span>
-              )}
-            </div>
-            {loading ? (
-              <div className="space-y-2">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="h-14 bg-muted animate-pulse rounded-lg" />
-                ))}
-              </div>
-            ) : topClients.length === 0 ? (
-              <RevenueEmptyState />
-            ) : (
-              <div className="space-y-2">
-                {topClients.map((client, index) => (
-                  <div
-                    key={client.key}
-                    className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors cursor-pointer group"
-                    onClick={() => {
-                      if (client.clientId) navigate(`/dashboard/clients/${client.clientId}`);
-                    }}
-                  >
-                    <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-xs font-bold text-primary">
-                      {index + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-medium text-foreground truncate">{client.displayName}</p>
-                        {client.isActive ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-medium text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">
-                            <span className="w-1 h-1 rounded-full bg-emerald-400" />
-                            Active
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                            <span className="w-1 h-1 rounded-full bg-muted-foreground" />
-                            Inactive
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {client.clientId ? "Click to view client record" : "Client record not linked"}
-                      </p>
-                    </div>
-                    <div className="text-right shrink-0 flex items-center gap-2">
-                      <p className="text-sm font-semibold text-foreground">{fmt(client.revenue)}</p>
-                      {client.clientId && (
-                        <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                      )}
+                          {breakdownData.map((entry, i) => (
+                            <Cell key={i} fill={entry.color} />
+                          ))}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-medium">Total</span>
+                      <span className="text-xl font-bold text-foreground">{fmt(breakdownTotal)}</span>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Upcoming Renewals */}
-        <Card>
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                  <CalendarClock className="w-4 h-4 text-purple-400" />
+                  <div className="space-y-1.5">
+                    {breakdownData
+                      .slice()
+                      .sort((a, b) => b.value - a.value)
+                      .map((b) => {
+                        const pct = breakdownTotal > 0 ? (b.value / breakdownTotal) * 100 : 0;
+                        return (
+                          <div
+                            key={b.name}
+                            className="flex items-center justify-between py-1.5"
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span
+                                className="w-2 h-2 rounded-full shrink-0"
+                                style={{ backgroundColor: b.color }}
+                              />
+                              <span className="text-xs font-medium text-foreground truncate">{b.name}</span>
+                            </div>
+                            <div className="text-right shrink-0 ml-3 flex items-center gap-2">
+                              <p className="text-xs font-semibold text-foreground">{fmt(b.value)}</p>
+                              <p className="text-[10px] text-muted-foreground w-9 text-right">{pct.toFixed(0)}%</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-foreground">Upcoming Renewals</h2>
-                  <p className="text-xs text-muted-foreground">Active retainer billing schedule</p>
-                </div>
-              </div>
-              {upcomingRenewals.length > 0 && (
-                <span className="text-xs text-muted-foreground">{upcomingRenewals.length} upcoming</span>
               )}
-            </div>
-            {loading ? (
-              <div className="space-y-2">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="h-14 bg-muted animate-pulse rounded-lg" />
-                ))}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Row: Top Clients + Upcoming Renewals */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Top Clients */}
+          <Card>
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Users className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-foreground">Top Clients</h2>
+                    <p className="text-xs text-muted-foreground">Highest revenue generators</p>
+                  </div>
+                </div>
+                {topClients.length > 0 && (
+                  <span className="text-xs text-muted-foreground">Top {topClients.length}</span>
+                )}
               </div>
-            ) : upcomingRenewals.length === 0 ? (
-              <RevenueEmptyState />
-            ) : (
-              <div className="space-y-2">
-                {upcomingRenewals.map((r) => {
-                  const urgency = renewalUrgency(r.days);
-                  return (
+              {loading ? (
+                <div className="space-y-2">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="h-12 bg-muted animate-pulse rounded-lg" />
+                  ))}
+                </div>
+              ) : topClients.length === 0 ? (
+                <RevenueEmptyState />
+              ) : (
+                <div className="space-y-1.5">
+                  {topClients.map((client, index) => (
                     <div
-                      key={r.id}
-                      className={`flex items-center gap-3 p-3 rounded-lg border ${urgency.border} ${urgency.bg} hover:brightness-110 transition-all cursor-pointer group`}
-                      onClick={() => navigate(`/dashboard/retainers/${r.id}`)}
+                      key={client.key}
+                      className="flex items-center gap-3 p-2.5 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors cursor-pointer group"
+                      onClick={() => {
+                        if (client.clientId) navigate(`/dashboard/clients/${client.clientId}`);
+                      }}
                     >
-                      <div className={`w-9 h-9 rounded-lg bg-background/50 flex items-center justify-center shrink-0`}>
-                        <Repeat className={`w-4 h-4 ${urgency.color}`} />
+                      <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-xs font-bold text-primary">
+                        {index + 1}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-sm font-medium text-foreground truncate">{r.client_name}</p>
-                          <span className={`text-[10px] uppercase tracking-wider font-medium ${urgency.color} bg-background/50 px-1.5 py-0.5 rounded`}>
-                            {r.days === 0 ? "Today" : r.days === 1 ? "1 day" : `${r.days} days`}
-                          </span>
+                          <p className="text-sm font-medium text-foreground truncate">{client.displayName}</p>
+                          {client.isActive ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-medium text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                              <span className="w-1 h-1 rounded-full bg-emerald-400" />
+                              Active
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                              <span className="w-1 h-1 rounded-full bg-muted-foreground" />
+                              Inactive
+                            </span>
+                          )}
                         </div>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {r.title}
-                          {r.company_name ? ` · ${r.company_name}` : ""}
-                        </p>
                       </div>
                       <div className="text-right shrink-0 flex items-center gap-2">
-                        <p className="text-sm font-semibold text-foreground">
-                          {formatMoney(r.amount_cents, r.currency)}
-                        </p>
-                        <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <p className="text-sm font-semibold text-foreground">{fmt(client.revenue)}</p>
+                        {client.clientId && (
+                          <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                        )}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Chart */}
-        <Card>
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-foreground">Revenue Over Time</h2>
-              <span className="text-xs text-muted-foreground">{filterLabel}</span>
-            </div>
-            {loading ? (
-              <div className="h-64 bg-muted animate-pulse rounded-lg" />
-            ) : (
-              <ChartContainer config={chartConfig} className="h-64 w-full">
-                <BarChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
-                  <XAxis
-                    dataKey="name"
-                    className="text-xs"
-                    tick={{ fill: "hsl(var(--muted-foreground))" }}
-                  />
-                  <YAxis
-                    tick={{ fill: "hsl(var(--muted-foreground))" }}
-                    tickFormatter={(v) => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
-                    className="text-xs"
-                  />
-                  <ChartTooltip
-                    content={
-                      <ChartTooltipContent
-                        formatter={(value) => `$${Number(value).toLocaleString()}`}
-                      />
-                    }
-                  />
-                  <Bar dataKey="revenue" fill="var(--color-revenue)" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ChartContainer>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Paid Proposals */}
-        <Card>
-          <CardContent className="p-4 sm:p-6">
-            <h2 className="text-lg font-semibold text-foreground mb-4">
-              Paid Proposals
-              {paidProposals.length > 0 && (
-                <span className="text-sm font-normal text-muted-foreground ml-2">
-                  ({paidProposals.length})
-                </span>
+                  ))}
+                </div>
               )}
-            </h2>
-            {paidProposals.length === 0 ? (
-              <RevenueEmptyState />
-            ) : (
-              <div className="space-y-2">
-                {[...paidProposals].reverse().slice(0, 10).map((p) => (
-                  <div
-                    key={p.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors cursor-pointer"
-                    onClick={() => navigate(`/dashboard/proposal/${p.id}`)}
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{p.client_name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(p.created_at).toLocaleDateString()}
+            </CardContent>
+          </Card>
+
+          {/* Upcoming Renewals */}
+          <Card>
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                    <CalendarClock className="w-4 h-4 text-purple-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-foreground">Upcoming Renewals</h2>
+                    <p className="text-xs text-muted-foreground">Active retainer billing schedule</p>
+                  </div>
+                </div>
+                {upcomingRenewals.length > 0 && (
+                  <span className="text-xs text-muted-foreground">{upcomingRenewals.length} upcoming</span>
+                )}
+              </div>
+              {loading ? (
+                <div className="space-y-2">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="h-12 bg-muted animate-pulse rounded-lg" />
+                  ))}
+                </div>
+              ) : upcomingRenewals.length === 0 ? (
+                <RevenueEmptyState />
+              ) : (
+                <div className="space-y-1.5">
+                  {upcomingRenewals.map((r) => {
+                    const urgency = renewalUrgency(r.days);
+                    return (
+                      <div
+                        key={r.id}
+                        className={`flex items-center gap-3 p-2.5 rounded-lg border ${urgency.border} ${urgency.bg} hover:brightness-110 transition-all cursor-pointer group`}
+                        onClick={() => navigate(`/dashboard/retainers/${r.id}`)}
+                      >
+                        <div className={`w-8 h-8 rounded-lg bg-background/50 flex items-center justify-center shrink-0`}>
+                          <Repeat className={`w-4 h-4 ${urgency.color}`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-medium text-foreground truncate">{r.client_name}</p>
+                            <span className={`text-[10px] uppercase tracking-wider font-medium ${urgency.color} bg-background/50 px-1.5 py-0.5 rounded`}>
+                              {r.days === 0 ? "Today" : r.days === 1 ? "1 day" : `${r.days}d`}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {r.title}
+                            {r.company_name ? ` · ${r.company_name}` : ""}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0 flex items-center gap-2">
+                          <p className="text-sm font-semibold text-foreground">
+                            {formatMoney(r.amount_cents, r.currency)}
+                          </p>
+                          <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Row: Recent Activity (2/3) + Paid Proposals (1/3) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Recent Revenue Activity */}
+          <Card className="lg:col-span-2">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                    <Activity className="w-4 h-4 text-accent" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-foreground">Recent Revenue Activity</h2>
+                    <p className="text-xs text-muted-foreground">Live feed of payments, renewals & alerts</p>
+                  </div>
+                </div>
+                {activityEvents.length > 0 && (
+                  <span className="text-xs text-muted-foreground">{activityEvents.length} event{activityEvents.length === 1 ? "" : "s"}</span>
+                )}
+              </div>
+              {loading ? (
+                <div className="space-y-2">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="h-14 bg-muted animate-pulse rounded-lg" />
+                  ))}
+                </div>
+              ) : activityEvents.length === 0 ? (
+                <RevenueEmptyState />
+              ) : (
+                <div className="space-y-1.5">
+                  {activityEvents.map((e) => {
+                    const s = activityStyle(e.type);
+                    const Icon = s.icon;
+                    const isAlert = e.type === "payment_failed" || e.type === "renewal_approaching";
+                    return (
+                      <div
+                        key={e.id}
+                        className={`flex items-center gap-3 p-2.5 rounded-lg border transition-colors ${
+                          isAlert
+                            ? e.type === "payment_failed"
+                              ? "border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10"
+                              : "border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10"
+                            : "border-transparent bg-secondary/30 hover:bg-secondary/50"
+                        }`}
+                      >
+                        <div className={`w-8 h-8 rounded-lg ${s.bg} flex items-center justify-center shrink-0`}>
+                          <Icon className={`w-4 h-4 ${s.color}`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-medium text-foreground truncate">{e.client}</p>
+                            <span className={`text-[10px] uppercase tracking-wider font-medium ${s.color}`}>
+                              {s.label}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate">{e.detail}</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          {e.amount && (
+                            <p className={`text-sm font-semibold ${
+                              e.type === "payment_failed" ? "text-rose-400" :
+                              e.type === "renewal_approaching" ? "text-amber-400" :
+                              "text-emerald-400"
+                            }`}>
+                              {e.amount}
+                            </p>
+                          )}
+                          <p className="text-[11px] text-muted-foreground mt-0.5">{formatRelative(e.timestamp)}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Paid Proposals */}
+          <Card>
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                    <FileCheck className="w-4 h-4 text-emerald-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-foreground">Paid Proposals</h2>
+                    <p className="text-xs text-muted-foreground">Most recent wins</p>
+                  </div>
+                </div>
+                {paidProposals.length > 0 && (
+                  <span className="text-xs text-muted-foreground">{paidProposals.length}</span>
+                )}
+              </div>
+              {paidProposals.length === 0 ? (
+                <RevenueEmptyState />
+              ) : (
+                <div className="space-y-1.5">
+                  {[...paidProposals].reverse().slice(0, 8).map((p) => (
+                    <div
+                      key={p.id}
+                      className="flex items-center justify-between p-2.5 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors cursor-pointer"
+                      onClick={() => navigate(`/dashboard/proposal/${p.id}`)}
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{p.client_name}</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {new Date(p.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <p className="text-sm font-semibold text-emerald-400 shrink-0 ml-2">
+                        ${parseBudget(p.budget).toLocaleString()}
                       </p>
                     </div>
-                    <p className="text-sm font-semibold text-emerald-400">
-                      ${parseBudget(p.budget).toLocaleString()}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
     </DashboardLayout>
   );
 }
