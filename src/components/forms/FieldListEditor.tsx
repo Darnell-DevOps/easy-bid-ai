@@ -177,6 +177,33 @@ export default function FieldListEditor({ fields, onChange, context = "onboardin
                     </div>
                   )}
 
+                  {isFile && (
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Max size (MB)</Label>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={20}
+                          value={field.maxSizeMb ?? 20}
+                          onChange={(e) =>
+                            update(idx, { maxSizeMb: Math.max(1, Math.min(20, Number(e.target.value) || 20)) })
+                          }
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Accepted types</Label>
+                        <Input
+                          value={field.accept || ""}
+                          onChange={(e) => update(idx, { accept: e.target.value })}
+                          className="h-8 text-sm"
+                          placeholder="image/*, .pdf"
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   <div className="space-y-1">
                     <Label className="text-xs">Conditional display</Label>
                     <div className="flex flex-wrap items-center gap-2">
