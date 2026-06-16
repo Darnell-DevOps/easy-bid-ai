@@ -206,10 +206,16 @@ export default function LeadInbox() {
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2 flex-wrap">
                   <span>{selected.name || "Anonymous lead"}</span>
+                  {selected.lead_quality && (
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] uppercase font-semibold ${QUALITY_TONE[selected.lead_quality]}`}>
+                      {selected.lead_quality} quality
+                    </span>
+                  )}
                   <LeadScoreBadge leadId={selected.id} size="md" enabled={selected.status !== "archived" && selected.status !== "converted"} />
                 </SheetTitle>
                 <SheetDescription>
                   {selected.form_id ? `via ${forms[selected.form_id]?.name || "form"}` : "Manual entry"} · {new Date(selected.created_at).toLocaleString()}
+                  {selected.qualified_at && <> · qualified {new Date(selected.qualified_at).toLocaleString()}</>}
                 </SheetDescription>
               </SheetHeader>
 
@@ -219,6 +225,47 @@ export default function LeadInbox() {
                     {selected.email && <div><span className="text-muted-foreground">Email:</span> <a href={`mailto:${selected.email}`} className="text-foreground hover:text-purple">{selected.email}</a></div>}
                     {selected.phone && <div><span className="text-muted-foreground">Phone:</span> <span className="text-foreground">{selected.phone}</span></div>}
                     {selected.company && <div><span className="text-muted-foreground">Company:</span> <span className="text-foreground">{selected.company}</span></div>}
+                  </div>
+                )}
+
+                {(selected.service_requested || selected.budget || selected.timeline || selected.goals || selected.ai_recommendation) && (
+                  <div className="rounded-lg border border-purple/20 bg-purple/5 p-3 text-sm space-y-1.5">
+                    <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-purple font-semibold">
+                      <Sparkles className="w-3 h-3" /> AI Qualification
+                    </div>
+                    {selected.service_requested && <div><span className="text-muted-foreground">Service:</span> <span className="text-foreground">{selected.service_requested}</span></div>}
+                    {selected.budget && <div><span className="text-muted-foreground">Budget:</span> <span className="text-foreground">{selected.budget}</span></div>}
+                    {selected.timeline && <div><span className="text-muted-foreground">Timeline:</span> <span className="text-foreground">{selected.timeline}</span></div>}
+                    {selected.goals && <div><span className="text-muted-foreground">Goals:</span> <span className="text-foreground">{selected.goals}</span></div>}
+                    {selected.ai_recommendation && (
+                      <div className="pt-1 border-t border-purple/15 mt-1.5">
+                        <span className="text-muted-foreground">Recommendation:</span> <span className="text-foreground">{selected.ai_recommendation}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {selected.qualification_error && (
+                  <div className="rounded-lg border border-rose-500/30 bg-rose-500/5 p-3 text-xs text-rose-300">
+                    Qualification failed: {selected.qualification_error}
+                  </div>
+                )}
+
+                {selected.draft_reply && (
+                  <div className="rounded-lg border border-border bg-card p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                        <Sparkles className="w-3 h-3 text-purple" /> Suggested reply
+                      </div>
+                      <Button size="sm" variant="outline" className="h-7 px-2 gap-1.5 text-xs" onClick={() => copyReply(selected.draft_reply!)}>
+                        {replyCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                        {replyCopied ? "Copied" : "Copy"}
+                      </Button>
+                    </div>
+                    {selected.draft_subject && (
+                      <div className="text-xs"><span className="text-muted-foreground">Subject:</span> <span className="text-foreground">{selected.draft_subject}</span></div>
+                    )}
+                    <div className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{selected.draft_reply}</div>
                   </div>
                 )}
                 <div>
