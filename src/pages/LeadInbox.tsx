@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Inbox, Loader2, UserPlus, Archive, FileDown } from "lucide-react";
+import { Inbox, Loader2, UserPlus, Archive, FileDown, Sparkles, Copy, Check } from "lucide-react";
 import type { SmartField } from "@/lib/form-fields";
 import LeadScoreBadge from "@/components/ai/LeadScoreBadge";
 
@@ -46,6 +46,16 @@ interface Lead {
   client_id: string | null;
   created_at: string;
   form_id: string | null;
+  service_requested: string | null;
+  budget: string | null;
+  timeline: string | null;
+  goals: string | null;
+  lead_quality: "High" | "Medium" | "Low" | null;
+  ai_recommendation: string | null;
+  draft_reply: string | null;
+  draft_subject: string | null;
+  qualified_at: string | null;
+  qualification_error: string | null;
 }
 
 interface FormLite { id: string; name: string; fields: SmartField[] }
@@ -57,12 +67,20 @@ const STATUS_TONE: Record<string, string> = {
   archived: "bg-muted/40 text-muted-foreground border border-border",
 };
 
+const QUALITY_TONE: Record<string, string> = {
+  High: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30",
+  Medium: "bg-amber-500/15 text-amber-300 border border-amber-500/30",
+  Low: "bg-rose-500/15 text-rose-300 border border-rose-500/30",
+};
+
 export default function LeadInbox() {
   const { toast } = useToast();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [forms, setForms] = useState<Record<string, FormLite>>({});
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Lead | null>(null);
+  const [requalifying, setRequalifying] = useState(false);
+  const [replyCopied, setReplyCopied] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -94,6 +112,31 @@ export default function LeadInbox() {
     toast({ title: "Archived" });
     setSelected(null);
     load();
+  };
+
+  const requalify = async (lead: Lead) => {
+    setRequalifying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("lead-requalify", {
+        body: { leadId: lead.id },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast({ title: "Lead re-qualified" });
+      const { data: ldata } = await supabase.from("leads" as any).select("*").eq("id", lead.id).maybeSingle();
+      if (ldata) setSelected(ldata as any);
+      load();
+    } catch (e: any) {
+      toast({ title: "Re-qualify failed", description: e.message || "Try again.", variant: "destructive" });
+    } finally {
+      setRequalifying(false);
+    }
+  };
+
+  const copyReply = async (reply: string) => {
+    await navigator.clipboard.writeText(reply);
+    setReplyCopied(true);
+    setTimeout(() => setReplyCopied(false), 1500);
   };
 
   return (
