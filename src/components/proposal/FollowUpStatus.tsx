@@ -12,7 +12,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Clock, CheckCircle2, Mail, Sparkles, Send, Loader2 } from "lucide-react";
+import { Clock, CheckCircle2, Mail, Sparkles, Send, Loader2, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -84,17 +84,27 @@ function hoursUntilScenario(p: FollowUpInput): { scenario: Exclude<FollowUpScena
 export default function FollowUpStatus({ proposalId, proposal, clientEmail, clientName }: FollowUpStatusProps) {
   const { toast } = useToast();
   const [sent, setSent] = useState<SentFollowUp[]>([]);
+  const [waSent, setWaSent] = useState<Array<{ id: string; recipient: string; sent_at: string; context: string | null }>>([]);
   const [loading, setLoading] = useState(true);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [sending, setSending] = useState(false);
 
   const loadHistory = async () => {
-    const { data } = await supabase
-      .from("proposal_follow_ups")
-      .select("id, scenario, sent_at, recipient_email")
-      .eq("proposal_id", proposalId)
-      .order("sent_at", { ascending: false });
+    const [{ data }, { data: wa }] = await Promise.all([
+      supabase
+        .from("proposal_follow_ups")
+        .select("id, scenario, sent_at, recipient_email")
+        .eq("proposal_id", proposalId)
+        .order("sent_at", { ascending: false }),
+      supabase
+        .from("whatsapp_send_log" as any)
+        .select("id, recipient, sent_at, context")
+        .eq("related_id", proposalId)
+        .order("sent_at", { ascending: false })
+        .limit(10),
+    ]);
     setSent((data as SentFollowUp[]) || []);
+    setWaSent((wa as any[]) || []);
   };
 
   useEffect(() => {
@@ -164,7 +174,7 @@ export default function FollowUpStatus({ proposalId, proposal, clientEmail, clie
   if (loading) return null;
 
   // Hide entirely if proposal is closed and there's no history.
-  if (terminal && sent.length === 0) return null;
+  if (terminal && sent.length === 0 && waSent.length === 0) return null;
 
   return (
     <Card className="border-border/60 bg-card/40">
@@ -263,6 +273,37 @@ export default function FollowUpStatus({ proposalId, proposal, clientEmail, clie
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5 truncate">
                       {s.recipient_email ? `Sent to ${s.recipient_email}` : "Sent"} · {formatTimestamp(s.sent_at)}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {waSent.length > 0 && (
+          <div>
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium mb-2">
+              WhatsApp
+            </p>
+            <ul className="space-y-2">
+              {waSent.map((w) => (
+                <li
+                  key={w.id}
+                  className="flex items-start gap-3 rounded-lg border border-border/40 bg-background/40 px-3 py-2.5"
+                >
+                  <div className="w-7 h-7 rounded-full bg-emerald-500/15 flex items-center justify-center shrink-0 mt-0.5">
+                    <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm text-foreground font-medium">
+                        {w.context?.replace(/_/g, " ") || "WhatsApp message"}
+                      </p>
+                      <span className="text-[11px] text-muted-foreground">{timeAgo(w.sent_at)}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                      Sent to {w.recipient.replace("whatsapp:", "")} · {formatTimestamp(w.sent_at)}
                     </p>
                   </div>
                 </li>

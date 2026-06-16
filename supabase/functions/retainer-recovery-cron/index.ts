@@ -3,6 +3,7 @@
 // retainers currently in dunning. Idempotent via UNIQUE(retainer_id, kind).
 // Also fires real emails to the retainer owner via send-email.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { sendWhatsAppFromCron } from "../_shared/whatsapp.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -98,7 +99,7 @@ Deno.serve(async (req) => {
     // 2) Payment failure reminders
     const { data: failed } = await supabase
       .from("retainers")
-      .select("id, user_id, client_name, payment_retry_count, failed_payment_reason")
+      .select("id, user_id, client_name, client_id, payment_retry_count, failed_payment_reason")
       .eq("has_failed_payment", true);
 
     for (const r of failed || []) {
@@ -130,6 +131,31 @@ Deno.serve(async (req) => {
           },
         });
         emailed++;
+      }
+
+      // WhatsApp to the client (no-op when toggle off / no phone).
+      if ((r as any).client_id) {
+        const { data: client } = await supabase
+          .from("clients")
+          .select("phone")
+          .eq("id", (r as any).client_id)
+          .maybeSingle();
+        const phone = (client as any)?.phone as string | undefined;
+        if (phone) {
+          const waBody = isFinal
+            ? `Hi ${r.client_name}, this is a final reminder that your ${r.client_name ? "" : ""}retainer payment didn't go through. Please update your details here: https://app.closesync.io/recovery`
+            : `Hi ${r.client_name}, we had trouble processing your retainer payment. You can update your details here: https://app.closesync.io/recovery`;
+          await sendWhatsAppFromCron({
+            supabase,
+            userId: r.user_id,
+            to: phone,
+            body: waBody,
+            autoKey: "auto_payment_reminders",
+            context: kind,
+            relatedId: r.id,
+            idempotencyKey: `wa-payfail-${r.id}-${r.payment_retry_count || 0}`,
+          });
+        }
       }
     }
 
