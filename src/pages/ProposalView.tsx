@@ -628,9 +628,9 @@ export default function ProposalView() {
   };
   const merge = (s: string) => renderMergeTags(s, mergeCtx);
   const tabs = [
-    { key: "proposal", label: "Proposal", content: merge(editedProposal), setter: setEditedProposal, rows: 24 },
-    { key: "pricing", label: "Pricing", content: merge(editedPricing), setter: setEditedPricing, rows: 16 },
-    { key: "invoice", label: "Invoice", content: merge(editedInvoice), setter: setEditedInvoice, rows: 16 },
+    { key: "proposal", label: "Proposal", content: editedProposal, rendered: merge(editedProposal), setter: setEditedProposal, rows: 24 },
+    { key: "pricing", label: "Pricing", content: editedPricing, rendered: merge(editedPricing), setter: setEditedPricing, rows: 16 },
+    { key: "invoice", label: "Invoice", content: editedInvoice, rendered: merge(editedInvoice), setter: setEditedInvoice, rows: 16 },
   ];
 
   const currentStatus = normalizeStatus(proposal.status);
