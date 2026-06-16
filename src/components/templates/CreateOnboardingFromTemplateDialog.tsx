@@ -113,6 +113,12 @@ export default function CreateOnboardingFromTemplateDialog({
     }
   };
 
+  const selectedClient = clientId !== "__new__" ? clients.find((c) => c.id === clientId) : null;
+  const intake = selectedClient?.intake_responses || null;
+  const fieldsForPreview = template ? templateToOnboardingFields(template) : [];
+  const prefillPreview = computePrefill(fieldsForPreview, intake);
+  const prefillCount = Object.keys(prefillPreview).length;
+
   const handleCreate = async () => {
     if (!template) return;
     if (!clientName.trim()) {
@@ -128,6 +134,9 @@ export default function CreateOnboardingFromTemplateDialog({
       return;
     }
     const fields = templateToOnboardingFields(template);
+    const prefill = usePrefill ? computePrefill(fields, intake) : {};
+    const appliedCount = Object.keys(prefill).length;
+    const nowIso = new Date().toISOString();
     const { data, error } = await (supabase.from("onboarding_forms") as any)
       .insert({
         user_id: userId,
@@ -136,8 +145,9 @@ export default function CreateOnboardingFromTemplateDialog({
         client_email: clientEmail.trim() || null,
         service_type: template.service_type || null,
         fields,
-        responses: {},
-        status: "pending",
+        responses: prefill,
+        status: appliedCount > 0 ? "in_progress" : "pending",
+        started_at: appliedCount > 0 ? nowIso : null,
       })
       .select("id, access_token")
       .single();
@@ -152,7 +162,12 @@ export default function CreateOnboardingFromTemplateDialog({
     }
     setCreatedToken(data.access_token);
     setCreatedId(data.id);
-    toast({ title: "Onboarding created", description: "Send the link to your client." });
+    toast({
+      title: "Onboarding created",
+      description: appliedCount > 0
+        ? `${appliedCount} answer${appliedCount > 1 ? "s" : ""} pre-filled from lead intake.`
+        : "Send the link to your client.",
+    });
   };
 
   const link = createdToken ? `${window.location.origin}/onboard/${createdToken}` : "";
