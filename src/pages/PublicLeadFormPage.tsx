@@ -92,6 +92,12 @@ export default function PublicLeadFormPage() {
       toast({ title: "Submission failed", description: error.message, variant: "destructive" });
       return;
     }
+    // Notify embedding parent
+    if (embed && typeof window !== "undefined" && window.parent !== window) {
+      try {
+        window.parent.postMessage({ type: "lovable-form-submitted", slug }, "*");
+      } catch { /* no-op */ }
+    }
     const redirect = (data as any)?.redirect_url || form.redirect_url;
     if (redirect) {
       window.location.href = redirect;
