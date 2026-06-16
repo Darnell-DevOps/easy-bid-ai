@@ -1,22 +1,12 @@
 // Onboarding system: shared types, service-specific field templates, helpers.
+// Backed by the shared SmartField engine in @/lib/form-fields.
 
-export type OnboardingFieldType =
-  | "short_text"
-  | "long_text"
-  | "url"
-  | "email"
-  | "date"
-  | "select";
+import type { SmartField, SmartFieldType, FieldCondition } from "@/lib/form-fields";
+export { isFieldVisible, visibleFields, computeProgress, missingRequired } from "@/lib/form-fields";
 
-export interface OnboardingField {
-  id: string;
-  label: string;
-  type: OnboardingFieldType;
-  placeholder?: string;
-  required?: boolean;
-  options?: string[]; // for "select"
-  group?: string; // section header label
-}
+export type OnboardingFieldType = SmartFieldType;
+export type OnboardingField = SmartField;
+export type { FieldCondition };
 
 export interface OnboardingSchema {
   service_key: string;

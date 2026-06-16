@@ -49,6 +49,10 @@ import TestimonialsDashboard from "./pages/TestimonialsDashboard";
 import TestimonialSubmitPage from "./pages/TestimonialSubmitPage";
 import TestimonialWallPage from "./pages/TestimonialWallPage";
 import SuperAdminGuard from "./components/admin/SuperAdminGuard";
+import LeadFormsDashboard from "./pages/LeadFormsDashboard";
+import LeadFormEditor from "./pages/LeadFormEditor";
+import PublicLeadFormPage from "./pages/PublicLeadFormPage";
+import LeadInbox from "./pages/LeadInbox";
 import NotFound from "./pages/NotFound";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { PageTransition } from "@/components/PageTransition";
@@ -79,6 +83,7 @@ const App = () => (
             <Route path="/r/recover/:token" element={<RetainerRecoverPage />} />
             <Route path="/testimonial/:token" element={<TestimonialSubmitPage />} />
             <Route path="/wall/:slug" element={<TestimonialWallPage />} />
+            <Route path="/f/:slug" element={<PublicLeadFormPage />} />
             <Route path="/dashboard/recovery" element={<AuthGuard><RecoveryDashboard /></AuthGuard>} />
             <Route path="/onboarding" element={<AuthGuard><Onboarding /></AuthGuard>} />
             <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
@@ -107,6 +112,9 @@ const App = () => (
             <Route path="/dashboard/policies/new" element={<AuthGuard><NewPolicy /></AuthGuard>} />
             <Route path="/dashboard/policies/:id" element={<AuthGuard><PolicyView /></AuthGuard>} />
             <Route path="/dashboard/testimonials" element={<AuthGuard><TestimonialsDashboard /></AuthGuard>} />
+            <Route path="/dashboard/lead-forms" element={<AuthGuard><LeadFormsDashboard /></AuthGuard>} />
+            <Route path="/dashboard/lead-forms/:id" element={<AuthGuard><LeadFormEditor /></AuthGuard>} />
+            <Route path="/dashboard/lead-inbox" element={<AuthGuard><LeadInbox /></AuthGuard>} />
             <Route path="/admin" element={<AuthGuard><SuperAdminGuard><AdminDashboard /></SuperAdminGuard></AuthGuard>} />
             <Route path="*" element={<NotFound />} />
           </Routes>

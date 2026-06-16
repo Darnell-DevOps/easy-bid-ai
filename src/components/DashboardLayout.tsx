@@ -27,6 +27,8 @@ const navGroups: NavGroup[] = [
       { label: "Dashboard", icon: FileText, href: "/dashboard" },
       { label: "Clients", icon: Users, href: "/dashboard/clients" },
       { label: "Lead Assistant", icon: Sparkles, href: "/dashboard/leads", badgeKey: "leads" },
+      { label: "Lead Forms", icon: ClipboardList, href: "/dashboard/lead-forms" },
+      { label: "Lead Inbox", icon: Mail, href: "/dashboard/lead-inbox" },
       { label: "Proposals", icon: FileText, href: "/dashboard/proposals" },
       { label: "Contracts", icon: FileSignature, href: "/dashboard/contracts" },
     ],

@@ -949,6 +949,164 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_form_views: {
+        Row: {
+          created_at: string
+          form_id: string
+          id: string
+          referer: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          form_id: string
+          id?: string
+          referer?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          form_id?: string
+          id?: string
+          referer?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_form_views_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "lead_forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_forms: {
+        Row: {
+          brand: Json
+          created_at: string
+          description: string
+          fields: Json
+          id: string
+          is_active: boolean
+          name: string
+          redirect_url: string | null
+          slug: string
+          submission_count: number
+          submit_label: string
+          success_message: string
+          title: string
+          updated_at: string
+          user_id: string
+          view_count: number
+        }
+        Insert: {
+          brand?: Json
+          created_at?: string
+          description?: string
+          fields?: Json
+          id?: string
+          is_active?: boolean
+          name: string
+          redirect_url?: string | null
+          slug: string
+          submission_count?: number
+          submit_label?: string
+          success_message?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+          view_count?: number
+        }
+        Update: {
+          brand?: Json
+          created_at?: string
+          description?: string
+          fields?: Json
+          id?: string
+          is_active?: boolean
+          name?: string
+          redirect_url?: string | null
+          slug?: string
+          submission_count?: number
+          submit_label?: string
+          success_message?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          view_count?: number
+        }
+        Relationships: []
+      }
+      leads: {
+        Row: {
+          client_id: string | null
+          company: string | null
+          created_at: string
+          email: string | null
+          form_id: string | null
+          id: string
+          name: string | null
+          notes: string | null
+          phone: string | null
+          responses: Json
+          source: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_id?: string | null
+          company?: string | null
+          created_at?: string
+          email?: string | null
+          form_id?: string | null
+          id?: string
+          name?: string | null
+          notes?: string | null
+          phone?: string | null
+          responses?: Json
+          source?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string | null
+          company?: string | null
+          created_at?: string
+          email?: string | null
+          form_id?: string | null
+          id?: string
+          name?: string | null
+          notes?: string | null
+          phone?: string | null
+          responses?: Json
+          source?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "lead_forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_preferences: {
         Row: {
           created_at: string
@@ -2068,6 +2226,22 @@ export type Database = {
         }[]
       }
       is_super_admin: { Args: never; Returns: boolean }
+      lead_convert_to_client: { Args: { _lead_id: string }; Returns: string }
+      lead_form_record_view: {
+        Args: { _referer?: string; _slug: string; _user_agent?: string }
+        Returns: undefined
+      }
+      lead_form_submit: {
+        Args: {
+          _company?: string
+          _email?: string
+          _name?: string
+          _phone?: string
+          _responses: Json
+          _slug: string
+        }
+        Returns: Json
+      }
       mark_proposal_paid: {
         Args: { _proposal_id: string; _txn_id: string }
         Returns: undefined
