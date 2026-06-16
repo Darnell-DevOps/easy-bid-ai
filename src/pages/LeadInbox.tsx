@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Inbox, Loader2, UserPlus, Archive, FileDown } from "lucide-react";
+import { Inbox, Loader2, UserPlus, Archive, FileDown, Sparkles, Copy, Check } from "lucide-react";
 import type { SmartField } from "@/lib/form-fields";
 import LeadScoreBadge from "@/components/ai/LeadScoreBadge";
 
@@ -46,6 +46,16 @@ interface Lead {
   client_id: string | null;
   created_at: string;
   form_id: string | null;
+  service_requested: string | null;
+  budget: string | null;
+  timeline: string | null;
+  goals: string | null;
+  lead_quality: "High" | "Medium" | "Low" | null;
+  ai_recommendation: string | null;
+  draft_reply: string | null;
+  draft_subject: string | null;
+  qualified_at: string | null;
+  qualification_error: string | null;
 }
 
 interface FormLite { id: string; name: string; fields: SmartField[] }
@@ -57,12 +67,20 @@ const STATUS_TONE: Record<string, string> = {
   archived: "bg-muted/40 text-muted-foreground border border-border",
 };
 
+const QUALITY_TONE: Record<string, string> = {
+  High: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30",
+  Medium: "bg-amber-500/15 text-amber-300 border border-amber-500/30",
+  Low: "bg-rose-500/15 text-rose-300 border border-rose-500/30",
+};
+
 export default function LeadInbox() {
   const { toast } = useToast();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [forms, setForms] = useState<Record<string, FormLite>>({});
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Lead | null>(null);
+  const [requalifying, setRequalifying] = useState(false);
+  const [replyCopied, setReplyCopied] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -94,6 +112,31 @@ export default function LeadInbox() {
     toast({ title: "Archived" });
     setSelected(null);
     load();
+  };
+
+  const requalify = async (lead: Lead) => {
+    setRequalifying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("lead-requalify", {
+        body: { leadId: lead.id },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast({ title: "Lead re-qualified" });
+      const { data: ldata } = await supabase.from("leads" as any).select("*").eq("id", lead.id).maybeSingle();
+      if (ldata) setSelected(ldata as any);
+      load();
+    } catch (e: any) {
+      toast({ title: "Re-qualify failed", description: e.message || "Try again.", variant: "destructive" });
+    } finally {
+      setRequalifying(false);
+    }
+  };
+
+  const copyReply = async (reply: string) => {
+    await navigator.clipboard.writeText(reply);
+    setReplyCopied(true);
+    setTimeout(() => setReplyCopied(false), 1500);
   };
 
   return (
@@ -163,10 +206,16 @@ export default function LeadInbox() {
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2 flex-wrap">
                   <span>{selected.name || "Anonymous lead"}</span>
+                  {selected.lead_quality && (
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] uppercase font-semibold ${QUALITY_TONE[selected.lead_quality]}`}>
+                      {selected.lead_quality} quality
+                    </span>
+                  )}
                   <LeadScoreBadge leadId={selected.id} size="md" enabled={selected.status !== "archived" && selected.status !== "converted"} />
                 </SheetTitle>
                 <SheetDescription>
                   {selected.form_id ? `via ${forms[selected.form_id]?.name || "form"}` : "Manual entry"} · {new Date(selected.created_at).toLocaleString()}
+                  {selected.qualified_at && <> · qualified {new Date(selected.qualified_at).toLocaleString()}</>}
                 </SheetDescription>
               </SheetHeader>
 
@@ -176,6 +225,47 @@ export default function LeadInbox() {
                     {selected.email && <div><span className="text-muted-foreground">Email:</span> <a href={`mailto:${selected.email}`} className="text-foreground hover:text-purple">{selected.email}</a></div>}
                     {selected.phone && <div><span className="text-muted-foreground">Phone:</span> <span className="text-foreground">{selected.phone}</span></div>}
                     {selected.company && <div><span className="text-muted-foreground">Company:</span> <span className="text-foreground">{selected.company}</span></div>}
+                  </div>
+                )}
+
+                {(selected.service_requested || selected.budget || selected.timeline || selected.goals || selected.ai_recommendation) && (
+                  <div className="rounded-lg border border-purple/20 bg-purple/5 p-3 text-sm space-y-1.5">
+                    <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-purple font-semibold">
+                      <Sparkles className="w-3 h-3" /> AI Qualification
+                    </div>
+                    {selected.service_requested && <div><span className="text-muted-foreground">Service:</span> <span className="text-foreground">{selected.service_requested}</span></div>}
+                    {selected.budget && <div><span className="text-muted-foreground">Budget:</span> <span className="text-foreground">{selected.budget}</span></div>}
+                    {selected.timeline && <div><span className="text-muted-foreground">Timeline:</span> <span className="text-foreground">{selected.timeline}</span></div>}
+                    {selected.goals && <div><span className="text-muted-foreground">Goals:</span> <span className="text-foreground">{selected.goals}</span></div>}
+                    {selected.ai_recommendation && (
+                      <div className="pt-1 border-t border-purple/15 mt-1.5">
+                        <span className="text-muted-foreground">Recommendation:</span> <span className="text-foreground">{selected.ai_recommendation}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {selected.qualification_error && (
+                  <div className="rounded-lg border border-rose-500/30 bg-rose-500/5 p-3 text-xs text-rose-300">
+                    Qualification failed: {selected.qualification_error}
+                  </div>
+                )}
+
+                {selected.draft_reply && (
+                  <div className="rounded-lg border border-border bg-card p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                        <Sparkles className="w-3 h-3 text-purple" /> Suggested reply
+                      </div>
+                      <Button size="sm" variant="outline" className="h-7 px-2 gap-1.5 text-xs" onClick={() => copyReply(selected.draft_reply!)}>
+                        {replyCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                        {replyCopied ? "Copied" : "Copy"}
+                      </Button>
+                    </div>
+                    {selected.draft_subject && (
+                      <div className="text-xs"><span className="text-muted-foreground">Subject:</span> <span className="text-foreground">{selected.draft_subject}</span></div>
+                    )}
+                    <div className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{selected.draft_reply}</div>
                   </div>
                 )}
                 <div>
@@ -219,6 +309,10 @@ export default function LeadInbox() {
                   ) : (
                     <Button className="gap-2" onClick={() => convert(selected)}><UserPlus className="w-4 h-4" />Convert to client</Button>
                   )}
+                  <Button variant="outline" className="gap-2" onClick={() => requalify(selected)} disabled={requalifying}>
+                    {requalifying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                    {selected.qualified_at ? "Re-qualify" : "Qualify with AI"}
+                  </Button>
                   {selected.status !== "archived" && (
                     <Button variant="outline" className="gap-2" onClick={() => archive(selected)}><Archive className="w-4 h-4" />Archive</Button>
                   )}
