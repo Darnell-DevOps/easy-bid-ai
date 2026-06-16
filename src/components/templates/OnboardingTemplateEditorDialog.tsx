@@ -309,6 +309,12 @@ export default function OnboardingTemplateEditorDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+      <AiGenerateFieldsDialog
+        open={aiOpen}
+        onOpenChange={setAiOpen}
+        context="onboarding"
+        onGenerated={handleAiGenerated}
+      />
     </Dialog>
   );
 }
