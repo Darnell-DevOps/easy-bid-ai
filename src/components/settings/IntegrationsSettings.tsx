@@ -29,6 +29,7 @@ import {
   XCircle,
   Lock,
 } from "lucide-react";
+import WhatsAppSettings from "@/components/settings/WhatsAppSettings";
 
 type Status = "connected" | "disconnected" | "attention" | "coming_soon";
 
@@ -309,6 +310,7 @@ export default function IntegrationsSettings() {
 
   return (
     <div className="space-y-6">
+      <WhatsAppSettings />
       {/* Integration health */}
       <Card>
         <CardContent className="p-5">
