@@ -1,114 +1,46 @@
-# Auto-qualification pipeline for leads
+# Enable auto-qualification on new leads
 
-Today `lead-response` is only invoked manually from `LeadAssistant`, and the `leads` table only stores raw form responses. Inbound form submissions never get qualified, scored, or routed automatically.
+You picked option 1: create the database trigger that auto-runs the `lead-qualify` edge function whenever a new lead arrives.
 
-This plan adds a server-side pipeline that runs the moment a lead row is created — no UI action required.
+## What's already in place
 
+- `leads` table has qualification columns (`lead_quality`, `ai_recommendation`, `draft_reply`, `qualified_at`, etc.)
+- `pg_net` extension is enabled (lets Postgres make HTTP calls)
+- `lead-qualify` edge function is deployed and expects an `x-internal-secret` header
+- `trigger_lead_qualify()` function already exists in the DB but contains a placeholder secret (`REPLACE_WITH_YOUR_LEAD_QUALIFY_SECRET`) and is not attached to the table yet
+
+## What this plan does
+
+### 1. Create the `LEAD_QUALIFY_SECRET` runtime secret
+Used by both the edge function (to validate incoming calls) and the DB trigger (to authenticate outbound calls). You'll be prompted to enter a value — any long random string works (e.g. a UUID or 32+ random chars).
+
+### 2. Store the secret inside Postgres so the trigger can read it
+The trigger runs inside the database and cannot read edge-function env vars. Standard pattern: store it as a custom GUC via `ALTER DATABASE ... SET app.lead_qualify_secret = '...'` and read it with `current_setting('app.lead_qualify_secret', true)` inside the trigger.
+
+Since `ALTER DATABASE` is forbidden in migrations on this stack, I'll use a small `vault`-free alternative: a dedicated single-row table `internal_config` (service_role only, RLS locked, no anon/auth grants) that the SECURITY DEFINER trigger reads.
+
+### 3. Rewrite `trigger_lead_qualify()` to read the secret from `internal_config`
+Removes the hardcoded placeholder.
+
+### 4. Attach the trigger to `leads`
 ```text
-Public form  ──► lead_form_submit RPC ──► INSERT into public.leads
-                                                  │
-                                                  ▼ (AFTER INSERT trigger via pg_net)
-                                          lead-qualify edge fn
-                                                  │
-                                ┌────────────────-┼────────────────┐
-                                ▼                 ▼                 ▼
-                         qualification     draft reply       status routing
-                         fields on lead     on lead         High→qualified
-                                                            Med →new
-                                                            Low →archived
+CREATE TRIGGER leads_auto_qualify
+  AFTER INSERT ON public.leads
+  FOR EACH ROW EXECUTE FUNCTION public.trigger_lead_qualify();
 ```
+Fires only when `qualified_at IS NULL` and `status = 'new'` (already guarded inside the function). HTTP failures are swallowed so lead ingestion never breaks.
 
-## Scope
+### 5. Seed the secret value into `internal_config` after you provide it
 
-In scope:
-- `leads` table additions to hold qualification + draft reply.
-- A new `lead-qualify` edge function (service-role internal endpoint).
-- DB trigger on `public.leads` that fires the edge function via `pg_net`.
-- LeadInbox drawer surfacing qualification fields + draft reply + a "Use draft" copy action.
+## Steps in order
 
-Out of scope:
-- Migrating `inbound-email-webhook` (still writes to `clients` table — separate flow).
-- Sending the draft reply automatically — we draft only; the user sends.
-- Bulk re-qualification of existing leads (one-off backfill can be added later).
+1. Prompt you for `LEAD_QUALIFY_SECRET` via the secrets tool
+2. Migration: create `internal_config` table (locked down), rewrite `trigger_lead_qualify()`, attach trigger to `leads`
+3. Insert the secret value into `internal_config`
+4. Test: submit a lead through an existing lead form and verify `qualified_at`, `lead_quality`, and `draft_reply` populate within a few seconds
 
-## Schema changes (migration tool)
+## Technical notes
 
-Add to `public.leads`:
-- `service_requested text`
-- `budget text`
-- `timeline text`
-- `goals text`
-- `lead_quality text` — `'High' | 'Medium' | 'Low'`
-- `ai_recommendation text`
-- `draft_reply text`
-- `draft_subject text`
-- `qualified_at timestamptz`
-- `qualification_error text` (records last failure so it's visible/retryable)
-
-No new RLS work needed — existing user-scoped policy on `leads` already covers these.
-
-Enable extensions `pg_net` (for trigger callouts).
-
-## `lead-qualify` edge function
-
-`supabase/functions/lead-qualify/index.ts`, `verify_jwt = false`.
-
-- Validates `x-internal-secret` header against `LEAD_QUALIFY_SECRET`.
-- Body: `{ leadId: string }`.
-- Uses service-role client to load the lead + its form (field id → label map for richer prompts).
-- Builds a message string from `name/email/phone/company/source + labelled responses`.
-- Calls Lovable AI Gateway (`google/gemini-2.5-flash`) with a forced tool returning:
-  `reply`, `reply_subject`, `service_requested`, `budget`, `timeline`, `goals`, `notes`, `lead_quality`, `quality_reason`, `ai_recommendation`.
-- Writes qualification fields + draft reply onto the lead row.
-- Auto-routes status:
-  - `High` → `qualified`
-  - `Medium` → `new` (left for human review)
-  - `Low` → `archived`
-- Sets `qualified_at = now()`. On AI failure: writes `qualification_error` and leaves status untouched.
-- Idempotent: if `qualified_at` is already set, returns early.
-
-## DB trigger (supabase insert tool, not migration)
-
-Per the cron-job guidance, the trigger embeds the project URL + secret, so it's created with the insert tool so it doesn't propagate to remixes.
-
-- Trigger function `public.trigger_lead_qualify()`:
-  - On `AFTER INSERT` of `public.leads`, when `NEW.status = 'new'` and `NEW.qualified_at IS NULL`.
-  - Calls `net.http_post(url, headers, body)` with `{ leadId: NEW.id }` and the internal secret header.
-  - Wrapped in `BEGIN/EXCEPTION WHEN OTHERS THEN PERFORM 1; END;` so a network hiccup never blocks the form submission.
-
-## Secrets
-
-- `LEAD_QUALIFY_SECRET` — random string. Used by both the trigger and the edge function.
-
-## LeadInbox UI
-
-Surface what the pipeline produced (frontend-only changes in `src/pages/LeadInbox.tsx`):
-
-- Drawer header: show `lead_quality` chip (color-coded) next to the existing score badge.
-- New "Qualification" section in the drawer with `service_requested`, `budget`, `timeline`, `goals`, `ai_recommendation`.
-- New "Draft reply" section with `draft_subject` + `draft_reply` in a readonly textarea, plus a "Copy reply" button (mirrors LeadAssistant's copy pattern).
-- "Re-qualify" button that invokes `lead-qualify` (using a thin authenticated wrapper — see note below).
-
-Note: the LeadInbox "Re-qualify" button shouldn't expose the internal secret to the browser. Easiest fix is a tiny second edge function `lead-requalify` (`verify_jwt = false` but checks the caller's JWT and confirms `leads.user_id = auth.uid()`) that then calls into the same shared qualification logic. Will extract the AI/update code into a shared helper used by both functions.
-
-## Verification
-
-- After deploy: submit the public lead form preview, then in LeadInbox confirm the new row appears with `lead_quality`, `draft_reply`, etc. populated within a few seconds and status routed correctly.
-- Force an AI failure path (e.g. temporarily wrong key) and confirm `qualification_error` is set and the lead is still ingested.
-- Hit `lead-qualify` directly without the secret header → expect 401.
-
-## Files
-
-Create:
-- `supabase/functions/lead-qualify/index.ts`
-- `supabase/functions/lead-requalify/index.ts`
-- `supabase/functions/_shared/lead-qualify.ts` (shared AI + update helper)
-
-Edit:
-- `src/pages/LeadInbox.tsx` (drawer additions, Re-qualify button)
-
-Migration:
-- Add columns to `public.leads`; enable `pg_net`.
-
-Insert-tool SQL (project-specific):
-- Trigger function + `AFTER INSERT` trigger on `public.leads`.
+- `internal_config` will have RLS enabled with no policies — only SECURITY DEFINER functions (running as table owner) can read it
+- The trigger is `AFTER INSERT`, non-blocking — `pg_net` queues the HTTP call asynchronously
+- Manual re-qualify button in `LeadInbox` (already built) continues to work via `lead-requalify`
