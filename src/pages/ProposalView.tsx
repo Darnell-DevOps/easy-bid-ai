@@ -1135,6 +1135,8 @@ export default function ProposalView() {
 
         <FollowUpStatus
           proposalId={proposal.id}
+          clientEmail={clientEmail}
+          clientName={proposal.client_name}
           proposal={{
             status: proposal.status,
             client_paid: proposal.client_paid,
@@ -1144,6 +1146,7 @@ export default function ProposalView() {
             paid_at: proposal.paid_at,
           }}
         />
+
 
         {/* Tabs */}
         <Tabs defaultValue="proposal">
