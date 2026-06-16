@@ -37,6 +37,7 @@ import type { TemplateData } from "@/pages/Templates";
 import { templates } from "@/pages/Templates";
 import { usePlan } from "@/hooks/use-plan";
 import UpgradeModal from "@/components/plan/UpgradeModal";
+import { WhatsAppButton } from "@/components/whatsapp/WhatsAppButton";
 
 const emptyState = {
   leadName: "",
@@ -559,7 +560,15 @@ export default function LeadAssistant() {
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Phone</Label>
-                    <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Optional" />
+                    <div className="flex gap-2">
+                      <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Optional" />
+                      <WhatsAppButton
+                        phone={phone}
+                        context="lead"
+                        vars={{ clientName: leadName }}
+                        variant="outline"
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label>Service requested</Label>

@@ -1,47 +1,94 @@
-# Proposal Auto Follow-Up
 
-Currently `src/lib/follow-up.ts` derives the right follow-up scenario from a proposal's timestamps, and `FollowUpDialog` lets the user copy or open mailto. Nothing runs in the background. We'll add a scheduled job that mirrors how `retainer-recovery-cron` works for retainers, but for proposals — and it only fires when the user has opted in via Settings → Automations.
+# WhatsApp Integration Plan
 
-## What gets built
+Two phases delivered together: (A) instant click-to-chat links everywhere a contact has a phone number, (B) Twilio-powered automated WhatsApp reminders for proposals, payments, contracts, and onboarding.
 
-1. **`proposal_follow_ups` table** (idempotency log) — one row per `(proposal_id, scenario)` so the same nudge is never sent twice.
-2. **`proposal-follow-up-cron` edge function** — hourly job that scans proposals, matches each one against `getFollowUpScenario`, checks the owner's automation prefs, and queues a send through the existing `send-email` function.
-3. **pg_cron schedule** — runs every hour via `pg_net` (same pattern as `retainer-recovery-cron`).
-4. **Two new default email templates** — `proposal-follow-up-nudge` and `proposal-payment-reminder`, registered with the existing transactional email registry. Bodies are derived from `buildFollowUpTemplate` so manual and auto follow-ups read identically.
+## Phase A — Click-to-chat (wa.me) across the lifecycle
 
-## How it decides to send
+### 1. Shared helper
+Create `src/lib/whatsapp.ts`:
+- `toE164Digits(phone)` — strip non-digits, drop leading `+`, validate length
+- `waLink(phone, message?)` — returns `https://wa.me/<digits>?text=<encoded>` or null
+- `buildWaMessage(template, vars)` — small templater for default messages per context (lead intro, proposal share, contract reminder, onboarding link, payment reminder)
 
-For each proposal where `status IN ('sent','viewed','accepted')` and `client_paid = false`:
+### 2. Reusable UI component
+`src/components/whatsapp/WhatsAppButton.tsx`:
+- Props: `phone`, `message`, `variant` (icon | button | menu-item), `label`
+- Renders disabled state with tooltip ("No phone on file") when phone missing
+- Uses lucide `MessageCircle` + brand green accent badge consistent with dark theme tokens
 
-- Compute scenario via the shared logic in `src/lib/follow-up.ts` (port to the edge function as `_shared/follow-up.ts`).
-- Skip if scenario is `none`.
-- Skip if no `client_email` resolvable (proposal's linked client has no email).
-- Map scenario → automation preference:
-  - `not_viewed_24h` / `viewed_no_action_48h` → `proposal_follow_up`
-  - `accepted_unpaid_24h` → `payment_follow_up_unpaid`
-- Skip if that preference is `false` for the owner.
-- Skip if a `proposal_follow_ups` row already exists for `(proposal_id, scenario)`.
-- Otherwise: insert the log row, then invoke `send-email` with idempotency key `proposal-followup-{id}-{scenario}`.
+### 3. Surfaces to add the button/menu item
+- **Lead detail / LeadAssistant** — alongside call/email actions
+- **LeadInbox** — row action
+- **Client detail page** — header action bar + quick-actions card
+- **Clients list** — row action menu
+- **Proposal page (owner view)** — "Share via WhatsApp" with pre-filled link to the proposal + tracked via existing follow-up history (logs a `proposal_follow_ups` row with `scenario = 'manual_whatsapp'` if we want; decide in step 5)
+- **Contracts** — "Send signing link via WhatsApp" on contract detail
+- **Onboarding** — "Send onboarding form via WhatsApp" on onboarding session
+- **Retainer / invoices** — "Send payment reminder via WhatsApp" on overdue retainer row
 
-## Owner visibility
+### 4. Default messages
+Centralize in `whatsapp.ts` with merge-tag-style placeholders reusing existing client/proposal names. Each surface passes its context object.
 
-- After sending, write a `user_notifications` row ("Follow-up sent to {client} — {scenario badge}") so the owner sees what the system did on their behalf.
-- `ProposalView` and `PriorityActions` stay unchanged — manual follow-up button still works; the dialog will just show "Auto follow-up sent {time ago}" when a `proposal_follow_ups` row exists, so the user doesn't double-send.
+## Phase B — Twilio automated WhatsApp sends
 
-## Technical notes
+### 1. Connector
+Use the Twilio App connector via `standard_connectors--connect` (connector_id `twilio`). User must already have an approved WhatsApp sender on their Twilio account (`whatsapp:+1...`). Surface a settings card explaining setup + sender number input.
 
-- New table:
-  ```text
-  proposal_follow_ups (id, user_id, proposal_id, scenario, sent_at)
-  UNIQUE (proposal_id, scenario)
-  ```
-  RLS: owner can read; service_role full access; no anon.
-- Cron: same migration pattern as `20260428071356_*` (uses `supabase--insert` so the URL/anon key aren't committed). Hourly cadence is enough — scenarios use 24/48h windows.
-- Edge function uses service role; no JWT (internal cron). Errors are logged but never block the job.
-- Reuses `send-email` so branding, sending domain, suppression, and DLQ behavior all match existing emails.
+### 2. Settings
+New table `whatsapp_settings` (per user):
+- `whatsapp_from` (E.164 with `whatsapp:` prefix)
+- `enabled` boolean
+- `auto_proposal_reminders`, `auto_payment_reminders`, `auto_contract_reminders`, `auto_onboarding_reminders` booleans
+- RLS: owner-only; service_role full
+UI: new "WhatsApp" section in `IntegrationsSettings.tsx` (connection status + sender) and toggles in `AutomationsSettings.tsx`.
 
-## Out of scope
+### 3. Send pipeline
+Shared edge helper `supabase/functions/_shared/whatsapp.ts`:
+- `sendWhatsApp({ userId, to, body, idempotencyKey })`
+- Loads user's `whatsapp_settings`, calls Twilio gateway `/Messages.json` with `To=whatsapp:+...`, `From=<whatsapp_from>`, `Body`
+- Logs to `whatsapp_send_log` (new table: user_id, to, body, twilio_sid, status, error, idempotency_key UNIQUE, sent_at)
+- Idempotency: skip if `idempotency_key` already present in last 5 minutes
 
-- No new UI in Settings — the existing toggles `proposal_follow_up` and `payment_follow_up_unpaid` drive everything.
-- No change to retainer dunning or contract reminders.
-- No second follow-up per scenario; one send per `(proposal, scenario)` only.
+### 4. New edge functions
+- `whatsapp-send` — authenticated, owner-only manual send (used by UI "Send WhatsApp now" buttons that prefer API over wa.me when sender configured)
+- `whatsapp-test` — sends a test message to a given number
+- Extend existing crons to also dispatch WhatsApp when the respective auto toggle is on:
+  - `proposal-follow-up-cron` → WhatsApp variant
+  - `retainer-recovery-cron` → WhatsApp variant
+  - Contract reminder cron (create `contract-reminder-cron` if not present, or piggy-back existing)
+  - Onboarding reminder cron (same approach)
+
+### 5. Proposal follow-up integration
+Extend `proposal_follow_ups` schema with `channel` ('email' | 'whatsapp') so the existing FollowUpStatus card shows both. Update `FollowUpStatus.tsx` to render channel icon and filter history.
+
+### 6. UI hooks
+- On proposal/contract/onboarding/retainer pages, when Twilio is connected, the WhatsApp button offers two modes: "Open WhatsApp" (wa.me) and "Send via Twilio" (server send, logged, idempotent).
+- Show last WhatsApp send timestamp on each entity card pulling from `whatsapp_send_log`.
+
+## Migrations summary
+1. `whatsapp_settings` table + RLS + GRANTs + updated_at trigger
+2. `whatsapp_send_log` table + RLS + GRANTs + unique idempotency_key
+3. Add `channel` column to `proposal_follow_ups` (default 'email')
+
+## Files to create
+- `src/lib/whatsapp.ts`
+- `src/components/whatsapp/WhatsAppButton.tsx`
+- `src/components/settings/WhatsAppSettings.tsx` (or section in IntegrationsSettings)
+- `supabase/functions/_shared/whatsapp.ts`
+- `supabase/functions/whatsapp-send/index.ts`
+- `supabase/functions/whatsapp-test/index.ts`
+
+## Files to edit
+- Lead/Client/Proposal/Contract/Onboarding/Retainer pages — add WhatsApp button
+- `IntegrationsSettings.tsx`, `AutomationsSettings.tsx` — WhatsApp config + toggles
+- `proposal-follow-up-cron`, `retainer-recovery-cron` — WhatsApp dispatch
+- `FollowUpStatus.tsx` — show channel
+- `src/integrations/supabase/types.ts` — regenerated after migrations
+
+## Out of scope (call out)
+- Inbound WhatsApp webhooks / two-way conversations (separate phase; needs message storage UI)
+- WhatsApp Business template approval workflow — user must manage templates in Twilio console; we send freeform within 24h session or pre-approved template strings they paste into settings
+
+## Open prerequisite
+User needs a Twilio account with an approved WhatsApp sender before Phase B sends will work. Phase A (wa.me) works immediately with no setup.

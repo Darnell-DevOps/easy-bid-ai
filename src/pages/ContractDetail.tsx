@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { contractTypeLabel, type ContractRow, type ContractSignatureRow } from "@/lib/contracts";
 import { sendEmail } from "@/lib/email";
 import { renderMergeTags } from "@/lib/merge-tags";
+import { WhatsAppButton } from "@/components/whatsapp/WhatsAppButton";
 
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -27,6 +28,7 @@ export default function ContractDetail() {
   const [signatures, setSignatures] = useState<ContractSignatureRow[]>([]);
   const [intake, setIntake] = useState<Record<string, string> | null>(null);
   const [loading, setLoading] = useState(true);
+  const [clientPhone, setClientPhone] = useState<string | null>(null);
 
   const load = async () => {
     if (!id) return;
@@ -39,10 +41,11 @@ export default function ContractDetail() {
     if ((c as any)?.client_id) {
       const { data: cl } = await supabase
         .from("clients")
-        .select("intake_responses")
+        .select("intake_responses, phone")
         .eq("id", (c as any).client_id)
         .maybeSingle();
       setIntake(((cl as any)?.intake_responses as Record<string, string>) || null);
+      setClientPhone(((cl as any)?.phone as string) || null);
     }
     setLoading(false);
   };
@@ -131,6 +134,14 @@ export default function ContractDetail() {
                     <ExternalLink className="w-4 h-4" /> Open
                   </a>
                 </Button>
+                <WhatsAppButton
+                  phone={clientPhone}
+                  context="contract"
+                  vars={{ clientName: contract.client_name, link: signingUrl }}
+                  variant="outline"
+                  size="default"
+                  label="WhatsApp"
+                />
                 {contract.status === "draft" && (
                   <Button className="gap-2 bg-gradient-to-r from-accent to-purple text-white" onClick={sendForSignature}>
                     <Send className="w-4 h-4" /> Send for signature
