@@ -1049,50 +1049,80 @@ export type Database = {
       }
       leads: {
         Row: {
+          ai_recommendation: string | null
+          budget: string | null
           client_id: string | null
           company: string | null
           created_at: string
+          draft_reply: string | null
+          draft_subject: string | null
           email: string | null
           form_id: string | null
+          goals: string | null
           id: string
+          lead_quality: string | null
           name: string | null
           notes: string | null
           phone: string | null
+          qualification_error: string | null
+          qualified_at: string | null
           responses: Json
+          service_requested: string | null
           source: string
           status: string
+          timeline: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          ai_recommendation?: string | null
+          budget?: string | null
           client_id?: string | null
           company?: string | null
           created_at?: string
+          draft_reply?: string | null
+          draft_subject?: string | null
           email?: string | null
           form_id?: string | null
+          goals?: string | null
           id?: string
+          lead_quality?: string | null
           name?: string | null
           notes?: string | null
           phone?: string | null
+          qualification_error?: string | null
+          qualified_at?: string | null
           responses?: Json
+          service_requested?: string | null
           source?: string
           status?: string
+          timeline?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          ai_recommendation?: string | null
+          budget?: string | null
           client_id?: string | null
           company?: string | null
           created_at?: string
+          draft_reply?: string | null
+          draft_subject?: string | null
           email?: string | null
           form_id?: string | null
+          goals?: string | null
           id?: string
+          lead_quality?: string | null
           name?: string | null
           notes?: string | null
           phone?: string | null
+          qualification_error?: string | null
+          qualified_at?: string | null
           responses?: Json
+          service_requested?: string | null
           source?: string
           status?: string
+          timeline?: string | null
           updated_at?: string
           user_id?: string
         }
