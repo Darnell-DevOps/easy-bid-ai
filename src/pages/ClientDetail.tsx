@@ -60,6 +60,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import ClientBriefCard from "@/components/ai/ClientBriefCard";
 import ReplyDrafterDialog from "@/components/ai/ReplyDrafterDialog";
+import { WhatsAppButton } from "@/components/whatsapp/WhatsAppButton";
 
 interface ClientInfo {
   id: string;
