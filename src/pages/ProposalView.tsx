@@ -621,10 +621,16 @@ export default function ProposalView() {
     );
   }
 
+  const mergeCtx = {
+    client: { name: proposal.client_name, company: proposal.company_name },
+    business: null,
+    intake: mergeIntake,
+  };
+  const merge = (s: string) => renderMergeTags(s, mergeCtx);
   const tabs = [
-    { key: "proposal", label: "Proposal", content: editedProposal, setter: setEditedProposal, rows: 24 },
-    { key: "pricing", label: "Pricing", content: editedPricing, setter: setEditedPricing, rows: 16 },
-    { key: "invoice", label: "Invoice", content: editedInvoice, setter: setEditedInvoice, rows: 16 },
+    { key: "proposal", label: "Proposal", content: merge(editedProposal), setter: setEditedProposal, rows: 24 },
+    { key: "pricing", label: "Pricing", content: merge(editedPricing), setter: setEditedPricing, rows: 16 },
+    { key: "invoice", label: "Invoice", content: merge(editedInvoice), setter: setEditedInvoice, rows: 16 },
   ];
 
   const currentStatus = normalizeStatus(proposal.status);
