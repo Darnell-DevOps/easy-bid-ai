@@ -18,6 +18,7 @@ import ProposalHeader from "@/components/proposal/ProposalHeader";
 import StatusBadge, { normalizeStatus, type ProposalStatus } from "@/components/proposal/StatusBadge";
 import FollowUpDialog from "@/components/proposal/FollowUpDialog";
 import { getFollowUpScenario, FOLLOW_UP_META } from "@/lib/follow-up";
+import FollowUpStatus from "@/components/proposal/FollowUpStatus";
 import { sendEmail } from "@/lib/email";
 import { usePlan } from "@/hooks/use-plan";
 import UpgradeModal from "@/components/plan/UpgradeModal";
