@@ -1132,8 +1132,21 @@ export default function ProposalView() {
           </div>
         </details>
 
+        <FollowUpStatus
+          proposalId={proposal.id}
+          proposal={{
+            status: proposal.status,
+            client_paid: proposal.client_paid,
+            sent_at: proposal.sent_at,
+            viewed_at: proposal.viewed_at,
+            accepted_at: proposal.accepted_at,
+            paid_at: proposal.paid_at,
+          }}
+        />
+
         {/* Tabs */}
         <Tabs defaultValue="proposal">
+
           <TabsList className="w-full justify-start border-b border-border rounded-none bg-transparent mb-6">
             {tabs.map((t) => (
               <TabsTrigger key={t.key} value={t.key}>{t.label}</TabsTrigger>
