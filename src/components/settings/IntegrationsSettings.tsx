@@ -30,6 +30,7 @@ import {
   Lock,
 } from "lucide-react";
 import WhatsAppSettings from "@/components/settings/WhatsAppSettings";
+import MessagingHistory from "@/components/settings/MessagingHistory";
 
 type Status = "connected" | "disconnected" | "attention" | "coming_soon";
 
@@ -311,6 +312,7 @@ export default function IntegrationsSettings() {
   return (
     <div className="space-y-6">
       <WhatsAppSettings />
+      <MessagingHistory />
       {/* Integration health */}
       <Card>
         <CardContent className="p-5">
