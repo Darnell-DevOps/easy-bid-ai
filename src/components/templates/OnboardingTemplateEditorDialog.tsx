@@ -237,10 +237,21 @@ export default function OnboardingTemplateEditorDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Onboarding questions</Label>
+            <div className="flex items-center justify-between">
+              <Label>Onboarding questions</Label>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setAiOpen(true)}
+                className="gap-1.5 h-7 text-xs"
+              >
+                <Sparkles className="w-3 h-3" /> Generate with AI
+              </Button>
+            </div>
             <p className="text-[11px] text-muted-foreground">
               One per line. Format: <code>Question label | type | required</code>. Type is one of
-              short_text, long_text, url, email, date, select. The "required" flag is optional.
+              short_text, long_text, url, email, phone, number, date, select, radio, multi_select, checkbox. The "required" flag is optional.
             </p>
             <Textarea
               value={form.fields_text}
