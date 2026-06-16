@@ -143,9 +143,11 @@ Deno.serve(async (req) => {
           // Owner notification
           await supabase.from("user_notifications").insert({
             user_id: p.user_id,
-            kind: "proposal_follow_up_sent",
+            category: "proposals",
+            key: `proposal_follow_up_sent:${p.id}:${scenario}`,
             title: `Follow-up sent — ${scenarioBadge(scenario)}`,
             body: `Sent automated follow-up to ${p.client_name} about their proposal.`,
+            link_url: `/proposals/${p.id}`,
             metadata: { proposal_id: p.id, scenario },
           });
         }
