@@ -1364,6 +1364,7 @@ export type Database = {
       }
       proposal_follow_ups: {
         Row: {
+          channel: string
           created_at: string
           id: string
           proposal_id: string
@@ -1373,6 +1374,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          channel?: string
           created_at?: string
           id?: string
           proposal_id: string
@@ -1382,6 +1384,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          channel?: string
           created_at?: string
           id?: string
           proposal_id?: string
@@ -2233,6 +2236,90 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      whatsapp_send_log: {
+        Row: {
+          body: string
+          context: string | null
+          created_at: string
+          error: string | null
+          id: string
+          idempotency_key: string
+          recipient: string
+          related_id: string | null
+          sent_at: string
+          status: string
+          twilio_sid: string | null
+          user_id: string
+        }
+        Insert: {
+          body: string
+          context?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          idempotency_key: string
+          recipient: string
+          related_id?: string | null
+          sent_at?: string
+          status?: string
+          twilio_sid?: string | null
+          user_id: string
+        }
+        Update: {
+          body?: string
+          context?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          idempotency_key?: string
+          recipient?: string
+          related_id?: string | null
+          sent_at?: string
+          status?: string
+          twilio_sid?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      whatsapp_settings: {
+        Row: {
+          auto_contract_reminders: boolean
+          auto_onboarding_reminders: boolean
+          auto_payment_reminders: boolean
+          auto_proposal_reminders: boolean
+          created_at: string
+          enabled: boolean
+          id: string
+          updated_at: string
+          user_id: string
+          whatsapp_from: string | null
+        }
+        Insert: {
+          auto_contract_reminders?: boolean
+          auto_onboarding_reminders?: boolean
+          auto_payment_reminders?: boolean
+          auto_proposal_reminders?: boolean
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          updated_at?: string
+          user_id: string
+          whatsapp_from?: string | null
+        }
+        Update: {
+          auto_contract_reminders?: boolean
+          auto_onboarding_reminders?: boolean
+          auto_payment_reminders?: boolean
+          auto_proposal_reminders?: boolean
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          updated_at?: string
+          user_id?: string
+          whatsapp_from?: string | null
         }
         Relationships: []
       }
