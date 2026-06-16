@@ -1573,6 +1573,48 @@ export type Database = {
           },
         ]
       }
+      reminder_audit_log: {
+        Row: {
+          attempted_at: string
+          channel: string
+          error: string | null
+          id: string
+          idempotency_key: string
+          kind: string
+          recipient: string | null
+          related_id: string | null
+          stage: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          attempted_at?: string
+          channel: string
+          error?: string | null
+          id?: string
+          idempotency_key: string
+          kind: string
+          recipient?: string | null
+          related_id?: string | null
+          stage: string
+          status: string
+          user_id: string
+        }
+        Update: {
+          attempted_at?: string
+          channel?: string
+          error?: string | null
+          id?: string
+          idempotency_key?: string
+          kind?: string
+          recipient?: string | null
+          related_id?: string | null
+          stage?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       retainer_invoices: {
         Row: {
           amount_cents: number
