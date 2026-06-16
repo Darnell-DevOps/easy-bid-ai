@@ -180,7 +180,10 @@ export default function ContractDetail() {
 
         <Card>
           <CardContent className="p-8">
-            <ContractRenderer content={contract.body} />
+            <ContractRenderer content={renderMergeTags(contract.body, {
+              client: { name: contract.client_name, email: contract.client_email, company: contract.company_name },
+              intake,
+            })} />
           </CardContent>
         </Card>
       </div>
