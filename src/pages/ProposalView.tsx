@@ -110,6 +110,7 @@ export default function ProposalView() {
   const [copied, setCopied] = useState(false);
   const [clientPaid, setClientPaid] = useState(false);
   const [clientEmail, setClientEmail] = useState<string | null>(null);
+  const [clientPhone, setClientPhone] = useState<string | null>(null);
   const [mergeIntake, setMergeIntake] = useState<Record<string, string> | null>(null);
   const [autoFillingPrice, setAutoFillingPrice] = useState(false);
   const [followUpOpen, setFollowUpOpen] = useState(false);
@@ -277,10 +278,11 @@ export default function ProposalView() {
         if (data.client_id) {
           const { data: client } = await supabase
             .from("clients")
-            .select("email, intake_responses")
+            .select("email, phone, intake_responses")
             .eq("id", data.client_id)
             .single();
           if (client?.email) setClientEmail(client.email);
+          if ((client as any)?.phone) setClientPhone((client as any).phone);
           if (client && (client as any).intake_responses) {
             setMergeIntake((client as any).intake_responses as Record<string, string>);
           }
@@ -1036,6 +1038,20 @@ export default function ProposalView() {
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handlePreview} className="gap-2">
                     <ExternalLink className="w-4 h-4" /> Open client preview
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    disabled={!clientPhone}
+                    onClick={() => {
+                      const msg = `Hi ${proposal.client_name}, your proposal${proposal.service_type ? ` for ${proposal.service_type}` : ""} is ready. You can review it here:\n${clientUrl}`;
+                      const link = waLink(clientPhone, msg);
+                      if (link) {
+                        window.open(link, "_blank", "noopener,noreferrer");
+                        if (currentStatus === "draft") void updateStatus("sent");
+                      }
+                    }}
+                    className="gap-2"
+                  >
+                    <MessageCircle className="w-4 h-4" /> WhatsApp {clientPhone ? "client" : "(no phone)"}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
