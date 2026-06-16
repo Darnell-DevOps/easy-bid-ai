@@ -491,6 +491,8 @@ export type Database = {
           email: string | null
           goals: string | null
           id: string
+          intake_form_id: string | null
+          intake_responses: Json
           is_active: boolean
           lead_draft_reply: string | null
           lead_draft_subject: string | null
@@ -517,6 +519,8 @@ export type Database = {
           email?: string | null
           goals?: string | null
           id?: string
+          intake_form_id?: string | null
+          intake_responses?: Json
           is_active?: boolean
           lead_draft_reply?: string | null
           lead_draft_subject?: string | null
@@ -543,6 +547,8 @@ export type Database = {
           email?: string | null
           goals?: string | null
           id?: string
+          intake_form_id?: string | null
+          intake_responses?: Json
           is_active?: boolean
           lead_draft_reply?: string | null
           lead_draft_subject?: string | null
