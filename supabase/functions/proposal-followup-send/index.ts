@@ -100,9 +100,35 @@ Deno.serve(async (req) => {
     senderName: senderName || undefined,
   });
 
-  const idemKey = `proposal-followup-manual-${proposal.id}-${scenario}-${Date.now()}`;
+  // --- Idempotency guard ---
+  // If we already logged a send for this (proposal, scenario) within the last
+  // 60 seconds, treat this as a duplicate click and no-op. Prevents double-
+  // sends from rapid clicks even before the send-email idempotency key kicks in.
+  const DUP_WINDOW_MS = 60_000;
+  const { data: recent } = await admin
+    .from("proposal_follow_ups")
+    .select("id, sent_at, recipient_email")
+    .eq("proposal_id", proposal.id)
+    .eq("scenario", scenario)
+    .order("sent_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (recent && Date.now() - new Date(recent.sent_at).getTime() < DUP_WINDOW_MS) {
+    return json({
+      ok: true,
+      deduped: true,
+      scenario,
+      recipient: recent.recipient_email || recipient,
+    });
+  }
 
-  const { error: sendErr } = await admin.functions.invoke("send-email", {
+  // Stable, time-bucketed idempotency key (5-minute bucket). Identical rapid
+  // requests collapse to the same key, so send-email's unique constraint on
+  // email_send_log.idempotency_key short-circuits the second send.
+  const bucket = Math.floor(Date.now() / (5 * 60_000));
+  const idemKey = `proposal-followup-manual-${proposal.id}-${scenario}-${bucket}`;
+
+  const { data: sendResp, error: sendErr } = await admin.functions.invoke("send-email", {
     body: {
       templateName: `proposal-followup-${scenario}`,
       recipientEmail: recipient,
@@ -118,31 +144,37 @@ Deno.serve(async (req) => {
     },
   });
   if (sendErr) return json({ error: "send_failed", message: sendErr.message }, 500);
+  const deduped = !!(sendResp as any)?.deduped;
 
-  // Upsert log row — overwrite sent_at if a row already exists so history
-  // reflects the most recent send for this scenario.
-  await admin
-    .from("proposal_follow_ups")
-    .upsert(
-      {
-        user_id: userId,
-        proposal_id: proposal.id,
-        scenario,
-        recipient_email: recipient,
-        sent_at: new Date().toISOString(),
-      },
-      { onConflict: "proposal_id,scenario" },
-    );
+  // Upsert log row only if this was a real send. Keep the existing sent_at if
+  // send-email deduped, so the history doesn't lie about send time.
+  if (!deduped) {
+    await admin
+      .from("proposal_follow_ups")
+      .upsert(
+        {
+          user_id: userId,
+          proposal_id: proposal.id,
+          scenario,
+          recipient_email: recipient,
+          sent_at: new Date().toISOString(),
+        },
+        { onConflict: "proposal_id,scenario" },
+      );
 
-  await admin.from("user_notifications").insert({
-    user_id: userId,
-    category: "proposals",
-    key: `proposal_follow_up_sent_manual:${proposal.id}:${scenario}:${Date.now()}`,
-    title: `Follow-up sent — ${scenarioBadge(scenario)}`,
-    body: `You sent a manual follow-up to ${proposal.client_name}.`,
-    link_url: `/proposals/${proposal.id}`,
-    metadata: { proposal_id: proposal.id, scenario, manual: true },
-  });
+    await admin.from("user_notifications").insert({
+      user_id: userId,
+      category: "proposals",
+      key: `proposal_follow_up_sent_manual:${proposal.id}:${scenario}:${bucket}`,
+      title: `Follow-up sent — ${scenarioBadge(scenario)}`,
+      body: `You sent a manual follow-up to ${proposal.client_name}.`,
+      link_url: `/proposals/${proposal.id}`,
+      metadata: { proposal_id: proposal.id, scenario, manual: true },
+    });
+  }
+
+  return json({ ok: true, deduped, scenario, recipient });
+
 
   return json({ ok: true, scenario, recipient });
 });
