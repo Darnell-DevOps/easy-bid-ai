@@ -1,46 +1,47 @@
-# Enable auto-qualification on new leads
+# Proposal Auto Follow-Up
 
-You picked option 1: create the database trigger that auto-runs the `lead-qualify` edge function whenever a new lead arrives.
+Currently `src/lib/follow-up.ts` derives the right follow-up scenario from a proposal's timestamps, and `FollowUpDialog` lets the user copy or open mailto. Nothing runs in the background. We'll add a scheduled job that mirrors how `retainer-recovery-cron` works for retainers, but for proposals — and it only fires when the user has opted in via Settings → Automations.
 
-## What's already in place
+## What gets built
 
-- `leads` table has qualification columns (`lead_quality`, `ai_recommendation`, `draft_reply`, `qualified_at`, etc.)
-- `pg_net` extension is enabled (lets Postgres make HTTP calls)
-- `lead-qualify` edge function is deployed and expects an `x-internal-secret` header
-- `trigger_lead_qualify()` function already exists in the DB but contains a placeholder secret (`REPLACE_WITH_YOUR_LEAD_QUALIFY_SECRET`) and is not attached to the table yet
+1. **`proposal_follow_ups` table** (idempotency log) — one row per `(proposal_id, scenario)` so the same nudge is never sent twice.
+2. **`proposal-follow-up-cron` edge function** — hourly job that scans proposals, matches each one against `getFollowUpScenario`, checks the owner's automation prefs, and queues a send through the existing `send-email` function.
+3. **pg_cron schedule** — runs every hour via `pg_net` (same pattern as `retainer-recovery-cron`).
+4. **Two new default email templates** — `proposal-follow-up-nudge` and `proposal-payment-reminder`, registered with the existing transactional email registry. Bodies are derived from `buildFollowUpTemplate` so manual and auto follow-ups read identically.
 
-## What this plan does
+## How it decides to send
 
-### 1. Create the `LEAD_QUALIFY_SECRET` runtime secret
-Used by both the edge function (to validate incoming calls) and the DB trigger (to authenticate outbound calls). You'll be prompted to enter a value — any long random string works (e.g. a UUID or 32+ random chars).
+For each proposal where `status IN ('sent','viewed','accepted')` and `client_paid = false`:
 
-### 2. Store the secret inside Postgres so the trigger can read it
-The trigger runs inside the database and cannot read edge-function env vars. Standard pattern: store it as a custom GUC via `ALTER DATABASE ... SET app.lead_qualify_secret = '...'` and read it with `current_setting('app.lead_qualify_secret', true)` inside the trigger.
+- Compute scenario via the shared logic in `src/lib/follow-up.ts` (port to the edge function as `_shared/follow-up.ts`).
+- Skip if scenario is `none`.
+- Skip if no `client_email` resolvable (proposal's linked client has no email).
+- Map scenario → automation preference:
+  - `not_viewed_24h` / `viewed_no_action_48h` → `proposal_follow_up`
+  - `accepted_unpaid_24h` → `payment_follow_up_unpaid`
+- Skip if that preference is `false` for the owner.
+- Skip if a `proposal_follow_ups` row already exists for `(proposal_id, scenario)`.
+- Otherwise: insert the log row, then invoke `send-email` with idempotency key `proposal-followup-{id}-{scenario}`.
 
-Since `ALTER DATABASE` is forbidden in migrations on this stack, I'll use a small `vault`-free alternative: a dedicated single-row table `internal_config` (service_role only, RLS locked, no anon/auth grants) that the SECURITY DEFINER trigger reads.
+## Owner visibility
 
-### 3. Rewrite `trigger_lead_qualify()` to read the secret from `internal_config`
-Removes the hardcoded placeholder.
-
-### 4. Attach the trigger to `leads`
-```text
-CREATE TRIGGER leads_auto_qualify
-  AFTER INSERT ON public.leads
-  FOR EACH ROW EXECUTE FUNCTION public.trigger_lead_qualify();
-```
-Fires only when `qualified_at IS NULL` and `status = 'new'` (already guarded inside the function). HTTP failures are swallowed so lead ingestion never breaks.
-
-### 5. Seed the secret value into `internal_config` after you provide it
-
-## Steps in order
-
-1. Prompt you for `LEAD_QUALIFY_SECRET` via the secrets tool
-2. Migration: create `internal_config` table (locked down), rewrite `trigger_lead_qualify()`, attach trigger to `leads`
-3. Insert the secret value into `internal_config`
-4. Test: submit a lead through an existing lead form and verify `qualified_at`, `lead_quality`, and `draft_reply` populate within a few seconds
+- After sending, write a `user_notifications` row ("Follow-up sent to {client} — {scenario badge}") so the owner sees what the system did on their behalf.
+- `ProposalView` and `PriorityActions` stay unchanged — manual follow-up button still works; the dialog will just show "Auto follow-up sent {time ago}" when a `proposal_follow_ups` row exists, so the user doesn't double-send.
 
 ## Technical notes
 
-- `internal_config` will have RLS enabled with no policies — only SECURITY DEFINER functions (running as table owner) can read it
-- The trigger is `AFTER INSERT`, non-blocking — `pg_net` queues the HTTP call asynchronously
-- Manual re-qualify button in `LeadInbox` (already built) continues to work via `lead-requalify`
+- New table:
+  ```text
+  proposal_follow_ups (id, user_id, proposal_id, scenario, sent_at)
+  UNIQUE (proposal_id, scenario)
+  ```
+  RLS: owner can read; service_role full access; no anon.
+- Cron: same migration pattern as `20260428071356_*` (uses `supabase--insert` so the URL/anon key aren't committed). Hourly cadence is enough — scenarios use 24/48h windows.
+- Edge function uses service role; no JWT (internal cron). Errors are logged but never block the job.
+- Reuses `send-email` so branding, sending domain, suppression, and DLQ behavior all match existing emails.
+
+## Out of scope
+
+- No new UI in Settings — the existing toggles `proposal_follow_up` and `payment_follow_up_unpaid` drive everything.
+- No change to retainer dunning or contract reminders.
+- No second follow-up per scenario; one send per `(proposal, scenario)` only.
