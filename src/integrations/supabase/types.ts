@@ -2335,6 +2335,8 @@ export type Database = {
           created_at: string
           enabled: boolean
           id: string
+          twilio_account_sid: string | null
+          twilio_auth_token: string | null
           updated_at: string
           user_id: string
           whatsapp_from: string | null
@@ -2347,6 +2349,8 @@ export type Database = {
           created_at?: string
           enabled?: boolean
           id?: string
+          twilio_account_sid?: string | null
+          twilio_auth_token?: string | null
           updated_at?: string
           user_id: string
           whatsapp_from?: string | null
@@ -2359,6 +2363,8 @@ export type Database = {
           created_at?: string
           enabled?: boolean
           id?: string
+          twilio_account_sid?: string | null
+          twilio_auth_token?: string | null
           updated_at?: string
           user_id?: string
           whatsapp_from?: string | null
