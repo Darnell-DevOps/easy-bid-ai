@@ -224,6 +224,21 @@ export default function CreateOnboardingFromTemplateDialog({
                 placeholder="sarah@acme.com"
               />
             </div>
+            {prefillCount > 0 && (
+              <div className="rounded-lg border border-purple/30 bg-purple/5 p-3 flex items-start gap-3">
+                <Sparkles className="w-4 h-4 text-purple shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <Label className="text-sm font-medium">Pre-fill from lead intake</Label>
+                    <Switch checked={usePrefill} onCheckedChange={setUsePrefill} />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {prefillCount} answer{prefillCount > 1 ? "s" : ""} from this client's lead form
+                    {usePrefill ? " will be pre-filled." : " will be skipped."}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
