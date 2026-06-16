@@ -1,12 +1,13 @@
+// Per-user WhatsApp send. Uses BYOK Twilio credentials stored on the caller's
+// whatsapp_settings row. Authenticates the caller, dedupes via
+// whatsapp_send_log.idempotency_key, and logs every attempt.
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { normalizeToWhatsApp, twilioSendWhatsApp } from "../_shared/whatsapp.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY");
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/twilio";
 
 interface SendRequest {
   to: string;
@@ -14,12 +15,6 @@ interface SendRequest {
   context?: string;
   relatedId?: string;
   idempotencyKey?: string;
-}
-
-function normalizeToWhatsApp(to: string): string | null {
-  const digits = to.replace(/[^\d]/g, "");
-  if (digits.length < 7 || digits.length > 15) return null;
-  return `whatsapp:+${digits}`;
 }
 
 function normalizeFrom(from: string): string {
@@ -35,13 +30,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    if (!LOVABLE_API_KEY || !TWILIO_API_KEY) {
-      return new Response(
-        JSON.stringify({ error: "Twilio connector not configured" }),
-        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
-
     const authHeader = req.headers.get("Authorization") || "";
     const token = authHeader.replace("Bearer ", "");
     if (!token) {
@@ -75,13 +63,22 @@ Deno.serve(async (req) => {
 
     const { data: settings } = await admin
       .from("whatsapp_settings")
-      .select("whatsapp_from, enabled")
+      .select("whatsapp_from, enabled, twilio_account_sid, twilio_auth_token")
       .eq("user_id", user.id)
       .maybeSingle();
 
-    if (!settings?.enabled || !settings?.whatsapp_from) {
+    if (!settings?.enabled) {
       return new Response(
-        JSON.stringify({ error: "WhatsApp not configured. Add your Twilio WhatsApp sender in Settings → Integrations." }),
+        JSON.stringify({ error: "WhatsApp sending is disabled. Enable it in Settings → Integrations." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    if (!settings.whatsapp_from || !settings.twilio_account_sid || !settings.twilio_auth_token) {
+      return new Response(
+        JSON.stringify({
+          error:
+            "WhatsApp not configured. Add your Twilio Account SID, Auth Token and WhatsApp sender in Settings → Integrations.",
+        }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -97,7 +94,8 @@ Deno.serve(async (req) => {
     const from = normalizeFrom(settings.whatsapp_from);
     const bucket = Math.floor(Date.now() / (5 * 60_000));
     const idempotencyKey =
-      payload.idempotencyKey ?? `wa-${user.id}-${payload.relatedId || "adhoc"}-${payload.context || "manual"}-${bucket}`;
+      payload.idempotencyKey ??
+      `wa-${user.id}-${payload.relatedId || "adhoc"}-${payload.context || "manual"}-${bucket}`;
 
     // Idempotency: short-circuit if a recent send with this key exists
     const { data: existing } = await admin
@@ -112,23 +110,14 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Send via Twilio
-    const twilioRes = await fetch(`${GATEWAY_URL}/Messages.json`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "X-Connection-Api-Key": TWILIO_API_KEY,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({
-        To: to,
-        From: from,
-        Body: payload.body,
-      }),
-    });
+    const { ok, status, data: twilioData } = await twilioSendWhatsApp(
+      { accountSid: settings.twilio_account_sid, authToken: settings.twilio_auth_token },
+      to,
+      from,
+      payload.body,
+    );
 
-    const twilioData = await twilioRes.json();
-    if (!twilioRes.ok) {
+    if (!ok) {
       await admin.from("whatsapp_send_log").insert({
         user_id: user.id,
         recipient: to,
@@ -140,7 +129,7 @@ Deno.serve(async (req) => {
         idempotency_key: idempotencyKey,
       });
       return new Response(
-        JSON.stringify({ error: twilioData?.message || "Twilio send failed", details: twilioData }),
+        JSON.stringify({ error: twilioData?.message || `Twilio send failed (${status})`, details: twilioData }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }

@@ -1,11 +1,8 @@
 // Shared helper for sending WhatsApp messages from edge functions via Twilio.
-// Loads the sender's settings, respects per-user enable + auto toggles,
-// dedupes against whatsapp_send_log.idempotency_key, and writes a row on success.
+// Uses BYOK (per-user) Twilio Account SID + Auth Token stored on whatsapp_settings.
+// Respects per-user enable + auto toggles, dedupes against
+// whatsapp_send_log.idempotency_key, and writes a row on success or failure.
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
-
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY");
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/twilio";
 
 export type WhatsAppAutoKey =
   | "auto_proposal_reminders"
@@ -16,6 +13,8 @@ export type WhatsAppAutoKey =
 export interface WhatsAppSettings {
   whatsapp_from: string | null;
   enabled: boolean;
+  twilio_account_sid: string | null;
+  twilio_auth_token: string | null;
   auto_proposal_reminders: boolean;
   auto_payment_reminders: boolean;
   auto_contract_reminders: boolean;
@@ -45,13 +44,39 @@ export async function getWhatsAppSettings(
   const { data } = await supabase
     .from("whatsapp_settings")
     .select(
-      "whatsapp_from, enabled, auto_proposal_reminders, auto_payment_reminders, auto_contract_reminders, auto_onboarding_reminders",
+      "whatsapp_from, enabled, twilio_account_sid, twilio_auth_token, auto_proposal_reminders, auto_payment_reminders, auto_contract_reminders, auto_onboarding_reminders",
     )
     .eq("user_id", userId)
     .maybeSingle();
   const s = (data as WhatsAppSettings | null) ?? null;
   settingsCache.set(userId, s);
   return s;
+}
+
+export interface TwilioCreds {
+  accountSid: string;
+  authToken: string;
+}
+
+/** Send a Twilio WhatsApp message directly using HTTP Basic Auth (per-user BYOK). */
+export async function twilioSendWhatsApp(
+  creds: TwilioCreds,
+  to: string,
+  from: string,
+  body: string,
+): Promise<{ ok: boolean; status: number; data: any }> {
+  const url = `https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(creds.accountSid)}/Messages.json`;
+  const basic = btoa(`${creds.accountSid}:${creds.authToken}`);
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${basic}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({ To: to, From: from, Body: body }),
+  });
+  const data = await res.json().catch(() => ({}));
+  return { ok: res.ok, status: res.status, data };
 }
 
 export interface CronSendArgs {
@@ -67,23 +92,31 @@ export interface CronSendArgs {
 
 export interface CronSendResult {
   sent: boolean;
-  skipped?: "twilio_unconfigured" | "no_settings" | "disabled" | "auto_off" | "no_sender" | "bad_phone" | "deduped";
+  skipped?:
+    | "no_settings"
+    | "disabled"
+    | "auto_off"
+    | "no_sender"
+    | "no_credentials"
+    | "bad_phone"
+    | "deduped";
   sid?: string;
   error?: string;
 }
 
 /**
- * Send a WhatsApp message from a cron context.
- * Skips silently (no exception) when Twilio isn't ready or the user opted out.
+ * Send a WhatsApp message from a cron context using the user's own Twilio creds.
+ * Skips silently (no exception) when not configured or the user opted out.
  */
 export async function sendWhatsAppFromCron(args: CronSendArgs): Promise<CronSendResult> {
-  if (!LOVABLE_API_KEY || !TWILIO_API_KEY) return { sent: false, skipped: "twilio_unconfigured" };
-
   const settings = await getWhatsAppSettings(args.supabase, args.userId);
   if (!settings) return { sent: false, skipped: "no_settings" };
   if (!settings.enabled) return { sent: false, skipped: "disabled" };
   if (!settings[args.autoKey]) return { sent: false, skipped: "auto_off" };
   if (!settings.whatsapp_from) return { sent: false, skipped: "no_sender" };
+  if (!settings.twilio_account_sid || !settings.twilio_auth_token) {
+    return { sent: false, skipped: "no_credentials" };
+  }
 
   const to = normalizeToWhatsApp(args.to);
   if (!to) return { sent: false, skipped: "bad_phone" };
@@ -98,17 +131,14 @@ export async function sendWhatsAppFromCron(args: CronSendArgs): Promise<CronSend
 
   const from = normalizeFrom(settings.whatsapp_from);
 
-  const res = await fetch(`${GATEWAY_URL}/Messages.json`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
-      "X-Connection-Api-Key": TWILIO_API_KEY,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({ To: to, From: from, Body: args.body }),
-  });
-  const data = await res.json();
-  if (!res.ok) {
+  const { ok, status, data } = await twilioSendWhatsApp(
+    { accountSid: settings.twilio_account_sid, authToken: settings.twilio_auth_token },
+    to,
+    from,
+    args.body,
+  );
+
+  if (!ok) {
     await args.supabase.from("whatsapp_send_log").insert({
       user_id: args.userId,
       recipient: to,
@@ -119,7 +149,7 @@ export async function sendWhatsAppFromCron(args: CronSendArgs): Promise<CronSend
       error: JSON.stringify(data).slice(0, 1000),
       idempotency_key: args.idempotencyKey,
     });
-    return { sent: false, error: data?.message || `Twilio ${res.status}` };
+    return { sent: false, error: data?.message || `Twilio ${status}` };
   }
 
   await args.supabase.from("whatsapp_send_log").insert({
