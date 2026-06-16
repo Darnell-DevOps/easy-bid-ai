@@ -36,6 +36,14 @@ export default function ContractDetail() {
     ]);
     setContract((c as any) || null);
     setSignatures((sigs as any) || []);
+    if ((c as any)?.client_id) {
+      const { data: cl } = await supabase
+        .from("clients")
+        .select("intake_responses")
+        .eq("id", (c as any).client_id)
+        .maybeSingle();
+      setIntake(((cl as any)?.intake_responses as Record<string, string>) || null);
+    }
     setLoading(false);
   };
 
