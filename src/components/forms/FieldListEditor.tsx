@@ -89,6 +89,7 @@ export default function FieldListEditor({ fields, onChange, context = "onboardin
         {fields.map((field, idx) => {
           const isOpen = expanded === field.id;
           const needsOptions = field.type === "select" || field.type === "radio" || field.type === "multi_select";
+          const isFile = field.type === "file";
           return (
             <div key={field.id} className="rounded-lg border border-border bg-card overflow-hidden">
               <div className="flex items-center gap-2 p-2.5">
@@ -173,6 +174,33 @@ export default function FieldListEditor({ fields, onChange, context = "onboardin
                         rows={3}
                         className="text-sm font-mono"
                       />
+                    </div>
+                  )}
+
+                  {isFile && (
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Max size (MB)</Label>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={20}
+                          value={field.maxSizeMb ?? 20}
+                          onChange={(e) =>
+                            update(idx, { maxSizeMb: Math.max(1, Math.min(20, Number(e.target.value) || 20)) })
+                          }
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Accepted types</Label>
+                        <Input
+                          value={field.accept || ""}
+                          onChange={(e) => update(idx, { accept: e.target.value })}
+                          className="h-8 text-sm"
+                          placeholder="image/*, .pdf"
+                        />
+                      </div>
                     </div>
                   )}
 

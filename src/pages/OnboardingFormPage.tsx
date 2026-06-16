@@ -213,6 +213,7 @@ export default function OnboardingFormPage() {
                     field={field}
                     value={responses[field.id]}
                     onChange={(v) => handleChange(field.id, v)}
+                    formContext={{ token }}
                   />
                   {field.helpText && (
                     <p className="text-[11px] text-muted-foreground">{field.helpText}</p>

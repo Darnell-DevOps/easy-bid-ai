@@ -18,7 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Copy, ExternalLink, CheckCircle2 } from "lucide-react";
+import { Loader2, Copy, ExternalLink, CheckCircle2, Sparkles } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -26,11 +27,37 @@ import {
   type MergedOnboardingTemplate,
 } from "@/lib/onboarding-templates";
 
+function slugify(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+}
+
+function computePrefill(
+  fields: { id: string; label: string }[],
+  intake: Record<string, string> | null | undefined,
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!intake) return out;
+  const labelSlugMap: Record<string, string> = {};
+  for (const k of Object.keys(intake)) labelSlugMap[k] = String(intake[k] ?? "");
+  for (const f of fields) {
+    if (intake[f.id] != null && intake[f.id] !== "") {
+      out[f.id] = String(intake[f.id]);
+      continue;
+    }
+    const slug = slugify(f.label);
+    if (labelSlugMap[slug] != null && labelSlugMap[slug] !== "") {
+      out[f.id] = labelSlugMap[slug];
+    }
+  }
+  return out;
+}
+
 interface ClientLite {
   id: string;
   name: string;
   email: string | null;
   company: string | null;
+  intake_responses?: Record<string, string> | null;
 }
 
 interface Props {
@@ -53,6 +80,7 @@ export default function CreateOnboardingFromTemplateDialog({
   const [submitting, setSubmitting] = useState(false);
   const [createdToken, setCreatedToken] = useState<string | null>(null);
   const [createdId, setCreatedId] = useState<string | null>(null);
+  const [usePrefill, setUsePrefill] = useState(true);
 
   useEffect(() => {
     if (!open) return;
@@ -61,10 +89,11 @@ export default function CreateOnboardingFromTemplateDialog({
     setClientEmail("");
     setCreatedToken(null);
     setCreatedId(null);
+    setUsePrefill(true);
     (async () => {
       const { data } = await supabase
         .from("clients")
-        .select("id, name, email, company")
+        .select("id, name, email, company, intake_responses")
         .order("name");
       setClients((data as ClientLite[]) || []);
     })();
@@ -84,6 +113,12 @@ export default function CreateOnboardingFromTemplateDialog({
     }
   };
 
+  const selectedClient = clientId !== "__new__" ? clients.find((c) => c.id === clientId) : null;
+  const intake = selectedClient?.intake_responses || null;
+  const fieldsForPreview = template ? templateToOnboardingFields(template) : [];
+  const prefillPreview = computePrefill(fieldsForPreview, intake);
+  const prefillCount = Object.keys(prefillPreview).length;
+
   const handleCreate = async () => {
     if (!template) return;
     if (!clientName.trim()) {
@@ -99,6 +134,9 @@ export default function CreateOnboardingFromTemplateDialog({
       return;
     }
     const fields = templateToOnboardingFields(template);
+    const prefill = usePrefill ? computePrefill(fields, intake) : {};
+    const appliedCount = Object.keys(prefill).length;
+    const nowIso = new Date().toISOString();
     const { data, error } = await (supabase.from("onboarding_forms") as any)
       .insert({
         user_id: userId,
@@ -107,8 +145,9 @@ export default function CreateOnboardingFromTemplateDialog({
         client_email: clientEmail.trim() || null,
         service_type: template.service_type || null,
         fields,
-        responses: {},
-        status: "pending",
+        responses: prefill,
+        status: appliedCount > 0 ? "in_progress" : "pending",
+        started_at: appliedCount > 0 ? nowIso : null,
       })
       .select("id, access_token")
       .single();
@@ -123,7 +162,12 @@ export default function CreateOnboardingFromTemplateDialog({
     }
     setCreatedToken(data.access_token);
     setCreatedId(data.id);
-    toast({ title: "Onboarding created", description: "Send the link to your client." });
+    toast({
+      title: "Onboarding created",
+      description: appliedCount > 0
+        ? `${appliedCount} answer${appliedCount > 1 ? "s" : ""} pre-filled from lead intake.`
+        : "Send the link to your client.",
+    });
   };
 
   const link = createdToken ? `${window.location.origin}/onboard/${createdToken}` : "";
@@ -180,6 +224,21 @@ export default function CreateOnboardingFromTemplateDialog({
                 placeholder="sarah@acme.com"
               />
             </div>
+            {prefillCount > 0 && (
+              <div className="rounded-lg border border-purple/30 bg-purple/5 p-3 flex items-start gap-3">
+                <Sparkles className="w-4 h-4 text-purple shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <Label className="text-sm font-medium">Pre-fill from lead intake</Label>
+                    <Switch checked={usePrefill} onCheckedChange={setUsePrefill} />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {prefillCount} answer{prefillCount > 1 ? "s" : ""} from this client's lead form
+                    {usePrefill ? " will be pre-filled." : " will be skipped."}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-4">

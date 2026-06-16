@@ -10,6 +10,7 @@ import { Loader2, ArrowLeft, Copy, ExternalLink, Send, CheckCircle2, Clock, Eye 
 import { useToast } from "@/hooks/use-toast";
 import { contractTypeLabel, type ContractRow, type ContractSignatureRow } from "@/lib/contracts";
 import { sendEmail } from "@/lib/email";
+import { renderMergeTags } from "@/lib/merge-tags";
 
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -24,6 +25,7 @@ export default function ContractDetail() {
   const navigate = useNavigate();
   const [contract, setContract] = useState<ContractRow | null>(null);
   const [signatures, setSignatures] = useState<ContractSignatureRow[]>([]);
+  const [intake, setIntake] = useState<Record<string, string> | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
@@ -34,6 +36,14 @@ export default function ContractDetail() {
     ]);
     setContract((c as any) || null);
     setSignatures((sigs as any) || []);
+    if ((c as any)?.client_id) {
+      const { data: cl } = await supabase
+        .from("clients")
+        .select("intake_responses")
+        .eq("id", (c as any).client_id)
+        .maybeSingle();
+      setIntake(((cl as any)?.intake_responses as Record<string, string>) || null);
+    }
     setLoading(false);
   };
 

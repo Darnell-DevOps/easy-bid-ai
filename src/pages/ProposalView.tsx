@@ -11,6 +11,7 @@ import { Download, Save, Loader2, Pencil, Eye, Copy, Check, Sparkles, RefreshCw,
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import ReactMarkdown from "react-markdown";
 import PremiumProposalRenderer from "@/components/proposal/PremiumProposalRenderer";
+import { renderMergeTags } from "@/lib/merge-tags";
 import PremiumPricingRenderer from "@/components/proposal/PremiumPricingRenderer";
 import PremiumInvoiceRenderer from "@/components/proposal/PremiumInvoiceRenderer";
 import ProposalHeader from "@/components/proposal/ProposalHeader";
@@ -108,6 +109,7 @@ export default function ProposalView() {
   const [copied, setCopied] = useState(false);
   const [clientPaid, setClientPaid] = useState(false);
   const [clientEmail, setClientEmail] = useState<string | null>(null);
+  const [mergeIntake, setMergeIntake] = useState<Record<string, string> | null>(null);
   const [autoFillingPrice, setAutoFillingPrice] = useState(false);
   const [followUpOpen, setFollowUpOpen] = useState(false);
 
@@ -274,10 +276,13 @@ export default function ProposalView() {
         if (data.client_id) {
           const { data: client } = await supabase
             .from("clients")
-            .select("email")
+            .select("email, intake_responses")
             .eq("id", data.client_id)
             .single();
           if (client?.email) setClientEmail(client.email);
+          if (client && (client as any).intake_responses) {
+            setMergeIntake((client as any).intake_responses as Record<string, string>);
+          }
         }
       }
       setLoading(false);
@@ -616,10 +621,16 @@ export default function ProposalView() {
     );
   }
 
+  const mergeCtx = {
+    client: { name: proposal.client_name, company: proposal.company_name },
+    business: null,
+    intake: mergeIntake,
+  };
+  const merge = (s: string) => renderMergeTags(s, mergeCtx);
   const tabs = [
-    { key: "proposal", label: "Proposal", content: editedProposal, setter: setEditedProposal, rows: 24 },
-    { key: "pricing", label: "Pricing", content: editedPricing, setter: setEditedPricing, rows: 16 },
-    { key: "invoice", label: "Invoice", content: editedInvoice, setter: setEditedInvoice, rows: 16 },
+    { key: "proposal", label: "Proposal", content: editedProposal, rendered: merge(editedProposal), setter: setEditedProposal, rows: 24 },
+    { key: "pricing", label: "Pricing", content: editedPricing, rendered: merge(editedPricing), setter: setEditedPricing, rows: 16 },
+    { key: "invoice", label: "Invoice", content: editedInvoice, rendered: merge(editedInvoice), setter: setEditedInvoice, rows: 16 },
   ];
 
   const currentStatus = normalizeStatus(proposal.status);
@@ -1157,24 +1168,24 @@ export default function ProposalView() {
                         serviceType={proposal.service_type}
                         createdAt={proposal.created_at}
                       />
-                      <MarkdownPreview content={t.content} isPremium />
+                      <MarkdownPreview content={t.rendered} isPremium />
                       {watermark && <ProposalWatermark />}
                     </div>
                   ) : t.key === "pricing" ? (
                     <div className="rounded-2xl border border-border/60 bg-card/40 px-6 sm:px-10 lg:px-14 py-8 lg:py-10 shadow-sm">
-                      <PremiumPricingRenderer content={t.content} />
+                      <PremiumPricingRenderer content={t.rendered} />
                     </div>
                   ) : t.key === "invoice" ? (
                     <div className="rounded-2xl border border-border/60 bg-card/40 px-6 sm:px-10 lg:px-14 py-8 lg:py-10 shadow-sm">
                       <PremiumInvoiceRenderer
-                        content={t.content}
+                        content={t.rendered}
                         clientName={proposal.client_name}
                         companyName={proposal.company_name}
                       />
                     </div>
                   ) : (
                     <div className="rounded-2xl border border-border/60 bg-card/40 px-6 sm:px-10 lg:px-14 py-8 lg:py-10 shadow-sm">
-                      <MarkdownPreview content={t.content} />
+                      <MarkdownPreview content={t.rendered} />
                     </div>
                   )}
                   {t.key === "proposal" && (
