@@ -108,6 +108,7 @@ export default function ProposalView() {
   const [copied, setCopied] = useState(false);
   const [clientPaid, setClientPaid] = useState(false);
   const [clientEmail, setClientEmail] = useState<string | null>(null);
+  const [mergeIntake, setMergeIntake] = useState<Record<string, string> | null>(null);
   const [autoFillingPrice, setAutoFillingPrice] = useState(false);
   const [followUpOpen, setFollowUpOpen] = useState(false);
 
