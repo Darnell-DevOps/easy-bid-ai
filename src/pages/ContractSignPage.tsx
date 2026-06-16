@@ -19,6 +19,7 @@ import {
   Lock,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { renderMergeTags } from "@/lib/merge-tags";
 
 interface PublicContract {
   id: string;
@@ -50,6 +51,7 @@ export default function ContractSignPage() {
   const [method, setMethod] = useState<"typed" | "drawn">("typed");
   const [bookingSlug, setBookingSlug] = useState<string | null>(null);
   const [retainerToken, setRetainerToken] = useState<string | null>(null);
+  const [intake, setIntake] = useState<Record<string, string> | null>(null);
 
   // Drawn signature state
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -103,6 +105,21 @@ export default function ContractSignPage() {
           .maybeSingle()
           .then(({ data: rt }) => {
             if (rt) setRetainerToken((rt as any).access_token);
+          });
+      }
+
+      // Pull intake responses from the linked client (if any) for merge-tag rendering.
+      if ((data as any).client_email) {
+        supabase
+          .from("clients")
+          .select("intake_responses")
+          .eq("user_id", (data as any).user_id)
+          .eq("email", (data as any).client_email)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+          .then(({ data: cl }) => {
+            if (cl) setIntake(((cl as any).intake_responses as Record<string, string>) || null);
           });
       }
     };
@@ -259,7 +276,10 @@ export default function ContractSignPage() {
 
         {/* Contract body */}
         <section className="rounded-xl border border-border bg-card p-6 lg:p-10">
-          <ContractRenderer content={contract.body} />
+          <ContractRenderer content={renderMergeTags(contract.body, {
+            client: { name: contract.client_name, email: contract.client_email, company: contract.company_name },
+            intake,
+          })} />
         </section>
 
         {/* Signature OR success */}
