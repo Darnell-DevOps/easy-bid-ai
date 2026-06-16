@@ -18,13 +18,39 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Copy, ExternalLink, CheckCircle2 } from "lucide-react";
+import { Loader2, Copy, ExternalLink, CheckCircle2, Sparkles } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
   templateToOnboardingFields,
   type MergedOnboardingTemplate,
 } from "@/lib/onboarding-templates";
+
+function slugify(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+}
+
+function computePrefill(
+  fields: { id: string; label: string }[],
+  intake: Record<string, string> | null | undefined,
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!intake) return out;
+  const labelSlugMap: Record<string, string> = {};
+  for (const k of Object.keys(intake)) labelSlugMap[k] = String(intake[k] ?? "");
+  for (const f of fields) {
+    if (intake[f.id] != null && intake[f.id] !== "") {
+      out[f.id] = String(intake[f.id]);
+      continue;
+    }
+    const slug = slugify(f.label);
+    if (labelSlugMap[slug] != null && labelSlugMap[slug] !== "") {
+      out[f.id] = labelSlugMap[slug];
+    }
+  }
+  return out;
+}
 
 interface ClientLite {
   id: string;
