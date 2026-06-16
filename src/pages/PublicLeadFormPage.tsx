@@ -155,6 +155,7 @@ export default function PublicLeadFormPage() {
                     field={f}
                     value={responses[f.id]}
                     onChange={(v) => setResponses((p) => ({ ...p, [f.id]: v }))}
+                    formContext={{ slug }}
                   />
                   {f.helpText && <p className="text-[11px] text-muted-foreground">{f.helpText}</p>}
                 </div>
