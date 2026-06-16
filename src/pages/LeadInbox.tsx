@@ -9,6 +9,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Inbox, Loader2, UserPlus, Archive } from "lucide-react";
+import type { SmartField } from "@/lib/form-fields";
 
 interface Lead {
   id: string;
@@ -24,7 +25,7 @@ interface Lead {
   form_id: string | null;
 }
 
-interface FormLite { id: string; name: string }
+interface FormLite { id: string; name: string; fields: SmartField[] }
 
 const STATUS_TONE: Record<string, string> = {
   new: "bg-blue-500/15 text-blue-300 border border-blue-500/30",
@@ -46,7 +47,7 @@ export default function LeadInbox() {
     if (!user) return;
     const [{ data: ldata }, { data: fdata }] = await Promise.all([
       supabase.from("leads" as any).select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(200),
-      supabase.from("lead_forms" as any).select("id, name").eq("user_id", user.id),
+      supabase.from("lead_forms" as any).select("id, name, fields").eq("user_id", user.id),
     ]);
     setLeads((ldata as any) || []);
     const fm: Record<string, FormLite> = {};
@@ -150,15 +151,21 @@ export default function LeadInbox() {
                 <div>
                   <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-2">Responses</p>
                   <div className="space-y-2">
-                    {Object.entries(selected.responses || {}).map(([k, v]) => (
-                      <div key={k} className="rounded-md border border-border bg-card p-3">
-                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{k}</div>
-                        <div className="text-sm text-foreground mt-0.5 whitespace-pre-wrap">{String(v)}</div>
-                      </div>
-                    ))}
-                    {Object.keys(selected.responses || {}).length === 0 && (
-                      <p className="text-xs text-muted-foreground">No additional answers.</p>
-                    )}
+                    {(() => {
+                      const labelMap: Record<string, string> = {};
+                      const fields = selected.form_id ? forms[selected.form_id]?.fields || [] : [];
+                      fields.forEach((f) => { labelMap[f.id] = f.label; });
+                      const entries = Object.entries(selected.responses || {});
+                      if (entries.length === 0) {
+                        return <p className="text-xs text-muted-foreground">No additional answers.</p>;
+                      }
+                      return entries.map(([k, v]) => (
+                        <div key={k} className="rounded-md border border-border bg-card p-3">
+                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{labelMap[k] || k}</div>
+                          <div className="text-sm text-foreground mt-0.5 whitespace-pre-wrap">{String(v)}</div>
+                        </div>
+                      ));
+                    })()}
                   </div>
                 </div>
 

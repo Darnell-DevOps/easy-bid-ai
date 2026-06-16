@@ -18,7 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
+import AiGenerateFieldsDialog from "@/components/forms/AiGenerateFieldsDialog";
+import type { SmartField } from "@/lib/form-fields";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -53,6 +55,27 @@ export default function OnboardingTemplateEditorDialog({
   const { toast } = useToast();
   const [form, setForm] = useState<OnboardingTemplateFormValues>(EMPTY_ONBOARDING_FORM);
   const [saving, setSaving] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
+
+  const fieldsToText = (fields: SmartField[]): string =>
+    fields
+      .map((f) => {
+        const parts = [f.label, f.type];
+        if (f.required) parts.push("required");
+        return parts.join(" | ");
+      })
+      .join("\n");
+
+  const handleAiGenerated = (fields: SmartField[], mode: "append" | "replace") => {
+    const generated = fieldsToText(fields);
+    setForm((prev) => ({
+      ...prev,
+      fields_text:
+        mode === "replace" || !prev.fields_text.trim()
+          ? generated
+          : `${prev.fields_text.trimEnd()}\n${generated}`,
+    }));
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -214,10 +237,21 @@ export default function OnboardingTemplateEditorDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Onboarding questions</Label>
+            <div className="flex items-center justify-between">
+              <Label>Onboarding questions</Label>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setAiOpen(true)}
+                className="gap-1.5 h-7 text-xs"
+              >
+                <Sparkles className="w-3 h-3" /> Generate with AI
+              </Button>
+            </div>
             <p className="text-[11px] text-muted-foreground">
               One per line. Format: <code>Question label | type | required</code>. Type is one of
-              short_text, long_text, url, email, date, select. The "required" flag is optional.
+              short_text, long_text, url, email, phone, number, date, select, radio, multi_select, checkbox. The "required" flag is optional.
             </p>
             <Textarea
               value={form.fields_text}
@@ -275,6 +309,12 @@ export default function OnboardingTemplateEditorDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+      <AiGenerateFieldsDialog
+        open={aiOpen}
+        onOpenChange={setAiOpen}
+        context="onboarding"
+        onGenerated={handleAiGenerated}
+      />
     </Dialog>
   );
 }
