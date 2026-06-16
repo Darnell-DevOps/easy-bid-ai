@@ -3,6 +3,7 @@
 // email_send_log unique idempotency_key and whatsapp_send_log idempotency_key.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendWhatsAppFromCron } from "../_shared/whatsapp.ts";
+import { recordReminderAudit } from "../_shared/reminder-audit.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -50,8 +51,13 @@ Deno.serve(async (req) => {
 
       // 1) Email reminder to client
       if (c.client_email) {
+        await recordReminderAudit(supabase, {
+          userId: c.user_id, kind: "contract_remind", stage, channel: "email",
+          status: "attempted", relatedId: c.id, recipient: c.client_email,
+          idempotencyKey: idemBase,
+        });
         try {
-          const { error: sendErr } = await supabase.functions.invoke("send-email", {
+          const { error: sendErr, data: sendData } = await supabase.functions.invoke("send-email", {
             body: {
               templateName: "contract-signature-reminder",
               recipientEmail: c.client_email,
@@ -65,11 +71,37 @@ Deno.serve(async (req) => {
               },
             },
           });
-          if (!sendErr) emailed++;
-          else console.error("contract reminder email failed:", sendErr.message);
+          if (sendErr) {
+            console.error("contract reminder email failed:", sendErr.message);
+            await recordReminderAudit(supabase, {
+              userId: c.user_id, kind: "contract_remind", stage, channel: "email",
+              status: "failed", relatedId: c.id, recipient: c.client_email,
+              idempotencyKey: idemBase, error: sendErr.message,
+            });
+          } else {
+            emailed++;
+            const deduped = !!(sendData as any)?.deduped;
+            await recordReminderAudit(supabase, {
+              userId: c.user_id, kind: "contract_remind", stage, channel: "email",
+              status: deduped ? "deduped" : "sent",
+              relatedId: c.id, recipient: c.client_email,
+              idempotencyKey: idemBase,
+            });
+          }
         } catch (e: any) {
           console.error("send-email threw:", e?.message || e);
+          await recordReminderAudit(supabase, {
+            userId: c.user_id, kind: "contract_remind", stage, channel: "email",
+            status: "failed", relatedId: c.id, recipient: c.client_email,
+            idempotencyKey: idemBase, error: e?.message || String(e),
+          });
         }
+      } else {
+        await recordReminderAudit(supabase, {
+          userId: c.user_id, kind: "contract_remind", stage, channel: "email",
+          status: "skipped", relatedId: c.id, recipient: null,
+          idempotencyKey: idemBase, error: "no_client_email",
+        });
       }
 
       // 2) WhatsApp reminder (no-op without phone, auto toggle off, or sender not set)
@@ -82,10 +114,16 @@ Deno.serve(async (req) => {
           .maybeSingle();
         phone = ((client as any)?.phone as string) || null;
       }
+      const waKey = `wa-${idemBase}`;
       if (phone) {
         const waBody = stage === "t2"
           ? `Hi ${c.client_name || "there"}, just a quick reminder to review and sign your contract "${c.title}":\n${signingUrl}`
           : `Hi ${c.client_name || "there"}, your contract "${c.title}" is still waiting on your signature. You can sign it here:\n${signingUrl}`;
+        await recordReminderAudit(supabase, {
+          userId: c.user_id, kind: "contract_remind", stage, channel: "whatsapp",
+          status: "attempted", relatedId: c.id, recipient: phone,
+          idempotencyKey: waKey,
+        });
         const res = await sendWhatsAppFromCron({
           supabase,
           userId: c.user_id,
@@ -94,10 +132,39 @@ Deno.serve(async (req) => {
           autoKey: "auto_contract_reminders",
           context: `contract_remind_${stage}`,
           relatedId: c.id,
-          idempotencyKey: `wa-${idemBase}`,
+          idempotencyKey: waKey,
         });
-        if (res.sent) waSent++;
-        else if (res.error) console.error("contract WA failed:", res.error);
+        if (res.sent) {
+          waSent++;
+          await recordReminderAudit(supabase, {
+            userId: c.user_id, kind: "contract_remind", stage, channel: "whatsapp",
+            status: "sent", relatedId: c.id, recipient: phone, idempotencyKey: waKey,
+          });
+        } else if (res.skipped === "deduped") {
+          await recordReminderAudit(supabase, {
+            userId: c.user_id, kind: "contract_remind", stage, channel: "whatsapp",
+            status: "deduped", relatedId: c.id, recipient: phone, idempotencyKey: waKey,
+          });
+        } else if (res.error) {
+          console.error("contract WA failed:", res.error);
+          await recordReminderAudit(supabase, {
+            userId: c.user_id, kind: "contract_remind", stage, channel: "whatsapp",
+            status: "failed", relatedId: c.id, recipient: phone,
+            idempotencyKey: waKey, error: res.error,
+          });
+        } else {
+          await recordReminderAudit(supabase, {
+            userId: c.user_id, kind: "contract_remind", stage, channel: "whatsapp",
+            status: "skipped", relatedId: c.id, recipient: phone,
+            idempotencyKey: waKey, error: res.skipped || null,
+          });
+        }
+      } else {
+        await recordReminderAudit(supabase, {
+          userId: c.user_id, kind: "contract_remind", stage, channel: "whatsapp",
+          status: "skipped", relatedId: c.id, recipient: null,
+          idempotencyKey: waKey, error: "no_client_phone",
+        });
       }
     }
 
