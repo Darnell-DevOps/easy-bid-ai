@@ -11,6 +11,7 @@ import { Download, Save, Loader2, Pencil, Eye, Copy, Check, Sparkles, RefreshCw,
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import ReactMarkdown from "react-markdown";
 import PremiumProposalRenderer from "@/components/proposal/PremiumProposalRenderer";
+import { renderMergeTags } from "@/lib/merge-tags";
 import PremiumPricingRenderer from "@/components/proposal/PremiumPricingRenderer";
 import PremiumInvoiceRenderer from "@/components/proposal/PremiumInvoiceRenderer";
 import ProposalHeader from "@/components/proposal/ProposalHeader";
