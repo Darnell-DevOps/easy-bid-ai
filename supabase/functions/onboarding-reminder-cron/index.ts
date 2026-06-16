@@ -3,6 +3,7 @@
 // send-email's email_send_log and whatsapp_send_log idempotency keys.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendWhatsAppFromCron } from "../_shared/whatsapp.ts";
+import { recordReminderAudit } from "../_shared/reminder-audit.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -49,8 +50,13 @@ Deno.serve(async (req) => {
       const idemBase = `onboarding-remind-${f.id}-${stage}`;
 
       if (f.client_email) {
+        await recordReminderAudit(supabase, {
+          userId: f.user_id, kind: "onboarding_remind", stage, channel: "email",
+          status: "attempted", relatedId: f.id, recipient: f.client_email,
+          idempotencyKey: idemBase,
+        });
         try {
-          const { error: sendErr } = await supabase.functions.invoke("send-email", {
+          const { error: sendErr, data: sendData } = await supabase.functions.invoke("send-email", {
             body: {
               templateName: "onboarding-reminder",
               recipientEmail: f.client_email,
@@ -64,11 +70,36 @@ Deno.serve(async (req) => {
               },
             },
           });
-          if (!sendErr) emailed++;
-          else console.error("onboarding reminder email failed:", sendErr.message);
+          if (sendErr) {
+            console.error("onboarding reminder email failed:", sendErr.message);
+            await recordReminderAudit(supabase, {
+              userId: f.user_id, kind: "onboarding_remind", stage, channel: "email",
+              status: "failed", relatedId: f.id, recipient: f.client_email,
+              idempotencyKey: idemBase, error: sendErr.message,
+            });
+          } else {
+            emailed++;
+            const deduped = !!(sendData as any)?.deduped;
+            await recordReminderAudit(supabase, {
+              userId: f.user_id, kind: "onboarding_remind", stage, channel: "email",
+              status: deduped ? "deduped" : "sent",
+              relatedId: f.id, recipient: f.client_email, idempotencyKey: idemBase,
+            });
+          }
         } catch (e: any) {
           console.error("send-email threw:", e?.message || e);
+          await recordReminderAudit(supabase, {
+            userId: f.user_id, kind: "onboarding_remind", stage, channel: "email",
+            status: "failed", relatedId: f.id, recipient: f.client_email,
+            idempotencyKey: idemBase, error: e?.message || String(e),
+          });
         }
+      } else {
+        await recordReminderAudit(supabase, {
+          userId: f.user_id, kind: "onboarding_remind", stage, channel: "email",
+          status: "skipped", relatedId: f.id, recipient: null,
+          idempotencyKey: idemBase, error: "no_client_email",
+        });
       }
 
       let phone: string | null = null;
@@ -80,10 +111,16 @@ Deno.serve(async (req) => {
           .maybeSingle();
         phone = ((client as any)?.phone as string) || null;
       }
+      const waKey = `wa-${idemBase}`;
       if (phone) {
         const waBody = stage === "t2"
           ? `Hi ${f.client_name || "there"}, a quick reminder to complete your onboarding so we can get started:\n${formUrl}`
           : `Hi ${f.client_name || "there"}, we're still waiting on your onboarding details. You can finish it here:\n${formUrl}`;
+        await recordReminderAudit(supabase, {
+          userId: f.user_id, kind: "onboarding_remind", stage, channel: "whatsapp",
+          status: "attempted", relatedId: f.id, recipient: phone,
+          idempotencyKey: waKey,
+        });
         const res = await sendWhatsAppFromCron({
           supabase,
           userId: f.user_id,
@@ -92,10 +129,39 @@ Deno.serve(async (req) => {
           autoKey: "auto_onboarding_reminders",
           context: `onboarding_remind_${stage}`,
           relatedId: f.id,
-          idempotencyKey: `wa-${idemBase}`,
+          idempotencyKey: waKey,
         });
-        if (res.sent) waSent++;
-        else if (res.error) console.error("onboarding WA failed:", res.error);
+        if (res.sent) {
+          waSent++;
+          await recordReminderAudit(supabase, {
+            userId: f.user_id, kind: "onboarding_remind", stage, channel: "whatsapp",
+            status: "sent", relatedId: f.id, recipient: phone, idempotencyKey: waKey,
+          });
+        } else if (res.skipped === "deduped") {
+          await recordReminderAudit(supabase, {
+            userId: f.user_id, kind: "onboarding_remind", stage, channel: "whatsapp",
+            status: "deduped", relatedId: f.id, recipient: phone, idempotencyKey: waKey,
+          });
+        } else if (res.error) {
+          console.error("onboarding WA failed:", res.error);
+          await recordReminderAudit(supabase, {
+            userId: f.user_id, kind: "onboarding_remind", stage, channel: "whatsapp",
+            status: "failed", relatedId: f.id, recipient: phone,
+            idempotencyKey: waKey, error: res.error,
+          });
+        } else {
+          await recordReminderAudit(supabase, {
+            userId: f.user_id, kind: "onboarding_remind", stage, channel: "whatsapp",
+            status: "skipped", relatedId: f.id, recipient: phone,
+            idempotencyKey: waKey, error: res.skipped || null,
+          });
+        }
+      } else {
+        await recordReminderAudit(supabase, {
+          userId: f.user_id, kind: "onboarding_remind", stage, channel: "whatsapp",
+          status: "skipped", relatedId: f.id, recipient: null,
+          idempotencyKey: waKey, error: "no_client_phone",
+        });
       }
 
       // Stamp reminded_at on first reminder for visibility
