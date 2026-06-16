@@ -37,6 +37,7 @@ import type { TemplateData } from "@/pages/Templates";
 import { templates } from "@/pages/Templates";
 import { usePlan } from "@/hooks/use-plan";
 import UpgradeModal from "@/components/plan/UpgradeModal";
+import { WhatsAppButton } from "@/components/whatsapp/WhatsAppButton";
 
 const emptyState = {
   leadName: "",
