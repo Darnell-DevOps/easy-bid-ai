@@ -39,10 +39,11 @@ export default function ContractDetail() {
     if ((c as any)?.client_id) {
       const { data: cl } = await supabase
         .from("clients")
-        .select("intake_responses")
+        .select("intake_responses, phone")
         .eq("id", (c as any).client_id)
         .maybeSingle();
       setIntake(((cl as any)?.intake_responses as Record<string, string>) || null);
+      setClientPhone(((cl as any)?.phone as string) || null);
     }
     setLoading(false);
   };
