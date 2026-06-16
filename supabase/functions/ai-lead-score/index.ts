@@ -76,18 +76,32 @@ ${responseLines}
     const result = await callAITool({
       model: "google/gemini-3-flash-preview",
       system:
-        "You are a B2B sales qualifier. Score an inbound lead 0 (junk) to 100 (hot, ready to buy). Weigh: contact completeness, response depth and seriousness, explicit budget/timeline/intent signals, fit cues (company, role), and source. Penalize: missing email/phone, one-word answers, spammy text, unrealistic asks. Reward: clear scope, named budget, near-term timeline, decision-maker language.",
+        "You are a B2B sales qualifier. Score an inbound lead 0 (junk) to 100 (hot, ready to buy). Weigh: contact completeness, response depth and seriousness, explicit budget/timeline/intent signals, fit cues (company, role), and source. Penalize: missing email/phone, one-word answers, spammy text, unrealistic asks. Reward: clear scope, named budget, near-term timeline, decision-maker language. Always return the top 3-5 concrete factors that drove the score, each tagged positive (boosted) or negative (hurt).",
       user: context,
       toolName: "score_lead",
-      toolDescription: "Return the lead score and a one-sentence reason.",
+      toolDescription: "Return the lead score, a one-sentence reason, and the top factors used.",
       parameters: {
         type: "object",
         properties: {
           score: { type: "integer", minimum: 0, maximum: 100 },
           reason: { type: "string", description: "One short sentence (max 120 chars)" },
           recommended_action: { type: "string", description: "Concrete next action (max 80 chars)" },
+          factors: {
+            type: "array",
+            description: "Top 3-5 concrete signals that drove the score, most impactful first.",
+            minItems: 3,
+            maxItems: 5,
+            items: {
+              type: "object",
+              properties: {
+                label: { type: "string", description: "Short factor name, max 60 chars (e.g. 'Named budget $10k', 'Missing phone number')" },
+                impact: { type: "string", enum: ["positive", "negative"] },
+              },
+              required: ["label", "impact"],
+            },
+          },
         },
-        required: ["score", "reason", "recommended_action"],
+        required: ["score", "reason", "recommended_action", "factors"],
       },
     });
 
@@ -103,7 +117,7 @@ ${responseLines}
       summary: result.reason,
       recommendedAction: result.recommended_action,
       actionUrl: `/dashboard/leads`,
-      details: {},
+      details: { factors: result.factors ?? [] },
     });
 
     return jsonResponse({ insight });
