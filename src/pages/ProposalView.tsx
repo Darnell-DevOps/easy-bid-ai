@@ -275,10 +275,13 @@ export default function ProposalView() {
         if (data.client_id) {
           const { data: client } = await supabase
             .from("clients")
-            .select("email")
+            .select("email, intake_responses")
             .eq("id", data.client_id)
             .single();
           if (client?.email) setClientEmail(client.email);
+          if (client && (client as any).intake_responses) {
+            setMergeIntake((client as any).intake_responses as Record<string, string>);
+          }
         }
       }
       setLoading(false);
