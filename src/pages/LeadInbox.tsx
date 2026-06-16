@@ -151,15 +151,21 @@ export default function LeadInbox() {
                 <div>
                   <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-2">Responses</p>
                   <div className="space-y-2">
-                    {Object.entries(selected.responses || {}).map(([k, v]) => (
-                      <div key={k} className="rounded-md border border-border bg-card p-3">
-                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{k}</div>
-                        <div className="text-sm text-foreground mt-0.5 whitespace-pre-wrap">{String(v)}</div>
-                      </div>
-                    ))}
-                    {Object.keys(selected.responses || {}).length === 0 && (
-                      <p className="text-xs text-muted-foreground">No additional answers.</p>
-                    )}
+                    {(() => {
+                      const labelMap: Record<string, string> = {};
+                      const fields = selected.form_id ? forms[selected.form_id]?.fields || [] : [];
+                      fields.forEach((f) => { labelMap[f.id] = f.label; });
+                      const entries = Object.entries(selected.responses || {});
+                      if (entries.length === 0) {
+                        return <p className="text-xs text-muted-foreground">No additional answers.</p>;
+                      }
+                      return entries.map(([k, v]) => (
+                        <div key={k} className="rounded-md border border-border bg-card p-3">
+                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{labelMap[k] || k}</div>
+                          <div className="text-sm text-foreground mt-0.5 whitespace-pre-wrap">{String(v)}</div>
+                        </div>
+                      ));
+                    })()}
                   </div>
                 </div>
 
