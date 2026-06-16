@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Users, Plus, Search, Sparkles, Lightbulb, Activity, ArrowRight, Eye, UserCheck } from "lucide-react";
+import { WhatsAppButton } from "@/components/whatsapp/WhatsAppButton";
 
 interface Client {
   id: string;
@@ -359,19 +360,27 @@ export default function Clients() {
                           {new Date(c.created_at).toLocaleDateString()}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            size="sm"
-                            variant={isPrimary ? "default" : "outline"}
-                            onClick={onAction}
-                            className={
-                              isPrimary
-                                ? "gap-1.5 bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 shadow-sm shadow-accent/20"
-                                : "gap-1.5"
-                            }
-                          >
-                            <ActionIcon className="w-3.5 h-3.5" />
-                            {actionLabel}
-                          </Button>
+                          <div className="inline-flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                            <WhatsAppButton
+                              phone={c.phone}
+                              context="client"
+                              vars={{ clientName: c.name }}
+                              variant="icon"
+                            />
+                            <Button
+                              size="sm"
+                              variant={isPrimary ? "default" : "outline"}
+                              onClick={onAction}
+                              className={
+                                isPrimary
+                                  ? "gap-1.5 bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 shadow-sm shadow-accent/20"
+                                  : "gap-1.5"
+                              }
+                            >
+                              <ActionIcon className="w-3.5 h-3.5" />
+                              {actionLabel}
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
