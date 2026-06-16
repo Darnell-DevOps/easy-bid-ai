@@ -174,7 +174,5 @@ Deno.serve(async (req) => {
   }
 
   return json({ ok: true, deduped, scenario, recipient });
-
-
-  return json({ ok: true, scenario, recipient });
 });
+
