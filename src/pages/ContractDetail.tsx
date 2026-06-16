@@ -10,6 +10,7 @@ import { Loader2, ArrowLeft, Copy, ExternalLink, Send, CheckCircle2, Clock, Eye 
 import { useToast } from "@/hooks/use-toast";
 import { contractTypeLabel, type ContractRow, type ContractSignatureRow } from "@/lib/contracts";
 import { sendEmail } from "@/lib/email";
+import { renderMergeTags } from "@/lib/merge-tags";
 
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
