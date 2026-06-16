@@ -393,6 +393,14 @@ export default function ClientDetail() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <WhatsAppButton
+              phone={client.phone}
+              context="client"
+              vars={{ clientName: client.name }}
+              variant="outline"
+              size="default"
+              className="h-10"
+            />
             <Select value={client.status} onValueChange={updateStatus}>
               <SelectTrigger className="w-44">
                 <SelectValue />
