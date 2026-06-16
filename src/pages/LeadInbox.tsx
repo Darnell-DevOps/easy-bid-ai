@@ -47,7 +47,7 @@ export default function LeadInbox() {
     if (!user) return;
     const [{ data: ldata }, { data: fdata }] = await Promise.all([
       supabase.from("leads" as any).select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(200),
-      supabase.from("lead_forms" as any).select("id, name").eq("user_id", user.id),
+      supabase.from("lead_forms" as any).select("id, name, fields").eq("user_id", user.id),
     ]);
     setLeads((ldata as any) || []);
     const fm: Record<string, FormLite> = {};
