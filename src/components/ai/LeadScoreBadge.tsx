@@ -59,8 +59,25 @@ export default function LeadScoreBadge({ leadId, enabled = true, size = "sm" }: 
         </TooltipTrigger>
         <TooltipContent side="top" className="max-w-xs">
           <p className="text-xs font-medium">{insight.summary}</p>
+          {Array.isArray((insight.details as any)?.factors) && (insight.details as any).factors.length > 0 && (
+            <div className="mt-2 space-y-0.5">
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Top factors</p>
+              <ul className="space-y-0.5">
+                {((insight.details as any).factors as Array<{ label: string; impact: "positive" | "negative" }>)
+                  .slice(0, 5)
+                  .map((f, i) => (
+                    <li key={i} className="text-xs flex items-start gap-1.5">
+                      <span className={cn("mt-0.5", f.impact === "positive" ? "text-emerald-500" : "text-rose-500")}>
+                        {f.impact === "positive" ? "▲" : "▼"}
+                      </span>
+                      <span className="leading-snug">{f.label}</span>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          )}
           {insight.recommended_action && (
-            <p className="text-xs text-muted-foreground mt-1">💡 {insight.recommended_action}</p>
+            <p className="text-xs text-muted-foreground mt-2">💡 {insight.recommended_action}</p>
           )}
         </TooltipContent>
       </Tooltip>
