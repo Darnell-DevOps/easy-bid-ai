@@ -1,8 +1,20 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, CheckCircle2, Mail, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Clock, CheckCircle2, Mail, Sparkles, Send, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import {
   getFollowUpScenario,
   FOLLOW_UP_META,
@@ -13,6 +25,8 @@ import {
 interface FollowUpStatusProps {
   proposalId: string;
   proposal: FollowUpInput;
+  clientEmail?: string | null;
+  clientName?: string | null;
 }
 
 interface SentFollowUp {
@@ -67,24 +81,30 @@ function hoursUntilScenario(p: FollowUpInput): { scenario: Exclude<FollowUpScena
   return null;
 }
 
-export default function FollowUpStatus({ proposalId, proposal }: FollowUpStatusProps) {
+export default function FollowUpStatus({ proposalId, proposal, clientEmail, clientName }: FollowUpStatusProps) {
+  const { toast } = useToast();
   const [sent, setSent] = useState<SentFollowUp[]>([]);
   const [loading, setLoading] = useState(true);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [sending, setSending] = useState(false);
+
+  const loadHistory = async () => {
+    const { data } = await supabase
+      .from("proposal_follow_ups")
+      .select("id, scenario, sent_at, recipient_email")
+      .eq("proposal_id", proposalId)
+      .order("sent_at", { ascending: false });
+    setSent((data as SentFollowUp[]) || []);
+  };
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
-        .from("proposal_follow_ups")
-        .select("id, scenario, sent_at, recipient_email")
-        .eq("proposal_id", proposalId)
-        .order("sent_at", { ascending: false });
-      if (!cancelled) {
-        setSent((data as SentFollowUp[]) || []);
-        setLoading(false);
-      }
+      await loadHistory();
+      if (!cancelled) setLoading(false);
     })();
     return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [proposalId]);
 
   const currentScenario = getFollowUpScenario(proposal);
@@ -94,26 +114,81 @@ export default function FollowUpStatus({ proposalId, proposal }: FollowUpStatusP
   const status = (proposal.status || "").toLowerCase();
   const terminal = proposal.client_paid || status === "rejected";
 
+  // Scenario we will actually send if user clicks "Send now"
+  const sendScenario: Exclude<FollowUpScenario, "none"> =
+    currentScenario !== "none"
+      ? (currentScenario as Exclude<FollowUpScenario, "none">)
+      : upcoming
+        ? upcoming.scenario
+        : "not_viewed_24h";
+
+  const handleSendNow = async () => {
+    if (!clientEmail) {
+      toast({
+        title: "No client email on file",
+        description: "Add an email to this client to send follow-ups.",
+        variant: "destructive",
+      });
+      setConfirmOpen(false);
+      return;
+    }
+    setSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("proposal-followup-send", {
+        body: { proposalId, scenario: sendScenario },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast({
+        title: "Follow-up sent",
+        description: `Sent to ${clientEmail}.`,
+      });
+      await loadHistory();
+      setConfirmOpen(false);
+    } catch (e: any) {
+      toast({
+        title: "Couldn't send follow-up",
+        description: e?.message || "Try again in a moment.",
+        variant: "destructive",
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
   if (loading) return null;
 
-  // Hide the card entirely if nothing relevant to show.
+  // Hide entirely if proposal is closed and there's no history.
   if (terminal && sent.length === 0) return null;
-  if (!dueNow && !upcoming && sent.length === 0) return null;
 
   return (
     <Card className="border-border/60 bg-card/40">
       <CardContent className="p-5 space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-accent" />
             <h3 className="text-sm font-semibold text-foreground">Follow-up status</h3>
           </div>
-          <Badge variant="outline" className="text-[10px] uppercase tracking-wider">
-            Auto
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-[10px] uppercase tracking-wider">
+              Auto
+            </Badge>
+            {!terminal && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setConfirmOpen(true)}
+                disabled={!clientEmail}
+                className="gap-1.5 h-8"
+                title={clientEmail ? "Send a follow-up to the client now" : "Add a client email to enable"}
+              >
+                <Send className="w-3.5 h-3.5" />
+                Send now
+              </Button>
+            )}
+          </div>
         </div>
 
-        {/* Upcoming / due now */}
         {dueNow && (
           <div className="flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
             <Clock className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
@@ -122,7 +197,7 @@ export default function FollowUpStatus({ proposalId, proposal }: FollowUpStatusP
                 {FOLLOW_UP_META[currentScenario as Exclude<FollowUpScenario, "none">].badge} — due now
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Scheduled to auto-send on the next hourly run.
+                Scheduled to auto-send on the next hourly run — or send it now.
               </p>
             </div>
           </div>
@@ -158,7 +233,6 @@ export default function FollowUpStatus({ proposalId, proposal }: FollowUpStatusP
           </div>
         )}
 
-        {/* Sent history */}
         {sent.length > 0 && (
           <div>
             <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium mb-2">
@@ -192,6 +266,49 @@ export default function FollowUpStatus({ proposalId, proposal }: FollowUpStatusP
           </div>
         )}
       </CardContent>
+
+      <AlertDialog open={confirmOpen} onOpenChange={(o) => !sending && setConfirmOpen(o)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Send follow-up now?</AlertDialogTitle>
+            <AlertDialogDescription>
+              We'll email{" "}
+              <span className="font-medium text-foreground">
+                {clientName || "the client"}
+              </span>{" "}
+              at{" "}
+              <span className="font-medium text-foreground">{clientEmail || "—"}</span>{" "}
+              using the{" "}
+              <span className="font-medium text-foreground">
+                {SCENARIO_LABEL[sendScenario]}
+              </span>{" "}
+              template. This will appear in the sent history.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={sending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleSendNow();
+              }}
+              disabled={sending}
+            >
+              {sending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4 mr-2" />
+                  Send now
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
