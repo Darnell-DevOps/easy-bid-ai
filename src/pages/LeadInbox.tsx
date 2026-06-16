@@ -9,6 +9,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Inbox, Loader2, UserPlus, Archive } from "lucide-react";
+import type { SmartField } from "@/lib/form-fields";
 
 interface Lead {
   id: string;
@@ -24,7 +25,7 @@ interface Lead {
   form_id: string | null;
 }
 
-interface FormLite { id: string; name: string }
+interface FormLite { id: string; name: string; fields: SmartField[] }
 
 const STATUS_TONE: Record<string, string> = {
   new: "bg-blue-500/15 text-blue-300 border border-blue-500/30",
