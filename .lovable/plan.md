@@ -1,42 +1,114 @@
-## Goal
+# Auto-qualification pipeline for leads
 
-Score raw inbound leads 0–100 so users can triage the Lead Inbox at a glance — same UX pattern as `DealScoreBadge`, but for entries in the `leads` table (not proposals).
+Today `lead-response` is only invoked manually from `LeadAssistant`, and the `leads` table only stores raw form responses. Inbound form submissions never get qualified, scored, or routed automatically.
+
+This plan adds a server-side pipeline that runs the moment a lead row is created — no UI action required.
+
+```text
+Public form  ──► lead_form_submit RPC ──► INSERT into public.leads
+                                                  │
+                                                  ▼ (AFTER INSERT trigger via pg_net)
+                                          lead-qualify edge fn
+                                                  │
+                                ┌────────────────-┼────────────────┐
+                                ▼                 ▼                 ▼
+                         qualification     draft reply       status routing
+                         fields on lead     on lead         High→qualified
+                                                            Med →new
+                                                            Low →archived
+```
 
 ## Scope
 
-1. **New edge function `ai-lead-score`** (`supabase/functions/ai-lead-score/index.ts`)
-   - Auth: requires user JWT, RLS-scoped Supabase client (mirrors `ai-deal-score`).
-   - Input: `{ leadId }`.
-   - Loads the lead + its `lead_forms` row (for form name/fields) so field IDs in `responses` can be paired with their labels.
-   - Builds an AI context: contact completeness (email/phone/company present?), response richness (answers length, count), intent signals (budget/timeline keywords in answers), source, age, status.
-   - Calls Lovable AI (`google/gemini-3-flash-preview`) via the existing `callAITool` helper with a `score_lead` tool returning `{ score, reason, recommended_action }`.
-   - Saves via `saveInsight({ entityType: "lead", kind: "lead_score", entityId: leadId, ... })`.
-   - Severity: ≥60 info, ≥30 warning, else critical (same thresholds as deal score).
+In scope:
+- `leads` table additions to hold qualification + draft reply.
+- A new `lead-qualify` edge function (service-role internal endpoint).
+- DB trigger on `public.leads` that fires the edge function via `pg_net`.
+- LeadInbox drawer surfacing qualification fields + draft reply + a "Use draft" copy action.
 
-2. **Types** (`src/lib/ai-coach.ts`)
-   - Extend `InsightKind` with `"lead_score"`.
-   - Extend `InsightEntityType` with `"lead"`.
-   - Add `lead_score: 12 * 60 * 60 * 1000` (12h TTL) to `INSIGHT_TTL_MS`.
+Out of scope:
+- Migrating `inbound-email-webhook` (still writes to `clients` table — separate flow).
+- Sending the draft reply automatically — we draft only; the user sends.
+- Bulk re-qualification of existing leads (one-off backfill can be added later).
 
-3. **New component `LeadScoreBadge`** (`src/components/ai/LeadScoreBadge.tsx`)
-   - Same shape as `DealScoreBadge`: uses `useAIInsight` with `entityType: "lead"`, `kind: "lead_score"`, `functionName: "ai-lead-score"`, payload `{ leadId }`.
-   - Two sizes (`sm` for table row, `md` for drawer header).
-   - Shows "Scoring…" pill while generating, tooltip with reason + recommended action when ready.
+## Schema changes (migration tool)
 
-4. **Wire into `LeadInbox`** (`src/pages/LeadInbox.tsx`)
-   - Add a "Score" column in the table (after Status, hidden on mobile) rendering `<LeadScoreBadge leadId={l.id} size="sm" />`.
-   - In the side-sheet header, show `<LeadScoreBadge leadId={selected.id} size="md" />` next to the name, plus a "Re-score" button calling `refresh()` (exposed by `useAIInsight`).
-   - Skip auto-scoring for `archived` and `converted` leads via the badge's `enabled` prop (prevents wasted credits).
+Add to `public.leads`:
+- `service_requested text`
+- `budget text`
+- `timeline text`
+- `goals text`
+- `lead_quality text` — `'High' | 'Medium' | 'Low'`
+- `ai_recommendation text`
+- `draft_reply text`
+- `draft_subject text`
+- `qualified_at timestamptz`
+- `qualification_error text` (records last failure so it's visible/retryable)
 
-## Technical Notes
+No new RLS work needed — existing user-scoped policy on `leads` already covers these.
 
-- `ai_insights` schema already stores `entity_type`/`kind` as free-text + has indexes on `(entity_type, entity_id)` — no DB migration needed.
-- RLS on `ai_insights` is already user-scoped; saving with `entity_type: "lead"` works without policy changes.
-- No new secrets; reuses `LOVABLE_API_KEY` already wired into `_shared/ai-coach.ts`.
-- Edge function deploys automatically.
+Enable extensions `pg_net` (for trigger callouts).
 
-## Out of Scope
+## `lead-qualify` edge function
 
-- Persisting score on the `leads` table itself (insights table is the single source of truth, matches deal scoring).
-- Sorting/filtering the inbox by score (can come later if useful).
-- Bulk re-score / background cron.
+`supabase/functions/lead-qualify/index.ts`, `verify_jwt = false`.
+
+- Validates `x-internal-secret` header against `LEAD_QUALIFY_SECRET`.
+- Body: `{ leadId: string }`.
+- Uses service-role client to load the lead + its form (field id → label map for richer prompts).
+- Builds a message string from `name/email/phone/company/source + labelled responses`.
+- Calls Lovable AI Gateway (`google/gemini-2.5-flash`) with a forced tool returning:
+  `reply`, `reply_subject`, `service_requested`, `budget`, `timeline`, `goals`, `notes`, `lead_quality`, `quality_reason`, `ai_recommendation`.
+- Writes qualification fields + draft reply onto the lead row.
+- Auto-routes status:
+  - `High` → `qualified`
+  - `Medium` → `new` (left for human review)
+  - `Low` → `archived`
+- Sets `qualified_at = now()`. On AI failure: writes `qualification_error` and leaves status untouched.
+- Idempotent: if `qualified_at` is already set, returns early.
+
+## DB trigger (supabase insert tool, not migration)
+
+Per the cron-job guidance, the trigger embeds the project URL + secret, so it's created with the insert tool so it doesn't propagate to remixes.
+
+- Trigger function `public.trigger_lead_qualify()`:
+  - On `AFTER INSERT` of `public.leads`, when `NEW.status = 'new'` and `NEW.qualified_at IS NULL`.
+  - Calls `net.http_post(url, headers, body)` with `{ leadId: NEW.id }` and the internal secret header.
+  - Wrapped in `BEGIN/EXCEPTION WHEN OTHERS THEN PERFORM 1; END;` so a network hiccup never blocks the form submission.
+
+## Secrets
+
+- `LEAD_QUALIFY_SECRET` — random string. Used by both the trigger and the edge function.
+
+## LeadInbox UI
+
+Surface what the pipeline produced (frontend-only changes in `src/pages/LeadInbox.tsx`):
+
+- Drawer header: show `lead_quality` chip (color-coded) next to the existing score badge.
+- New "Qualification" section in the drawer with `service_requested`, `budget`, `timeline`, `goals`, `ai_recommendation`.
+- New "Draft reply" section with `draft_subject` + `draft_reply` in a readonly textarea, plus a "Copy reply" button (mirrors LeadAssistant's copy pattern).
+- "Re-qualify" button that invokes `lead-qualify` (using a thin authenticated wrapper — see note below).
+
+Note: the LeadInbox "Re-qualify" button shouldn't expose the internal secret to the browser. Easiest fix is a tiny second edge function `lead-requalify` (`verify_jwt = false` but checks the caller's JWT and confirms `leads.user_id = auth.uid()`) that then calls into the same shared qualification logic. Will extract the AI/update code into a shared helper used by both functions.
+
+## Verification
+
+- After deploy: submit the public lead form preview, then in LeadInbox confirm the new row appears with `lead_quality`, `draft_reply`, etc. populated within a few seconds and status routed correctly.
+- Force an AI failure path (e.g. temporarily wrong key) and confirm `qualification_error` is set and the lead is still ingested.
+- Hit `lead-qualify` directly without the secret header → expect 401.
+
+## Files
+
+Create:
+- `supabase/functions/lead-qualify/index.ts`
+- `supabase/functions/lead-requalify/index.ts`
+- `supabase/functions/_shared/lead-qualify.ts` (shared AI + update helper)
+
+Edit:
+- `src/pages/LeadInbox.tsx` (drawer additions, Re-qualify button)
+
+Migration:
+- Add columns to `public.leads`; enable `pg_net`.
+
+Insert-tool SQL (project-specific):
+- Trigger function + `AFTER INSERT` trigger on `public.leads`.
