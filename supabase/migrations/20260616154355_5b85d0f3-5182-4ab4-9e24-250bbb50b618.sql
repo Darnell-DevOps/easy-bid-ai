@@ -1,0 +1,1 @@
+DROP TRIGGER IF EXISTS lead_auto_qualify ON public.leads;
