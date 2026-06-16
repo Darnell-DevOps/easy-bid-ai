@@ -1362,6 +1362,44 @@ export type Database = {
         }
         Relationships: []
       }
+      proposal_follow_ups: {
+        Row: {
+          created_at: string
+          id: string
+          proposal_id: string
+          recipient_email: string | null
+          scenario: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          proposal_id: string
+          recipient_email?: string | null
+          scenario: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          proposal_id?: string
+          recipient_email?: string | null
+          scenario?: string
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_follow_ups_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       proposal_templates: {
         Row: {
           accent: string | null
