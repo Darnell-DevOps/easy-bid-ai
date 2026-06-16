@@ -309,6 +309,10 @@ export default function LeadInbox() {
                   ) : (
                     <Button className="gap-2" onClick={() => convert(selected)}><UserPlus className="w-4 h-4" />Convert to client</Button>
                   )}
+                  <Button variant="outline" className="gap-2" onClick={() => requalify(selected)} disabled={requalifying}>
+                    {requalifying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                    {selected.qualified_at ? "Re-qualify" : "Qualify with AI"}
+                  </Button>
                   {selected.status !== "archived" && (
                     <Button variant="outline" className="gap-2" onClick={() => archive(selected)}><Archive className="w-4 h-4" />Archive</Button>
                   )}
