@@ -8,8 +8,30 @@ import {
 } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Inbox, Loader2, UserPlus, Archive } from "lucide-react";
+import { Inbox, Loader2, UserPlus, Archive, FileDown } from "lucide-react";
 import type { SmartField } from "@/lib/form-fields";
+
+function parseFileValue(v: string): { path: string; name: string; size?: number; type?: string } | null {
+  if (!v || typeof v !== "string") return null;
+  const t = v.trim();
+  if (!t.startsWith("{")) return null;
+  try {
+    const obj = JSON.parse(t);
+    if (obj && typeof obj.path === "string" && typeof obj.name === "string") return obj;
+  } catch { /* not a file */ }
+  return null;
+}
+
+async function openSignedFile(path: string) {
+  const { data: sess } = await supabase.auth.getSession();
+  const token = sess.session?.access_token;
+  if (!token) return;
+  const { data, error } = await supabase.functions.invoke("form-upload-signed-read", {
+    body: { path },
+  });
+  if (error || !(data as any)?.url) return;
+  window.open((data as any).url, "_blank", "noopener");
+}
 
 interface Lead {
   id: string;
@@ -159,12 +181,26 @@ export default function LeadInbox() {
                       if (entries.length === 0) {
                         return <p className="text-xs text-muted-foreground">No additional answers.</p>;
                       }
-                      return entries.map(([k, v]) => (
-                        <div key={k} className="rounded-md border border-border bg-card p-3">
-                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{labelMap[k] || k}</div>
-                          <div className="text-sm text-foreground mt-0.5 whitespace-pre-wrap">{String(v)}</div>
-                        </div>
-                      ));
+                      return entries.map(([k, v]) => {
+                        const file = parseFileValue(String(v));
+                        return (
+                          <div key={k} className="rounded-md border border-border bg-card p-3">
+                            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{labelMap[k] || k}</div>
+                            {file ? (
+                              <button
+                                onClick={() => openSignedFile(file.path)}
+                                className="mt-1 inline-flex items-center gap-2 text-sm text-purple hover:underline"
+                              >
+                                <FileDown className="w-3.5 h-3.5" />
+                                {file.name}
+                                {file.size ? <span className="text-muted-foreground text-xs">· {(file.size / 1024).toFixed(0)} KB</span> : null}
+                              </button>
+                            ) : (
+                              <div className="text-sm text-foreground mt-0.5 whitespace-pre-wrap">{String(v)}</div>
+                            )}
+                          </div>
+                        );
+                      });
                     })()}
                   </div>
                 </div>
