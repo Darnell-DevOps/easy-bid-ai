@@ -89,6 +89,7 @@ export default function FieldListEditor({ fields, onChange, context = "onboardin
         {fields.map((field, idx) => {
           const isOpen = expanded === field.id;
           const needsOptions = field.type === "select" || field.type === "radio" || field.type === "multi_select";
+          const isFile = field.type === "file";
           return (
             <div key={field.id} className="rounded-lg border border-border bg-card overflow-hidden">
               <div className="flex items-center gap-2 p-2.5">
