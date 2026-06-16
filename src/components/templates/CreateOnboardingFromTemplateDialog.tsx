@@ -57,6 +57,7 @@ interface ClientLite {
   name: string;
   email: string | null;
   company: string | null;
+  intake_responses?: Record<string, string> | null;
 }
 
 interface Props {
