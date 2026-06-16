@@ -11,7 +11,8 @@ export type SmartFieldType =
   | "select"
   | "radio"
   | "multi_select"
-  | "checkbox";
+  | "checkbox"
+  | "file";
 
 export type ConditionOperator =
   | "equals"
