@@ -9,6 +9,7 @@ import {
   scenarioBadge,
   scenarioToPrefKey,
 } from "../_shared/follow-up.ts";
+import { sendWhatsAppFromCron } from "../_shared/whatsapp.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -86,15 +87,17 @@ Deno.serve(async (req) => {
       const enabled = prefs[prefKey] !== false; // default on
       if (!enabled) { skipped++; continue; }
 
-      // Resolve client email.
+      // Resolve client email + phone.
       let clientEmail: string | null = null;
+      let clientPhone: string | null = null;
       if (p.client_id) {
         const { data: client } = await supabase
           .from("clients")
-          .select("email")
+          .select("email, phone")
           .eq("id", p.client_id)
           .maybeSingle();
         clientEmail = (client?.email as string) || null;
+        clientPhone = ((client as any)?.phone as string) || null;
       }
       if (!clientEmail) { skipped++; continue; }
 
@@ -153,6 +156,26 @@ Deno.serve(async (req) => {
         }
       } catch (e: any) {
         console.error("send invoke threw:", e?.message || e);
+      }
+
+      // WhatsApp dispatch (no-op when disabled / no phone / no settings).
+      if (clientPhone) {
+        const waBody = tpl.body.length > 1000 ? `${tpl.body.slice(0, 980)}…` : tpl.body;
+        const waRes = await sendWhatsAppFromCron({
+          supabase,
+          userId: p.user_id,
+          to: clientPhone,
+          body: waBody,
+          autoKey: "auto_proposal_reminders",
+          context: `proposal_followup_${scenario}`,
+          relatedId: p.id,
+          idempotencyKey: `wa-proposal-followup-${p.id}-${scenario}`,
+        });
+        if (waRes.sent) {
+          console.log(`whatsapp sent for proposal ${p.id} (${scenario})`);
+        } else if (waRes.error) {
+          console.error(`whatsapp send failed for proposal ${p.id}:`, waRes.error);
+        }
       }
     }
 
