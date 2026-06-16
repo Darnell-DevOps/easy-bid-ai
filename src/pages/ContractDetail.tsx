@@ -25,6 +25,7 @@ export default function ContractDetail() {
   const navigate = useNavigate();
   const [contract, setContract] = useState<ContractRow | null>(null);
   const [signatures, setSignatures] = useState<ContractSignatureRow[]>([]);
+  const [intake, setIntake] = useState<Record<string, string> | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
