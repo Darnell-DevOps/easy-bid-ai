@@ -565,7 +565,7 @@ export default function LeadAssistant() {
                       <WhatsAppButton
                         phone={phone}
                         context="lead"
-                        vars={{ clientName: name }}
+                        vars={{ clientName: leadName }}
                         variant="outline"
                       />
                     </div>
