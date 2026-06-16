@@ -122,9 +122,40 @@ export const FIELD_TYPE_LABELS: Record<SmartFieldType, string> = {
   radio: "Single choice",
   multi_select: "Multi-select",
   checkbox: "Checkbox",
+  file: "File upload",
 };
 
 export const ALL_FIELD_TYPES: SmartFieldType[] = [
   "short_text", "long_text", "url", "email", "phone", "number",
-  "date", "select", "radio", "multi_select", "checkbox",
+  "date", "select", "radio", "multi_select", "checkbox", "file",
 ];
+
+// File payload (stored serialized as JSON string inside Record<string,string>)
+export interface FilePayload {
+  path: string;
+  name: string;
+  size: number;
+  type: string;
+}
+
+export function parseFilePayload(value: unknown): FilePayload | null {
+  if (!value) return null;
+  if (typeof value === "object" && value !== null && "path" in (value as any)) {
+    return value as FilePayload;
+  }
+  if (typeof value !== "string") return null;
+  const s = value.trim();
+  if (!s.startsWith("{")) return null;
+  try {
+    const obj = JSON.parse(s);
+    if (obj && typeof obj.path === "string" && typeof obj.name === "string") {
+      return { path: obj.path, name: obj.name, size: Number(obj.size) || 0, type: String(obj.type || "") };
+    }
+  } catch { /* ignore */ }
+  return null;
+}
+
+export function serializeFilePayload(p: FilePayload | null | undefined): string {
+  if (!p) return "";
+  return JSON.stringify(p);
+}
