@@ -55,6 +55,27 @@ export default function OnboardingTemplateEditorDialog({
   const { toast } = useToast();
   const [form, setForm] = useState<OnboardingTemplateFormValues>(EMPTY_ONBOARDING_FORM);
   const [saving, setSaving] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
+
+  const fieldsToText = (fields: SmartField[]): string =>
+    fields
+      .map((f) => {
+        const parts = [f.label, f.type];
+        if (f.required) parts.push("required");
+        return parts.join(" | ");
+      })
+      .join("\n");
+
+  const handleAiGenerated = (fields: SmartField[], mode: "append" | "replace") => {
+    const generated = fieldsToText(fields);
+    setForm((prev) => ({
+      ...prev,
+      fields_text:
+        mode === "replace" || !prev.fields_text.trim()
+          ? generated
+          : `${prev.fields_text.trimEnd()}\n${generated}`,
+    }));
+  };
 
   useEffect(() => {
     if (!open) return;
