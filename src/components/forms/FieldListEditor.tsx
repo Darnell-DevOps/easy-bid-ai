@@ -181,10 +181,10 @@ export default function FieldListEditor({ fields, onChange, context = "onboardin
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-xs text-muted-foreground">Show when</span>
                       <Select
-                        value={field.condition?.fieldId || ""}
+                        value={field.condition?.fieldId || "__none__"}
                         onValueChange={(v) =>
                           update(idx, {
-                            condition: v
+                            condition: v && v !== "__none__"
                               ? { fieldId: v, operator: field.condition?.operator || "equals", value: field.condition?.value || "" }
                               : null,
                           })
@@ -192,7 +192,7 @@ export default function FieldListEditor({ fields, onChange, context = "onboardin
                       >
                         <SelectTrigger className="h-8 w-[180px] text-xs"><SelectValue placeholder="Always show" /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="__none__" onClick={() => update(idx, { condition: null })}>Always show</SelectItem>
+                          <SelectItem value="__none__">Always show</SelectItem>
                           {fields.filter((_, i) => i !== idx).map((f) => (
                             <SelectItem key={f.id} value={f.id}>{f.label}</SelectItem>
                           ))}
