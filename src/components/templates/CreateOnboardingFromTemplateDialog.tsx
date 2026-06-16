@@ -80,6 +80,7 @@ export default function CreateOnboardingFromTemplateDialog({
   const [submitting, setSubmitting] = useState(false);
   const [createdToken, setCreatedToken] = useState<string | null>(null);
   const [createdId, setCreatedId] = useState<string | null>(null);
+  const [usePrefill, setUsePrefill] = useState(true);
 
   useEffect(() => {
     if (!open) return;
@@ -88,10 +89,11 @@ export default function CreateOnboardingFromTemplateDialog({
     setClientEmail("");
     setCreatedToken(null);
     setCreatedId(null);
+    setUsePrefill(true);
     (async () => {
       const { data } = await supabase
         .from("clients")
-        .select("id, name, email, company")
+        .select("id, name, email, company, intake_responses")
         .order("name");
       setClients((data as ClientLite[]) || []);
     })();
