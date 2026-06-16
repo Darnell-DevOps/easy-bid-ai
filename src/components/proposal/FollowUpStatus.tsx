@@ -123,6 +123,7 @@ export default function FollowUpStatus({ proposalId, proposal, clientEmail, clie
         : "not_viewed_24h";
 
   const handleSendNow = async () => {
+    if (sending) return; // hard guard against rapid double-clicks
     if (!clientEmail) {
       toast({
         title: "No client email on file",
@@ -139,9 +140,12 @@ export default function FollowUpStatus({ proposalId, proposal, clientEmail, clie
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
+      const deduped = !!(data as any)?.deduped;
       toast({
-        title: "Follow-up sent",
-        description: `Sent to ${clientEmail}.`,
+        title: deduped ? "Already sent" : "Follow-up sent",
+        description: deduped
+          ? "A follow-up was just sent — skipping the duplicate."
+          : `Sent to ${clientEmail}.`,
       });
       await loadHistory();
       setConfirmOpen(false);
@@ -155,6 +159,7 @@ export default function FollowUpStatus({ proposalId, proposal, clientEmail, clie
       setSending(false);
     }
   };
+
 
   if (loading) return null;
 
