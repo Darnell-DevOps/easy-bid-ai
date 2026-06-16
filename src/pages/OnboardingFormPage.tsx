@@ -2,8 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Loader2, CheckCircle2, ClipboardList, Sparkles, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -12,7 +10,35 @@ import {
   onboardingProgress,
   type OnboardingFormRow,
 } from "@/lib/onboarding";
+import { isFieldVisible, type FieldResponses } from "@/lib/form-fields";
+import SmartFieldRenderer from "@/components/forms/SmartFieldRenderer";
 import OnboardingProgressTracker from "@/components/onboarding/OnboardingProgressTracker";
+
+function hydrate(raw: Record<string, string> | undefined): FieldResponses {
+  const out: FieldResponses = {};
+  if (!raw) return out;
+  for (const [k, v] of Object.entries(raw)) {
+    if (v == null) continue;
+    // Best-effort split for previously-stored multi-selects
+    if (typeof v === "string" && v.includes(", ")) {
+      out[k] = v;
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
+function serialize(r: FieldResponses): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(r)) {
+    if (v == null) continue;
+    if (Array.isArray(v)) out[k] = v.join(", ");
+    else if (typeof v === "boolean") out[k] = v ? "yes" : "";
+    else out[k] = String(v);
+  }
+  return out;
+}
 
 export default function OnboardingFormPage() {
   const { token } = useParams();
@@ -20,7 +46,7 @@ export default function OnboardingFormPage() {
   const [form, setForm] = useState<OnboardingFormRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [responses, setResponses] = useState<Record<string, string>>({});
+  const [responses, setResponses] = useState<FieldResponses>({});
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -38,25 +64,29 @@ export default function OnboardingFormPage() {
       }
       const row = data as unknown as OnboardingFormRow;
       setForm(row);
-      setResponses(row.responses || {});
+      setResponses(hydrate(row.responses));
       setLoading(false);
     })();
   }, [token]);
 
   const groups = useMemo(() => (form ? groupFields(form.fields) : []), [form]);
+  const serialized = useMemo(() => serialize(responses), [responses]);
   const progress = useMemo(
-    () => (form ? onboardingProgress({ fields: form.fields, responses }) : 0),
-    [form, responses],
+    () => (form ? onboardingProgress({ fields: form.fields, responses: serialized }) : 0),
+    [form, serialized],
   );
 
-  const handleChange = (id: string, value: string) => {
+  const handleChange = (id: string, value: string | string[] | boolean) => {
     setResponses((prev) => ({ ...prev, [id]: value }));
   };
 
   const handleSubmit = async (complete: boolean) => {
     if (!form || !token) return;
+    const payload = serialize(responses);
     if (complete) {
-      const missing = form.fields.filter((f) => f.required && !(responses[f.id] || "").trim());
+      const missing = form.fields.filter(
+        (f) => f.required && isFieldVisible(f, responses) && !(payload[f.id] || "").trim(),
+      );
       if (missing.length) {
         toast({
           title: "Please fill the required fields",
@@ -69,7 +99,7 @@ export default function OnboardingFormPage() {
     setSubmitting(true);
     const { error } = await supabase.rpc("onboarding_submit", {
       _token: token,
-      _responses: responses,
+      _responses: payload,
       _complete: complete,
     });
     setSubmitting(false);
@@ -79,7 +109,7 @@ export default function OnboardingFormPage() {
     }
     setForm({
       ...form,
-      responses,
+      responses: payload,
       status: complete ? "completed" : "in_progress",
       completed_at: complete ? new Date().toISOString() : form.completed_at,
       started_at: form.started_at || new Date().toISOString(),
@@ -167,36 +197,31 @@ export default function OnboardingFormPage() {
           </div>
         </section>
 
-        {groups.map((group) => (
-          <section key={group.group} className="rounded-xl border border-border bg-card p-6 lg:p-8 space-y-5">
-            <p className="text-xs uppercase tracking-[0.2em] text-purple font-semibold">{group.group}</p>
-            {group.fields.map((field) => (
-              <div key={field.id} className="space-y-1.5">
-                <Label htmlFor={field.id}>
-                  {field.label}
-                  {field.required && <span className="text-rose-500 ml-1">*</span>}
-                </Label>
-                {field.type === "long_text" ? (
-                  <Textarea
-                    id={field.id}
-                    placeholder={field.placeholder}
-                    value={responses[field.id] || ""}
-                    onChange={(e) => handleChange(field.id, e.target.value)}
-                    className="min-h-[90px]"
+        {groups.map((group) => {
+          const visible = group.fields.filter((f) => isFieldVisible(f, responses));
+          if (visible.length === 0) return null;
+          return (
+            <section key={group.group} className="rounded-xl border border-border bg-card p-6 lg:p-8 space-y-5">
+              <p className="text-xs uppercase tracking-[0.2em] text-purple font-semibold">{group.group}</p>
+              {visible.map((field) => (
+                <div key={field.id} className="space-y-1.5">
+                  <Label htmlFor={field.id}>
+                    {field.label}
+                    {field.required && <span className="text-rose-500 ml-1">*</span>}
+                  </Label>
+                  <SmartFieldRenderer
+                    field={field}
+                    value={responses[field.id]}
+                    onChange={(v) => handleChange(field.id, v)}
                   />
-                ) : (
-                  <Input
-                    id={field.id}
-                    type={field.type === "email" ? "email" : field.type === "url" ? "url" : field.type === "date" ? "date" : "text"}
-                    placeholder={field.placeholder}
-                    value={responses[field.id] || ""}
-                    onChange={(e) => handleChange(field.id, e.target.value)}
-                  />
-                )}
-              </div>
-            ))}
-          </section>
-        ))}
+                  {field.helpText && (
+                    <p className="text-[11px] text-muted-foreground">{field.helpText}</p>
+                  )}
+                </div>
+              ))}
+            </section>
+          );
+        })}
 
         <div className="flex flex-col sm:flex-row gap-3 sticky bottom-3">
           <Button
