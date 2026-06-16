@@ -1168,24 +1168,24 @@ export default function ProposalView() {
                         serviceType={proposal.service_type}
                         createdAt={proposal.created_at}
                       />
-                      <MarkdownPreview content={t.content} isPremium />
+                      <MarkdownPreview content={t.rendered} isPremium />
                       {watermark && <ProposalWatermark />}
                     </div>
                   ) : t.key === "pricing" ? (
                     <div className="rounded-2xl border border-border/60 bg-card/40 px-6 sm:px-10 lg:px-14 py-8 lg:py-10 shadow-sm">
-                      <PremiumPricingRenderer content={t.content} />
+                      <PremiumPricingRenderer content={t.rendered} />
                     </div>
                   ) : t.key === "invoice" ? (
                     <div className="rounded-2xl border border-border/60 bg-card/40 px-6 sm:px-10 lg:px-14 py-8 lg:py-10 shadow-sm">
                       <PremiumInvoiceRenderer
-                        content={t.content}
+                        content={t.rendered}
                         clientName={proposal.client_name}
                         companyName={proposal.company_name}
                       />
                     </div>
                   ) : (
                     <div className="rounded-2xl border border-border/60 bg-card/40 px-6 sm:px-10 lg:px-14 py-8 lg:py-10 shadow-sm">
-                      <MarkdownPreview content={t.content} />
+                      <MarkdownPreview content={t.rendered} />
                     </div>
                   )}
                   {t.key === "proposal" && (
