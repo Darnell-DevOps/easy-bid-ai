@@ -37,6 +37,8 @@ export interface SmartField {
   options?: string[]; // select / radio / multi_select
   group?: string;
   condition?: FieldCondition | null;
+  maxSizeMb?: number; // file
+  accept?: string; // file — comma-separated MIME or extensions
 }
 
 export type FieldResponses = Record<string, string | string[] | boolean>;
