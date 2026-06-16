@@ -131,7 +131,7 @@ export function handleError(e: unknown): Response {
  */
 export async function saveInsight(opts: {
   userId: string;
-  entityType: "proposal" | "retainer" | "dashboard" | "audit";
+  entityType: "proposal" | "retainer" | "dashboard" | "audit" | "lead";
   entityId: string | null;
   kind: string;
   score?: number | null;

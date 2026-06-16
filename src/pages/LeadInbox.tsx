@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Inbox, Loader2, UserPlus, Archive, FileDown } from "lucide-react";
 import type { SmartField } from "@/lib/form-fields";
+import LeadScoreBadge from "@/components/ai/LeadScoreBadge";
 
 function parseFileValue(v: string): { path: string; name: string; size?: number; type?: string } | null {
   if (!v || typeof v !== "string") return null;
@@ -126,6 +127,7 @@ export default function LeadInbox() {
                   <th className="text-left px-4 py-2.5 font-medium hidden md:table-cell">Email</th>
                   <th className="text-left px-4 py-2.5 font-medium hidden lg:table-cell">Form</th>
                   <th className="text-left px-4 py-2.5 font-medium">Status</th>
+                  <th className="text-left px-4 py-2.5 font-medium hidden md:table-cell">Score</th>
                   <th className="text-left px-4 py-2.5 font-medium hidden sm:table-cell">Received</th>
                 </tr>
               </thead>
@@ -139,6 +141,9 @@ export default function LeadInbox() {
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] uppercase font-semibold ${STATUS_TONE[l.status] || STATUS_TONE.new}`}>
                         {l.status}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 hidden md:table-cell" onClick={(e) => e.stopPropagation()}>
+                      <LeadScoreBadge leadId={l.id} enabled={l.status !== "archived" && l.status !== "converted"} />
                     </td>
                     <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell text-xs">
                       {new Date(l.created_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
@@ -156,7 +161,10 @@ export default function LeadInbox() {
           {selected && (
             <>
               <SheetHeader>
-                <SheetTitle>{selected.name || "Anonymous lead"}</SheetTitle>
+                <SheetTitle className="flex items-center gap-2 flex-wrap">
+                  <span>{selected.name || "Anonymous lead"}</span>
+                  <LeadScoreBadge leadId={selected.id} size="md" enabled={selected.status !== "archived" && selected.status !== "converted"} />
+                </SheetTitle>
                 <SheetDescription>
                   {selected.form_id ? `via ${forms[selected.form_id]?.name || "form"}` : "Manual entry"} · {new Date(selected.created_at).toLocaleString()}
                 </SheetDescription>

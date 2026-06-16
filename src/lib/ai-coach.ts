@@ -2,12 +2,13 @@
 
 export type InsightKind =
   | "deal_score"
+  | "lead_score"
   | "audit"
   | "churn_risk"
   | "coach_feed"
   | "weekly_briefing";
 
-export type InsightEntityType = "proposal" | "retainer" | "dashboard" | "audit";
+export type InsightEntityType = "proposal" | "retainer" | "dashboard" | "audit" | "lead";
 export type InsightSeverity = "info" | "warning" | "critical";
 
 export interface AIInsight {
@@ -30,6 +31,7 @@ export interface AIInsight {
 // Cache TTL in ms — frontend uses this to decide whether to trigger regeneration.
 export const INSIGHT_TTL_MS: Record<InsightKind, number> = {
   deal_score: 6 * 60 * 60 * 1000, // 6h
+  lead_score: 12 * 60 * 60 * 1000, // 12h
   churn_risk: 12 * 60 * 60 * 1000, // 12h
   coach_feed: 60 * 60 * 1000, // 1h
   weekly_briefing: 7 * 24 * 60 * 60 * 1000, // 7d
