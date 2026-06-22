@@ -196,6 +196,7 @@ export default function ContractDetail() {
               client: { name: contract.client_name, email: contract.client_email, company: contract.company_name },
               intake,
             })} />
+            <SignatureBlock signatures={signatures} />
           </CardContent>
         </Card>
       </div>
