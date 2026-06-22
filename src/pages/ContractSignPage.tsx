@@ -52,6 +52,7 @@ export default function ContractSignPage() {
   const [method, setMethod] = useState<"typed" | "drawn">("typed");
   const [bookingSlug, setBookingSlug] = useState<string | null>(null);
   const [retainerToken, setRetainerToken] = useState<string | null>(null);
+  const [proposalPaid, setProposalPaid] = useState(false);
   const [intake, setIntake] = useState<Record<string, string> | null>(null);
   const [signatures, setSignatures] = useState<Array<{
     id: string;
