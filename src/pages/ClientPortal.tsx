@@ -462,23 +462,47 @@ export default function ClientPortal() {
   }
 
   const projectName = proposal.service_type;
+  const slugify = (s: string) => (s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 32) || "project";
+  const companySlug = slugify(proposal.company_name || proposal.client_name);
+  const projectSlug = slugify(proposal.service_type);
+  const stageOrder: ProjectStage[] = ["proposal", "contract", "payment", "onboarding", "kickoff", "active"];
+  const progressPct = Math.round(((stageOrder.indexOf(stage) + (stage === "active" ? 1 : 0)) / stageOrder.length) * 100);
 
   return (
-    <div className="min-h-screen bg-background pb-24 sm:pb-8">
-      {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 min-w-0">
-            <Sparkles className="w-5 h-5 text-purple shrink-0" />
-            <span className="text-sm font-semibold text-foreground truncate">
-              Proposal for {proposal.client_name}
+    <div className="relative min-h-screen pb-24 sm:pb-8 overflow-hidden">
+      {/* Ambient backdrop */}
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute top-[12%] left-[10%] w-[480px] h-[480px] rounded-full bg-accent/10 blur-[120px] animate-soft-pulse" />
+        <div
+          className="absolute bottom-[8%] right-[8%] w-[420px] h-[420px] rounded-full bg-purple/10 blur-[120px] animate-soft-pulse"
+          style={{ animationDelay: "1.5s" }}
+        />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 w-[700px] h-[300px] rounded-full bg-accent/5 blur-[140px]" />
+      </div>
+
+      {/* Browser-chrome header */}
+      <header className="sticky top-0 z-20 border-b border-border/60 bg-background/70 backdrop-blur-xl">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3">
+          <div className="flex gap-1.5 shrink-0">
+            <span className="w-2.5 h-2.5 rounded-full bg-red-500/70" />
+            <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/70" />
+            <span className="w-2.5 h-2.5 rounded-full bg-green-500/70" />
+          </div>
+          <div className="flex-1 min-w-0 text-xs text-muted-foreground font-mono truncate">
+            portal.closesync.io / {companySlug} / {projectSlug}
+          </div>
+          <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-emerald-400 font-medium">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
             </span>
+            Live
           </div>
           <StatusBadge status={status} />
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 lg:py-10 space-y-6 lg:space-y-8">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 lg:py-10 space-y-6 lg:space-y-8">
         {/* Project Overview */}
         {!isRejected && (
           <>
@@ -491,6 +515,7 @@ export default function ClientPortal() {
               upcomingBooking={upcomingBooking}
               upcomingDeadline={null}
               activity={activityEvents}
+              progressPct={progressPct}
             />
             <ProjectProgressTracker currentStage={stage} />
           </>
