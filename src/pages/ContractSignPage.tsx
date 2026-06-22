@@ -128,6 +128,15 @@ export default function ContractSignPage() {
           .then(({ data: rt }) => {
             if (rt) setRetainerToken((rt as any).access_token);
           });
+
+        supabase
+          .from("proposals")
+          .select("client_paid")
+          .eq("id", (data as any).proposal_id)
+          .maybeSingle()
+          .then(({ data: pr }) => {
+            if (pr) setProposalPaid(!!(pr as any).client_paid);
+          });
       }
 
       // Pull intake responses from the linked client (if any) for merge-tag rendering.
