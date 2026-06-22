@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -7,12 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import ContractRenderer from "@/components/contracts/ContractRenderer";
 import SignatureBlock from "@/components/contracts/SignatureBlock";
-import { Loader2, ArrowLeft, Copy, ExternalLink, Send, CheckCircle2, Clock, Eye } from "lucide-react";
+import { Loader2, ArrowLeft, Copy, ExternalLink, Send, CheckCircle2, Clock, Eye, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { contractTypeLabel, type ContractRow, type ContractSignatureRow } from "@/lib/contracts";
 import { sendEmail } from "@/lib/email";
 import { renderMergeTags } from "@/lib/merge-tags";
 import { WhatsAppButton } from "@/components/whatsapp/WhatsAppButton";
+// @ts-ignore - no types ship with html2pdf.js
+import html2pdf from "html2pdf.js";
 
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
