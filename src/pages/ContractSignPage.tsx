@@ -203,6 +203,9 @@ export default function ContractSignPage() {
   };
 
   const startDraw = (e: React.MouseEvent | React.TouchEvent) => {
+    // Re-sync the backing store with the displayed size before each stroke,
+    // so any layout shift since the canvas was last sized can't offset the pointer.
+    resizeCanvas();
     drawingRef.current = true;
     lastPosRef.current = getPos(e);
   };
@@ -217,7 +220,8 @@ export default function ContractSignPage() {
     ctx.lineTo(pos.x, pos.y);
     ctx.stroke();
     lastPosRef.current = pos;
-    setHasDrawn(true);
+    hasDrawnRef.current = true;
+    if (!hasDrawn) setHasDrawn(true);
   };
   const stopDraw = () => {
     drawingRef.current = false;
@@ -227,6 +231,7 @@ export default function ContractSignPage() {
     const c = canvasRef.current;
     const ctx = c?.getContext("2d");
     if (c && ctx) ctx.clearRect(0, 0, c.width, c.height);
+    hasDrawnRef.current = false;
     setHasDrawn(false);
   };
 
