@@ -86,6 +86,18 @@ export default function ContractSignPage() {
       setSignerEmail((data as any).client_email || "");
       setLoading(false);
 
+      // If already signed, load existing signatures so they render inside the contract.
+      if ((data as any).status === "signed") {
+        supabase
+          .from("contract_signatures")
+          .select("id, signer_name, signer_email, method, signature_data, signed_at")
+          .eq("contract_id", (data as any).id)
+          .order("signed_at", { ascending: true })
+          .then(({ data: sigs }) => {
+            if (sigs) setSignatures(sigs as any);
+          });
+      }
+
       // Mark viewed (non-blocking)
       supabase.rpc("contract_record_view", { _token: token });
 
