@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import ContractRenderer from "@/components/contracts/ContractRenderer";
+import SignatureBlock from "@/components/contracts/SignatureBlock";
 import { Loader2, ArrowLeft, Copy, ExternalLink, Send, CheckCircle2, Clock, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { contractTypeLabel, type ContractRow, type ContractSignatureRow } from "@/lib/contracts";
@@ -195,6 +196,7 @@ export default function ContractDetail() {
               client: { name: contract.client_name, email: contract.client_email, company: contract.company_name },
               intake,
             })} />
+            <SignatureBlock signatures={signatures} />
           </CardContent>
         </Card>
       </div>

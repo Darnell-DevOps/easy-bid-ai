@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ContractRenderer from "@/components/contracts/ContractRenderer";
+import SignatureBlock from "@/components/contracts/SignatureBlock";
 import {
   Loader2,
   CheckCircle2,
@@ -52,6 +53,14 @@ export default function ContractSignPage() {
   const [bookingSlug, setBookingSlug] = useState<string | null>(null);
   const [retainerToken, setRetainerToken] = useState<string | null>(null);
   const [intake, setIntake] = useState<Record<string, string> | null>(null);
+  const [signatures, setSignatures] = useState<Array<{
+    id: string;
+    signer_name: string;
+    signer_email: string | null;
+    method: "typed" | "drawn";
+    signature_data: string;
+    signed_at: string;
+  }>>([]);
 
   // Drawn signature state
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -76,6 +85,18 @@ export default function ContractSignPage() {
       setSignerName((data as any).client_name || "");
       setSignerEmail((data as any).client_email || "");
       setLoading(false);
+
+      // If already signed, load existing signatures so they render inside the contract.
+      if ((data as any).status === "signed") {
+        supabase
+          .from("contract_signatures")
+          .select("id, signer_name, signer_email, method, signature_data, signed_at")
+          .eq("contract_id", (data as any).id)
+          .order("signed_at", { ascending: true })
+          .then(({ data: sigs }) => {
+            if (sigs) setSignatures(sigs as any);
+          });
+      }
 
       // Mark viewed (non-blocking)
       supabase.rpc("contract_record_view", { _token: token });
@@ -126,22 +147,52 @@ export default function ContractSignPage() {
     load();
   }, [token]);
 
-  // Canvas init for high-DPI sharp drawing
-  useEffect(() => {
-    if (method !== "drawn") return;
+  // Canvas init for high-DPI sharp drawing. Re-sizes on layout changes so the
+  // pointer always lines up with the stroke.
+  const resizeCanvas = () => {
     const c = canvasRef.current;
     if (!c) return;
-    const dpr = window.devicePixelRatio || 1;
     const rect = c.getBoundingClientRect();
-    c.width = rect.width * dpr;
-    c.height = rect.height * dpr;
+    if (rect.width === 0 || rect.height === 0) return;
+    const dpr = window.devicePixelRatio || 1;
+    const targetW = Math.round(rect.width * dpr);
+    const targetH = Math.round(rect.height * dpr);
+    if (c.width === targetW && c.height === targetH) return;
+    // Preserve existing strokes across resizes.
+    const prev = hasDrawnRef.current ? c.toDataURL("image/png") : null;
+    c.width = targetW;
+    c.height = targetH;
     const ctx = c.getContext("2d");
     if (!ctx) return;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(dpr, dpr);
     ctx.lineWidth = 2.2;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.strokeStyle = "#0f172a";
+    if (prev) {
+      const img = new Image();
+      img.onload = () => ctx.drawImage(img, 0, 0, rect.width, rect.height);
+      img.src = prev;
+    }
+  };
+
+  const hasDrawnRef = useRef(false);
+
+  useEffect(() => {
+    if (method !== "drawn") return;
+    resizeCanvas();
+    const c = canvasRef.current;
+    if (!c) return;
+    const ro = new ResizeObserver(() => resizeCanvas());
+    ro.observe(c);
+    const onWin = () => resizeCanvas();
+    window.addEventListener("resize", onWin);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", onWin);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [method]);
 
   const getPos = (e: React.MouseEvent | React.TouchEvent) => {
@@ -152,6 +203,9 @@ export default function ContractSignPage() {
   };
 
   const startDraw = (e: React.MouseEvent | React.TouchEvent) => {
+    // Re-sync the backing store with the displayed size before each stroke,
+    // so any layout shift since the canvas was last sized can't offset the pointer.
+    resizeCanvas();
     drawingRef.current = true;
     lastPosRef.current = getPos(e);
   };
@@ -166,7 +220,8 @@ export default function ContractSignPage() {
     ctx.lineTo(pos.x, pos.y);
     ctx.stroke();
     lastPosRef.current = pos;
-    setHasDrawn(true);
+    hasDrawnRef.current = true;
+    if (!hasDrawn) setHasDrawn(true);
   };
   const stopDraw = () => {
     drawingRef.current = false;
@@ -176,6 +231,7 @@ export default function ContractSignPage() {
     const c = canvasRef.current;
     const ctx = c?.getContext("2d");
     if (c && ctx) ctx.clearRect(0, 0, c.width, c.height);
+    hasDrawnRef.current = false;
     setHasDrawn(false);
   };
 
@@ -214,6 +270,13 @@ export default function ContractSignPage() {
       });
       if (error) throw error;
       setContract({ ...contract, status: "signed", signed_at: new Date().toISOString() });
+      // Pull all signatures for this contract so they appear inline immediately.
+      const { data: sigs } = await supabase
+        .from("contract_signatures")
+        .select("id, signer_name, signer_email, method, signature_data, signed_at")
+        .eq("contract_id", contract.id)
+        .order("signed_at", { ascending: true });
+      if (sigs) setSignatures(sigs as any);
       toast({ title: "Contract signed", description: "Thank you — your signature has been recorded." });
     } catch (e: any) {
       toast({ title: "Couldn't sign", description: e.message, variant: "destructive" });
@@ -280,6 +343,7 @@ export default function ContractSignPage() {
             client: { name: contract.client_name, email: contract.client_email, company: contract.company_name },
             intake,
           })} />
+          <SignatureBlock signatures={signatures} />
         </section>
 
         {/* Signature OR success */}
