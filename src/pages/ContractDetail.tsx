@@ -110,6 +110,29 @@ export default function ContractDetail() {
     load();
   };
 
+  const downloadPdf = async () => {
+    if (!pdfRef.current || !contract) return;
+    setDownloading(true);
+    try {
+      const safeTitle = contract.title.replace(/[^a-z0-9-_ ]/gi, "").trim() || "contract";
+      await html2pdf()
+        .set({
+          margin: [12, 12, 16, 12],
+          filename: `${safeTitle}.pdf`,
+          image: { type: "jpeg", quality: 0.95 },
+          html2canvas: { scale: 2, backgroundColor: "#ffffff", useCORS: true },
+          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+          pagebreak: { mode: ["css", "legacy", "avoid-all"] },
+        })
+        .from(pdfRef.current)
+        .save();
+    } catch (e: any) {
+      toast({ title: "Couldn't generate PDF", description: e?.message || "Try again.", variant: "destructive" });
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6 max-w-4xl mx-auto">
