@@ -480,16 +480,11 @@ export default function ClientPortal() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 w-[700px] h-[300px] rounded-full bg-accent/5 blur-[140px]" />
       </div>
 
-      {/* Browser-chrome header */}
+      {/* Header */}
       <header className="sticky top-0 z-20 border-b border-border/60 bg-background/70 backdrop-blur-xl">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3">
-          <div className="flex gap-1.5 shrink-0">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500/70" />
-            <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/70" />
-            <span className="w-2.5 h-2.5 rounded-full bg-green-500/70" />
-          </div>
-          <div className="flex-1 min-w-0 text-xs text-muted-foreground font-mono truncate">
-            portal.closesync.io / {companySlug} / {projectSlug}
+          <div className="flex-1 min-w-0 text-xs text-muted-foreground font-medium truncate">
+            {proposal.company_name || proposal.client_name} · {projectName}
           </div>
           <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-emerald-400 font-medium">
             <span className="relative flex h-1.5 w-1.5">
@@ -501,6 +496,7 @@ export default function ClientPortal() {
           <StatusBadge status={status} />
         </div>
       </header>
+
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 lg:py-10 space-y-6 lg:space-y-8">
         {/* Project Overview */}
