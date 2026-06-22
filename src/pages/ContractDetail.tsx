@@ -224,8 +224,17 @@ export default function ContractDetail() {
           <CardContent className="p-8">
             <div
               ref={pdfRef}
+              className="pdf-export-surface"
               style={{ background: "#ffffff", color: "#0f172a", padding: "32px", borderRadius: 8 }}
             >
+              <style>{`
+                .pdf-export-surface, .pdf-export-surface * {
+                  color: #0f172a !important;
+                  background-color: transparent !important;
+                  border-color: #e2e8f0 !important;
+                }
+                .pdf-export-surface { background-color: #ffffff !important; }
+              `}</style>
               <div style={{ marginBottom: 24 }}>
                 <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>{contract.title}</h1>
                 <p style={{ fontSize: 12, color: "#475569", marginTop: 4 }}>
