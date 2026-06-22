@@ -53,6 +53,14 @@ export default function ContractSignPage() {
   const [bookingSlug, setBookingSlug] = useState<string | null>(null);
   const [retainerToken, setRetainerToken] = useState<string | null>(null);
   const [intake, setIntake] = useState<Record<string, string> | null>(null);
+  const [signatures, setSignatures] = useState<Array<{
+    id: string;
+    signer_name: string;
+    signer_email: string | null;
+    method: "typed" | "drawn";
+    signature_data: string;
+    signed_at: string;
+  }>>([]);
 
   // Drawn signature state
   const canvasRef = useRef<HTMLCanvasElement>(null);
