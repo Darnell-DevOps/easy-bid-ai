@@ -169,6 +169,10 @@ export default function ContractDetail() {
                   size="default"
                   label="WhatsApp"
                 />
+                <Button variant="outline" className="gap-2" onClick={downloadPdf} disabled={downloading}>
+                  {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                  Download PDF
+                </Button>
                 {contract.status === "draft" && (
                   <Button className="gap-2 bg-gradient-to-r from-accent to-purple text-white" onClick={sendForSignature}>
                     <Send className="w-4 h-4" /> Send for signature
