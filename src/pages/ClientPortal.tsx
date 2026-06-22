@@ -517,6 +517,7 @@ export default function ClientPortal() {
               upcomingBooking={upcomingBooking}
               upcomingDeadline={null}
               activity={activityEvents}
+              progressPct={progressPct}
             />
             <ProjectProgressTracker currentStage={stage} />
           </>
