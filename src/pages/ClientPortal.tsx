@@ -520,151 +520,111 @@ export default function ClientPortal() {
           </>
         )}
 
-        {/* Hero / Summary */}
-        <section className="rounded-xl border border-border bg-card p-6 lg:p-10">
-          <p className="text-xs uppercase tracking-wider text-purple font-semibold mb-3">Proposal</p>
-          <h1 className="text-2xl lg:text-4xl font-bold text-foreground mb-4">
-            {proposal.service_type}
-          </h1>
-          <p className="text-base lg:text-lg text-foreground/90 leading-relaxed max-w-2xl mb-5">
-            Win more clients, grow visibility, and unlock new revenue — fast.
-          </p>
-          <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <Building2 className="w-4 h-4 shrink-0" />
-              <span>Prepared for {proposal.company_name || proposal.client_name}</span>
+        {/* Proposal — collapsible (click to view, like the contract card) */}
+        <details className="group rounded-xl border border-purple/30 bg-gradient-to-br from-purple/5 via-card to-accent/5 p-6 lg:p-8 [&_summary::-webkit-details-marker]:hidden">
+          <summary className="flex items-start gap-4 cursor-pointer list-none">
+            <div className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 bg-purple/15 text-purple">
+              <FileText className="w-5 h-5" />
             </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 shrink-0" />
-              <span>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs uppercase tracking-wider text-purple font-semibold mb-1">Proposal</p>
+              <h3 className="text-lg font-semibold text-foreground mb-1">{proposal.service_type}</h3>
+              <p className="text-sm text-muted-foreground">
+                Prepared for {proposal.company_name || proposal.client_name} ·{" "}
                 {new Date(proposal.created_at).toLocaleDateString(undefined, { dateStyle: "long" })}
-              </span>
-            </div>
-          </div>
-        </section>
-
-        {/* Accepted — needs contract signature */}
-        {needsContractSignature && (
-          <div className="rounded-xl border border-purple/40 bg-gradient-to-br from-purple/15 via-accent/5 to-transparent p-5 sm:p-6 text-center">
-            <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-purple/20 mb-3">
-              <FileSignature className="w-5 h-5 text-purple" />
-            </div>
-            <p className="text-base sm:text-lg font-semibold text-foreground mb-1">
-              Proposal accepted — review &amp; sign your contract
-            </p>
-            <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
-              We've prepared your agreement. Sign it to unlock payment and get started.
-            </p>
-            <Button
-              size="lg"
-              asChild
-              className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 hover:shadow-purple/30 transition-all"
-            >
-              <RouterLink to={`/sign/${contract!.signing_token}`}>
-                <FileSignature className="w-4 h-4" />
-                Review &amp; Sign Contract
-              </RouterLink>
-            </Button>
-          </div>
-        )}
-
-        {/* Accepted — drafting contract spinner */}
-        {isAccepted && !contract && !isPaid && (
-          <div className="rounded-xl border border-purple/30 bg-gradient-to-br from-purple/10 to-transparent p-5 sm:p-6 text-center">
-            <Loader2 className="w-5 h-5 text-purple animate-spin mx-auto mb-3" />
-            <p className="text-base font-semibold text-foreground mb-1">
-              Proposal accepted — preparing your contract…
-            </p>
-            <p className="text-sm text-muted-foreground">
-              This usually takes just a few seconds.
-            </p>
-          </div>
-        )}
-
-        {/* Contract signed — ready to pay */}
-        {readyToPay && (
-          <div className="rounded-xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-card to-transparent p-5 sm:p-6 text-center">
-            <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/15 mb-3">
-              <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-            </div>
-            <p className="text-base sm:text-lg font-semibold text-foreground mb-1">
-              Contract signed — complete payment to begin work
-            </p>
-            <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
-              Secure your slot with payment and we'll kick things off.
-            </p>
-            <Button
-              size="lg"
-              onClick={handlePayAgain}
-              disabled={payLoading}
-              className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 hover:shadow-purple/30 transition-all"
-            >
-              {payLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <CreditCard className="w-4 h-4" />
-              )}
-              Pay Now {formattedTotal ? `— ${formattedTotal}` : ""}
-            </Button>
-          </div>
-        )}
-        {proposal.proposal_content && (
-          <section
-            className={cn(
-              "transition-all relative",
-              acceptedNotPaid && "opacity-60 pointer-events-none select-none",
-            )}
-            aria-hidden={acceptedNotPaid ? "true" : undefined}
-          >
-            <PremiumProposalRenderer content={proposal.proposal_content} />
-          </section>
-        )}
-
-        {/* Pricing — also dimmed once accepted (price is locked) */}
-        {proposal.pricing_breakdown && (
-          <section
-            id="pricing"
-            className={cn(
-              "rounded-xl border border-purple/30 bg-card p-6 lg:p-10 shadow-lg shadow-purple/5 transition-all",
-              acceptedNotPaid && "opacity-70",
-            )}
-          >
-            <div className="mb-8 pb-8 border-b border-border/60">
-              <p className="text-xs uppercase tracking-[0.2em] text-purple font-semibold mb-3">
-                What you're getting
               </p>
-              <ul className="space-y-2">
-                {[
-                  "A clear plan tailored to your goals",
-                  "Hands-on delivery from start to finish",
-                  "Measurable results you can track",
-                  "Direct support throughout the project",
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-2 text-sm text-foreground">
-                    <CheckCircle2 className="w-4 h-4 text-purple shrink-0 mt-0.5" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <PremiumPricingRenderer content={proposal.pricing_breakdown} showPayCta={false} />
-
-            {formattedTotal && (
-              <div className="mt-8 pt-8 border-t border-border/60">
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-semibold mb-1">
-                  Total Investment
-                </p>
-                <p className="text-3xl lg:text-4xl font-bold text-foreground tracking-tight">
-                  {formattedTotal}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1.5">
-                  No long-term contracts. Cancel anytime.
-                </p>
+              <div className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-purple">
+                <span className="group-open:hidden">View proposal</span>
+                <span className="hidden group-open:inline">Hide proposal</span>
+                <ChevronDown className="w-4 h-4 transition-transform group-open:rotate-180" />
               </div>
+            </div>
+          </summary>
+
+          <div className="mt-6 pt-6 border-t border-border/60 space-y-6">
+            {/* Hero / Summary */}
+            <section className="rounded-xl border border-border bg-card p-6 lg:p-10">
+              <p className="text-xs uppercase tracking-wider text-purple font-semibold mb-3">Overview</p>
+              <h1 className="text-2xl lg:text-4xl font-bold text-foreground mb-4">
+                {proposal.service_type}
+              </h1>
+              <p className="text-base lg:text-lg text-foreground/90 leading-relaxed max-w-2xl mb-5">
+                Win more clients, grow visibility, and unlock new revenue — fast.
+              </p>
+              <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-4 h-4 shrink-0" />
+                  <span>Prepared for {proposal.company_name || proposal.client_name}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 shrink-0" />
+                  <span>
+                    {new Date(proposal.created_at).toLocaleDateString(undefined, { dateStyle: "long" })}
+                  </span>
+                </div>
+              </div>
+            </section>
+
+            {proposal.proposal_content && (
+              <section
+                className={cn(
+                  "transition-all relative",
+                  acceptedNotPaid && "opacity-60 pointer-events-none select-none",
+                )}
+                aria-hidden={acceptedNotPaid ? "true" : undefined}
+              >
+                <PremiumProposalRenderer content={proposal.proposal_content} />
+              </section>
             )}
-          </section>
-        )}
+
+            {/* Pricing */}
+            {proposal.pricing_breakdown && (
+              <section
+                id="pricing"
+                className={cn(
+                  "rounded-xl border border-purple/30 bg-card p-6 lg:p-10 shadow-lg shadow-purple/5 transition-all",
+                  acceptedNotPaid && "opacity-70",
+                )}
+              >
+                <div className="mb-8 pb-8 border-b border-border/60">
+                  <p className="text-xs uppercase tracking-[0.2em] text-purple font-semibold mb-3">
+                    What you're getting
+                  </p>
+                  <ul className="space-y-2">
+                    {[
+                      "A clear plan tailored to your goals",
+                      "Hands-on delivery from start to finish",
+                      "Measurable results you can track",
+                      "Direct support throughout the project",
+                    ].map((item) => (
+                      <li key={item} className="flex items-start gap-2 text-sm text-foreground">
+                        <CheckCircle2 className="w-4 h-4 text-purple shrink-0 mt-0.5" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <PremiumPricingRenderer content={proposal.pricing_breakdown} showPayCta={false} />
+
+                {formattedTotal && (
+                  <div className="mt-8 pt-8 border-t border-border/60">
+                    <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-semibold mb-1">
+                      Total Investment
+                    </p>
+                    <p className="text-3xl lg:text-4xl font-bold text-foreground tracking-tight">
+                      {formattedTotal}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1.5">
+                      No long-term contracts. Cancel anytime.
+                    </p>
+                  </div>
+                )}
+              </section>
+            )}
+          </div>
+        </details>
+
 
         {/* Trust section */}
         {!isRejected && (
