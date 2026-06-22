@@ -122,8 +122,7 @@ export default function ContractDetail() {
           image: { type: "jpeg", quality: 0.95 },
           html2canvas: { scale: 2, backgroundColor: "#ffffff", useCORS: true },
           jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-          pagebreak: { mode: ["css", "legacy", "avoid-all"] },
-        })
+        } as any)
         .from(pdfRef.current)
         .save();
     } catch (e: any) {
