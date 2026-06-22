@@ -503,8 +503,6 @@ export default function ClientPortal() {
       </header>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 lg:py-10 space-y-6 lg:space-y-8">
-        {/* Glass frame around the whole portal */}
-        <div className="hidden" data-portal-progress={progressPct} />
         {/* Project Overview */}
         {!isRejected && (
           <>
