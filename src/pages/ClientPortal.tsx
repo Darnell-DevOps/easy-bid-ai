@@ -21,7 +21,10 @@ import {
   FileCheck,
   CalendarPlus,
   FileSignature,
+  FileText,
+  ChevronDown,
 } from "lucide-react";
+
 import { Link as RouterLink } from "react-router-dom";
 import PremiumProposalRenderer from "@/components/proposal/PremiumProposalRenderer";
 import PremiumPricingRenderer from "@/components/proposal/PremiumPricingRenderer";
