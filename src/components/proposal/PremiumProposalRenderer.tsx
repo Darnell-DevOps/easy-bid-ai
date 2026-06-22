@@ -178,48 +178,9 @@ export default function PremiumProposalRenderer({ content }: PremiumProposalRend
         }
 
         if (sectionType === "cta") {
-          return (
-            <section key={i} className="py-10 lg:py-12">
-              <div className="rounded-xl border border-purple/30 bg-gradient-to-br from-purple/10 via-accent/5 to-transparent p-6 lg:p-10 text-center">
-                <div className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-purple/20 mb-4">
-                  <ArrowRight className="h-5 w-5 text-purple" />
-                </div>
-                <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-3 tracking-tight">
-                  Ready to get started?
-                </h2>
-                <p className="text-muted-foreground max-w-md mx-auto mb-6 leading-relaxed">
-                  Three simple steps to begin — no friction, no delays.
-                </p>
-                <ol className="max-w-sm mx-auto space-y-3 text-left mb-8">
-                  {[
-                    "Accept this proposal",
-                    "Make payment securely online",
-                    "Work begins immediately",
-                  ].map((step, idx) => (
-                    <li key={idx} className="flex items-start gap-3">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-purple/20 text-xs font-bold text-purple">
-                        {idx + 1}
-                      </span>
-                      <span className="text-sm text-foreground leading-relaxed pt-0.5">{step}</span>
-                    </li>
-                  ))}
-                </ol>
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple to-accent px-7 py-3 text-sm font-semibold text-accent-foreground shadow-lg shadow-purple/20 hover:brightness-110 hover:shadow-purple/30 transition-all"
-                >
-                  <Sparkles className="h-4 w-4" />
-                  Accept &amp; Get Started
-                </button>
-                {body && (
-                  <div className="prose-content text-muted-foreground leading-relaxed max-w-xl mx-auto mt-6 text-sm">
-                    <ReactMarkdown>{body}</ReactMarkdown>
-                  </div>
-                )}
-              </div>
-            </section>
-          );
+          return null;
         }
+
 
         if (sectionType === "pricing") {
           return (
