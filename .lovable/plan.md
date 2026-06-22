@@ -1,48 +1,47 @@
+
 ## Goal
-On `/contract/sign/:token`:
-1. Drawn signatures should track the cursor/finger exactly.
-2. After signing, the signature should be visible inside the contract (not just stored silently).
 
-## Problem analysis
+Make the client portal feel as alive and premium as the landing-page `ClientPortalShowcase` mock (the screenshot you attached). Same dark glassmorphic language, ambient gradient orbs, animated stage tracker, "Live" pulse, and a live activity ticker — applied to the real `/portal/:id` page.
 
-**1. Cursor misalignment when drawing**
-The canvas is sized once in a `useEffect` that runs only when the user switches to the "Draw signature" tab. It captures `getBoundingClientRect()` at that moment and bakes `width = rect.width * dpr` into the canvas backing store, then scales the 2D context by `dpr`. After that, the backing store never re-syncs with the displayed size. So as soon as the layout shifts after init — the sticky header changes height on scroll, the page reflows when the agreement checkbox / name field grows, the viewport resizes, fonts finish loading, or the user rotates a phone — the CSS width of the canvas no longer matches its internal width. Mouse positions are computed in CSS pixels from a fresh `getBoundingClientRect()`, but the strokes land in the stale internal coordinate space, so the line draws offset from the pointer.
+## Scope
 
-**2. Signature doesn't show on the signed contract**
-The `contract_sign` RPC correctly inserts into `contract_signatures` (verified — recent rows exist with full `signature_data`). But `ContractSignPage` never reads that table back. After signing it flips to a generic "Contract signed successfully" success card and the contract body above it stays exactly as it was — no signature line, no signer name, no drawn image. From the signer's perspective the contract "is still empty" because nothing in the document changed.
+Visual / presentation only. No changes to data model, RPCs, business logic, or routes. Everything stays driven by the same `proposal`, `contract`, `onboarding`, `bookings` state already loaded in `ClientPortal.tsx`.
 
-`ContractDetail` (owner view) already renders a separate Signatures card, so the data is reachable; the gap is on the public sign page and inside the rendered document itself.
+## What changes
 
-## Changes
+### 1. `src/pages/ClientPortal.tsx` — page shell
+- Replace the flat `bg-background` shell with a layered backdrop: dark gradient base + two animated soft-pulse blurred orbs (accent + purple), matching `ClientPortalShowcase`.
+- Replace the plain sticky header with a "browser window chrome" header: traffic-light dots, faux URL (`portal.closesync.io / {company-slug} / {project-slug}`), and a green pulsing **Live** indicator on the right. Keep `StatusBadge` accessible just below or merged in.
+- Wrap main content in a glass card (`border border-border/60 bg-card/70 backdrop-blur-xl shadow-[0_30px_80px_-20px_hsl(var(--accent)/0.25)]`) so the whole portal sits inside the same "portal mock" frame the landing page uses.
 
-### `src/pages/ContractSignPage.tsx`
+### 2. `src/components/portal/ProjectOverview.tsx` — welcome + next action
+- Welcome header: add subtle gradient text on the project name, a progress % readout on the right (derived from current stage index / total stages), and a thin animated gradient progress bar underneath (accent → purple → accent with soft glow), mirroring the landing mock.
+- Next Action card: keep current content but upgrade the icon tile to a gradient pill with an accent ring/glow when actionable; add a faint animated ping on the icon when an action is required.
+- Side rail: keep upcoming booking + deadline; add a third small "Live activity" tile that mirrors the landing page's three-row pulse list (most recent activity events with colored pulse dots).
+- Recent Activity: restyle rows with connector line between status dots (like the landing tracker), and add a subtle hover lift.
 
-**Canvas alignment**
-- Replace the one-shot `useEffect([method])` sizer with a `resizeCanvas()` helper that:
-  - reads `getBoundingClientRect()`,
-  - saves the current strokes via `toDataURL()` before resizing (so a mid-session reflow doesn't wipe the signature),
-  - sets `canvas.width/height = rect.width/height * dpr`,
-  - resets transform then `ctx.scale(dpr, dpr)` and re-applies stroke style,
-  - redraws the saved image back at CSS dimensions.
-- Call `resizeCanvas()` on tab switch to "drawn", on `window` resize, via a `ResizeObserver` on the canvas, and once more at the start of `startDraw` as a cheap safety net so the very next stroke is always aligned.
-- Keep `getPos` as-is (it already uses fresh `getBoundingClientRect()` in CSS pixels, which is correct once the backing store matches).
+### 3. `src/components/portal/ProjectProgressTracker.tsx` — stage tracker
+- Rebuild visually to match the landing mock's vertical stage list style adapted for the portal:
+  - Each stage in its own rounded card (`border-border/50 bg-background/30`).
+  - Active stage: accent-tinted bg, glowing ring, spinning `Loader2`, animated `ping` halo.
+  - Complete stages: emerald gradient icon tile with `Check`.
+  - Pending stages: muted, lower opacity.
+  - Vertical connector line between stages tinted to the progress.
+  - Right-side status pill: COMPLETE / IN PROGRESS / PENDING with matching colors.
+- Keep the same `ProjectStage` API so the page doesn't need rewiring.
 
-**Show the signature after signing**
-- After a successful `contract_sign` RPC, fetch the newly-inserted row from `contract_signatures` for this `contract_id` (most recent) and store it in local state as `signedSignature`.
-- In the "signed" success section, render a signature block above the next-step buttons:
-  - signer name, email, timestamp;
-  - for `method === "drawn"`: `<img src={signature_data}>` on a white card;
-  - for `method === "typed"`: the name in the Caveat cursive style already used in the live preview.
-- Also append a "Signed by" block at the bottom of the contract body section (still using `ContractRenderer` for the markdown, but render the signature card immediately under it inside the same bordered section) so the document itself visibly carries the signature, matching what the user expects from "the contract where it shows signatures."
-
-### `src/pages/ContractDetail.tsx`
-- No behavioral change needed (Signatures card already works), but mirror the same "signed by" block at the foot of the rendered contract body so the owner-facing document view is consistent with the public sign view.
+### 4. Tokens / utilities
+- Reuse existing tokens (`--accent`, `--purple`, `--card`, `--border`, `--foreground`, `--muted-foreground`) and existing animations (`animate-pulse`, `animate-ping`, `animate-soft-pulse`, `animate-scale-in`). No new global CSS needed; the landing page already defines `soft-pulse` keyframes via Tailwind config.
+- No hardcoded colors — all surfaces go through semantic tokens so light mode still works.
 
 ## Out of scope
-- No DB / RPC / RLS changes — `contract_sign` and `contract_signatures` already do the right thing.
-- No changes to typed-signature flow beyond rendering it in the new "signed by" block.
-- No changes to ContractRenderer's markdown parser.
 
-## Verification
-- Manually draw on the canvas at the top, middle, and bottom of the page after scrolling and after resizing the window — strokes should land under the cursor in every case.
-- Sign a test contract with both typed and drawn methods; confirm the signature appears inside the contract section on the success screen and on `/contracts/:id` for the owner.
+- No changes to `ClientPortalShowcase` (landing) itself.
+- No changes to onboarding form page, contract sign page, or proposal/pricing renderers embedded inside the portal.
+- No new data fetches; "Live" indicator is purely visual.
+
+## Files touched
+
+- `src/pages/ClientPortal.tsx` — shell, header chrome, ambient background, glass frame
+- `src/components/portal/ProjectOverview.tsx` — welcome, progress bar, next-action polish, live activity tile
+- `src/components/portal/ProjectProgressTracker.tsx` — stage list redesign
