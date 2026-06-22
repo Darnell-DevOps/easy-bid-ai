@@ -32,6 +32,8 @@ export default function ContractDetail() {
   const [intake, setIntake] = useState<Record<string, string> | null>(null);
   const [loading, setLoading] = useState(true);
   const [clientPhone, setClientPhone] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
+  const pdfRef = useRef<HTMLDivElement>(null);
 
   const load = async () => {
     if (!id) return;
