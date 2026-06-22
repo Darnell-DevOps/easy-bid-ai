@@ -52,6 +52,7 @@ export default function ContractSignPage() {
   const [method, setMethod] = useState<"typed" | "drawn">("typed");
   const [bookingSlug, setBookingSlug] = useState<string | null>(null);
   const [retainerToken, setRetainerToken] = useState<string | null>(null);
+  const [proposalPaid, setProposalPaid] = useState(false);
   const [intake, setIntake] = useState<Record<string, string> | null>(null);
   const [signatures, setSignatures] = useState<Array<{
     id: string;
@@ -126,6 +127,15 @@ export default function ContractSignPage() {
           .maybeSingle()
           .then(({ data: rt }) => {
             if (rt) setRetainerToken((rt as any).access_token);
+          });
+
+        supabase
+          .from("proposals")
+          .select("client_paid")
+          .eq("id", (data as any).proposal_id)
+          .maybeSingle()
+          .then(({ data: pr }) => {
+            if (pr) setProposalPaid(!!(pr as any).client_paid);
           });
       }
 
@@ -365,7 +375,7 @@ export default function ContractSignPage() {
                     <CreditCard className="w-4 h-4" /> Start subscription
                   </Link>
                 </Button>
-              ) : contract.proposal_id ? (
+              ) : contract.proposal_id && !proposalPaid ? (
                 <Button size="lg" asChild className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold">
                   <Link to={`/proposal/view/${contract.proposal_id}`}>
                     <CreditCard className="w-4 h-4" /> Complete payment
@@ -373,7 +383,7 @@ export default function ContractSignPage() {
                 </Button>
               ) : null}
               {bookingSlug && (
-                <Button size="lg" variant={contract.proposal_id || retainerToken ? "outline" : "default"} asChild className="gap-2">
+                <Button size="lg" variant={(contract.proposal_id && !proposalPaid) || retainerToken ? "outline" : "default"} asChild className="gap-2">
                   <Link to={`/book/${bookingSlug}${contract.proposal_id ? `?proposal=${contract.proposal_id}` : ""}`}>
                     <CalendarPlus className="w-4 h-4" /> Book kickoff call
                   </Link>
