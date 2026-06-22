@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -7,12 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import ContractRenderer from "@/components/contracts/ContractRenderer";
 import SignatureBlock from "@/components/contracts/SignatureBlock";
-import { Loader2, ArrowLeft, Copy, ExternalLink, Send, CheckCircle2, Clock, Eye } from "lucide-react";
+import { Loader2, ArrowLeft, Copy, ExternalLink, Send, CheckCircle2, Clock, Eye, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { contractTypeLabel, type ContractRow, type ContractSignatureRow } from "@/lib/contracts";
 import { sendEmail } from "@/lib/email";
 import { renderMergeTags } from "@/lib/merge-tags";
 import { WhatsAppButton } from "@/components/whatsapp/WhatsAppButton";
+// @ts-ignore - no types ship with html2pdf.js
+import html2pdf from "html2pdf.js";
 
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -30,6 +32,8 @@ export default function ContractDetail() {
   const [intake, setIntake] = useState<Record<string, string> | null>(null);
   const [loading, setLoading] = useState(true);
   const [clientPhone, setClientPhone] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
+  const pdfRef = useRef<HTMLDivElement>(null);
 
   const load = async () => {
     if (!id) return;
@@ -106,6 +110,28 @@ export default function ContractDetail() {
     load();
   };
 
+  const downloadPdf = async () => {
+    if (!pdfRef.current || !contract) return;
+    setDownloading(true);
+    try {
+      const safeTitle = contract.title.replace(/[^a-z0-9-_ ]/gi, "").trim() || "contract";
+      await html2pdf()
+        .set({
+          margin: [12, 12, 16, 12],
+          filename: `${safeTitle}.pdf`,
+          image: { type: "jpeg", quality: 0.95 },
+          html2canvas: { scale: 2, backgroundColor: "#ffffff", useCORS: true },
+          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+        } as any)
+        .from(pdfRef.current)
+        .save();
+    } catch (e: any) {
+      toast({ title: "Couldn't generate PDF", description: e?.message || "Try again.", variant: "destructive" });
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6 max-w-4xl mx-auto">
@@ -143,6 +169,10 @@ export default function ContractDetail() {
                   size="default"
                   label="WhatsApp"
                 />
+                <Button variant="outline" className="gap-2" onClick={downloadPdf} disabled={downloading}>
+                  {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                  Download PDF
+                </Button>
                 {contract.status === "draft" && (
                   <Button className="gap-2 bg-gradient-to-r from-accent to-purple text-white" onClick={sendForSignature}>
                     <Send className="w-4 h-4" /> Send for signature
@@ -192,11 +222,32 @@ export default function ContractDetail() {
 
         <Card>
           <CardContent className="p-8">
-            <ContractRenderer content={renderMergeTags(contract.body, {
-              client: { name: contract.client_name, email: contract.client_email, company: contract.company_name },
-              intake,
-            })} />
-            <SignatureBlock signatures={signatures} />
+            <div
+              ref={pdfRef}
+              className="pdf-export-surface"
+              style={{ background: "#ffffff", color: "#0f172a", padding: "32px", borderRadius: 8 }}
+            >
+              <style>{`
+                .pdf-export-surface, .pdf-export-surface * {
+                  color: #0f172a !important;
+                  background-color: transparent !important;
+                  border-color: #e2e8f0 !important;
+                }
+                .pdf-export-surface { background-color: #ffffff !important; }
+              `}</style>
+              <div style={{ marginBottom: 24 }}>
+                <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>{contract.title}</h1>
+                <p style={{ fontSize: 12, color: "#475569", marginTop: 4 }}>
+                  {contractTypeLabel(contract.contract_type)} · For {contract.client_name}
+                  {contract.company_name ? ` · ${contract.company_name}` : ""}
+                </p>
+              </div>
+              <ContractRenderer content={renderMergeTags(contract.body, {
+                client: { name: contract.client_name, email: contract.client_email, company: contract.company_name },
+                intake,
+              })} />
+              <SignatureBlock signatures={signatures} />
+            </div>
           </CardContent>
         </Card>
       </div>
