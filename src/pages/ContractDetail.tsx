@@ -222,11 +222,23 @@ export default function ContractDetail() {
 
         <Card>
           <CardContent className="p-8">
-            <ContractRenderer content={renderMergeTags(contract.body, {
-              client: { name: contract.client_name, email: contract.client_email, company: contract.company_name },
-              intake,
-            })} />
-            <SignatureBlock signatures={signatures} />
+            <div
+              ref={pdfRef}
+              style={{ background: "#ffffff", color: "#0f172a", padding: "32px", borderRadius: 8 }}
+            >
+              <div style={{ marginBottom: 24 }}>
+                <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>{contract.title}</h1>
+                <p style={{ fontSize: 12, color: "#475569", marginTop: 4 }}>
+                  {contractTypeLabel(contract.contract_type)} · For {contract.client_name}
+                  {contract.company_name ? ` · ${contract.company_name}` : ""}
+                </p>
+              </div>
+              <ContractRenderer content={renderMergeTags(contract.body, {
+                client: { name: contract.client_name, email: contract.client_email, company: contract.company_name },
+                intake,
+              })} />
+              <SignatureBlock signatures={signatures} />
+            </div>
           </CardContent>
         </Card>
       </div>
