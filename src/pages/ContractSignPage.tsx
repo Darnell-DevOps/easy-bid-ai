@@ -147,22 +147,52 @@ export default function ContractSignPage() {
     load();
   }, [token]);
 
-  // Canvas init for high-DPI sharp drawing
-  useEffect(() => {
-    if (method !== "drawn") return;
+  // Canvas init for high-DPI sharp drawing. Re-sizes on layout changes so the
+  // pointer always lines up with the stroke.
+  const resizeCanvas = () => {
     const c = canvasRef.current;
     if (!c) return;
-    const dpr = window.devicePixelRatio || 1;
     const rect = c.getBoundingClientRect();
-    c.width = rect.width * dpr;
-    c.height = rect.height * dpr;
+    if (rect.width === 0 || rect.height === 0) return;
+    const dpr = window.devicePixelRatio || 1;
+    const targetW = Math.round(rect.width * dpr);
+    const targetH = Math.round(rect.height * dpr);
+    if (c.width === targetW && c.height === targetH) return;
+    // Preserve existing strokes across resizes.
+    const prev = hasDrawnRef.current ? c.toDataURL("image/png") : null;
+    c.width = targetW;
+    c.height = targetH;
     const ctx = c.getContext("2d");
     if (!ctx) return;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(dpr, dpr);
     ctx.lineWidth = 2.2;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.strokeStyle = "#0f172a";
+    if (prev) {
+      const img = new Image();
+      img.onload = () => ctx.drawImage(img, 0, 0, rect.width, rect.height);
+      img.src = prev;
+    }
+  };
+
+  const hasDrawnRef = useRef(false);
+
+  useEffect(() => {
+    if (method !== "drawn") return;
+    resizeCanvas();
+    const c = canvasRef.current;
+    if (!c) return;
+    const ro = new ResizeObserver(() => resizeCanvas());
+    ro.observe(c);
+    const onWin = () => resizeCanvas();
+    window.addEventListener("resize", onWin);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", onWin);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [method]);
 
   const getPos = (e: React.MouseEvent | React.TouchEvent) => {
