@@ -375,7 +375,7 @@ export default function ContractSignPage() {
                     <CreditCard className="w-4 h-4" /> Start subscription
                   </Link>
                 </Button>
-              ) : contract.proposal_id ? (
+              ) : contract.proposal_id && !proposalPaid ? (
                 <Button size="lg" asChild className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold">
                   <Link to={`/proposal/view/${contract.proposal_id}`}>
                     <CreditCard className="w-4 h-4" /> Complete payment
@@ -383,7 +383,7 @@ export default function ContractSignPage() {
                 </Button>
               ) : null}
               {bookingSlug && (
-                <Button size="lg" variant={contract.proposal_id || retainerToken ? "outline" : "default"} asChild className="gap-2">
+                <Button size="lg" variant={(contract.proposal_id && !proposalPaid) || retainerToken ? "outline" : "default"} asChild className="gap-2">
                   <Link to={`/book/${bookingSlug}${contract.proposal_id ? `?proposal=${contract.proposal_id}` : ""}`}>
                     <CalendarPlus className="w-4 h-4" /> Book kickoff call
                   </Link>
