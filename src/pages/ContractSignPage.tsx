@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ContractRenderer from "@/components/contracts/ContractRenderer";
+import SignatureBlock from "@/components/contracts/SignatureBlock";
 import {
   Loader2,
   CheckCircle2,
