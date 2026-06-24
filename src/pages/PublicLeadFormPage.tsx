@@ -36,6 +36,10 @@ export default function PublicLeadFormPage() {
   const [responses, setResponses] = useState<FieldResponses>({});
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  // Spam protection: honeypot field + min time-to-submit guard.
+  const [honeypot, setHoneypot] = useState("");
+  const [loadedAt] = useState(() => Date.now());
+
 
   useEffect(() => {
     if (!slug) return;
