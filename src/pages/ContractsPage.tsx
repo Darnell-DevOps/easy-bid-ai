@@ -120,8 +120,8 @@ export default function ContractsPage() {
   }, [location.state]);
 
   const stats = useMemo(() => {
-    const pending = contracts.filter((c) => c.status !== "signed").length;
-    const signed = contracts.filter((c) => c.status === "signed").length;
+    const pending = contracts.filter((c) => c.status !== "executed" && c.status !== "signed").length;
+    const signed = contracts.filter((c) => c.status === "signed" || c.status === "executed").length;
     const awaiting = contracts.filter((c) => c.status === "sent" || c.status === "viewed").length;
     return { pending, signed, awaiting };
   }, [contracts]);
