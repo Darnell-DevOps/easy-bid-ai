@@ -33,6 +33,12 @@ export interface ContractRow {
   sent_at: string | null;
   viewed_at: string | null;
   signed_at: string | null;
+  countersigned_at?: string | null;
+  countersigner_name?: string | null;
+  signing_token: string;
+  sent_at: string | null;
+  viewed_at: string | null;
+  signed_at: string | null;
   created_at: string;
   updated_at: string;
 }
