@@ -532,6 +532,41 @@ export default function ContractSignPage() {
           </section>
         )}
       </main>
+
+      {isExecuted && (
+        <div style={{ position: "fixed", left: -10000, top: 0, width: 794 }} aria-hidden="true">
+          <div
+            ref={pdfRef}
+            className="pdf-export-surface"
+            style={{ background: "#ffffff", color: "#0f172a", padding: 32, borderRadius: 8 }}
+          >
+            <style>{`
+              .pdf-export-surface, .pdf-export-surface * {
+                color: #0f172a !important;
+                background-color: transparent !important;
+                border-color: #e2e8f0 !important;
+              }
+              .pdf-export-surface { background-color: #ffffff !important; }
+            `}</style>
+            <div style={{ marginBottom: 24 }}>
+              <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>{contract.title}</h1>
+              <p style={{ fontSize: 12, color: "#475569", marginTop: 4 }}>
+                For {contract.client_name}
+                {contract.company_name ? ` · ${contract.company_name}` : ""}
+              </p>
+            </div>
+            <ContractRenderer
+              content={renderMergeTags(contract.body, {
+                client: { name: contract.client_name, email: contract.client_email, company: contract.company_name },
+                intake,
+              })}
+              clientSignature={clientSig as any}
+              providerSignature={providerSig as any}
+            />
+            <SignatureBlock signatures={signatures as any} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
