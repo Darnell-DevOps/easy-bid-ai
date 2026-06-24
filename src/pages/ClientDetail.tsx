@@ -1177,3 +1177,92 @@ function DetailRow({
     </div>
   );
 }
+
+function ClientSection({
+  title,
+  icon: Icon,
+  actionLabel,
+  onAction,
+  emptyText,
+  isEmpty,
+  children,
+}: {
+  title: string;
+  icon: any;
+  actionLabel?: string;
+  onAction?: () => void;
+  emptyText: string;
+  isEmpty: boolean;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <Icon className="w-4 h-4 text-accent" /> {title}
+        </h2>
+        {actionLabel && onAction && (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={onAction}
+            className="gap-2 text-xs text-muted-foreground hover:text-foreground h-8 px-2.5"
+          >
+            <Plus className="w-3.5 h-3.5" /> {actionLabel}
+          </Button>
+        )}
+      </div>
+      {isEmpty ? (
+        <Card className="border-dashed">
+          <CardContent className="p-6 text-center">
+            <Icon className="w-7 h-7 text-muted-foreground/60 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">{emptyText}</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-2.5">{children}</div>
+      )}
+    </div>
+  );
+}
+
+function RowCard({
+  onClick,
+  icon: Icon,
+  title,
+  subtitle,
+  badge,
+}: {
+  onClick?: () => void;
+  icon: any;
+  title: string;
+  subtitle: string;
+  badge?: { label: string; className: string };
+}) {
+  return (
+    <Card
+      className="group cursor-pointer transition-all duration-200 hover:border-accent/50 hover:shadow-lg hover:shadow-accent/10 hover:-translate-y-0.5 hover:bg-accent/[0.04]"
+      onClick={onClick}
+    >
+      <CardContent className="p-4 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5 min-w-0 flex-1">
+          <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0 group-hover:bg-accent/20 transition-colors">
+            <Icon className="w-5 h-5 text-accent" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground truncate">{title}</p>
+            <p className="text-xs text-muted-foreground mt-0.5 truncate">{subtitle}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {badge && (
+            <Badge variant="outline" className={`${badge.className} text-xs whitespace-nowrap capitalize`}>
+              {badge.label}
+            </Badge>
+          )}
+          <ArrowRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-accent group-hover:translate-x-1 transition-all" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
