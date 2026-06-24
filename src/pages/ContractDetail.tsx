@@ -180,7 +180,7 @@ export default function ContractDetail() {
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-2xl font-bold text-foreground">{contract.title}</h1>
-                  <Badge className={`${STATUS_STYLES[contract.status]} border-0`}>{contract.status}</Badge>
+                  <Badge className={`${STATUS_STYLES[contract.status] || STATUS_STYLES.draft} border-0`}>{STATUS_LABEL[contract.status] || contract.status}</Badge>
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">
                   {contractTypeLabel(contract.contract_type)} · For {contract.client_name}
