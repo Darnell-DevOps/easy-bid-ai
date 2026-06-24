@@ -18,9 +18,12 @@ import {
   CreditCard,
   Eraser,
   Lock,
+  Download,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { renderMergeTags } from "@/lib/merge-tags";
+import { sendEmail } from "@/lib/email";
+import { downloadContractPdf } from "@/lib/contract-pdf";
 
 interface PublicContract {
   id: string;
@@ -37,6 +40,8 @@ interface PublicContract {
   signed_at: string | null;
   amount_cents: number | null;
   currency: string | null;
+  countersigned_at?: string | null;
+  countersigner_name?: string | null;
 }
 
 export default function ContractSignPage() {
@@ -61,7 +66,10 @@ export default function ContractSignPage() {
     method: "typed" | "drawn";
     signature_data: string;
     signed_at: string;
+    signer_role?: "client" | "provider";
   }>>([]);
+  const [downloading, setDownloading] = useState(false);
+  const pdfRef = useRef<HTMLDivElement>(null);
 
   // Drawn signature state
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -88,10 +96,10 @@ export default function ContractSignPage() {
       setLoading(false);
 
       // If already signed, load existing signatures so they render inside the contract.
-      if ((data as any).status === "signed") {
+      if ((data as any).status === "signed" || (data as any).status === "executed") {
         supabase
           .from("contract_signatures")
-          .select("id, signer_name, signer_email, method, signature_data, signed_at")
+          .select("id, signer_name, signer_email, method, signature_data, signed_at, signer_role")
           .eq("contract_id", (data as any).id)
           .order("signed_at", { ascending: true })
           .then(({ data: sigs }) => {
@@ -283,11 +291,33 @@ export default function ContractSignPage() {
       // Pull all signatures for this contract so they appear inline immediately.
       const { data: sigs } = await supabase
         .from("contract_signatures")
-        .select("id, signer_name, signer_email, method, signature_data, signed_at")
+        .select("id, signer_name, signer_email, method, signature_data, signed_at, signer_role")
         .eq("contract_id", contract.id)
         .order("signed_at", { ascending: true });
       if (sigs) setSignatures(sigs as any);
-      toast({ title: "Contract signed", description: "Thank you — your signature has been recorded." });
+      toast({ title: "Contract signed", description: "Thank you — your signature has been recorded. The provider will countersign shortly." });
+
+      // Notify the contract owner so they can countersign.
+      try {
+        const { data: ownerRows } = await supabase.rpc("get_contract_owner_email", { _token: contract.signing_token });
+        const owner = Array.isArray(ownerRows) ? ownerRows[0] : ownerRows;
+        if (owner?.owner_email) {
+          const ownerUrl = `${window.location.origin}/dashboard/contracts/${contract.id}`;
+          void sendEmail({
+            templateName: "contract-awaiting-countersign",
+            recipientEmail: owner.owner_email,
+            userId: contract.user_id,
+            idempotencyKey: `contract-awaiting-countersign-${contract.id}`,
+            data: {
+              title: contract.title,
+              client_name: signerName.trim() || contract.client_name,
+              url: ownerUrl,
+            },
+          });
+        }
+      } catch (notifyErr) {
+        console.warn("countersign notify failed:", notifyErr);
+      }
     } catch (e: any) {
       toast({ title: "Couldn't sign", description: e.message, variant: "destructive" });
     } finally {
@@ -314,7 +344,22 @@ export default function ContractSignPage() {
     );
   }
 
-  const isSigned = contract.status === "signed";
+  const isSigned = contract.status === "signed" || contract.status === "executed";
+  const isExecuted = contract.status === "executed";
+  const clientSig = signatures.find((s) => s.signer_role === "client") || signatures.find((s) => !s.signer_role) || null;
+  const providerSig = signatures.find((s) => s.signer_role === "provider") || null;
+
+  const handleDownload = async () => {
+    if (!pdfRef.current) return;
+    setDownloading(true);
+    try {
+      await downloadContractPdf(pdfRef.current, contract.title);
+    } catch (e: any) {
+      toast({ title: "Couldn't generate PDF", description: e?.message || "Try again.", variant: "destructive" });
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -325,9 +370,13 @@ export default function ContractSignPage() {
             <FileSignature className="w-5 h-5 text-purple shrink-0" />
             <span className="text-sm font-semibold text-foreground truncate">{contract.title}</span>
           </div>
-          {isSigned ? (
+          {isExecuted ? (
             <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-500 bg-emerald-500/10 px-2.5 py-1 rounded-full">
-              <CheckCircle2 className="w-3.5 h-3.5" /> Signed
+              <CheckCircle2 className="w-3.5 h-3.5" /> Executed
+            </span>
+          ) : isSigned ? (
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-purple bg-purple/10 px-2.5 py-1 rounded-full">
+              <CheckCircle2 className="w-3.5 h-3.5" /> Signed — awaiting countersignature
             </span>
           ) : (
             <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-purple bg-purple/10 px-2.5 py-1 rounded-full">
@@ -354,9 +403,10 @@ export default function ContractSignPage() {
               client: { name: contract.client_name, email: contract.client_email, company: contract.company_name },
               intake,
             })}
-            clientSignature={signatures[signatures.length - 1] || null}
+            clientSignature={clientSig as any}
+            providerSignature={providerSig as any}
           />
-          <SignatureBlock signatures={signatures} />
+          <SignatureBlock signatures={signatures as any} />
         </section>
 
         {/* Signature OR success */}
@@ -366,12 +416,20 @@ export default function ContractSignPage() {
               <CheckCircle2 className="w-6 h-6 text-emerald-500" />
             </div>
             <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-2">
-              Contract signed successfully
+              {isExecuted ? "Contract fully executed" : "Contract signed successfully"}
             </h2>
             <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto">
-              A copy has been saved to your records. Here's what's next:
+              {isExecuted
+                ? "Both parties have signed. Download a copy for your records."
+                : "Your signature has been recorded. The provider will countersign and you'll receive the executed contract by email."}
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center flex-wrap">
+              {isExecuted && (
+                <Button size="lg" variant="outline" className="gap-2" onClick={handleDownload} disabled={downloading}>
+                  {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                  Download Executed PDF
+                </Button>
+              )}
               {retainerToken ? (
                 <Button size="lg" asChild className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold">
                   <Link to={`/retainer/${retainerToken}`}>
@@ -474,6 +532,41 @@ export default function ContractSignPage() {
           </section>
         )}
       </main>
+
+      {isExecuted && (
+        <div style={{ position: "fixed", left: -10000, top: 0, width: 794 }} aria-hidden="true">
+          <div
+            ref={pdfRef}
+            className="pdf-export-surface"
+            style={{ background: "#ffffff", color: "#0f172a", padding: 32, borderRadius: 8 }}
+          >
+            <style>{`
+              .pdf-export-surface, .pdf-export-surface * {
+                color: #0f172a !important;
+                background-color: transparent !important;
+                border-color: #e2e8f0 !important;
+              }
+              .pdf-export-surface { background-color: #ffffff !important; }
+            `}</style>
+            <div style={{ marginBottom: 24 }}>
+              <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>{contract.title}</h1>
+              <p style={{ fontSize: 12, color: "#475569", marginTop: 4 }}>
+                For {contract.client_name}
+                {contract.company_name ? ` · ${contract.company_name}` : ""}
+              </p>
+            </div>
+            <ContractRenderer
+              content={renderMergeTags(contract.body, {
+                client: { name: contract.client_name, email: contract.client_email, company: contract.company_name },
+                intake,
+              })}
+              clientSignature={clientSig as any}
+              providerSignature={providerSig as any}
+            />
+            <SignatureBlock signatures={signatures as any} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

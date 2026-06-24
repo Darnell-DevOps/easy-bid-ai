@@ -7,20 +7,29 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import ContractRenderer from "@/components/contracts/ContractRenderer";
 import SignatureBlock from "@/components/contracts/SignatureBlock";
-import { Loader2, ArrowLeft, Copy, ExternalLink, Send, CheckCircle2, Clock, Eye, Download } from "lucide-react";
+import CountersignDialog from "@/components/contracts/CountersignDialog";
+import { Loader2, ArrowLeft, Copy, ExternalLink, Send, CheckCircle2, Clock, Eye, Download, FileSignature } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { contractTypeLabel, type ContractRow, type ContractSignatureRow } from "@/lib/contracts";
 import { sendEmail } from "@/lib/email";
 import { renderMergeTags } from "@/lib/merge-tags";
 import { WhatsAppButton } from "@/components/whatsapp/WhatsAppButton";
-// @ts-ignore - no types ship with html2pdf.js
-import html2pdf from "html2pdf.js";
+import { downloadContractPdf } from "@/lib/contract-pdf";
 
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
   sent: "bg-accent/15 text-accent",
   viewed: "bg-purple/15 text-purple",
-  signed: "bg-emerald-500/15 text-emerald-500",
+  signed: "bg-purple/15 text-purple",
+  executed: "bg-emerald-500/15 text-emerald-500",
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  draft: "draft",
+  sent: "sent",
+  viewed: "viewed",
+  signed: "awaiting countersignature",
+  executed: "executed",
 };
 
 export default function ContractDetail() {
@@ -33,7 +42,18 @@ export default function ContractDetail() {
   const [loading, setLoading] = useState(true);
   const [clientPhone, setClientPhone] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [countersignOpen, setCountersignOpen] = useState(false);
+  const [ownerName, setOwnerName] = useState("");
   const pdfRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      const u = data.user;
+      if (!u) return;
+      const meta: any = u.user_metadata || {};
+      setOwnerName(meta.full_name || meta.name || u.email || "");
+    });
+  }, []);
 
   const load = async () => {
     if (!id) return;
@@ -114,23 +134,38 @@ export default function ContractDetail() {
     if (!pdfRef.current || !contract) return;
     setDownloading(true);
     try {
-      const safeTitle = contract.title.replace(/[^a-z0-9-_ ]/gi, "").trim() || "contract";
-      await html2pdf()
-        .set({
-          margin: [12, 12, 16, 12],
-          filename: `${safeTitle}.pdf`,
-          image: { type: "jpeg", quality: 0.95 },
-          html2canvas: { scale: 2, backgroundColor: "#ffffff", useCORS: true },
-          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-        } as any)
-        .from(pdfRef.current)
-        .save();
+      await downloadContractPdf(pdfRef.current, contract.title);
     } catch (e: any) {
       toast({ title: "Couldn't generate PDF", description: e?.message || "Try again.", variant: "destructive" });
     } finally {
       setDownloading(false);
     }
   };
+
+
+  const handleCountersigned = async () => {
+    await load();
+    if (contract?.client_email) {
+      const url = `${window.location.origin}/sign/${contract.signing_token}`;
+      void sendEmail({
+        templateName: "contract-executed",
+        recipientEmail: contract.client_email,
+        userId: contract.user_id,
+        idempotencyKey: `contract-executed-${contract.id}`,
+        data: {
+          title: contract.title,
+          client_name: contract.client_name,
+          from_name: contract.company_name || ownerName || "Your contact",
+          url,
+        },
+      });
+    }
+  };
+
+  const clientSig = signatures.find((s: any) => s.signer_role === "client") || signatures[0] || null;
+  const providerSig = signatures.find((s: any) => s.signer_role === "provider") || null;
+  const isExecuted = contract?.status === "executed";
+  const isAwaitingCountersign = contract?.status === "signed" && !providerSig;
 
   return (
     <DashboardLayout>
@@ -145,7 +180,7 @@ export default function ContractDetail() {
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-2xl font-bold text-foreground">{contract.title}</h1>
-                  <Badge className={`${STATUS_STYLES[contract.status]} border-0`}>{contract.status}</Badge>
+                  <Badge className={`${STATUS_STYLES[contract.status] || STATUS_STYLES.draft} border-0`}>{STATUS_LABEL[contract.status] || contract.status}</Badge>
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">
                   {contractTypeLabel(contract.contract_type)} · For {contract.client_name}
@@ -171,23 +206,54 @@ export default function ContractDetail() {
                 />
                 <Button variant="outline" className="gap-2" onClick={downloadPdf} disabled={downloading}>
                   {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                  Download PDF
+                  {isExecuted ? "Download Executed PDF" : "Download PDF"}
                 </Button>
                 {contract.status === "draft" && (
                   <Button className="gap-2 bg-gradient-to-r from-accent to-purple text-white" onClick={sendForSignature}>
                     <Send className="w-4 h-4" /> Send for signature
                   </Button>
                 )}
+                {isAwaitingCountersign && (
+                  <Button
+                    className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold"
+                    onClick={() => setCountersignOpen(true)}
+                  >
+                    <FileSignature className="w-4 h-4" /> Countersign contract
+                  </Button>
+                )}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-2">
               <Timeline icon={Send} label="Sent" value={contract.sent_at} />
               <Timeline icon={Eye} label="Viewed" value={contract.viewed_at} />
-              <Timeline icon={CheckCircle2} label="Signed" value={contract.signed_at} />
+              <Timeline icon={CheckCircle2} label="Client signed" value={contract.signed_at} />
+              <Timeline icon={FileSignature} label="Executed" value={(contract as any).countersigned_at || null} />
             </div>
           </CardContent>
         </Card>
+
+        {isAwaitingCountersign && (
+          <Card className="border-purple/40 bg-purple/5">
+            <CardContent className="p-5 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-purple/15 flex items-center justify-center">
+                  <FileSignature className="w-5 h-5 text-purple" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Your client has signed</p>
+                  <p className="text-xs text-muted-foreground">Add your countersignature to make this contract fully executed.</p>
+                </div>
+              </div>
+              <Button
+                className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold"
+                onClick={() => setCountersignOpen(true)}
+              >
+                <FileSignature className="w-4 h-4" /> Countersign now
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {signatures.length > 0 && (
           <Card>
@@ -242,15 +308,27 @@ export default function ContractDetail() {
                   {contract.company_name ? ` · ${contract.company_name}` : ""}
                 </p>
               </div>
-              <ContractRenderer content={renderMergeTags(contract.body, {
-                client: { name: contract.client_name, email: contract.client_email, company: contract.company_name },
-                intake,
-              })} />
-              <SignatureBlock signatures={signatures} />
+              <ContractRenderer
+                content={renderMergeTags(contract.body, {
+                  client: { name: contract.client_name, email: contract.client_email, company: contract.company_name },
+                  intake,
+                })}
+                clientSignature={clientSig as any}
+                providerSignature={providerSig as any}
+              />
+              <SignatureBlock signatures={signatures as any} />
             </div>
           </CardContent>
         </Card>
       </div>
+
+      <CountersignDialog
+        open={countersignOpen}
+        onOpenChange={setCountersignOpen}
+        contractId={contract.id}
+        defaultName={ownerName}
+        onSigned={handleCountersigned}
+      />
     </DashboardLayout>
   );
 }

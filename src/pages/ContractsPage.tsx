@@ -45,7 +45,8 @@ const STATUS_STYLES: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
   sent: "bg-accent/15 text-accent",
   viewed: "bg-purple/15 text-purple",
-  signed: "bg-emerald-500/15 text-emerald-500",
+  signed: "bg-purple/15 text-purple",
+  executed: "bg-emerald-500/15 text-emerald-500",
 };
 
 export default function ContractsPage() {
@@ -119,8 +120,8 @@ export default function ContractsPage() {
   }, [location.state]);
 
   const stats = useMemo(() => {
-    const pending = contracts.filter((c) => c.status !== "signed").length;
-    const signed = contracts.filter((c) => c.status === "signed").length;
+    const pending = contracts.filter((c) => c.status !== "executed" && c.status !== "signed").length;
+    const signed = contracts.filter((c) => c.status === "signed" || c.status === "executed").length;
     const awaiting = contracts.filter((c) => c.status === "sent" || c.status === "viewed").length;
     return { pending, signed, awaiting };
   }, [contracts]);

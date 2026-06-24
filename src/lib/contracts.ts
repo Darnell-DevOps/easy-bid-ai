@@ -33,6 +33,8 @@ export interface ContractRow {
   sent_at: string | null;
   viewed_at: string | null;
   signed_at: string | null;
+  countersigned_at?: string | null;
+  countersigner_name?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -48,6 +50,7 @@ export interface ContractSignatureRow {
   ip_address: string | null;
   user_agent: string | null;
   signed_at: string;
+  signer_role?: "client" | "provider";
 }
 
 export function contractTypeLabel(type: string): string {
@@ -63,7 +66,9 @@ export function contractStatusLabel(s: string): string {
     case "viewed":
       return "Viewed";
     case "signed":
-      return "Signed";
+      return "Awaiting countersignature";
+    case "executed":
+      return "Executed";
     default:
       return s;
   }

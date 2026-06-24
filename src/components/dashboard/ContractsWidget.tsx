@@ -16,12 +16,13 @@ interface ContractLite {
 const STATUS_ICON: Record<string, any> = {
   sent: Send,
   viewed: Eye,
-  signed: CheckCircle2,
+  signed: FileSignature,
+  executed: CheckCircle2,
 };
 
 export default function ContractsWidget() {
   const [contracts, setContracts] = useState<ContractLite[]>([]);
-  const [counts, setCounts] = useState({ pending: 0, signed: 0 });
+  const [counts, setCounts] = useState({ pending: 0, awaitingCountersign: 0, executed: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,7 +36,8 @@ export default function ContractsWidget() {
       setContracts(list.slice(0, 4));
       setCounts({
         pending: list.filter((c) => c.status === "sent" || c.status === "viewed").length,
-        signed: list.filter((c) => c.status === "signed").length,
+        awaitingCountersign: list.filter((c) => c.status === "signed").length,
+        executed: list.filter((c) => c.status === "executed").length,
       });
       setLoading(false);
     };
@@ -68,12 +70,15 @@ export default function ContractsWidget() {
           />
         ) : (
           <>
-            <div className="flex items-center gap-3 mb-3 text-xs">
+            <div className="flex items-center gap-3 mb-3 text-xs flex-wrap">
               <span className="inline-flex items-center gap-1 text-purple font-medium">
-                <Send className="w-3 h-3" /> {counts.pending} awaiting
+                <Send className="w-3 h-3" /> {counts.pending} awaiting client
+              </span>
+              <span className="inline-flex items-center gap-1 text-purple font-medium">
+                <FileSignature className="w-3 h-3" /> {counts.awaitingCountersign} to countersign
               </span>
               <span className="inline-flex items-center gap-1 text-emerald-500 font-medium">
-                <CheckCircle2 className="w-3 h-3" /> {counts.signed} signed
+                <CheckCircle2 className="w-3 h-3" /> {counts.executed} executed
               </span>
             </div>
             <ul className="space-y-2">
@@ -85,7 +90,7 @@ export default function ContractsWidget() {
                       to={`/dashboard/contracts/${c.id}`}
                       className="flex items-center gap-2 p-2 -mx-2 rounded-md hover:bg-muted/50 transition-colors"
                     >
-                      <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${c.status === "signed" ? "text-emerald-500" : "text-muted-foreground"}`} />
+                      <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${c.status === "executed" ? "text-emerald-500" : c.status === "signed" ? "text-purple" : "text-muted-foreground"}`} />
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium text-foreground truncate">{c.client_name}</p>
                         <p className="text-[11px] text-muted-foreground truncate">{c.title} · {c.status}</p>
