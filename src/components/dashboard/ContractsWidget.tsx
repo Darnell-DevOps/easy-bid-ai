@@ -16,7 +16,8 @@ interface ContractLite {
 const STATUS_ICON: Record<string, any> = {
   sent: Send,
   viewed: Eye,
-  signed: CheckCircle2,
+  signed: FileSignature,
+  executed: CheckCircle2,
 };
 
 export default function ContractsWidget() {
