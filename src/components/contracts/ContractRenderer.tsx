@@ -1,11 +1,34 @@
 import { useMemo } from "react";
 
+export interface InlineSignature {
+  signer_name: string;
+  signer_email?: string | null;
+  method: "typed" | "drawn";
+  signature_data: string;
+  signed_at: string;
+}
+
 /**
  * Lightweight Markdown renderer scoped to contract output.
  * Supports: # / ## / ### headings, paragraphs, bullet lists, **bold**.
+ *
+ * When a `clientSignature` is provided, the renderer detects underscore
+ * placeholder lines (e.g. "____________ Date:") that follow a "Client" label
+ * and replaces the underscores with the actual signature visual + date,
+ * so the signed contract carries the signature where it belongs.
  */
-export default function ContractRenderer({ content }: { content: string }) {
+export default function ContractRenderer({
+  content,
+  clientSignature,
+}: {
+  content: string;
+  clientSignature?: InlineSignature | null;
+}) {
   const blocks = useMemo(() => parseBlocks(content || ""), [content]);
+
+  // Track the last non-empty label (e.g. "Client", "Service Provider")
+  // so we can attach the signature to the right slot.
+  let lastLabel = "";
 
   return (
     <article className="max-w-none text-foreground leading-relaxed">
@@ -38,6 +61,59 @@ export default function ContractRenderer({ content }: { content: string }) {
               ))}
             </ul>
           );
+
+        // Detect signature placeholder line (e.g. "____________ Date:")
+        const isPlaceholder = /_{3,}/.test(b.text);
+        if (isPlaceholder && clientSignature && /client/i.test(lastLabel)) {
+          const label = lastLabel;
+          lastLabel = ""; // consume
+          return (
+            <div key={i} className="my-3 flex flex-wrap items-end gap-x-8 gap-y-2">
+              <div className="flex flex-col">
+                <div className="min-h-12 flex items-end">
+                  {clientSignature.method === "drawn" &&
+                  clientSignature.signature_data?.startsWith("data:image") ? (
+                    <img
+                      src={clientSignature.signature_data}
+                      alt={`Signature of ${clientSignature.signer_name}`}
+                      className="max-h-14 object-contain"
+                    />
+                  ) : (
+                    <span
+                      className="text-2xl text-foreground"
+                      style={{ fontFamily: "'Caveat', 'Brush Script MT', cursive" }}
+                    >
+                      {clientSignature.signature_data || clientSignature.signer_name}
+                    </span>
+                  )}
+                </div>
+                <div className="border-t border-border/70 mt-1 pt-1 min-w-[14rem]">
+                  <p className="text-xs text-muted-foreground">
+                    {clientSignature.signer_name}
+                    {label ? ` · ${label}` : ""}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col">
+                <p className="text-sm text-foreground/90 min-h-12 flex items-end">
+                  {new Date(clientSignature.signed_at).toLocaleDateString()}
+                </p>
+                <div className="border-t border-border/70 mt-1 pt-1 min-w-[8rem]">
+                  <p className="text-xs text-muted-foreground">Date</p>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        // Update lastLabel tracker with short label-like paragraphs
+        const trimmed = b.text.trim();
+        if (trimmed && !isPlaceholder && trimmed.length < 40) {
+          lastLabel = trimmed.replace(/\*\*/g, "");
+        } else if (!isPlaceholder) {
+          lastLabel = "";
+        }
+
         return (
           <p key={i} className="text-sm text-foreground/90 my-3 whitespace-pre-wrap">
             {renderInline(b.text)}
@@ -100,6 +176,16 @@ function parseBlocks(md: string): Block[] {
       flushPara();
       list = list || [];
       list.push(line.replace(/^[-*]\s+/, ""));
+      continue;
+    }
+    // Treat short label-style lines (e.g. "Client", "Service Provider") and
+    // underscore signature placeholder lines as their own blocks so the
+    // renderer can pair them up. Otherwise merge into the running paragraph.
+    const isLabel = /^(\*\*)?(client|service provider)(\*\*)?:?$/i.test(line);
+    const isPlaceholder = /_{3,}/.test(line);
+    if (isLabel || isPlaceholder) {
+      flushPara();
+      blocks.push({ type: "p", text: line });
       continue;
     }
     flushList();
