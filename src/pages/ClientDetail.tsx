@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { contractTypeLabel, contractStatusLabel } from "@/lib/contracts";
+import { formatMoney, intervalLabel, statusBadgeClasses as retainerStatusBadge } from "@/lib/retainers";
 import {
   Select,
   SelectContent,
@@ -38,6 +40,10 @@ import {
   Receipt,
   CreditCard,
   AlertCircle,
+  FileSignature,
+  Repeat,
+  ClipboardList,
+  CalendarDays,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -90,6 +96,49 @@ interface Proposal {
   status: string;
   client_paid: boolean;
   invoice_content: string | null;
+}
+
+interface ContractItem {
+  id: string;
+  title: string;
+  contract_type: string;
+  status: string;
+  amount_cents: number | null;
+  currency: string | null;
+  signed_at: string | null;
+  countersigned_at: string | null;
+  created_at: string;
+}
+
+interface RetainerItem {
+  id: string;
+  title: string;
+  service_type: string | null;
+  status: string;
+  amount_cents: number;
+  currency: string;
+  billing_interval: string;
+  custom_interval_days: number | null;
+  next_billing_date: string | null;
+  created_at: string;
+}
+
+interface OnboardingItem {
+  id: string;
+  service_type: string | null;
+  status: string;
+  access_token: string;
+  sent_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+}
+
+interface BookingItem {
+  id: string;
+  meeting_name: string;
+  scheduled_at: string;
+  status: string;
+  duration_minutes: number;
 }
 
 const STATUS_OPTIONS = ["New", "Qualified", "Proposal Sent", "Won", "Lost"];
@@ -148,6 +197,10 @@ export default function ClientDetail() {
   const navigate = useNavigate();
   const [client, setClient] = useState<ClientInfo | null>(null);
   const [proposals, setProposals] = useState<Proposal[]>([]);
+  const [contracts, setContracts] = useState<ContractItem[]>([]);
+  const [retainers, setRetainers] = useState<RetainerItem[]>([]);
+  const [onboardingForms, setOnboardingForms] = useState<OnboardingItem[]>([]);
+  const [bookings, setBookings] = useState<BookingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
@@ -157,18 +210,71 @@ export default function ClientDetail() {
   const [replyOpen, setReplyOpen] = useState(false);
 
   useEffect(() => {
-    const fetch = async () => {
+    const fetchAll = async () => {
       const { data: c } = await supabase.from("clients").select("*").eq("id", id!).single();
-      const { data: p } = await supabase
-        .from("proposals")
-        .select("id, service_type, budget, created_at, status, client_paid, invoice_content")
-        .eq("client_id", id!)
-        .order("created_at", { ascending: false });
-      setClient(c as ClientInfo);
-      setProposals(p || []);
+      const client = c as ClientInfo | null;
+      const email = client?.email?.toLowerCase() || null;
+      const name = client?.name || null;
+
+      const [p, ct, r, of, bkByEmail, bkByName] = await Promise.all([
+        supabase
+          .from("proposals")
+          .select("id, service_type, budget, created_at, status, client_paid, invoice_content")
+          .eq("client_id", id!)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("contracts")
+          .select("id, title, contract_type, status, amount_cents, currency, signed_at, countersigned_at, created_at")
+          .eq("client_id", id!)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("retainers")
+          .select("id, title, service_type, status, amount_cents, currency, billing_interval, custom_interval_days, next_billing_date, created_at")
+          .eq("client_id", id!)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("onboarding_forms")
+          .select("id, service_type, status, access_token, sent_at, completed_at, created_at")
+          .eq("client_id", id!)
+          .order("created_at", { ascending: false }),
+        email
+          ? supabase
+              .from("bookings")
+              .select("id, meeting_name, scheduled_at, status, duration_minutes, client_email, client_name")
+              .ilike("client_email", email)
+              .order("scheduled_at", { ascending: false })
+          : Promise.resolve({ data: [] as any[] }),
+        name
+          ? supabase
+              .from("bookings")
+              .select("id, meeting_name, scheduled_at, status, duration_minutes, client_email, client_name")
+              .ilike("client_name", name)
+              .order("scheduled_at", { ascending: false })
+          : Promise.resolve({ data: [] as any[] }),
+      ]);
+
+      const bookingMap = new Map<string, BookingItem>();
+      [...(bkByEmail.data || []), ...(bkByName.data || [])].forEach((b: any) => {
+        bookingMap.set(b.id, {
+          id: b.id,
+          meeting_name: b.meeting_name,
+          scheduled_at: b.scheduled_at,
+          status: b.status,
+          duration_minutes: b.duration_minutes,
+        });
+      });
+
+      setClient(client);
+      setProposals(p.data || []);
+      setContracts((ct.data as any) || []);
+      setRetainers((r.data as any) || []);
+      setOnboardingForms((of.data as any) || []);
+      setBookings(Array.from(bookingMap.values()).sort((a, b) =>
+        new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime()
+      ));
       setLoading(false);
     };
-    fetch();
+    fetchAll();
   }, [id]);
 
   const updateStatus = async (newStatus: string) => {
@@ -601,6 +707,162 @@ export default function ClientDetail() {
           )}
         </div>
 
+        {/* Contracts */}
+        <ClientSection
+          title="Contracts"
+          icon={FileSignature}
+          actionLabel="New contract"
+          onAction={() =>
+            navigate("/dashboard/contracts", {
+              state: {
+                prefillClient: {
+                  id: client.id,
+                  name: client.name,
+                  email: client.email,
+                  company: client.company,
+                },
+              },
+            })
+          }
+          emptyText="No contracts yet for this client."
+          isEmpty={contracts.length === 0}
+        >
+          {contracts.map((c) => (
+            <RowCard
+              key={c.id}
+              onClick={() => navigate(`/dashboard/contracts/${c.id}`)}
+              icon={FileSignature}
+              title={c.title}
+              subtitle={`${contractTypeLabel(c.contract_type)}${
+                c.amount_cents
+                  ? ` • ${formatMoney(c.amount_cents, c.currency || "USD")}`
+                  : ""
+              } • ${new Date(c.created_at).toLocaleDateString()}`}
+              badge={{
+                label: contractStatusLabel(c.status),
+                className:
+                  c.status === "executed"
+                    ? "bg-emerald-500/15 text-emerald-500 border-emerald-500/30"
+                    : c.status === "signed"
+                    ? "bg-purple/15 text-purple border-purple/30"
+                    : c.status === "sent" || c.status === "viewed"
+                    ? "bg-accent/15 text-accent border-accent/30"
+                    : "bg-muted text-muted-foreground border-border",
+              }}
+            />
+          ))}
+        </ClientSection>
+
+        {/* Retainers */}
+        <ClientSection
+          title="Retainers"
+          icon={Repeat}
+          actionLabel="New retainer"
+          onAction={() =>
+            navigate("/dashboard/retainers/new", {
+              state: {
+                prefillClient: {
+                  id: client.id,
+                  name: client.name,
+                  email: client.email,
+                  company: client.company,
+                },
+              },
+            })
+          }
+          emptyText="No retainers yet for this client."
+          isEmpty={retainers.length === 0}
+        >
+          {retainers.map((r) => (
+            <RowCard
+              key={r.id}
+              onClick={() => navigate(`/dashboard/retainers/${r.id}`)}
+              icon={Repeat}
+              title={r.title}
+              subtitle={`${formatMoney(r.amount_cents, r.currency)} • ${intervalLabel(
+                r.billing_interval,
+                r.custom_interval_days,
+              )}${
+                r.next_billing_date
+                  ? ` • Next: ${new Date(r.next_billing_date).toLocaleDateString()}`
+                  : ""
+              }`}
+              badge={{
+                label: r.status.replace("_", " "),
+                className: retainerStatusBadge(r.status),
+              }}
+            />
+          ))}
+        </ClientSection>
+
+        {/* Onboarding forms */}
+        <ClientSection
+          title="Onboarding"
+          icon={ClipboardList}
+          emptyText="No onboarding forms yet for this client."
+          isEmpty={onboardingForms.length === 0}
+        >
+          {onboardingForms.map((o) => (
+            <RowCard
+              key={o.id}
+              onClick={() => window.open(`/onboarding/${o.access_token}`, "_blank")}
+              icon={ClipboardList}
+              title={o.service_type || "Onboarding form"}
+              subtitle={`Created ${new Date(o.created_at).toLocaleDateString()}${
+                o.completed_at
+                  ? ` • Submitted ${new Date(o.completed_at).toLocaleDateString()}`
+                  : o.sent_at
+                  ? ` • Sent ${new Date(o.sent_at).toLocaleDateString()}`
+                  : ""
+              }`}
+              badge={{
+                label:
+                  o.status === "completed"
+                    ? "Submitted"
+                    : o.status === "in_progress"
+                    ? "In progress"
+                    : "Sent",
+                className:
+                  o.status === "completed"
+                    ? "bg-emerald-500/15 text-emerald-500 border-emerald-500/30"
+                    : o.status === "in_progress"
+                    ? "bg-accent/15 text-accent border-accent/30"
+                    : "bg-muted text-muted-foreground border-border",
+              }}
+            />
+          ))}
+        </ClientSection>
+
+        {/* Bookings */}
+        <ClientSection
+          title="Bookings"
+          icon={CalendarDays}
+          emptyText="No bookings with this client yet."
+          isEmpty={bookings.length === 0}
+        >
+          {bookings.map((b) => {
+            const when = new Date(b.scheduled_at);
+            const past = when.getTime() < Date.now();
+            return (
+              <RowCard
+                key={b.id}
+                onClick={() => navigate("/dashboard/calendar")}
+                icon={CalendarDays}
+                title={b.meeting_name}
+                subtitle={`${when.toLocaleString()} • ${b.duration_minutes} min`}
+                badge={{
+                  label: past ? "Past" : b.status,
+                  className: past
+                    ? "bg-muted text-muted-foreground border-border"
+                    : "bg-emerald-500/15 text-emerald-500 border-emerald-500/30",
+                }}
+              />
+            );
+          })}
+        </ClientSection>
+
+
+
         {/* Lead Summary — only if this client came through the Lead Assistant */}
         {(client.original_lead_message || client.lead_quality || client.ai_recommendation || client.lead_source) && (
           <Card className="glass-card border-accent/20">
@@ -913,5 +1175,94 @@ function DetailRow({
         {value || <span className="text-muted-foreground italic">Not provided</span>}
       </p>
     </div>
+  );
+}
+
+function ClientSection({
+  title,
+  icon: Icon,
+  actionLabel,
+  onAction,
+  emptyText,
+  isEmpty,
+  children,
+}: {
+  title: string;
+  icon: any;
+  actionLabel?: string;
+  onAction?: () => void;
+  emptyText: string;
+  isEmpty: boolean;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <Icon className="w-4 h-4 text-accent" /> {title}
+        </h2>
+        {actionLabel && onAction && (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={onAction}
+            className="gap-2 text-xs text-muted-foreground hover:text-foreground h-8 px-2.5"
+          >
+            <Plus className="w-3.5 h-3.5" /> {actionLabel}
+          </Button>
+        )}
+      </div>
+      {isEmpty ? (
+        <Card className="border-dashed">
+          <CardContent className="p-6 text-center">
+            <Icon className="w-7 h-7 text-muted-foreground/60 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">{emptyText}</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-2.5">{children}</div>
+      )}
+    </div>
+  );
+}
+
+function RowCard({
+  onClick,
+  icon: Icon,
+  title,
+  subtitle,
+  badge,
+}: {
+  onClick?: () => void;
+  icon: any;
+  title: string;
+  subtitle: string;
+  badge?: { label: string; className: string };
+}) {
+  return (
+    <Card
+      className="group cursor-pointer transition-all duration-200 hover:border-accent/50 hover:shadow-lg hover:shadow-accent/10 hover:-translate-y-0.5 hover:bg-accent/[0.04]"
+      onClick={onClick}
+    >
+      <CardContent className="p-4 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5 min-w-0 flex-1">
+          <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0 group-hover:bg-accent/20 transition-colors">
+            <Icon className="w-5 h-5 text-accent" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground truncate">{title}</p>
+            <p className="text-xs text-muted-foreground mt-0.5 truncate">{subtitle}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {badge && (
+            <Badge variant="outline" className={`${badge.className} text-xs whitespace-nowrap capitalize`}>
+              {badge.label}
+            </Badge>
+          )}
+          <ArrowRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-accent group-hover:translate-x-1 transition-all" />
+        </div>
+      </CardContent>
+    </Card>
   );
 }

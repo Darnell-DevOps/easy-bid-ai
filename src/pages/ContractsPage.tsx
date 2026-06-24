@@ -62,6 +62,8 @@ export default function ContractsPage() {
   const [contractType, setContractType] = useState("service_agreement");
   const [proposalId, setProposalId] = useState<string>("none");
   const [proposals, setProposals] = useState<any[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
+  const [clientId, setClientId] = useState<string>("none");
   const [providerName, setProviderName] = useState("");
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
@@ -86,15 +88,20 @@ export default function ContractsPage() {
 
   const fetchData = async () => {
     setLoading(true);
-    const [{ data: c }, { data: p }] = await Promise.all([
+    const [{ data: c }, { data: p }, { data: cl }] = await Promise.all([
       supabase.from("contracts").select("*").order("created_at", { ascending: false }),
       supabase
         .from("proposals")
-        .select("id, client_name, company_name, service_type, project_scope, timeline, budget, amount_cents, currency, status, accepted_at")
+        .select("id, client_id, client_name, company_name, service_type, project_scope, timeline, budget, amount_cents, currency, status, accepted_at")
         .order("created_at", { ascending: false }),
+      supabase
+        .from("clients")
+        .select("id, name, email, company")
+        .order("name", { ascending: true }),
     ]);
     setContracts((c as any) || []);
     setProposals(p || []);
+    setClients(cl || []);
     setLoading(false);
 
     // pre-fill provider name from auth
@@ -108,12 +115,24 @@ export default function ContractsPage() {
     fetchData();
   }, []);
 
-  // Apply contract template passed via navigation state (from Templates page)
+  // Apply contract template or client prefill passed via navigation state
   useEffect(() => {
-    const tpl = (location.state as any)?.contractTemplate as MergedContractTemplate | undefined;
+    const state = (location.state as any) || {};
+    const tpl = state.contractTemplate as MergedContractTemplate | undefined;
+    const prefill = state.prefillClient as
+      | { id: string; name?: string; email?: string | null; company?: string | null }
+      | undefined;
     if (tpl) {
       useTemplate(tpl);
-      // clear state so it doesn't reapply on back-nav
+    }
+    if (prefill) {
+      setClientId(prefill.id);
+      setClientName(prefill.name || "");
+      setClientEmail(prefill.email || "");
+      setCompanyName(prefill.company || "");
+      setOpenCreate(true);
+    }
+    if (tpl || prefill) {
       navigate(location.pathname, { replace: true, state: {} });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -126,6 +145,16 @@ export default function ContractsPage() {
     return { pending, signed, awaiting };
   }, [contracts]);
 
+  const pickClient = (id: string) => {
+    setClientId(id);
+    if (id === "none") return;
+    const c = clients.find((x) => x.id === id);
+    if (!c) return;
+    setClientName(c.name || "");
+    setClientEmail(c.email || "");
+    setCompanyName(c.company || "");
+  };
+
   const fillFromProposal = (id: string) => {
     setProposalId(id);
     if (id === "none") return;
@@ -137,6 +166,7 @@ export default function ContractsPage() {
     setScope(p.project_scope || "");
     setTimeline(p.timeline || "");
     setBudget(p.budget || "");
+    if (p.client_id) setClientId(p.client_id);
   };
 
   const handleCreate = async () => {
@@ -180,6 +210,7 @@ export default function ContractsPage() {
       const insertRow: any = {
         user_id: user.id,
         proposal_id: proposalId !== "none" ? proposalId : null,
+        client_id: clientId !== "none" ? clientId : (proposal?.client_id ?? null),
         contract_type: contractType,
         title: data?.title || contractTypeLabel(contractType),
         body: data?.body || "",
@@ -215,6 +246,7 @@ export default function ContractsPage() {
   const resetForm = () => {
     setContractType("service_agreement");
     setProposalId("none");
+    setClientId("none");
     setClientName("");
     setClientEmail("");
     setCompanyName("");
@@ -385,6 +417,24 @@ export default function ContractsPage() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div>
+              <Label>Link to client</Label>
+              <Select value={clientId} onValueChange={pickClient}>
+                <SelectTrigger><SelectValue placeholder="No linked client" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No linked client</SelectItem>
+                  {clients.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}{c.company ? ` — ${c.company}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Linking shows this contract on the client's profile alongside their proposals, retainers and bookings.
+              </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
