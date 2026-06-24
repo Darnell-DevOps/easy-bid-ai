@@ -123,23 +123,50 @@ export default function ContractDetail() {
     if (!pdfRef.current || !contract) return;
     setDownloading(true);
     try {
-      const safeTitle = contract.title.replace(/[^a-z0-9-_ ]/gi, "").trim() || "contract";
-      await html2pdf()
-        .set({
-          margin: [12, 12, 16, 12],
-          filename: `${safeTitle}.pdf`,
-          image: { type: "jpeg", quality: 0.95 },
-          html2canvas: { scale: 2, backgroundColor: "#ffffff", useCORS: true },
-          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-        } as any)
-        .from(pdfRef.current)
-        .save();
+      await downloadContractPdf(pdfRef.current, contract.title);
     } catch (e: any) {
       toast({ title: "Couldn't generate PDF", description: e?.message || "Try again.", variant: "destructive" });
     } finally {
       setDownloading(false);
     }
   };
+
+  const [countersignOpen, setCountersignOpen] = useState(false);
+  const [ownerName, setOwnerName] = useState("");
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      const u = data.user;
+      if (!u) return;
+      const meta: any = u.user_metadata || {};
+      const candidate = meta.full_name || meta.name || u.email || "";
+      setOwnerName(candidate);
+    });
+  }, []);
+
+  const handleCountersigned = async () => {
+    await load();
+    if (contract?.client_email) {
+      const url = `${window.location.origin}/sign/${contract.signing_token}`;
+      void sendEmail({
+        templateName: "contract-executed",
+        recipientEmail: contract.client_email,
+        userId: contract.user_id,
+        idempotencyKey: `contract-executed-${contract.id}`,
+        data: {
+          title: contract.title,
+          client_name: contract.client_name,
+          from_name: contract.company_name || ownerName || "Your contact",
+          url,
+        },
+      });
+    }
+  };
+
+  const clientSig = signatures.find((s: any) => s.signer_role === "client") || signatures[0] || null;
+  const providerSig = signatures.find((s: any) => s.signer_role === "provider") || null;
+  const isExecuted = contract?.status === "executed";
+  const isAwaitingCountersign = contract?.status === "signed" && !providerSig;
 
   return (
     <DashboardLayout>
