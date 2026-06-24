@@ -419,6 +419,24 @@ export default function ContractsPage() {
               </div>
             </div>
 
+            <div>
+              <Label>Link to client</Label>
+              <Select value={clientId} onValueChange={pickClient}>
+                <SelectTrigger><SelectValue placeholder="No linked client" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No linked client</SelectItem>
+                  {clients.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}{c.company ? ` — ${c.company}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Linking shows this contract on the client's profile alongside their proposals, retainers and bookings.
+              </p>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label>Your name / business</Label>
