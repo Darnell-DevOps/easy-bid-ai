@@ -295,7 +295,29 @@ export default function ContractSignPage() {
         .eq("contract_id", contract.id)
         .order("signed_at", { ascending: true });
       if (sigs) setSignatures(sigs as any);
-      toast({ title: "Contract signed", description: "Thank you — your signature has been recorded." });
+      toast({ title: "Contract signed", description: "Thank you — your signature has been recorded. The provider will countersign shortly." });
+
+      // Notify the contract owner so they can countersign.
+      try {
+        const { data: ownerRows } = await supabase.rpc("get_contract_owner_email", { _token: contract.signing_token });
+        const owner = Array.isArray(ownerRows) ? ownerRows[0] : ownerRows;
+        if (owner?.owner_email) {
+          const ownerUrl = `${window.location.origin}/dashboard/contracts/${contract.id}`;
+          void sendEmail({
+            templateName: "contract-awaiting-countersign",
+            recipientEmail: owner.owner_email,
+            userId: contract.user_id,
+            idempotencyKey: `contract-awaiting-countersign-${contract.id}`,
+            data: {
+              title: contract.title,
+              client_name: signerName.trim() || contract.client_name,
+              url: ownerUrl,
+            },
+          });
+        }
+      } catch (notifyErr) {
+        console.warn("countersign notify failed:", notifyErr);
+      }
     } catch (e: any) {
       toast({ title: "Couldn't sign", description: e.message, variant: "destructive" });
     } finally {
