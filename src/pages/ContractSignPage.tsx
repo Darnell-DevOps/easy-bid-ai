@@ -344,7 +344,22 @@ export default function ContractSignPage() {
     );
   }
 
-  const isSigned = contract.status === "signed";
+  const isSigned = contract.status === "signed" || contract.status === "executed";
+  const isExecuted = contract.status === "executed";
+  const clientSig = signatures.find((s) => s.signer_role === "client") || signatures.find((s) => !s.signer_role) || null;
+  const providerSig = signatures.find((s) => s.signer_role === "provider") || null;
+
+  const handleDownload = async () => {
+    if (!pdfRef.current) return;
+    setDownloading(true);
+    try {
+      await downloadContractPdf(pdfRef.current, contract.title);
+    } catch (e: any) {
+      toast({ title: "Couldn't generate PDF", description: e?.message || "Try again.", variant: "destructive" });
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20">
