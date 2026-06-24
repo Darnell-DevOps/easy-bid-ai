@@ -308,15 +308,27 @@ export default function ContractDetail() {
                   {contract.company_name ? ` · ${contract.company_name}` : ""}
                 </p>
               </div>
-              <ContractRenderer content={renderMergeTags(contract.body, {
-                client: { name: contract.client_name, email: contract.client_email, company: contract.company_name },
-                intake,
-              })} />
-              <SignatureBlock signatures={signatures} />
+              <ContractRenderer
+                content={renderMergeTags(contract.body, {
+                  client: { name: contract.client_name, email: contract.client_email, company: contract.company_name },
+                  intake,
+                })}
+                clientSignature={clientSig as any}
+                providerSignature={providerSig as any}
+              />
+              <SignatureBlock signatures={signatures as any} />
             </div>
           </CardContent>
         </Card>
       </div>
+
+      <CountersignDialog
+        open={countersignOpen}
+        onOpenChange={setCountersignOpen}
+        contractId={contract.id}
+        defaultName={ownerName}
+        onSigned={handleCountersigned}
+      />
     </DashboardLayout>
   );
 }
