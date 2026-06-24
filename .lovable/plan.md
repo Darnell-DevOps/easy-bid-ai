@@ -1,11 +1,16 @@
-## Hide "Complete payment" button on signed contract page when proposal is already paid
+## Make the drawn signature visible on the dark contract
 
-**Problem:** On the public contract signing page (`/sign/:token`), after the contract is signed, a "Complete payment" button is shown whenever the contract is linked to a proposal — regardless of whether that proposal has already been paid.
+The drawn signature is captured in black ink on a white canvas, so when it renders on the dark contract background it nearly disappears. Fix: invert the rendered signature image so the strokes appear white (or light) on the dark contract.
 
-**Fix:** In `src/pages/ContractSignPage.tsx`:
+### Changes
 
-1. Add a `proposalPaid` state (boolean, default `false`).
-2. In the existing load effect, when `data.proposal_id` is present, also fetch `client_paid` from the `proposals` table for that id and store it in `proposalPaid`.
-3. In the post-signing success section (around line 368), change the conditional from `contract.proposal_id ? ...` to `contract.proposal_id && !proposalPaid ? ...` so the "Complete payment" button only renders when payment is still outstanding.
+**`src/components/contracts/ContractRenderer.tsx`** — inline client signature
+- Apply a CSS filter to the `<img>` for drawn signatures so black ink becomes white: `filter: invert(1) brightness(2) contrast(1.1)`. The original PNG (with white background + black strokes) becomes transparent-feeling white strokes on the dark contract surface.
+- Typed signatures already use `text-foreground`, which is light on dark — no change needed there.
 
-No changes to the client portal, proposal view, PDF export, or any other functionality. Pure presentation logic on the contract signing page.
+**`src/components/contracts/SignatureBlock.tsx`** — bottom "Signed by" receipt cards
+- These cards have a white background (`bg-white`) so the black signature is already visible there. No change.
+
+### Out of scope
+- PDF export rendering (user previously asked we don't affect exports).
+- Capture color on the signing canvas stays black so the white-card "Signed by" receipt and PDF still look correct.
