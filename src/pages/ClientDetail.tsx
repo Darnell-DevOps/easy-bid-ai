@@ -707,6 +707,162 @@ export default function ClientDetail() {
           )}
         </div>
 
+        {/* Contracts */}
+        <ClientSection
+          title="Contracts"
+          icon={FileSignature}
+          actionLabel="New contract"
+          onAction={() =>
+            navigate("/dashboard/contracts", {
+              state: {
+                prefillClient: {
+                  id: client.id,
+                  name: client.name,
+                  email: client.email,
+                  company: client.company,
+                },
+              },
+            })
+          }
+          emptyText="No contracts yet for this client."
+          isEmpty={contracts.length === 0}
+        >
+          {contracts.map((c) => (
+            <RowCard
+              key={c.id}
+              onClick={() => navigate(`/dashboard/contracts/${c.id}`)}
+              icon={FileSignature}
+              title={c.title}
+              subtitle={`${contractTypeLabel(c.contract_type)}${
+                c.amount_cents
+                  ? ` • ${formatMoney(c.amount_cents, c.currency || "USD")}`
+                  : ""
+              } • ${new Date(c.created_at).toLocaleDateString()}`}
+              badge={{
+                label: contractStatusLabel(c.status),
+                className:
+                  c.status === "executed"
+                    ? "bg-emerald-500/15 text-emerald-500 border-emerald-500/30"
+                    : c.status === "signed"
+                    ? "bg-purple/15 text-purple border-purple/30"
+                    : c.status === "sent" || c.status === "viewed"
+                    ? "bg-accent/15 text-accent border-accent/30"
+                    : "bg-muted text-muted-foreground border-border",
+              }}
+            />
+          ))}
+        </ClientSection>
+
+        {/* Retainers */}
+        <ClientSection
+          title="Retainers"
+          icon={Repeat}
+          actionLabel="New retainer"
+          onAction={() =>
+            navigate("/dashboard/retainers/new", {
+              state: {
+                prefillClient: {
+                  id: client.id,
+                  name: client.name,
+                  email: client.email,
+                  company: client.company,
+                },
+              },
+            })
+          }
+          emptyText="No retainers yet for this client."
+          isEmpty={retainers.length === 0}
+        >
+          {retainers.map((r) => (
+            <RowCard
+              key={r.id}
+              onClick={() => navigate(`/dashboard/retainers/${r.id}`)}
+              icon={Repeat}
+              title={r.title}
+              subtitle={`${formatMoney(r.amount_cents, r.currency)} • ${intervalLabel(
+                r.billing_interval,
+                r.custom_interval_days,
+              )}${
+                r.next_billing_date
+                  ? ` • Next: ${new Date(r.next_billing_date).toLocaleDateString()}`
+                  : ""
+              }`}
+              badge={{
+                label: r.status.replace("_", " "),
+                className: retainerStatusBadge(r.status),
+              }}
+            />
+          ))}
+        </ClientSection>
+
+        {/* Onboarding forms */}
+        <ClientSection
+          title="Onboarding"
+          icon={ClipboardList}
+          emptyText="No onboarding forms yet for this client."
+          isEmpty={onboardingForms.length === 0}
+        >
+          {onboardingForms.map((o) => (
+            <RowCard
+              key={o.id}
+              onClick={() => window.open(`/onboarding/${o.access_token}`, "_blank")}
+              icon={ClipboardList}
+              title={o.service_type || "Onboarding form"}
+              subtitle={`Created ${new Date(o.created_at).toLocaleDateString()}${
+                o.completed_at
+                  ? ` • Submitted ${new Date(o.completed_at).toLocaleDateString()}`
+                  : o.sent_at
+                  ? ` • Sent ${new Date(o.sent_at).toLocaleDateString()}`
+                  : ""
+              }`}
+              badge={{
+                label:
+                  o.status === "completed"
+                    ? "Submitted"
+                    : o.status === "in_progress"
+                    ? "In progress"
+                    : "Sent",
+                className:
+                  o.status === "completed"
+                    ? "bg-emerald-500/15 text-emerald-500 border-emerald-500/30"
+                    : o.status === "in_progress"
+                    ? "bg-accent/15 text-accent border-accent/30"
+                    : "bg-muted text-muted-foreground border-border",
+              }}
+            />
+          ))}
+        </ClientSection>
+
+        {/* Bookings */}
+        <ClientSection
+          title="Bookings"
+          icon={CalendarDays}
+          emptyText="No bookings with this client yet."
+          isEmpty={bookings.length === 0}
+        >
+          {bookings.map((b) => {
+            const when = new Date(b.scheduled_at);
+            const past = when.getTime() < Date.now();
+            return (
+              <RowCard
+                key={b.id}
+                onClick={() => navigate("/dashboard/calendar")}
+                icon={CalendarDays}
+                title={b.meeting_name}
+                subtitle={`${when.toLocaleString()} • ${b.duration_minutes} min`}
+                badge={{
+                  label: past ? "Past" : b.status,
+                  className: past
+                    ? "bg-muted text-muted-foreground border-border"
+                    : "bg-emerald-500/15 text-emerald-500 border-emerald-500/30",
+                }}
+              />
+            );
+          })}
+        </ClientSection>
+
+
+
         {/* Lead Summary — only if this client came through the Lead Assistant */}
         {(client.original_lead_message || client.lead_quality || client.ai_recommendation || client.lead_source) && (
           <Card className="glass-card border-accent/20">
