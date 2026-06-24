@@ -62,6 +62,8 @@ export default function ContractsPage() {
   const [contractType, setContractType] = useState("service_agreement");
   const [proposalId, setProposalId] = useState<string>("none");
   const [proposals, setProposals] = useState<any[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
+  const [clientId, setClientId] = useState<string>("none");
   const [providerName, setProviderName] = useState("");
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
