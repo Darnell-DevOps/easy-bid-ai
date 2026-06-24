@@ -416,12 +416,20 @@ export default function ContractSignPage() {
               <CheckCircle2 className="w-6 h-6 text-emerald-500" />
             </div>
             <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-2">
-              Contract signed successfully
+              {isExecuted ? "Contract fully executed" : "Contract signed successfully"}
             </h2>
             <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto">
-              A copy has been saved to your records. Here's what's next:
+              {isExecuted
+                ? "Both parties have signed. Download a copy for your records."
+                : "Your signature has been recorded. The provider will countersign and you'll receive the executed contract by email."}
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center flex-wrap">
+              {isExecuted && (
+                <Button size="lg" variant="outline" className="gap-2" onClick={handleDownload} disabled={downloading}>
+                  {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                  Download Executed PDF
+                </Button>
+              )}
               {retainerToken ? (
                 <Button size="lg" asChild className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold">
                   <Link to={`/retainer/${retainerToken}`}>
