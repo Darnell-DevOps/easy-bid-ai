@@ -56,6 +56,8 @@ export default function LeadFormsDashboard() {
           description:
             "A few quick details so we can prepare a tailored next step within one business day.",
           submit_label: "Send Project Details",
+          success_message:
+            "Project details received. We've received your details and will review your project shortly.",
           fields: [
             // Contact
             { id: "name", label: "Your name", type: "short_text", required: true, group: "Contact" },

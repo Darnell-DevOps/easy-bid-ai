@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Copy, ExternalLink, Loader2, Save } from "lucide-react";
+import { ArrowLeft, Copy, ExternalLink, Loader2, Save, Send, ShieldCheck } from "lucide-react";
 import FieldListEditor from "@/components/forms/FieldListEditor";
 import SmartFieldRenderer from "@/components/forms/SmartFieldRenderer";
 import {
@@ -185,26 +185,62 @@ export default function LeadFormEditor() {
           <div className="lg:col-span-2">
             <div className="sticky top-4 space-y-3">
               <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Live preview</p>
-              <div className="rounded-xl border border-border bg-background p-5 space-y-4 max-h-[80vh] overflow-y-auto">
-                <div>
-                  <h3 className="text-lg font-bold text-foreground">{form.title || "Untitled"}</h3>
-                  {form.description && <p className="text-sm text-muted-foreground mt-1">{form.description}</p>}
-                </div>
-                {grouped.map((g) => (
-                  <div key={g.group} className="space-y-3">
-                    <p className="text-[10px] uppercase tracking-[0.18em] text-purple font-semibold">{g.group}</p>
-                    {g.fields.map((f) => isFieldVisible(f, preview) && (
-                      <div key={f.id} className="space-y-1">
-                        <Label className="text-xs">
-                          {f.label}{f.required && <span className="text-rose-500 ml-0.5">*</span>}
-                        </Label>
-                        <SmartFieldRenderer field={f} value={preview[f.id]} onChange={(v) => setPreview({ ...preview, [f.id]: v })} />
-                        {f.helpText && <p className="text-[11px] text-muted-foreground">{f.helpText}</p>}
-                      </div>
+              <div className="max-h-[80vh] overflow-y-auto">
+                <div className="relative rounded-2xl border border-border/60 bg-card/70 backdrop-blur p-6 overflow-hidden">
+                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
+                  <div className="absolute -top-24 -right-24 w-72 h-72 bg-purple/10 blur-3xl rounded-full pointer-events-none" />
+
+                  <header className="relative mb-7">
+                    <h3 className="text-xl font-bold text-foreground tracking-tight">{form.title || "Untitled"}</h3>
+                    {form.description && (
+                      <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{form.description}</p>
+                    )}
+                  </header>
+
+                  <div className="relative space-y-8">
+                    {grouped.map((g, gi) => (
+                      <section key={g.group} className="space-y-4">
+                        <div className="flex items-center gap-3">
+                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-accent/15 text-accent text-[11px] font-semibold">
+                            {gi + 1}
+                          </span>
+                          <p className="text-[11px] uppercase tracking-[0.22em] text-foreground/80 font-semibold">
+                            {g.group}
+                          </p>
+                          <div className="flex-1 h-px bg-border/60" />
+                        </div>
+                        <div className="space-y-4">
+                          {g.fields.map((f) => isFieldVisible(f, preview) && (
+                            <div key={f.id} className="space-y-1.5">
+                              <Label className="text-sm font-medium text-foreground">
+                                {f.label}{f.required && <span className="text-rose-500 ml-1">*</span>}
+                              </Label>
+                              <div className="[&_input]:transition-all [&_textarea]:transition-all [&_input]:focus-visible:ring-2 [&_textarea]:focus-visible:ring-2 [&_input]:focus-visible:ring-accent/40 [&_textarea]:focus-visible:ring-accent/40">
+                                <SmartFieldRenderer field={f} value={preview[f.id]} onChange={(v) => setPreview({ ...preview, [f.id]: v })} />
+                              </div>
+                              {f.helpText && <p className="text-[11px] text-muted-foreground">{f.helpText}</p>}
+                            </div>
+                          ))}
+                        </div>
+                      </section>
                     ))}
                   </div>
-                ))}
-                <Button className="w-full" disabled>{form.submit_label || "Submit"}</Button>
+
+                  <div className="relative mt-8 pt-6 border-t border-border/60 space-y-4">
+                    <p className="text-xs text-muted-foreground flex items-center justify-center gap-2 text-center">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-400/80 flex-shrink-0" />
+                      Submit your details and we'll prepare the next step for your project.
+                    </p>
+                    <Button
+                      disabled
+                      size="lg"
+                      className="w-full gap-2 bg-gradient-to-r from-accent via-purple to-accent text-accent-foreground font-semibold shadow-lg shadow-accent/20 h-12"
+                    >
+                      <Send className="w-4 h-4" />
+                      {form.submit_label || "Send Project Details"}
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
