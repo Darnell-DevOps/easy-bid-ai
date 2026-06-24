@@ -224,13 +224,36 @@ export default function ContractDetail() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-2">
               <Timeline icon={Send} label="Sent" value={contract.sent_at} />
               <Timeline icon={Eye} label="Viewed" value={contract.viewed_at} />
-              <Timeline icon={CheckCircle2} label="Signed" value={contract.signed_at} />
+              <Timeline icon={CheckCircle2} label="Client signed" value={contract.signed_at} />
+              <Timeline icon={FileSignature} label="Executed" value={(contract as any).countersigned_at || null} />
             </div>
           </CardContent>
         </Card>
+
+        {isAwaitingCountersign && (
+          <Card className="border-purple/40 bg-purple/5">
+            <CardContent className="p-5 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-purple/15 flex items-center justify-center">
+                  <FileSignature className="w-5 h-5 text-purple" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Your client has signed</p>
+                  <p className="text-xs text-muted-foreground">Add your countersignature to make this contract fully executed.</p>
+                </div>
+              </div>
+              <Button
+                className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold"
+                onClick={() => setCountersignOpen(true)}
+              >
+                <FileSignature className="w-4 h-4" /> Countersign now
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {signatures.length > 0 && (
           <Card>
