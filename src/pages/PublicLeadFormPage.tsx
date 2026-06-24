@@ -231,6 +231,21 @@ export default function PublicLeadFormPage() {
             ))}
           </div>
 
+          {/* Honeypot — hidden from real users, irresistible to naive bots. */}
+          <div aria-hidden="true" className="absolute -left-[9999px] top-auto h-0 w-0 overflow-hidden" style={{ position: "absolute", left: "-9999px" }}>
+            <label htmlFor="website_url_hp">Website (leave blank)</label>
+            <input
+              type="text"
+              id="website_url_hp"
+              name="website_url_hp"
+              tabIndex={-1}
+              autoComplete="off"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+            />
+          </div>
+
+
           <div className="relative mt-10 pt-6 border-t border-border/60 space-y-4">
             <p className="text-xs text-muted-foreground flex items-center justify-center gap-2 text-center">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400/80 flex-shrink-0" />
