@@ -66,7 +66,9 @@ export function contractStatusLabel(s: string): string {
     case "viewed":
       return "Viewed";
     case "signed":
-      return "Signed";
+      return "Awaiting countersignature";
+    case "executed":
+      return "Executed";
     default:
       return s;
   }
