@@ -64,7 +64,10 @@ export default function ContractSignPage() {
     method: "typed" | "drawn";
     signature_data: string;
     signed_at: string;
+    signer_role?: "client" | "provider";
   }>>([]);
+  const [downloading, setDownloading] = useState(false);
+  const pdfRef = useRef<HTMLDivElement>(null);
 
   // Drawn signature state
   const canvasRef = useRef<HTMLCanvasElement>(null);
