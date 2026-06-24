@@ -20,9 +20,11 @@ export interface InlineSignature {
 export default function ContractRenderer({
   content,
   clientSignature,
+  providerSignature,
 }: {
   content: string;
   clientSignature?: InlineSignature | null;
+  providerSignature?: InlineSignature | null;
 }) {
   const blocks = useMemo(() => parseBlocks(content || ""), [content]);
 
