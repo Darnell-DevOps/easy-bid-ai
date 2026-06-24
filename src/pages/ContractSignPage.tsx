@@ -40,6 +40,8 @@ interface PublicContract {
   signed_at: string | null;
   amount_cents: number | null;
   currency: string | null;
+  countersigned_at?: string | null;
+  countersigner_name?: string | null;
 }
 
 export default function ContractSignPage() {
