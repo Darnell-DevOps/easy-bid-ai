@@ -90,7 +90,7 @@ export default function ContractsWidget() {
                       to={`/dashboard/contracts/${c.id}`}
                       className="flex items-center gap-2 p-2 -mx-2 rounded-md hover:bg-muted/50 transition-colors"
                     >
-                      <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${c.status === "signed" ? "text-emerald-500" : "text-muted-foreground"}`} />
+                      <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${c.status === "executed" ? "text-emerald-500" : c.status === "signed" ? "text-purple" : "text-muted-foreground"}`} />
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium text-foreground truncate">{c.client_name}</p>
                         <p className="text-[11px] text-muted-foreground truncate">{c.title} · {c.status}</p>
