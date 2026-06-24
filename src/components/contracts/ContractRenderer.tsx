@@ -192,7 +192,7 @@ function parseBlocks(md: string): Block[] {
     // Treat short label-style lines (e.g. "Client", "Service Provider") and
     // underscore signature placeholder lines as their own blocks so the
     // renderer can pair them up. Otherwise merge into the running paragraph.
-    const isLabel = /^(\*\*)?(client|service provider)(\*\*)?:?$/i.test(line);
+    const isLabel = /^(\*\*)?(client|customer|service provider|provider|company|contractor|consultant)(\*\*)?:?$/i.test(line);
     const isPlaceholder = /_{3,}/.test(line);
     if (isLabel || isPlaceholder) {
       flushPara();
