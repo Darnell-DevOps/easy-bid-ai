@@ -92,6 +92,49 @@ interface Proposal {
   invoice_content: string | null;
 }
 
+interface ContractItem {
+  id: string;
+  title: string;
+  contract_type: string;
+  status: string;
+  amount_cents: number | null;
+  currency: string | null;
+  signed_at: string | null;
+  countersigned_at: string | null;
+  created_at: string;
+}
+
+interface RetainerItem {
+  id: string;
+  title: string;
+  service_type: string | null;
+  status: string;
+  amount_cents: number;
+  currency: string;
+  billing_interval: string;
+  custom_interval_days: number | null;
+  next_billing_date: string | null;
+  created_at: string;
+}
+
+interface OnboardingItem {
+  id: string;
+  service_type: string | null;
+  status: string;
+  access_token: string;
+  sent_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+}
+
+interface BookingItem {
+  id: string;
+  meeting_name: string;
+  scheduled_at: string;
+  status: string;
+  duration_minutes: number;
+}
+
 const STATUS_OPTIONS = ["New", "Qualified", "Proposal Sent", "Won", "Lost"];
 
 const statusStyle = (s: string) => {
