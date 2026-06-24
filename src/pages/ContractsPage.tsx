@@ -115,12 +115,24 @@ export default function ContractsPage() {
     fetchData();
   }, []);
 
-  // Apply contract template passed via navigation state (from Templates page)
+  // Apply contract template or client prefill passed via navigation state
   useEffect(() => {
-    const tpl = (location.state as any)?.contractTemplate as MergedContractTemplate | undefined;
+    const state = (location.state as any) || {};
+    const tpl = state.contractTemplate as MergedContractTemplate | undefined;
+    const prefill = state.prefillClient as
+      | { id: string; name?: string; email?: string | null; company?: string | null }
+      | undefined;
     if (tpl) {
       useTemplate(tpl);
-      // clear state so it doesn't reapply on back-nav
+    }
+    if (prefill) {
+      setClientId(prefill.id);
+      setClientName(prefill.name || "");
+      setClientEmail(prefill.email || "");
+      setCompanyName(prefill.company || "");
+      setOpenCreate(true);
+    }
+    if (tpl || prefill) {
       navigate(location.pathname, { replace: true, state: {} });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -133,6 +145,16 @@ export default function ContractsPage() {
     return { pending, signed, awaiting };
   }, [contracts]);
 
+  const pickClient = (id: string) => {
+    setClientId(id);
+    if (id === "none") return;
+    const c = clients.find((x) => x.id === id);
+    if (!c) return;
+    setClientName(c.name || "");
+    setClientEmail(c.email || "");
+    setCompanyName(c.company || "");
+  };
+
   const fillFromProposal = (id: string) => {
     setProposalId(id);
     if (id === "none") return;
@@ -144,6 +166,7 @@ export default function ContractsPage() {
     setScope(p.project_scope || "");
     setTimeline(p.timeline || "");
     setBudget(p.budget || "");
+    if (p.client_id) setClientId(p.client_id);
   };
 
   const handleCreate = async () => {
