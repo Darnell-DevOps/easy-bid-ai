@@ -174,22 +174,60 @@ test.describe("Contract sign → countersign → executed PDF", () => {
       });
       await expect(ownerPage.getByRole("button", { name: /Countersign contract/i })).toHaveCount(0);
 
-      // Trigger the PDF download from the owner side; the button must not throw.
-      await ownerPage.getByRole("button", { name: /Download Executed PDF/i }).click();
-      // html2pdf writes to a Blob -> anchor click; just confirm the button re-enables.
-      await expect(ownerPage.getByRole("button", { name: /Download Executed PDF/i })).toBeEnabled({
-        timeout: 20_000,
-      });
+      // Capture the actual PDF file produced by html2pdf.js.
+      const [ownerDownload] = await Promise.all([
+        ownerPage.waitForEvent("download", { timeout: 30_000 }),
+        ownerPage.getByRole("button", { name: /Download Executed PDF/i }).click(),
+      ]);
+      const ownerPdfPath = path.join(
+        mkdtempSync(path.join(tmpdir(), "contract-pdf-owner-")),
+        ownerDownload.suggestedFilename() || "owner.pdf",
+      );
+      await ownerDownload.saveAs(ownerPdfPath);
+      expect(readFileSync(ownerPdfPath).slice(0, 4).toString("utf8")).toBe("%PDF");
 
       // ---- 4. Verify client side now also sees the executed state + PDF button ----
       const clientCtx2 = await browser.newContext();
       const clientPage2 = await clientCtx2.newPage();
       await clientPage2.goto(`${baseURL}/sign/${contract.signing_token}`);
-      await expect(clientPage2.getByRole("button", { name: /Download Executed PDF/i })).toBeVisible({
-        timeout: 15_000,
-      });
+      const clientDownloadBtn = clientPage2.getByRole("button", { name: /Download Executed PDF/i });
+      await expect(clientDownloadBtn).toBeVisible({ timeout: 15_000 });
+
+      const [clientDownload] = await Promise.all([
+        clientPage2.waitForEvent("download", { timeout: 30_000 }),
+        clientDownloadBtn.click(),
+      ]);
+      const clientPdfPath = path.join(
+        mkdtempSync(path.join(tmpdir(), "contract-pdf-client-")),
+        clientDownload.suggestedFilename() || "client.pdf",
+      );
+      await clientDownload.saveAs(clientPdfPath);
+      expect(readFileSync(clientPdfPath).slice(0, 4).toString("utf8")).toBe("%PDF");
+
       await clientCtx2.close();
       await ownerCtx.close();
+
+      // ---- 5. OCR both PDFs and assert both signatures + the EXECUTED pill ----
+      test.skip(
+        !hasBinary("pdftoppm") || !hasBinary("tesseract"),
+        "pdftoppm and tesseract are required to OCR the executed PDF.",
+      );
+
+      for (const [label, pdf] of [
+        ["owner", ownerPdfPath],
+        ["client", clientPdfPath],
+      ] as const) {
+        const ocrText = ocrPdf(pdf).replace(/\s+/g, " ");
+        // Tesseract output is noisy; use case-insensitive substring checks.
+        const lower = ocrText.toLowerCase();
+        expect(lower, `${label} PDF should contain the client signer name`).toContain(
+          "e2e test client",
+        );
+        expect(lower, `${label} PDF should contain the provider signer name`).toContain(
+          "e2e test provider",
+        );
+        expect(lower, `${label} PDF should contain the EXECUTED pill`).toContain("executed");
+      }
     } finally {
       await deleteContract(api, session, contract.id);
       await api.dispose();
