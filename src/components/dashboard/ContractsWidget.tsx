@@ -21,7 +21,7 @@ const STATUS_ICON: Record<string, any> = {
 
 export default function ContractsWidget() {
   const [contracts, setContracts] = useState<ContractLite[]>([]);
-  const [counts, setCounts] = useState({ pending: 0, signed: 0 });
+  const [counts, setCounts] = useState({ pending: 0, awaitingCountersign: 0, executed: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,7 +35,8 @@ export default function ContractsWidget() {
       setContracts(list.slice(0, 4));
       setCounts({
         pending: list.filter((c) => c.status === "sent" || c.status === "viewed").length,
-        signed: list.filter((c) => c.status === "signed").length,
+        awaitingCountersign: list.filter((c) => c.status === "signed").length,
+        executed: list.filter((c) => c.status === "executed").length,
       });
       setLoading(false);
     };
