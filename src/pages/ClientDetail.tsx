@@ -40,6 +40,10 @@ import {
   Receipt,
   CreditCard,
   AlertCircle,
+  FileSignature,
+  Repeat,
+  ClipboardList,
+  CalendarDays,
 } from "lucide-react";
 import {
   AlertDialog,
