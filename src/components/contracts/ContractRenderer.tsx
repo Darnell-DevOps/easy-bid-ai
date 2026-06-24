@@ -66,18 +66,25 @@ export default function ContractRenderer({
 
         // Detect signature placeholder line (e.g. "____________ Date:")
         const isPlaceholder = /_{3,}/.test(b.text);
-        if (isPlaceholder && clientSignature && /client/i.test(lastLabel)) {
+        const matchedSig: InlineSignature | null | undefined = isPlaceholder
+          ? /service provider|provider|company|contractor|consultant/i.test(lastLabel)
+            ? providerSignature
+            : /client|customer/i.test(lastLabel)
+            ? clientSignature
+            : null
+          : null;
+        if (isPlaceholder && matchedSig) {
           const label = lastLabel;
           lastLabel = ""; // consume
           return (
             <div key={i} className="my-3 flex flex-wrap items-end gap-x-8 gap-y-2">
               <div className="flex flex-col">
                 <div className="min-h-12 flex items-end">
-                  {clientSignature.method === "drawn" &&
-                  clientSignature.signature_data?.startsWith("data:image") ? (
+                  {matchedSig.method === "drawn" &&
+                  matchedSig.signature_data?.startsWith("data:image") ? (
                     <img
-                      src={clientSignature.signature_data}
-                      alt={`Signature of ${clientSignature.signer_name}`}
+                      src={matchedSig.signature_data}
+                      alt={`Signature of ${matchedSig.signer_name}`}
                       className="max-h-14 object-contain"
                       style={{ filter: "invert(1) brightness(2) contrast(1.1)" }}
                     />
@@ -86,20 +93,20 @@ export default function ContractRenderer({
                       className="text-2xl text-foreground"
                       style={{ fontFamily: "'Caveat', 'Brush Script MT', cursive" }}
                     >
-                      {clientSignature.signature_data || clientSignature.signer_name}
+                      {matchedSig.signature_data || matchedSig.signer_name}
                     </span>
                   )}
                 </div>
                 <div className="border-t border-border/70 mt-1 pt-1 min-w-[14rem]">
                   <p className="text-xs text-muted-foreground">
-                    {clientSignature.signer_name}
+                    {matchedSig.signer_name}
                     {label ? ` · ${label}` : ""}
                   </p>
                 </div>
               </div>
               <div className="flex flex-col">
                 <p className="text-sm text-foreground/90 min-h-12 flex items-end">
-                  {new Date(clientSignature.signed_at).toLocaleDateString()}
+                  {new Date(matchedSig.signed_at).toLocaleDateString()}
                 </p>
                 <div className="border-t border-border/70 mt-1 pt-1 min-w-[8rem]">
                   <p className="text-xs text-muted-foreground">Date</p>
@@ -108,6 +115,7 @@ export default function ContractRenderer({
             </div>
           );
         }
+
 
         // Update lastLabel tracker with short label-like paragraphs
         const trimmed = b.text.trim();
