@@ -96,7 +96,7 @@ export default function ContractSignPage() {
       setLoading(false);
 
       // If already signed, load existing signatures so they render inside the contract.
-      if ((data as any).status === "signed") {
+      if ((data as any).status === "signed" || (data as any).status === "executed") {
         supabase
           .from("contract_signatures")
           .select("id, signer_name, signer_email, method, signature_data, signed_at, signer_role")
