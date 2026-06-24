@@ -142,18 +142,6 @@ export default function ContractDetail() {
     }
   };
 
-  const [countersignOpen, setCountersignOpen] = useState(false);
-  const [ownerName, setOwnerName] = useState("");
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      const u = data.user;
-      if (!u) return;
-      const meta: any = u.user_metadata || {};
-      const candidate = meta.full_name || meta.name || u.email || "";
-      setOwnerName(candidate);
-    });
-  }, []);
 
   const handleCountersigned = async () => {
     await load();
