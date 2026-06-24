@@ -45,7 +45,8 @@ const STATUS_STYLES: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
   sent: "bg-accent/15 text-accent",
   viewed: "bg-purple/15 text-purple",
-  signed: "bg-emerald-500/15 text-emerald-500",
+  signed: "bg-purple/15 text-purple",
+  executed: "bg-emerald-500/15 text-emerald-500",
 };
 
 export default function ContractsPage() {
