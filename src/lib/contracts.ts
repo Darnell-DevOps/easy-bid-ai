@@ -50,6 +50,7 @@ export interface ContractSignatureRow {
   ip_address: string | null;
   user_agent: string | null;
   signed_at: string;
+  signer_role?: "client" | "provider";
 }
 
 export function contractTypeLabel(type: string): string {
