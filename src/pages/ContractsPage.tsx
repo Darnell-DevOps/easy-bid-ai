@@ -246,6 +246,7 @@ export default function ContractsPage() {
   const resetForm = () => {
     setContractType("service_agreement");
     setProposalId("none");
+    setClientId("none");
     setClientName("");
     setClientEmail("");
     setCompanyName("");
