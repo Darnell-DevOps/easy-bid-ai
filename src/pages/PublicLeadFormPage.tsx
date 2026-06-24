@@ -148,6 +148,7 @@ export default function PublicLeadFormPage() {
   }
 
   if (done) {
+    const { title: successTitle, body: successBody } = splitSuccessMessage(form.success_message);
     return (
       <div className={`${embed ? "" : "min-h-screen"} bg-background flex items-center justify-center px-4 py-12`}>
         <div className="relative max-w-lg w-full text-center rounded-2xl border border-border/60 bg-card/80 backdrop-blur p-10 overflow-hidden">
@@ -157,10 +158,10 @@ export default function PublicLeadFormPage() {
               <CheckCircle2 className="w-7 h-7 text-emerald-400" />
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2 tracking-tight">
-              Project details received
+              {successTitle}
             </h1>
             <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-              We've received your details and will review your project shortly.
+              {successBody}
             </p>
             {!embed && (
               <Button
@@ -276,6 +277,27 @@ function serialize(r: FieldResponses): Record<string, string> {
     else out[k] = String(v);
   }
   return out;
+}
+
+// Render the user's `success_message` inside the premium success screen.
+// Splits "Title. Body…" or "Title\nBody" into heading + supporting text so
+// editing the message stays consistent with the polished default layout.
+function splitSuccessMessage(raw: string | null | undefined): { title: string; body: string } {
+  const fallback = {
+    title: "Project details received",
+    body: "We've received your details and will review your project shortly.",
+  };
+  const msg = (raw || "").trim();
+  if (!msg) return fallback;
+  const nl = msg.indexOf("\n");
+  if (nl > 0) {
+    const title = msg.slice(0, nl).trim();
+    const body = msg.slice(nl + 1).trim();
+    if (title && body) return { title, body };
+  }
+  const m = msg.match(/^(.+?[.!?])\s+(.+)$/s);
+  if (m) return { title: m[1].replace(/[.!?]+$/, "").trim(), body: m[2].trim() };
+  return { title: fallback.title, body: msg };
 }
 
 // Stable per-form + per-browser fingerprint. Persisted in localStorage so the
