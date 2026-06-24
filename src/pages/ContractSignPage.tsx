@@ -99,7 +99,7 @@ export default function ContractSignPage() {
       if ((data as any).status === "signed") {
         supabase
           .from("contract_signatures")
-          .select("id, signer_name, signer_email, method, signature_data, signed_at")
+          .select("id, signer_name, signer_email, method, signature_data, signed_at, signer_role")
           .eq("contract_id", (data as any).id)
           .order("signed_at", { ascending: true })
           .then(({ data: sigs }) => {
@@ -291,7 +291,7 @@ export default function ContractSignPage() {
       // Pull all signatures for this contract so they appear inline immediately.
       const { data: sigs } = await supabase
         .from("contract_signatures")
-        .select("id, signer_name, signer_email, method, signature_data, signed_at")
+        .select("id, signer_name, signer_email, method, signature_data, signed_at, signer_role")
         .eq("contract_id", contract.id)
         .order("signed_at", { ascending: true });
       if (sigs) setSignatures(sigs as any);
