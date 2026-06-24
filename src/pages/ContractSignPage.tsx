@@ -18,9 +18,12 @@ import {
   CreditCard,
   Eraser,
   Lock,
+  Download,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { renderMergeTags } from "@/lib/merge-tags";
+import { sendEmail } from "@/lib/email";
+import { downloadContractPdf } from "@/lib/contract-pdf";
 
 interface PublicContract {
   id: string;
