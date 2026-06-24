@@ -579,6 +579,7 @@ export type Database = {
           signed_at: string
           signer_email: string | null
           signer_name: string
+          signer_role: string
           user_agent: string | null
           user_id: string
         }
@@ -591,6 +592,7 @@ export type Database = {
           signed_at?: string
           signer_email?: string | null
           signer_name: string
+          signer_role?: string
           user_agent?: string | null
           user_id: string
         }
@@ -603,6 +605,7 @@ export type Database = {
           signed_at?: string
           signer_email?: string | null
           signer_name?: string
+          signer_role?: string
           user_agent?: string | null
           user_id?: string
         }
@@ -694,6 +697,8 @@ export type Database = {
           client_name: string
           company_name: string | null
           contract_type: string
+          countersigned_at: string | null
+          countersigner_name: string | null
           created_at: string
           currency: string | null
           id: string
@@ -715,6 +720,8 @@ export type Database = {
           client_name?: string
           company_name?: string | null
           contract_type?: string
+          countersigned_at?: string | null
+          countersigner_name?: string | null
           created_at?: string
           currency?: string | null
           id?: string
@@ -736,6 +743,8 @@ export type Database = {
           client_name?: string
           company_name?: string | null
           contract_type?: string
+          countersigned_at?: string | null
+          countersigner_name?: string | null
           created_at?: string
           currency?: string | null
           id?: string
@@ -2425,6 +2434,17 @@ export type Database = {
         Args: { _action: string; _message?: string; _proposal_id: string }
         Returns: undefined
       }
+      contract_countersign: {
+        Args: {
+          _contract_id: string
+          _method: string
+          _signature_data: string
+          _signer_email: string
+          _signer_name: string
+          _ua: string
+        }
+        Returns: string
+      }
       contract_record_view: { Args: { _token: string }; Returns: undefined }
       contract_sign: {
         Args: {
@@ -2437,6 +2457,14 @@ export type Database = {
           _ua: string
         }
         Returns: string
+      }
+      get_contract_owner_email: {
+        Args: { _token: string }
+        Returns: {
+          owner_email: string
+          owner_name: string
+          user_id: string
+        }[]
       }
       has_role: {
         Args: {
