@@ -65,6 +65,19 @@ export default function PublicLeadFormPage() {
 
   const handleSubmit = async () => {
     if (!form || !slug) return;
+
+    // Honeypot tripped — pretend success, don't call the RPC.
+    if (honeypot.trim().length > 0) {
+      setDone(true);
+      return;
+    }
+
+    // Min time-to-submit (1.5s) — humans don't fill multi-section forms this fast.
+    if (Date.now() - loadedAt < 1500) {
+      setDone(true);
+      return;
+    }
+
     const missing = missingRequired(form.fields, responses);
     if (missing.length) {
       toast({
@@ -82,6 +95,7 @@ export default function PublicLeadFormPage() {
       }
       return null;
     };
+    const fingerprint = await computeFingerprint(form.id);
     const { data, error } = await supabase.rpc("lead_form_submit" as any, {
       _slug: slug,
       _responses: serialize(responses),
@@ -89,12 +103,25 @@ export default function PublicLeadFormPage() {
       _email: pick("email", "your_email"),
       _phone: pick("phone", "phone_number"),
       _company: pick("company", "company_name", "business"),
+      _honeypot: null,
+      _fingerprint: fingerprint,
     });
     setSubmitting(false);
     if (error) {
+      const msg = String(error.message || "");
+      if (msg.includes("rate_limited")) {
+        // Don't expose technical spam messaging — show a calm, generic note.
+        toast({
+          title: "Too many submissions",
+          description: "Please wait a few minutes before submitting this form again.",
+          variant: "destructive",
+        });
+        return;
+      }
       toast({ title: "Submission failed", description: error.message, variant: "destructive" });
       return;
     }
+
     if (embed && typeof window !== "undefined" && window.parent !== window) {
       try { window.parent.postMessage({ type: "lovable-form-submitted", slug }, "*"); } catch { /* no-op */ }
     }
