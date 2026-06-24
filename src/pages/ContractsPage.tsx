@@ -88,15 +88,20 @@ export default function ContractsPage() {
 
   const fetchData = async () => {
     setLoading(true);
-    const [{ data: c }, { data: p }] = await Promise.all([
+    const [{ data: c }, { data: p }, { data: cl }] = await Promise.all([
       supabase.from("contracts").select("*").order("created_at", { ascending: false }),
       supabase
         .from("proposals")
-        .select("id, client_name, company_name, service_type, project_scope, timeline, budget, amount_cents, currency, status, accepted_at")
+        .select("id, client_id, client_name, company_name, service_type, project_scope, timeline, budget, amount_cents, currency, status, accepted_at")
         .order("created_at", { ascending: false }),
+      supabase
+        .from("clients")
+        .select("id, name, email, company")
+        .order("name", { ascending: true }),
     ]);
     setContracts((c as any) || []);
     setProposals(p || []);
+    setClients(cl || []);
     setLoading(false);
 
     // pre-fill provider name from auth
