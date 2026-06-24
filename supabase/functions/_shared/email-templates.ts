@@ -103,6 +103,33 @@ const templates: Record<string, Tpl> = {
     };
   },
 
+  "contract-awaiting-countersign": (d) => {
+    const subject = `Action needed: countersign ${d.title ? escape(String(d.title)) : "your contract"}`;
+    const body =
+      h1(`Your client signed — countersign to execute`) +
+      p(`${escape(d.client_name || "Your client")} just signed${d.title ? ` <strong>${escape(d.title)}</strong>` : " the contract"}. Add your countersignature to make the contract fully executed.`) +
+      button(String(d.url || APP_URL), "Open contract to countersign");
+    return {
+      subject,
+      html: layout({ preheader: "Your client signed. Countersign to finalize.", bodyHtml: body }),
+      text: `${d.client_name || "Your client"} signed ${d.title || "the contract"}. Countersign: ${d.url || APP_URL}`,
+    };
+  },
+
+  "contract-executed": (d) => {
+    const subject = `${d.title ? escape(String(d.title)) : "Your contract"} is fully executed`;
+    const body =
+      h1(`Contract executed`) +
+      p(`Good news${d.client_name ? `, ${escape(String(d.client_name))}` : ""} — ${escape(d.from_name || "your contact")} has countersigned${d.title ? ` <strong>${escape(String(d.title))}</strong>` : " the contract"}. Both signatures are now on file.`) +
+      p(`You can view the fully executed contract and download the PDF copy any time.`) +
+      button(String(d.url || APP_URL), "View executed contract");
+    return {
+      subject,
+      html: layout({ preheader: "Both signatures captured — your contract is executed.", bodyHtml: body }),
+      text: `${d.title || "Your contract"} is fully executed. View: ${d.url || APP_URL}`,
+    };
+  },
+
   "payment-confirmation": (d) => {
     const subject = `Payment received${d.amount ? ` — ${d.amount}` : ""}`;
     const body =
