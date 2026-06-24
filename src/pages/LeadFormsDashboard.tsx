@@ -52,12 +52,133 @@ export default function LeadFormsDashboard() {
           user_id: user.id,
           name: "New lead form",
           slug,
-          title: "Get in touch",
-          description: "Tell us about your project and we'll be in touch within one business day.",
+          title: "Tell us about your project",
+          description:
+            "A few quick details so we can prepare a tailored next step within one business day.",
+          submit_label: "Send Project Details",
           fields: [
+            // Contact
             { id: "name", label: "Your name", type: "short_text", required: true, group: "Contact" },
             { id: "email", label: "Email", type: "email", required: true, group: "Contact" },
-            { id: "message", label: "What can we help with?", type: "long_text", required: true, group: "Project" },
+            { id: "phone", label: "Phone / WhatsApp number", type: "phone", group: "Contact" },
+            { id: "company", label: "Company name", type: "short_text", group: "Contact" },
+
+            // Project Details
+            {
+              id: "service_interest",
+              label: "What service are you interested in?",
+              type: "select",
+              required: true,
+              group: "Project Details",
+              options: [
+                "Website Design",
+                "Branding",
+                "Social Media Management",
+                "Marketing Strategy",
+                "Automation",
+                "Consulting",
+                "Other",
+              ],
+            },
+            {
+              id: "message",
+              label: "What can we help you with?",
+              type: "long_text",
+              required: true,
+              group: "Project Details",
+              placeholder: "Briefly describe what you're looking for…",
+            },
+            {
+              id: "main_goal",
+              label: "What is your main goal?",
+              type: "short_text",
+              group: "Project Details",
+              placeholder: "More leads, better branding, faster workflow, more sales…",
+            },
+
+            // Conditional — Website Design
+            {
+              id: "needs_copy",
+              label: "Do you need copy/content?",
+              type: "select",
+              group: "Project Details",
+              options: ["Yes", "No", "Not sure"],
+              condition: { fieldId: "service_interest", operator: "equals", value: "Website Design" },
+            },
+            // Conditional — Branding
+            {
+              id: "has_logo",
+              label: "Do you already have a logo?",
+              type: "select",
+              group: "Project Details",
+              options: ["Yes", "No", "In progress"],
+              condition: { fieldId: "service_interest", operator: "equals", value: "Branding" },
+            },
+            // Conditional — Social Media
+            {
+              id: "social_platforms",
+              label: "Which platforms do you use?",
+              type: "multi_select",
+              group: "Project Details",
+              options: ["Instagram", "TikTok", "Facebook", "LinkedIn", "X (Twitter)", "YouTube", "Other"],
+              condition: { fieldId: "service_interest", operator: "equals", value: "Social Media Management" },
+            },
+            // Conditional — Automation
+            {
+              id: "automation_process",
+              label: "What process do you want automated?",
+              type: "long_text",
+              group: "Project Details",
+              placeholder: "Lead intake, invoicing, follow-ups, reporting…",
+              condition: { fieldId: "service_interest", operator: "equals", value: "Automation" },
+            },
+
+            // Budget & Timeline
+            {
+              id: "budget",
+              label: "Estimated budget",
+              type: "select",
+              required: true,
+              group: "Budget & Timeline",
+              options: [
+                "Under £500",
+                "£500–£1,000",
+                "£1,000–£2,500",
+                "£2,500–£5,000",
+                "£5,000+",
+                "Not sure yet",
+              ],
+            },
+            {
+              id: "timeline",
+              label: "Desired timeline",
+              type: "select",
+              required: true,
+              group: "Budget & Timeline",
+              options: ["ASAP", "Within 1 week", "2–4 weeks", "1–3 months", "Flexible"],
+            },
+
+            // Additional Information
+            {
+              id: "current_url",
+              label: "Current website / social page URL",
+              type: "url",
+              group: "Additional Information",
+              placeholder: "https://",
+            },
+            {
+              id: "brief_file",
+              label: "Upload file or brief",
+              type: "file",
+              group: "Additional Information",
+              helpText: "PDF, doc, image — anything that helps us understand the project.",
+            },
+            {
+              id: "extra_notes",
+              label: "Anything else we should know?",
+              type: "long_text",
+              group: "Additional Information",
+            },
           ],
         })
         .select("id")
