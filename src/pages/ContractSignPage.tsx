@@ -403,9 +403,10 @@ export default function ContractSignPage() {
               client: { name: contract.client_name, email: contract.client_email, company: contract.company_name },
               intake,
             })}
-            clientSignature={signatures[signatures.length - 1] || null}
+            clientSignature={clientSig as any}
+            providerSignature={providerSig as any}
           />
-          <SignatureBlock signatures={signatures} />
+          <SignatureBlock signatures={signatures as any} />
         </section>
 
         {/* Signature OR success */}
