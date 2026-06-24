@@ -42,7 +42,18 @@ export default function ContractDetail() {
   const [loading, setLoading] = useState(true);
   const [clientPhone, setClientPhone] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [countersignOpen, setCountersignOpen] = useState(false);
+  const [ownerName, setOwnerName] = useState("");
   const pdfRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      const u = data.user;
+      if (!u) return;
+      const meta: any = u.user_metadata || {};
+      setOwnerName(meta.full_name || meta.name || u.email || "");
+    });
+  }, []);
 
   const load = async () => {
     if (!id) return;
