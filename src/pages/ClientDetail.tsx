@@ -191,6 +191,10 @@ export default function ClientDetail() {
   const navigate = useNavigate();
   const [client, setClient] = useState<ClientInfo | null>(null);
   const [proposals, setProposals] = useState<Proposal[]>([]);
+  const [contracts, setContracts] = useState<ContractItem[]>([]);
+  const [retainers, setRetainers] = useState<RetainerItem[]>([]);
+  const [onboardingForms, setOnboardingForms] = useState<OnboardingItem[]>([]);
+  const [bookings, setBookings] = useState<BookingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
@@ -200,18 +204,71 @@ export default function ClientDetail() {
   const [replyOpen, setReplyOpen] = useState(false);
 
   useEffect(() => {
-    const fetch = async () => {
+    const fetchAll = async () => {
       const { data: c } = await supabase.from("clients").select("*").eq("id", id!).single();
-      const { data: p } = await supabase
-        .from("proposals")
-        .select("id, service_type, budget, created_at, status, client_paid, invoice_content")
-        .eq("client_id", id!)
-        .order("created_at", { ascending: false });
-      setClient(c as ClientInfo);
-      setProposals(p || []);
+      const client = c as ClientInfo | null;
+      const email = client?.email?.toLowerCase() || null;
+      const name = client?.name || null;
+
+      const [p, ct, r, of, bkByEmail, bkByName] = await Promise.all([
+        supabase
+          .from("proposals")
+          .select("id, service_type, budget, created_at, status, client_paid, invoice_content")
+          .eq("client_id", id!)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("contracts")
+          .select("id, title, contract_type, status, amount_cents, currency, signed_at, countersigned_at, created_at")
+          .eq("client_id", id!)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("retainers")
+          .select("id, title, service_type, status, amount_cents, currency, billing_interval, custom_interval_days, next_billing_date, created_at")
+          .eq("client_id", id!)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("onboarding_forms")
+          .select("id, service_type, status, access_token, sent_at, completed_at, created_at")
+          .eq("client_id", id!)
+          .order("created_at", { ascending: false }),
+        email
+          ? supabase
+              .from("bookings")
+              .select("id, meeting_name, scheduled_at, status, duration_minutes, client_email, client_name")
+              .ilike("client_email", email)
+              .order("scheduled_at", { ascending: false })
+          : Promise.resolve({ data: [] as any[] }),
+        name
+          ? supabase
+              .from("bookings")
+              .select("id, meeting_name, scheduled_at, status, duration_minutes, client_email, client_name")
+              .ilike("client_name", name)
+              .order("scheduled_at", { ascending: false })
+          : Promise.resolve({ data: [] as any[] }),
+      ]);
+
+      const bookingMap = new Map<string, BookingItem>();
+      [...(bkByEmail.data || []), ...(bkByName.data || [])].forEach((b: any) => {
+        bookingMap.set(b.id, {
+          id: b.id,
+          meeting_name: b.meeting_name,
+          scheduled_at: b.scheduled_at,
+          status: b.status,
+          duration_minutes: b.duration_minutes,
+        });
+      });
+
+      setClient(client);
+      setProposals(p.data || []);
+      setContracts((ct.data as any) || []);
+      setRetainers((r.data as any) || []);
+      setOnboardingForms((of.data as any) || []);
+      setBookings(Array.from(bookingMap.values()).sort((a, b) =>
+        new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime()
+      ));
       setLoading(false);
     };
-    fetch();
+    fetchAll();
   }, [id]);
 
   const updateStatus = async (newStatus: string) => {
