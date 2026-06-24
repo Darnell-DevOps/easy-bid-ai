@@ -210,6 +210,7 @@ export default function ContractsPage() {
       const insertRow: any = {
         user_id: user.id,
         proposal_id: proposalId !== "none" ? proposalId : null,
+        client_id: clientId !== "none" ? clientId : (proposal?.client_id ?? null),
         contract_type: contractType,
         title: data?.title || contractTypeLabel(contractType),
         body: data?.body || "",
