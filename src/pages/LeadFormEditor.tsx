@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Copy, ExternalLink, Loader2, Save } from "lucide-react";
+import { ArrowLeft, Copy, ExternalLink, Loader2, Save, Send, ShieldCheck } from "lucide-react";
 import FieldListEditor from "@/components/forms/FieldListEditor";
 import SmartFieldRenderer from "@/components/forms/SmartFieldRenderer";
 import {
