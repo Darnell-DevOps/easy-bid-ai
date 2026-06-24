@@ -279,6 +279,27 @@ function serialize(r: FieldResponses): Record<string, string> {
   return out;
 }
 
+// Render the user's `success_message` inside the premium success screen.
+// Splits "Title. Body…" or "Title\nBody" into heading + supporting text so
+// editing the message stays consistent with the polished default layout.
+function splitSuccessMessage(raw: string | null | undefined): { title: string; body: string } {
+  const fallback = {
+    title: "Project details received",
+    body: "We've received your details and will review your project shortly.",
+  };
+  const msg = (raw || "").trim();
+  if (!msg) return fallback;
+  const nl = msg.indexOf("\n");
+  if (nl > 0) {
+    const title = msg.slice(0, nl).trim();
+    const body = msg.slice(nl + 1).trim();
+    if (title && body) return { title, body };
+  }
+  const m = msg.match(/^(.+?[.!?])\s+(.+)$/s);
+  if (m) return { title: m[1].replace(/[.!?]+$/, "").trim(), body: m[2].trim() };
+  return { title: fallback.title, body: msg };
+}
+
 // Stable per-form + per-browser fingerprint. Persisted in localStorage so the
 // same visitor counts toward the same rate-limit bucket across reloads, but
 // never tied to identifying info (no IP, no PII).
