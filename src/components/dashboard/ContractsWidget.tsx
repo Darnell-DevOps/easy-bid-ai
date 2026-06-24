@@ -70,12 +70,15 @@ export default function ContractsWidget() {
           />
         ) : (
           <>
-            <div className="flex items-center gap-3 mb-3 text-xs">
+            <div className="flex items-center gap-3 mb-3 text-xs flex-wrap">
               <span className="inline-flex items-center gap-1 text-purple font-medium">
-                <Send className="w-3 h-3" /> {counts.pending} awaiting
+                <Send className="w-3 h-3" /> {counts.pending} awaiting client
+              </span>
+              <span className="inline-flex items-center gap-1 text-purple font-medium">
+                <FileSignature className="w-3 h-3" /> {counts.awaitingCountersign} to countersign
               </span>
               <span className="inline-flex items-center gap-1 text-emerald-500 font-medium">
-                <CheckCircle2 className="w-3 h-3" /> {counts.signed} signed
+                <CheckCircle2 className="w-3 h-3" /> {counts.executed} executed
               </span>
             </div>
             <ul className="space-y-2">
