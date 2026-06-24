@@ -277,3 +277,37 @@ function serialize(r: FieldResponses): Record<string, string> {
   }
   return out;
 }
+
+// Stable per-form + per-browser fingerprint. Persisted in localStorage so the
+// same visitor counts toward the same rate-limit bucket across reloads, but
+// never tied to identifying info (no IP, no PII).
+async function computeFingerprint(formId: string): Promise<string> {
+  let visitorId: string | null = null;
+  try {
+    visitorId = localStorage.getItem("lf_visitor_id");
+    if (!visitorId) {
+      visitorId = (crypto.randomUUID?.() ?? Math.random().toString(36).slice(2)) + "-" + Date.now().toString(36);
+      localStorage.setItem("lf_visitor_id", visitorId);
+    }
+  } catch {
+    visitorId = Math.random().toString(36).slice(2);
+  }
+  const raw = [
+    formId,
+    visitorId,
+    navigator.userAgent || "",
+    navigator.language || "",
+    String(screen?.width || 0) + "x" + String(screen?.height || 0),
+    String(new Date().getTimezoneOffset()),
+  ].join("|");
+  try {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
+    return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  } catch {
+    // Fallback (older browsers): simple non-crypto hash, still stable per visitor.
+    let h = 0;
+    for (let i = 0; i < raw.length; i++) h = (h * 31 + raw.charCodeAt(i)) | 0;
+    return "fb_" + (h >>> 0).toString(16) + "_" + visitorId;
+  }
+}
+
