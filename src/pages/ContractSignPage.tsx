@@ -349,10 +349,13 @@ export default function ContractSignPage() {
 
         {/* Contract body */}
         <section className="rounded-xl border border-border bg-card p-6 lg:p-10">
-          <ContractRenderer content={renderMergeTags(contract.body, {
-            client: { name: contract.client_name, email: contract.client_email, company: contract.company_name },
-            intake,
-          })} />
+          <ContractRenderer
+            content={renderMergeTags(contract.body, {
+              client: { name: contract.client_name, email: contract.client_email, company: contract.company_name },
+              intake,
+            })}
+            clientSignature={signatures[signatures.length - 1] || null}
+          />
           <SignatureBlock signatures={signatures} />
         </section>
 
