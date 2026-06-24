@@ -1,0 +1,159 @@
+/**
+ * End-to-end coverage for the contract signing workflow:
+ *   1. Owner seeds a contract via the authenticated REST API.
+ *   2. Client opens the public /sign/:token URL and signs (typed).
+ *   3. Owner opens the dashboard contract page and countersigns.
+ *   4. The contract becomes "executed" and the executed PDF is downloadable
+ *      from both the owner dashboard and the client's signed-confirmation view.
+ *
+ * Required env vars (skipped otherwise):
+ *   TEST_USER_EMAIL   – a real auth user in the project
+ *   TEST_USER_PASSWORD
+ */
+import { test, expect, type APIRequestContext, type BrowserContext } from "@playwright/test";
+
+const SUPABASE_URL = "https://avtogztwdoemxuffnwyv.supabase.co";
+const SUPABASE_ANON =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF2dG9nenR3ZG9lbXh1ZmZud3l2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MjMzOTIsImV4cCI6MjA5MTI5OTM5Mn0.YzBeN1hJwep-3enRTATohXbuBC0OoEMVv0KC6yRmhnw";
+const STORAGE_KEY = "sb-avtogztwdoemxuffnwyv-auth-token";
+
+const EMAIL = process.env.TEST_USER_EMAIL;
+const PASSWORD = process.env.TEST_USER_PASSWORD;
+
+type AuthSession = {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  expires_at: number;
+  token_type: string;
+  user: { id: string; email: string };
+};
+
+async function signIn(api: APIRequestContext): Promise<AuthSession> {
+  const res = await api.post(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+    headers: { apikey: SUPABASE_ANON, "Content-Type": "application/json" },
+    data: { email: EMAIL, password: PASSWORD },
+  });
+  expect(res.ok(), `Sign-in failed: ${res.status()} ${await res.text()}`).toBeTruthy();
+  return res.json();
+}
+
+async function seedContract(api: APIRequestContext, session: AuthSession) {
+  const token = `e2e-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  const body = {
+    user_id: session.user.id,
+    contract_type: "web_design_agreement",
+    title: "E2E Sign Flow Contract",
+    client_name: "E2E Test Client",
+    client_email: "e2e-client@example.com",
+    body:
+      "This Agreement is between the Service Provider and the Client.\n\n" +
+      "Scope: end-to-end signing flow smoke test.\n\nSignatures below.",
+    status: "sent",
+    signing_token: token,
+    currency: "USD",
+    amount_cents: 100000,
+  };
+  const res = await api.post(`${SUPABASE_URL}/rest/v1/contracts`, {
+    headers: {
+      apikey: SUPABASE_ANON,
+      Authorization: `Bearer ${session.access_token}`,
+      "Content-Type": "application/json",
+      Prefer: "return=representation",
+    },
+    data: body,
+  });
+  expect(res.ok(), `Seed contract failed: ${res.status()} ${await res.text()}`).toBeTruthy();
+  const rows = await res.json();
+  return rows[0] as { id: string; signing_token: string; user_id: string };
+}
+
+async function deleteContract(api: APIRequestContext, session: AuthSession, id: string) {
+  await api.delete(`${SUPABASE_URL}/rest/v1/contracts?id=eq.${id}`, {
+    headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${session.access_token}` },
+  });
+}
+
+async function attachOwnerSession(ctx: BrowserContext, session: AuthSession, baseURL: string) {
+  const page = await ctx.newPage();
+  await page.goto(baseURL);
+  await page.evaluate(
+    ([key, value]) => window.localStorage.setItem(key, value),
+    [STORAGE_KEY, JSON.stringify(session)] as const,
+  );
+  await page.close();
+}
+
+test.describe("Contract sign → countersign → executed PDF", () => {
+  test.skip(!EMAIL || !PASSWORD, "Set TEST_USER_EMAIL / TEST_USER_PASSWORD to run this E2E.");
+  test.setTimeout(120_000);
+
+  test("full flow", async ({ browser, playwright, baseURL }) => {
+    const api = await playwright.request.newContext();
+    const session = await signIn(api);
+    const contract = await seedContract(api, session);
+
+    try {
+      // ---- 1. Client signs via the public /sign/:token page ----
+      const clientCtx = await browser.newContext();
+      const clientPage = await clientCtx.newPage();
+      await clientPage.goto(`${baseURL}/sign/${contract.signing_token}`);
+
+      await expect(clientPage.getByText("E2E Sign Flow Contract", { exact: false })).toBeVisible();
+
+      // Name is pre-filled from contract.client_name; just confirm it's there.
+      const nameInput = clientPage.getByPlaceholder("Jane Smith");
+      await expect(nameInput).toHaveValue(/E2E Test Client/);
+
+      // "Type signature" tab is selected by default.
+      await clientPage.getByRole("checkbox").first().check();
+      await clientPage.getByRole("button", { name: /Sign Contract/i }).click();
+
+      // Post-sign UI: awaiting countersignature copy + signed badge.
+      await expect(clientPage.getByText(/awaiting countersignature/i)).toBeVisible({ timeout: 15_000 });
+      await clientCtx.close();
+
+      // ---- 2. Owner countersigns from dashboard ----
+      const ownerCtx = await browser.newContext();
+      await attachOwnerSession(ownerCtx, session, baseURL!);
+      const ownerPage = await ownerCtx.newPage();
+      await ownerPage.goto(`${baseURL}/dashboard/contracts/${contract.id}`);
+
+      await expect(ownerPage.getByRole("button", { name: /Countersign contract/i })).toBeVisible({
+        timeout: 15_000,
+      });
+      await ownerPage.getByRole("button", { name: /Countersign contract/i }).first().click();
+
+      const dialog = ownerPage.getByRole("dialog");
+      await expect(dialog.getByText("Countersign contract")).toBeVisible();
+      await dialog.getByPlaceholder("Your name").fill("E2E Test Provider");
+      await dialog.getByRole("button", { name: /Countersign & execute/i }).click();
+
+      // ---- 3. Verify executed state on owner dashboard ----
+      await expect(ownerPage.getByRole("button", { name: /Download Executed PDF/i })).toBeVisible({
+        timeout: 15_000,
+      });
+      await expect(ownerPage.getByRole("button", { name: /Countersign contract/i })).toHaveCount(0);
+
+      // Trigger the PDF download from the owner side; the button must not throw.
+      await ownerPage.getByRole("button", { name: /Download Executed PDF/i }).click();
+      // html2pdf writes to a Blob -> anchor click; just confirm the button re-enables.
+      await expect(ownerPage.getByRole("button", { name: /Download Executed PDF/i })).toBeEnabled({
+        timeout: 20_000,
+      });
+
+      // ---- 4. Verify client side now also sees the executed state + PDF button ----
+      const clientCtx2 = await browser.newContext();
+      const clientPage2 = await clientCtx2.newPage();
+      await clientPage2.goto(`${baseURL}/sign/${contract.signing_token}`);
+      await expect(clientPage2.getByRole("button", { name: /Download Executed PDF/i })).toBeVisible({
+        timeout: 15_000,
+      });
+      await clientCtx2.close();
+      await ownerCtx.close();
+    } finally {
+      await deleteContract(api, session, contract.id);
+      await api.dispose();
+    }
+  });
+});
