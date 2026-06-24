@@ -36,6 +36,10 @@ export default function PublicLeadFormPage() {
   const [responses, setResponses] = useState<FieldResponses>({});
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  // Spam protection: honeypot field + min time-to-submit guard.
+  const [honeypot, setHoneypot] = useState("");
+  const [loadedAt] = useState(() => Date.now());
+
 
   useEffect(() => {
     if (!slug) return;
@@ -61,6 +65,19 @@ export default function PublicLeadFormPage() {
 
   const handleSubmit = async () => {
     if (!form || !slug) return;
+
+    // Honeypot tripped — pretend success, don't call the RPC.
+    if (honeypot.trim().length > 0) {
+      setDone(true);
+      return;
+    }
+
+    // Min time-to-submit (1.5s) — humans don't fill multi-section forms this fast.
+    if (Date.now() - loadedAt < 1500) {
+      setDone(true);
+      return;
+    }
+
     const missing = missingRequired(form.fields, responses);
     if (missing.length) {
       toast({
@@ -78,6 +95,7 @@ export default function PublicLeadFormPage() {
       }
       return null;
     };
+    const fingerprint = await computeFingerprint(form.id);
     const { data, error } = await supabase.rpc("lead_form_submit" as any, {
       _slug: slug,
       _responses: serialize(responses),
@@ -85,12 +103,25 @@ export default function PublicLeadFormPage() {
       _email: pick("email", "your_email"),
       _phone: pick("phone", "phone_number"),
       _company: pick("company", "company_name", "business"),
+      _honeypot: null,
+      _fingerprint: fingerprint,
     });
     setSubmitting(false);
     if (error) {
+      const msg = String(error.message || "");
+      if (msg.includes("rate_limited")) {
+        // Don't expose technical spam messaging — show a calm, generic note.
+        toast({
+          title: "Too many submissions",
+          description: "Please wait a few minutes before submitting this form again.",
+          variant: "destructive",
+        });
+        return;
+      }
       toast({ title: "Submission failed", description: error.message, variant: "destructive" });
       return;
     }
+
     if (embed && typeof window !== "undefined" && window.parent !== window) {
       try { window.parent.postMessage({ type: "lovable-form-submitted", slug }, "*"); } catch { /* no-op */ }
     }
@@ -200,6 +231,21 @@ export default function PublicLeadFormPage() {
             ))}
           </div>
 
+          {/* Honeypot — hidden from real users, irresistible to naive bots. */}
+          <div aria-hidden="true" className="absolute -left-[9999px] top-auto h-0 w-0 overflow-hidden" style={{ position: "absolute", left: "-9999px" }}>
+            <label htmlFor="website_url_hp">Website (leave blank)</label>
+            <input
+              type="text"
+              id="website_url_hp"
+              name="website_url_hp"
+              tabIndex={-1}
+              autoComplete="off"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+            />
+          </div>
+
+
           <div className="relative mt-10 pt-6 border-t border-border/60 space-y-4">
             <p className="text-xs text-muted-foreground flex items-center justify-center gap-2 text-center">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400/80 flex-shrink-0" />
@@ -231,3 +277,37 @@ function serialize(r: FieldResponses): Record<string, string> {
   }
   return out;
 }
+
+// Stable per-form + per-browser fingerprint. Persisted in localStorage so the
+// same visitor counts toward the same rate-limit bucket across reloads, but
+// never tied to identifying info (no IP, no PII).
+async function computeFingerprint(formId: string): Promise<string> {
+  let visitorId: string | null = null;
+  try {
+    visitorId = localStorage.getItem("lf_visitor_id");
+    if (!visitorId) {
+      visitorId = (crypto.randomUUID?.() ?? Math.random().toString(36).slice(2)) + "-" + Date.now().toString(36);
+      localStorage.setItem("lf_visitor_id", visitorId);
+    }
+  } catch {
+    visitorId = Math.random().toString(36).slice(2);
+  }
+  const raw = [
+    formId,
+    visitorId,
+    navigator.userAgent || "",
+    navigator.language || "",
+    String(screen?.width || 0) + "x" + String(screen?.height || 0),
+    String(new Date().getTimezoneOffset()),
+  ].join("|");
+  try {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
+    return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  } catch {
+    // Fallback (older browsers): simple non-crypto hash, still stable per visitor.
+    let h = 0;
+    for (let i = 0; i < raw.length; i++) h = (h * 31 + raw.charCodeAt(i)) | 0;
+    return "fb_" + (h >>> 0).toString(16) + "_" + visitorId;
+  }
+}
+

@@ -982,6 +982,35 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_form_submission_log: {
+        Row: {
+          created_at: string
+          fingerprint: string
+          form_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          fingerprint: string
+          form_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          fingerprint?: string
+          form_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_form_submission_log_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "lead_forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_form_views: {
         Row: {
           created_at: string
@@ -2490,6 +2519,8 @@ export type Database = {
         Args: {
           _company?: string
           _email?: string
+          _fingerprint?: string
+          _honeypot?: string
           _name?: string
           _phone?: string
           _responses: Json
