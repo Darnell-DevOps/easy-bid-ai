@@ -1,63 +1,81 @@
 ## Goal
 
-Make every contract (and related record) tied to a client, and turn the Client detail page into a single source of truth that shows all activity for that client — proposals, contracts, retainers, onboarding forms and bookings.
+Make the public lead form feel premium and conversion-focused, with the smart field set you described, while keeping the form fully editable per user.
 
-## 1. Link contracts to clients on creation
+## What already exists
 
-Today the "New Contract" dialog on `/dashboard/contracts` collects a free‑text client name/email but never sets `contracts.client_id` (the column already exists). We'll fix that:
+- `PublicLeadFormPage.tsx` already renders fields grouped by section, with conditional logic, file upload, dropdowns — the engine in `src/lib/form-fields.ts` supports everything you need.
+- The `lead_form_submit` RPC already creates a `leads` row with `status = 'new'`, saves the full JSON `responses` (consumed by proposal generation today), and writes a `user_notifications` activity entry ("New lead from …"). No backend changes required.
 
-- Add a **Client picker** to the New Contract dialog (`src/pages/ContractsPage.tsx`):
-  - Loads `clients` for the signed-in user.
-  - Selecting a client auto-fills name, email, company.
-  - "Auto-fill from proposal" continues to work and, if the proposal has a `client_id`, it pre-selects that client.
-  - Falls back to a "No linked client" option for ad‑hoc contracts.
-- On insert, write `client_id` alongside the existing fields.
-- Backfill: a one-off migration matches existing `contracts` rows to `clients` by `(user_id, lower(client_email))` first, then `(user_id, lower(client_name))` when email is empty, and sets `client_id` where a unique match exists.
-- Same picker pattern added to the **New Retainer** flow if it isn't already linked, so retainers also carry `client_id`.
+## Changes
 
-## 2. Pre-fill contract creation from a client
+### 1. Public form visual upgrade — `src/pages/PublicLeadFormPage.tsx`
 
-Add a **"New Contract"** button on the Client detail hero/actions area that opens `/dashboard/contracts` with the dialog pre-opened and the client pre-selected (via `location.state`, mirroring the existing template flow).
+- Wrap the form in a premium card: subtle gradient border, soft inner shadow, generous `space-y-8` between sections; tighten field spacing to `space-y-5` inside.
+- Section headers: small uppercase eyebrow ("Contact", "Project Details", "Budget & Timeline", "Additional Information") + a thin divider, instead of the current single purple label.
+- Field polish: refine labels, helper text styling, and focus rings (accent ring, smooth transition). Required asterisk in `text-rose-500`.
+- Trust line above the submit button:
+  "Submit your details and we'll prepare the next step for your project."
+- Submit button:
+  - Label override: when a form still has the default `submit_label` (`"Submit"` or empty), render "Send Project Details".
+  - Soft gradient (`from-accent via-purple to-accent`) with shadow and hover brightness, full-width on mobile.
+- Success screen redesign:
+  - Centered card, accent gradient halo behind the check icon.
+  - Title: "Project details received"
+  - Body: "We've received your details and will review your project shortly."
+  - Primary button "Back to homepage" → routes to `/`.
+  - Keeps the existing redirect-URL override behavior when the form owner has configured one.
 
-## 3. Client detail: full activity view
+### 2. Smart default fields for new forms — `src/pages/LeadFormsDashboard.tsx`
 
-Extend `src/pages/ClientDetail.tsx` to fetch and display everything related to the client. All queries scope by `client_id = client.id`.
+When the user clicks "New lead form", insert this field set (instead of the current 3 placeholders). Existing forms are untouched — owners can keep editing in the builder.
 
-New sections, added under the existing Proposals card in this order:
+```text
+Contact
+  - Your name *          short_text
+  - Email *              email
+  - Phone / WhatsApp     phone
+  - Company name         short_text
 
-1. **Contracts** — list with title, type, status pill (Draft / Sent / Viewed / Awaiting countersignature / Executed), amount, signed/executed dates. Row click → `/dashboard/contracts/:id`. Header has a **New contract** button.
-2. **Retainers** — list with title, billing cycle, MRR, status (Active / Paused / Cancelled), next invoice date. Row click → `/dashboard/retainers/:id`. Header has **New retainer**.
-3. **Onboarding forms** — list with template title, status (Sent / In progress / Submitted), submitted date, link to the form.
-4. **Bookings** — upcoming + past bookings for this client (name/email match on `bookings`), with date, link type, status.
+Project Details
+  - Service interested in *   select: Website Design, Branding,
+                              Social Media Management, Marketing Strategy,
+                              Automation, Consulting, Other
+  - What can we help you with? *   long_text
+  - Main goal             short_text  (placeholder: "More leads, better branding,
+                                        faster workflow, more sales…")
 
-Each section uses the existing `Card` pattern and shows an inline empty state when there's nothing yet.
+Budget & Timeline
+  - Estimated budget *    select: Under £500, £500–£1,000, £1,000–£2,500,
+                                  £2,500–£5,000, £5,000+, Not sure yet
+  - Desired timeline *    select: ASAP, Within 1 week, 2–4 weeks,
+                                  1–3 months, Flexible
 
-### Updated stats strip
+Additional Information
+  - Current website / social URL   url
+  - Upload file or brief           file
+  - Anything else?                 long_text
 
-The 3-stat strip becomes 4 stats: Proposals, Contracts (executed / total), Retainer MRR, Revenue collected. Mobile keeps a 2×2 grid.
-
-## 4. Data fetching
-
-`ClientDetail` does a single parallel fetch on mount:
-
-```ts
-const [c, p, ct, r, of, bk] = await Promise.all([
-  supabase.from("clients").select("*").eq("id", id).single(),
-  supabase.from("proposals").select(...).eq("client_id", id),
-  supabase.from("contracts").select(...).eq("client_id", id),
-  supabase.from("retainers").select(...).eq("client_id", id),
-  supabase.from("onboarding_forms").select(...).eq("client_id", id),
-  supabase.from("bookings").select(...).eq("client_id", id),
-]);
+Conditional fields (auto-shown by service)
+  - Website Design  → "Do you need copy/content?"   select: Yes / No / Not sure
+  - Branding        → "Do you already have a logo?" select: Yes / No / In progress
+  - Social Media    → "Which platforms do you use?" multi_select:
+                       Instagram, TikTok, Facebook, LinkedIn, X, YouTube, Other
+  - Automation      → "What process do you want automated?" long_text
 ```
 
-RLS already restricts each of these tables to the owning `user_id`, so no policy changes are required — only the backfill migration above.
+The "Current website URL" stays in Additional Information so it's always available; the Website-Design-specific copy/content question is the conditional one.
 
-## 5. Files touched
+Defaults also set `title: "Tell us about your project"`, `description: "A few quick details so we can prepare a tailored next step within one business day."`, and `submit_label: "Send Project Details"`.
 
-- `supabase/migrations/<new>.sql` — backfill `contracts.client_id` (and `retainers.client_id` if needed) by email/name match.
-- `src/pages/ContractsPage.tsx` — client picker in the dialog, write `client_id`, support pre-open from navigation state.
-- `src/pages/ClientDetail.tsx` — new fetches, new sections, new stats, "New contract" / "New retainer" buttons.
-- Small shared helpers reused from `src/lib/contracts.ts`, `src/lib/retainers.ts`, `src/lib/onboarding.ts`, `src/lib/bookings.ts` for status labels/formatting.
+### 3. No backend / schema changes
 
-No schema changes beyond the backfill; no edits to auto-generated Supabase files.
+- `leads.status = 'new'`, responses JSON, and the activity notification are already produced by the existing RPC.
+- Leads remain leads — they're surfaced in your Lead Inbox and can be converted to a client when you generate a proposal (existing flow). The form does not silently create a `clients` row from anonymous submissions.
+
+## Files touched
+
+- `src/pages/PublicLeadFormPage.tsx` — visual redesign + success screen + submit-label override + trust line.
+- `src/pages/LeadFormsDashboard.tsx` — new default field set for "New lead form".
+
+No new packages, no migrations, no edits to the form builder (existing customization still works).
