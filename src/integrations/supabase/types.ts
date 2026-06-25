@@ -805,6 +805,54 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_domains: {
+        Row: {
+          created_at: string
+          domain: string
+          id: string
+          is_primary: boolean
+          last_check_error: string | null
+          last_checked_at: string | null
+          updated_at: string
+          use_for_forms: boolean
+          use_for_portal: boolean
+          user_id: string
+          verification_token: string
+          verified: boolean
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          domain: string
+          id?: string
+          is_primary?: boolean
+          last_check_error?: string | null
+          last_checked_at?: string | null
+          updated_at?: string
+          use_for_forms?: boolean
+          use_for_portal?: boolean
+          user_id: string
+          verification_token?: string
+          verified?: boolean
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+          id?: string
+          is_primary?: boolean
+          last_check_error?: string | null
+          last_checked_at?: string | null
+          updated_at?: string
+          use_for_forms?: boolean
+          use_for_portal?: boolean
+          user_id?: string
+          verification_token?: string
+          verified?: boolean
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       deadlines: {
         Row: {
           booking_id: string | null
@@ -2698,6 +2746,14 @@ export type Database = {
           owner_email: string
           owner_name: string
           user_id: string
+        }[]
+      }
+      get_primary_custom_domain: {
+        Args: { p_user_id: string }
+        Returns: {
+          domain: string
+          use_for_forms: boolean
+          use_for_portal: boolean
         }[]
       }
       get_public_branding: {
