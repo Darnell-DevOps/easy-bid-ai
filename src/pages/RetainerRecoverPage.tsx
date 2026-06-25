@@ -88,6 +88,7 @@ export default function RetainerRecoverPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-10">
+      <DynamicFavicon userId={retainer?.user_id} />
       <Card className="max-w-lg w-full border-border/60">
         <CardContent className="p-8 space-y-6">
           {resolved ? (
