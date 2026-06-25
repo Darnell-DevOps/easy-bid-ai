@@ -13,6 +13,7 @@ import {
 
 interface PublicForm {
   id: string;
+  user_id: string;
   slug: string;
   title: string;
   description: string;
