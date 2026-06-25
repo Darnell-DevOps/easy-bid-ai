@@ -81,6 +81,51 @@ export default function InboundReviewQueue() {
 
   if (review.length === 0 && ignored.length === 0) return null;
 
+  // Split reason into headline + signal bullets
+  const parseReason = (raw: string | null) => {
+    if (!raw) return { headline: "", signals: [] as string[] };
+    const lines = raw.split("\n").map((l) => l.trim()).filter(Boolean);
+    const headline = lines.find((l) => !l.startsWith("•")) || "";
+    const signals = lines.filter((l) => l.startsWith("•")).map((l) => l.replace(/^•\s*/, ""));
+    return { headline, signals };
+  };
+
+  const ReasonChip = ({ raw, tone }: { raw: string | null; tone: "amber" | "muted" }) => {
+    const { headline, signals } = parseReason(raw);
+    const toneClass =
+      tone === "amber"
+        ? "border-amber-500/40 text-amber-600"
+        : "border-border text-muted-foreground";
+    return (
+      <Popover>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] hover:bg-muted/40 ${toneClass}`}
+          >
+            {tone === "amber" ? <AlertTriangle className="w-3 h-3" /> : <Info className="w-3 h-3" />}
+            <span className="truncate max-w-[200px]">{headline || "Why?"}</span>
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="w-80 text-xs space-y-2">
+          <div className="font-medium text-foreground">{headline || "Classification signals"}</div>
+          {signals.length === 0 ? (
+            <p className="text-muted-foreground">No further detail recorded.</p>
+          ) : (
+            <ul className="space-y-1">
+              {signals.map((s, i) => (
+                <li key={i} className="text-muted-foreground leading-snug">• {s}</li>
+              ))}
+            </ul>
+          )}
+          <p className="text-[10px] text-muted-foreground/70 pt-1 border-t border-border">
+            Signals combine sender-pattern checks, header/length heuristics, AI verdict, and existing-client matching.
+          </p>
+        </PopoverContent>
+      </Popover>
+    );
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -94,7 +139,7 @@ export default function InboundReviewQueue() {
           )}
         </CardTitle>
         <p className="text-xs text-muted-foreground">
-          Emails we weren't sure about. Convert real enquiries to leads, ignore the rest.
+          Emails we weren't sure about. Click the reason chip on any item to see the exact signals behind the call.
         </p>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -112,9 +157,7 @@ export default function InboundReviewQueue() {
                     {m.from_email} · {new Date(m.received_at).toLocaleString()}
                   </div>
                 </div>
-                <Badge variant="outline" className="text-[10px] gap-1 border-amber-500/40 text-amber-600">
-                  <AlertTriangle className="w-3 h-3" /> {m.classification_reason || "Needs review"}
-                </Badge>
+                <ReasonChip raw={m.classification_reason} tone="amber" />
               </div>
               {m.subject && <div className="text-sm font-medium">{m.subject}</div>}
               {m.body_text && (
@@ -149,12 +192,12 @@ export default function InboundReviewQueue() {
               <div className="mt-2 space-y-1.5">
                 {ignored.map((m) => (
                   <div key={m.id} className="text-xs text-muted-foreground flex items-center justify-between gap-2 border border-border/60 rounded px-2 py-1.5">
-                    <span className="truncate">
+                    <span className="truncate min-w-0 flex-1">
                       <span className="font-medium text-foreground/80">{m.from_email || "?"}</span>
                       {" — "}
                       {m.subject || "(no subject)"}
                     </span>
-                    <span className="shrink-0 text-[10px]">{m.classification_reason}</span>
+                    <ReasonChip raw={m.classification_reason} tone="muted" />
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" disabled={busyId === m.id} onClick={() => promote(m.id)}>
                       Restore
                     </Button>
@@ -168,3 +211,4 @@ export default function InboundReviewQueue() {
     </Card>
   );
 }
+
