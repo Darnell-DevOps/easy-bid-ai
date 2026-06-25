@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useSearchParams, useNavigate } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle2, Loader2, Send, ShieldCheck, ArrowLeft } from "lucide-react";
+import { CheckCircle2, Loader2, Send, ShieldCheck } from "lucide-react";
 import SmartFieldRenderer from "@/components/forms/SmartFieldRenderer";
 import {
   groupSmartFields, isFieldVisible, missingRequired,
@@ -27,7 +27,7 @@ export default function PublicLeadFormPage() {
   const { slug } = useParams();
   const [search] = useSearchParams();
   const embed = search.get("embed") === "1";
-  const navigate = useNavigate();
+  
   const { toast } = useToast();
 
   const [form, setForm] = useState<PublicForm | null>(null);
@@ -163,15 +163,6 @@ export default function PublicLeadFormPage() {
             <p className="text-sm text-muted-foreground max-w-sm mx-auto">
               {successBody}
             </p>
-            {!embed && (
-              <Button
-                onClick={() => navigate("/")}
-                size="lg"
-                className="mt-7 gap-2 bg-gradient-to-r from-accent via-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110"
-              >
-                <ArrowLeft className="w-4 h-4" /> Back to homepage
-              </Button>
-            )}
           </div>
         </div>
       </div>
