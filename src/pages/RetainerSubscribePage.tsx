@@ -41,7 +41,7 @@ export default function RetainerSubscribePage() {
     const { data } = await supabase
       .from("retainers")
       .select(
-        "id, client_name, client_email, company_name, title, description, amount_cents, currency, billing_interval, custom_interval_days, status, start_date, next_billing_date, current_period_end, cancel_at_period_end, paddle_subscription_id",
+        "id, user_id, client_name, client_email, company_name, title, description, amount_cents, currency, billing_interval, custom_interval_days, status, start_date, next_billing_date, current_period_end, cancel_at_period_end, paddle_subscription_id",
       )
       .eq("access_token", token)
       .maybeSingle();
