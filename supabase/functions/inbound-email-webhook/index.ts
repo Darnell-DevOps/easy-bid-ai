@@ -492,6 +492,35 @@ Deno.serve(async (req) => {
     .update({ last_inbound_at: new Date().toISOString() })
     .eq("user_id", alias.user_id);
 
+  // Evaluate auto-send rules and log the decision (no actual dispatch — hard kill switch).
+  const autoSend = evaluateAutoSend({
+    prefs,
+    ai,
+    classification,
+    isExistingClient: !!dedupeNote,
+    subject,
+    body: message,
+  });
+  try {
+    await svc.from("lead_auto_send_log").insert({
+      user_id: alias.user_id,
+      client_id: clientId,
+      subject,
+      body_preview: (ai?.reply || "").slice(0, 500),
+      confidence: ai?.lead_confidence || null,
+      decision: autoSend.decision,
+      reason: autoSend.reason,
+      metadata: {
+        classification,
+        lead_score: ai?.lead_score || null,
+        existing_client: !!dedupeNote,
+        feature_globally_enabled: false,
+      },
+    });
+  } catch (e) {
+    console.warn("auto-send log insert failed", e);
+  }
+
   return jsonResponse({
     ok: true,
     classification,
@@ -500,6 +529,7 @@ Deno.serve(async (req) => {
     signals,
     dedupe: dedupeNote,
     client_id: clientId,
+    auto_send: autoSend,
     draft: ai && classification === "lead"
       ? { subject: ai.reply_subject || `Re: ${subject}`, body: ai.reply }
       : null,
