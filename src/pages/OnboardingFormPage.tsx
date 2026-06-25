@@ -13,6 +13,7 @@ import {
 import { isFieldVisible, type FieldResponses } from "@/lib/form-fields";
 import SmartFieldRenderer from "@/components/forms/SmartFieldRenderer";
 import OnboardingProgressTracker from "@/components/onboarding/OnboardingProgressTracker";
+import DynamicFavicon from "@/components/branding/DynamicFavicon";
 
 function hydrate(raw: Record<string, string> | undefined): FieldResponses {
   const out: FieldResponses = {};
