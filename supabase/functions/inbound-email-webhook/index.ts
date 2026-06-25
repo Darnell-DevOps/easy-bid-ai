@@ -89,6 +89,13 @@ Rules:
 - Reply: warm, professional, conversion-focused, under 180 words. Reference what they said. Ask 1–2 sharp qualification questions if missing. End with a clear next step (call or proposal). Sign off as "Best,".
 - Quality: "High", "Medium", "Low" based on clarity, budget, urgency, and fit.
 - Recommendation: "High" -> "Recommend generating proposal"; "Medium" -> "Recommend asking more questions"; "Low" -> "May not be worth pursuing".
+- Lead score (use these exact rules):
+  • Hot = clear project intent AND at least one of: stated budget, stated timeline, explicit request for a call/proposal.
+  • Warm = clear project intent but missing one of budget/timeline/scope.
+  • Cold = vague intent, no qualification signals.
+  • Unclear = you can't reasonably tell, or the message lacks enough context.
+- lead_score_reason: ≤ 200 chars, justify the score using the actual words/signals in the email.
+- missing_info: 0–6 short strings naming the qualification gaps that would raise the score (e.g. "budget", "timeline", "decision maker", "project scope", "preferred contact method"). Empty array if nothing meaningful is missing.
 Return ONLY by calling the tool.`;
 
   const user = `Lead name: ${opts.name}
@@ -126,8 +133,11 @@ ${opts.message}
               lead_quality: { type: "string", enum: ["High", "Medium", "Low"] },
               quality_reason: { type: "string" },
               ai_recommendation: { type: "string" },
+              lead_score: { type: "string", enum: ["Hot", "Warm", "Cold", "Unclear"] },
+              lead_score_reason: { type: "string" },
+              missing_info: { type: "array", items: { type: "string" } },
             },
-            required: ["is_lead", "lead_confidence", "not_lead_reason", "reply", "reply_subject", "service_requested", "budget", "timeline", "goals", "notes", "lead_quality", "quality_reason", "ai_recommendation"],
+            required: ["is_lead", "lead_confidence", "not_lead_reason", "reply", "reply_subject", "service_requested", "budget", "timeline", "goals", "notes", "lead_quality", "quality_reason", "ai_recommendation", "lead_score", "lead_score_reason", "missing_info"],
             additionalProperties: false,
           },
         },
