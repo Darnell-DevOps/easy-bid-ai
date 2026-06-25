@@ -80,13 +80,51 @@ function stripHtml(html: string): string {
     .trim();
 }
 
-async function callLeadAI(opts: { name: string; email: string | null; message: string }) {
+type LeadPrefs = {
+  business_name?: string | null;
+  business_services?: string | null;
+  booking_link?: string | null;
+  lead_reply_tone?: string | null;
+  lead_reply_style?: string | null;
+  lead_reply_length?: string | null;
+  email_signature?: string | null;
+  lead_auto_send_enabled?: boolean | null;
+  lead_auto_send_min_confidence?: string | null;
+  lead_auto_send_only_new_leads?: boolean | null;
+  lead_auto_send_block_keywords?: string[] | null;
+  custom_instructions?: string | null;
+};
+
+const LENGTH_LIMIT: Record<string, string> = {
+  short: "≤80 words",
+  standard: "≤180 words",
+  detailed: "≤300 words",
+};
+
+async function callLeadAI(opts: { name: string; email: string | null; message: string; prefs: LeadPrefs | null }) {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
 
-  const system = `You are an elite sales assistant. Draft a reply to an inbound lead and extract qualification info.
+  const p = opts.prefs || {};
+  const tone = p.lead_reply_tone || "friendly";
+  const style = p.lead_reply_style || "consultative";
+  const length = LENGTH_LIMIT[p.lead_reply_length || "standard"] || "≤180 words";
+  const bizName = (p.business_name || "").trim();
+  const services = (p.business_services || "").trim();
+  const booking = (p.booking_link || "").trim();
+  const customRules = (p.custom_instructions || "").trim();
+
+  const bizBlock = [
+    bizName ? `Business name: ${bizName}` : "",
+    services ? `Services offered: ${services}` : "",
+    booking ? `Booking link (use as call-to-action when suggesting a call): ${booking}` : "",
+    customRules ? `Additional rules from the user: ${customRules}` : "",
+  ].filter(Boolean).join("\n");
+
+  const system = `You are an elite sales assistant${bizName ? ` writing on behalf of ${bizName}` : ""}. Draft a reply to an inbound lead and extract qualification info.
+${bizBlock ? "\nContext about the business:\n" + bizBlock + "\n" : ""}
 Rules:
-- Reply: warm, professional, conversion-focused, under 180 words. Reference what they said. Ask 1–2 sharp qualification questions if missing. End with a clear next step (call or proposal). Sign off as "Best,".
+- Reply tone: ${tone}. Reply style: ${style}. Length: ${length}. Reference what they said. Ask 1–2 sharp qualification questions if missing. End with a clear next step (call or proposal)${booking ? `; when suggesting a call, include the booking link verbatim` : ""}. Do NOT include a sign-off or signature — the system will append the user's signature.
 - Quality: "High", "Medium", "Low" based on clarity, budget, urgency, and fit.
 - Recommendation: "High" -> "Recommend generating proposal"; "Medium" -> "Recommend asking more questions"; "Low" -> "May not be worth pursuing".
 - Lead score (use these exact rules):
@@ -95,7 +133,7 @@ Rules:
   • Cold = vague intent, no qualification signals.
   • Unclear = you can't reasonably tell, or the message lacks enough context.
 - lead_score_reason: ≤ 200 chars, justify the score using the actual words/signals in the email.
-- missing_info: 0–6 short strings naming the qualification gaps that would raise the score (e.g. "budget", "timeline", "decision maker", "project scope", "preferred contact method"). Empty array if nothing meaningful is missing.
+- missing_info: 0–6 short strings naming the qualification gaps that would raise the score. Empty array if nothing meaningful is missing.
 Return ONLY by calling the tool.`;
 
   const user = `Lead name: ${opts.name}
@@ -155,6 +193,71 @@ ${opts.message}
   const args = data.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
   if (!args) return null;
   try { return JSON.parse(args); } catch { return null; }
+}
+
+// HARD KILL SWITCH — auto-send is not shipped yet. Even if a user enables it
+// in settings, this server-side flag prevents any actual auto-send dispatch.
+// We still evaluate and log the decision so users can preview the audit trail.
+const AUTO_SEND_GLOBALLY_ENABLED = false;
+
+type AutoSendDecision = {
+  allow: boolean;
+  decision:
+    | "sent"
+    | "blocked_disabled_globally"
+    | "blocked_disabled_user"
+    | "blocked_low_confidence"
+    | "blocked_keywords"
+    | "blocked_existing_client"
+    | "blocked_not_a_lead";
+  reason: string;
+};
+
+function evaluateAutoSend(args: {
+  prefs: LeadPrefs | null;
+  ai: any | null;
+  classification: "lead" | "needs_review" | "ignored";
+  isExistingClient: boolean;
+  subject: string;
+  body: string;
+}): AutoSendDecision {
+  const { prefs, ai, classification, isExistingClient, subject, body } = args;
+
+  if (!AUTO_SEND_GLOBALLY_ENABLED) {
+    return { allow: false, decision: "blocked_disabled_globally", reason: "Auto-send feature is not yet released." };
+  }
+  if (!prefs?.lead_auto_send_enabled) {
+    return { allow: false, decision: "blocked_disabled_user", reason: "User has auto-send disabled in settings." };
+  }
+  if (classification !== "lead") {
+    return { allow: false, decision: "blocked_not_a_lead", reason: `Classification was "${classification}".` };
+  }
+  if (prefs.lead_auto_send_only_new_leads && isExistingClient) {
+    return { allow: false, decision: "blocked_existing_client", reason: "Only new inbound leads may be auto-sent." };
+  }
+
+  const minConf = prefs.lead_auto_send_min_confidence || "high";
+  const aiConf = (ai?.lead_confidence || "low").toLowerCase();
+  const rank: Record<string, number> = { low: 1, medium: 2, high: 3 };
+  if ((rank[aiConf] || 0) < (rank[minConf] || 3)) {
+    return { allow: false, decision: "blocked_low_confidence", reason: `AI confidence "${aiConf}" below minimum "${minConf}".` };
+  }
+
+  const haystack = (subject + "\n" + body).toLowerCase();
+  const blocklist = (prefs.lead_auto_send_block_keywords || []).map((k) => k.toLowerCase()).filter(Boolean);
+  const hit = blocklist.find((k) => haystack.includes(k));
+  if (hit) {
+    return { allow: false, decision: "blocked_keywords", reason: `Matched block-list keyword "${hit}".` };
+  }
+
+  return { allow: true, decision: "sent", reason: "All guardrails passed." };
+}
+
+function appendSignature(reply: string, signature: string | null | undefined): string {
+  const sig = (signature || "").trim();
+  if (!sig) return reply;
+  if (reply.includes(sig)) return reply;
+  return reply.trimEnd() + "\n\n" + sig;
 }
 
 Deno.serve(async (req) => {
