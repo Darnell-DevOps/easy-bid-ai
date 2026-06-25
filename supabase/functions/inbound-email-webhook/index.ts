@@ -189,46 +189,119 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Empty email body" }, 400);
   }
 
-  // Run AI (best-effort — never block ingest)
+  // ── Heuristic gate: cheap classification before paying for AI ──
+  const headersBlob = JSON.stringify(body.headers ?? {}).toLowerCase();
+  const subjectLower = subject.toLowerCase();
+  const fromLower = (fromEmail || "").toLowerCase();
+  const noReplyRe = /(no[-_.]?reply|do[-_.]?not[-_.]?reply|mailer-daemon|postmaster|notifications?@|bounce)/i;
+  const autoSubjectRe = /^(out of office|auto[- ]?reply|automatic reply|delivery status notification|undeliverable|returned mail)/i;
+  const cleanedLen = message.replace(/^>.*$/gm, "").replace(/\s+/g, " ").trim().length;
+
+  let heuristicIgnored: string | null = null;
+  if (fromLower && noReplyRe.test(fromLower)) heuristicIgnored = "Sender is a no-reply / system address";
+  else if (autoSubjectRe.test(subjectLower)) heuristicIgnored = "Subject indicates auto-reply or bounce";
+  else if (/list-unsubscribe|precedence:\s*bulk|auto-submitted:\s*auto-/i.test(headersBlob)) heuristicIgnored = "Bulk / auto-submitted headers";
+  else if (cleanedLen < 20) heuristicIgnored = "Body too short to be a real enquiry";
+
+  // Run AI unless heuristic already dismissed (still safe to skip on AI failure)
   let ai: any = null;
-  try {
-    ai = await callLeadAI({ name, email: fromEmail, message });
-  } catch (e) {
-    console.error("AI failed, ingesting without draft:", e);
+  if (!heuristicIgnored) {
+    try {
+      ai = await callLeadAI({ name, email: fromEmail, message });
+    } catch (e) {
+      console.error("AI failed, falling back to needs_review:", e);
+    }
   }
 
-  const insertPayload: Record<string, unknown> = {
+  // Decide classification
+  let classification: "lead" | "needs_review" | "ignored" = "needs_review";
+  let classificationReason = "";
+  if (heuristicIgnored) {
+    classification = "ignored";
+    classificationReason = heuristicIgnored;
+  } else if (ai) {
+    if (ai.is_lead === false) {
+      classification = "ignored";
+      classificationReason = ai.not_lead_reason || "AI: not a lead";
+    } else if (ai.lead_confidence === "low") {
+      classification = "needs_review";
+      classificationReason = ai.not_lead_reason || "AI: low confidence";
+    } else {
+      classification = "lead";
+      classificationReason = `AI: ${ai.lead_confidence} confidence`;
+    }
+  } else {
+    classificationReason = "AI unavailable — queued for manual review";
+  }
+
+  // Resolve existing client by sender email for dedupe
+  let clientId: string | null = null;
+  if (classification === "lead" && fromEmail) {
+    const { data: existing } = await svc
+      .from("clients")
+      .select("id, lead_thread")
+      .eq("user_id", alias.user_id)
+      .ilike("email", fromEmail)
+      .limit(1)
+      .maybeSingle();
+
+    if (existing) {
+      // Append to thread, bump unread
+      const thread = Array.isArray((existing as any).lead_thread) ? (existing as any).lead_thread : [];
+      thread.push({ subject, body: message.slice(0, 8000), received_at: new Date().toISOString() });
+      await svc
+        .from("clients")
+        .update({ lead_thread: thread, unread_at: new Date().toISOString() })
+        .eq("id", existing.id);
+      clientId = existing.id;
+    } else {
+      const insertPayload: Record<string, unknown> = {
+        user_id: alias.user_id,
+        name,
+        email: fromEmail,
+        status: "New",
+        is_active: true,
+        lead_source: "Email",
+        original_lead_message: message.slice(0, 8000),
+        lead_inbound_subject: subject,
+        lead_inbound_from_email: fromEmail,
+        unread_at: new Date().toISOString(),
+      };
+      if (ai) {
+        insertPayload.service_requested = ai.service_requested || null;
+        insertPayload.budget = ai.budget || null;
+        insertPayload.timeline = ai.timeline || null;
+        insertPayload.goals = ai.goals || null;
+        insertPayload.lead_quality = ai.lead_quality || null;
+        insertPayload.ai_recommendation = ai.ai_recommendation || null;
+        insertPayload.lead_draft_reply = ai.reply || null;
+        insertPayload.lead_draft_subject = ai.reply_subject || `Re: ${subject}`;
+      }
+      const { data: client, error: insertErr } = await svc
+        .from("clients")
+        .insert(insertPayload)
+        .select("id")
+        .single();
+      if (insertErr) {
+        console.error("Insert client failed", insertErr);
+        return jsonResponse({ error: "Could not save lead" }, 500);
+      }
+      clientId = client.id;
+    }
+  }
+
+  // Always log the raw inbound message
+  await svc.from("inbound_messages").insert({
     user_id: alias.user_id,
-    name,
-    email: fromEmail,
-    status: "New",
-    is_active: true,
-    lead_source: "Email",
-    original_lead_message: message.slice(0, 8000),
-    lead_inbound_subject: subject,
-    lead_inbound_from_email: fromEmail,
-    unread_at: new Date().toISOString(),
-  };
-  if (ai) {
-    insertPayload.service_requested = ai.service_requested || null;
-    insertPayload.budget = ai.budget || null;
-    insertPayload.timeline = ai.timeline || null;
-    insertPayload.goals = ai.goals || null;
-    insertPayload.lead_quality = ai.lead_quality || null;
-    insertPayload.ai_recommendation = ai.ai_recommendation || null;
-    insertPayload.lead_draft_reply = ai.reply || null;
-    insertPayload.lead_draft_subject = ai.reply_subject || `Re: ${subject}`;
-  }
-
-  const { data: client, error: insertErr } = await svc
-    .from("clients")
-    .insert(insertPayload)
-    .select("id")
-    .single();
-  if (insertErr) {
-    console.error("Insert client failed", insertErr);
-    return jsonResponse({ error: "Could not save lead" }, 500);
-  }
+    alias_id: alias.user_id,
+    from_email: fromEmail,
+    from_name: name,
+    subject,
+    body_text: message.slice(0, 16000),
+    classification,
+    classification_reason: classificationReason,
+    client_id: clientId,
+  });
 
   await svc
     .from("user_inbound_aliases")
@@ -237,7 +310,12 @@ Deno.serve(async (req) => {
 
   return jsonResponse({
     ok: true,
-    client_id: client.id,
-    draft: ai ? { subject: insertPayload.lead_draft_subject, body: insertPayload.lead_draft_reply } : null,
+    classification,
+    classification_reason: classificationReason,
+    client_id: clientId,
+    draft: ai && classification === "lead"
+      ? { subject: ai.reply_subject || `Re: ${subject}`, body: ai.reply }
+      : null,
   });
 });
+
