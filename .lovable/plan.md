@@ -1,74 +1,69 @@
-# AI lead qualification — Hot / Warm / Cold / Unclear
 
-The inbound webhook and Lead Assistant already extract `lead_quality` (High/Medium/Low), `quality_reason`, `service_requested`, `budget`, `timeline`, and `ai_recommendation`. This plan **adds** the new fields the user asked for without touching what's already working.
+## Goal
+Build on what already exists. The inbound email webhook already drafts a reply via AI and stores `lead_draft_reply` / `lead_draft_subject` on the client. We'll surface that draft on the lead detail page with a review-first action panel, plus an in-app notification so users know when a new AI draft is waiting.
 
-## New per-lead fields
+## What already exists (not rebuilding)
+- AI extraction of score, missing info, recommended action, draft reply, subject (in `inbound-email-webhook`).
+- `clients.lead_draft_reply`, `lead_draft_subject`, `lead_score`, `missing_info`, `ai_recommendation`, `original_lead_message`, `lead_quality`.
+- Lead Summary card on `ClientDetail` showing original message, score, missing info, recommendation.
+- `user_notifications` table + bell UI.
 
-Stored on `public.clients` (and emitted by the AI):
+## Additions
 
-- `lead_score` — `Hot | Warm | Cold | Unclear`
-- `lead_score_reason` — short sentence the AI must justify the score with
-- `missing_info` — `text[]` of qualification gaps (e.g. `["budget", "timeline", "decision maker"]`)
+### 1. In-app notification when a new AI draft lands (1 file)
+- In `supabase/functions/inbound-email-webhook/index.ts`, after a lead row is inserted with a draft, insert a `user_notifications` row:
+  - `category: "lead"`, `key: "ai_reply_ready"`, title `"New AI reply ready for {name}"`, body = first ~140 chars of message, `link_url: /dashboard/clients/{id}#ai-reply`, metadata `{ client_id, lead_score }`.
+- Deduped per client_id via the existing `key` unique pattern (or include client id in `key`).
 
-Existing fields are reused as-is:
-- `service_requested`, `budget`, `timeline` → "Detected service / budget / timeline"
-- `ai_recommendation` → "Recommended next step"
-- `lead_quality` / `quality_reason` → kept for backwards compatibility (Hot/Warm/Cold/Unclear is shown alongside, not in place of it)
+### 2. Schema additions (one migration)
+Add to `public.clients`:
+- `lead_reply_sent_at timestamptz` — set when user sends the reply.
+- `lead_reply_edited boolean default false` — toggled when user edits before sending.
+- `not_a_lead boolean default false` — for "Mark as Not a Lead".
 
-## Database
+No RLS changes; existing client RLS already covers these columns.
 
-Single migration:
-- `ALTER TABLE public.clients ADD COLUMN lead_score text` with `CHECK (lead_score IN ('Hot','Warm','Cold','Unclear'))`
-- `ADD COLUMN lead_score_reason text`
-- `ADD COLUMN missing_info text[]`
-- Backfill: derive `lead_score` from existing `lead_quality` for current rows (`High→Hot`, `Medium→Warm`, `Low→Cold`, null→`Unclear`) so older leads still render.
+### 3. Edge function: `send-lead-reply` (new)
+- Auth: user JWT, finds client by id (owned by `auth.uid()`).
+- Body: `{ client_id, subject, body }`.
+- Sends via the existing `send-transactional-email` flow using a new template `lead-reply` (plain branded email containing the body) to `clients.email`.
+- On success: updates `clients.lead_reply_sent_at = now()`, sets `status='Contacted'` if currently `'New'`.
+- Returns `{ ok: true }`.
 
-No new table, no RLS changes (clients RLS already scopes by `user_id`).
+### 4. Lead detail UI — new "AI Suggested Reply" block on `ClientDetail.tsx`
+Rendered inside the existing Lead Summary card (or directly below it) only when `lead_draft_reply` exists. Anchor id `ai-reply` so the notification deep-links to it.
 
-## AI schema changes
+Layout:
+```text
+┌─ AI Suggested Reply ──────────────────────┐
+│ Subject: [____editable input____]         │
+│ ┌───────────────────────────────────────┐ │
+│ │ editable textarea (draft body)        │ │
+│ └───────────────────────────────────────┘ │
+│ Missing info chips · Next action pill     │
+│ [Send Reply] [Copy] [Edit] (toggles RO)   │
+│ [Send Intake Form] [Create Proposal]      │
+│ [Mark as Not a Lead]                      │
+│ "Sent {time ago}" once lead_reply_sent_at │
+└───────────────────────────────────────────┘
+```
+Behaviour:
+- **Edit Reply**: toggles the textarea between read-only preview and editable; saves debounced to `clients.lead_draft_reply` (and sets `lead_reply_edited=true`).
+- **Send Reply**: calls `send-lead-reply`. Confirms in toast. Hides Send button once `lead_reply_sent_at` set; replaces with "Sent {when} · Resend".
+- **Copy**: writes subject + body to clipboard.
+- **Send Intake Form**: navigates to existing intake form flow with `client_id` prefilled (use existing `/dashboard/onboarding/new?client_id=`).
+- **Create Proposal**: navigates to `/dashboard/new` with the same prefill used today by the AI Lead Assistant (`prefillFromClient`).
+- **Mark as Not a Lead**: sets `not_a_lead=true`, `status='Archived'`, clears notification; toast + collapses the block.
 
-Update both `draft_lead_reply` tool definitions:
-- `supabase/functions/inbound-email-webhook/index.ts`
-- `supabase/functions/_shared/lead-qualify.ts`
+### 5. Notifications bell tweak (optional, tiny)
+- Ensure bell badge picks up `category='lead'`; if existing filter excludes new categories, include it.
 
-Add three required fields to the tool schema and prompt:
-- `lead_score` (enum: Hot/Warm/Cold/Unclear)
-- `lead_score_reason` (string ≤ 200 chars)
-- `missing_info` (array of strings, max 6 items)
-
-Prompt guidance added to the system message:
-- Hot = clear intent + budget OR timeline OR explicit ask for proposal/call
-- Warm = clear intent, missing one of budget/timeline/scope
-- Cold = vague intent, no qualification signals
-- Unclear = AI can't tell (also used when `lead_confidence = low`)
-- `missing_info` lists what would push the score up (budget, timeline, scope, decision maker, contact method, etc.)
-
-## Write-through
-
-In the inbound webhook insert payload, add (when AI returned them):
-- `lead_score`, `lead_score_reason`, `missing_info`
-
-Same additions in `_shared/lead-qualify.ts` `update` payload so manually re-qualified leads also get scored.
-
-Dedupe path (existing client appended to thread) gets a lightweight update too: bump `lead_score` only if the new score is **higher** than the stored one (Hot > Warm > Cold > Unclear) so a follow-up email can promote a lead but never demote it.
-
-## UI surfacing (additive only)
-
-`src/pages/ClientDetail.tsx` — existing "Lead Intelligence" card gets a new top row:
-- A colored Hot/Warm/Cold/Unclear pill (red / amber / slate / muted)
-- `lead_score_reason` as a one-liner
-- A "Missing info" chip group rendered from `missing_info` when non-empty
-- Existing `lead_quality`, `service_requested`, `budget`, `timeline`, `ai_recommendation` blocks are left in place
-
-`src/pages/LeadInbox.tsx` — list row shows the score pill next to the existing quality badge; detail pane shows score reason + missing info above the current quality block.
-
-`src/pages/LeadAssistant.tsx` — qualification form gets a read-only "AI score" badge with reason; no edit UI for the new fields (AI-owned).
-
-No changes to the proposal, contract, or onboarding flows.
+## Out of scope
+- No auto-send (explicitly required).
+- No changes to manual AI Lead Assistant page flow (it already shows the draft and conversion buttons).
+- No new AI model call from the lead detail page — we reuse the draft already produced by the webhook. Regenerating draft can come later.
 
 ## Technical notes
-
-- Score ordering helper lives in `src/lib/leadScore.ts` (`scoreRank`, `scoreTone`) so list, detail, and dedupe logic share one source of truth.
-- `missing_info` is rendered with `Badge variant="outline"`; empty array hides the row entirely.
-- No new edge functions, no new cron, no new RPCs.
-- After the migration runs, redeploy `inbound-email-webhook` and `lead-response` so the new tool schema ships.
+- Email template `lead-reply` is a minimal React Email component using the brand styles already in `_shared/transactional-email-templates`. Subject from input, body wrapped in branded container, includes signature footer if `business_branding` has one.
+- `send-lead-reply` validates inputs with zod; idempotency key = `lead-reply-{client_id}-{sent_count}`.
+- All new clients query columns added via a single migration with GRANTs already in place on `clients`.

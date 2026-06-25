@@ -44,6 +44,10 @@ import {
   Repeat,
   ClipboardList,
   CalendarDays,
+  Copy,
+  Check,
+  Ban,
+  Loader2,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -90,6 +94,11 @@ interface ClientInfo {
   lead_score: string | null;
   lead_score_reason: string | null;
   missing_info: string[] | null;
+  lead_draft_reply: string | null;
+  lead_draft_subject: string | null;
+  lead_reply_sent_at: string | null;
+  lead_reply_edited: boolean | null;
+  not_a_lead: boolean | null;
   created_at: string;
 }
 
@@ -214,6 +223,14 @@ export default function ClientDetail() {
   const [edit, setEdit] = useState<Partial<ClientInfo>>({});
   const [replyOpen, setReplyOpen] = useState(false);
 
+  // AI Suggested Reply panel state
+  const [draftSubject, setDraftSubject] = useState("");
+  const [draftBody, setDraftBody] = useState("");
+  const [draftEditing, setDraftEditing] = useState(false);
+  const [draftSending, setDraftSending] = useState(false);
+  const [draftCopied, setDraftCopied] = useState(false);
+  const [markingNotLead, setMarkingNotLead] = useState(false);
+
   useEffect(() => {
     const fetchAll = async () => {
       const { data: c } = await supabase.from("clients").select("*").eq("id", id!).single();
@@ -270,6 +287,10 @@ export default function ClientDetail() {
       });
 
       setClient(client);
+      if (client) {
+        setDraftSubject(client.lead_draft_subject || "");
+        setDraftBody(client.lead_draft_reply || "");
+      }
       setProposals(p.data || []);
       setContracts((ct.data as any) || []);
       setRetainers((r.data as any) || []);
@@ -366,6 +387,78 @@ export default function ClientDetail() {
         },
       },
     });
+  };
+
+  // ─── AI suggested reply actions ───────────────────────────────
+  const saveDraftLocal = async (subject: string, body: string) => {
+    if (!client) return;
+    await supabase
+      .from("clients")
+      .update({ lead_draft_subject: subject, lead_draft_reply: body, lead_reply_edited: true })
+      .eq("id", client.id);
+    setClient({ ...client, lead_draft_subject: subject, lead_draft_reply: body, lead_reply_edited: true });
+  };
+
+  const handleSendReply = async () => {
+    if (!client) return;
+    if (!client.email) {
+      toast({ title: "No email on file", description: "Add an email to send a reply.", variant: "destructive" });
+      return;
+    }
+    if (!draftSubject.trim() || !draftBody.trim()) {
+      toast({ title: "Reply is empty", variant: "destructive" });
+      return;
+    }
+    setDraftSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-lead-reply", {
+        body: { client_id: client.id, subject: draftSubject.trim(), body: draftBody.trim() },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const now = new Date().toISOString();
+      setClient({
+        ...client,
+        lead_reply_sent_at: now,
+        lead_draft_subject: draftSubject.trim(),
+        lead_draft_reply: draftBody.trim(),
+        status: client.status === "New" ? "Contacted" : client.status,
+      });
+      setDraftEditing(false);
+      toast({ title: "Reply sent", description: `Sent to ${client.email}` });
+    } catch (e: any) {
+      toast({ title: "Could not send reply", description: e.message || "Try again.", variant: "destructive" });
+    } finally {
+      setDraftSending(false);
+    }
+  };
+
+  const handleCopyReply = async () => {
+    const text = `Subject: ${draftSubject}\n\n${draftBody}`;
+    await navigator.clipboard.writeText(text);
+    setDraftCopied(true);
+    setTimeout(() => setDraftCopied(false), 1500);
+  };
+
+  const handleSendIntakeForm = () => {
+    if (!client) return;
+    navigate(`/dashboard/onboarding/new?client_id=${client.id}`);
+  };
+
+  const handleMarkNotALead = async () => {
+    if (!client) return;
+    setMarkingNotLead(true);
+    const { error } = await supabase
+      .from("clients")
+      .update({ not_a_lead: true, status: "Archived", is_active: false })
+      .eq("id", client.id);
+    setMarkingNotLead(false);
+    if (error) {
+      toast({ title: "Could not update", description: error.message, variant: "destructive" });
+      return;
+    }
+    setClient({ ...client, not_a_lead: true, status: "Archived", is_active: false });
+    toast({ title: "Marked as not a lead" });
   };
 
   const totalRevenue = proposals
@@ -903,6 +996,137 @@ export default function ClientDetail() {
                       ))}
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* AI Suggested Reply — review-first action panel */}
+              {client.lead_draft_reply && !client.not_a_lead && (
+                <div
+                  id="ai-reply"
+                  className="rounded-lg border border-accent/30 bg-accent/[0.04] p-4 space-y-3 scroll-mt-24"
+                >
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-accent" />
+                      <span className="text-sm font-semibold">AI suggested reply</span>
+                      {client.lead_reply_sent_at ? (
+                        <Badge variant="outline" className="text-[10px] bg-emerald-500/15 text-emerald-600 border-emerald-500/30 gap-1">
+                          <Check className="w-3 h-3" /> Sent {new Date(client.lead_reply_sent_at).toLocaleString()}
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-[10px] bg-amber-500/15 text-amber-600 border-amber-500/30">
+                          Awaiting your review
+                        </Badge>
+                      )}
+                      {client.lead_reply_edited && !client.lead_reply_sent_at && (
+                        <Badge variant="outline" className="text-[10px]">Edited</Badge>
+                      )}
+                    </div>
+                    {client.email && (
+                      <span className="text-[11px] text-muted-foreground truncate max-w-[55%]">
+                        to {client.email}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="ai-reply-subject" className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                      Subject
+                    </Label>
+                    <Input
+                      id="ai-reply-subject"
+                      value={draftSubject}
+                      onChange={(e) => setDraftSubject(e.target.value)}
+                      onBlur={() => {
+                        if (draftSubject !== (client.lead_draft_subject || "") || draftBody !== (client.lead_draft_reply || "")) {
+                          void saveDraftLocal(draftSubject, draftBody);
+                        }
+                      }}
+                      readOnly={!draftEditing && !!client.lead_reply_sent_at}
+                      className="h-9"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="ai-reply-body" className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                      Reply
+                    </Label>
+                    <Textarea
+                      id="ai-reply-body"
+                      rows={9}
+                      value={draftBody}
+                      onChange={(e) => setDraftBody(e.target.value)}
+                      onBlur={() => {
+                        if (draftSubject !== (client.lead_draft_subject || "") || draftBody !== (client.lead_draft_reply || "")) {
+                          void saveDraftLocal(draftSubject, draftBody);
+                        }
+                      }}
+                      readOnly={!draftEditing && !!client.lead_reply_sent_at}
+                      className="resize-none text-sm leading-relaxed"
+                    />
+                  </div>
+
+                  {client.ai_recommendation && (
+                    <div className="text-xs text-muted-foreground flex items-start gap-1.5">
+                      <Lightbulb className="w-3 h-3 mt-0.5 text-accent flex-shrink-0" />
+                      <span><span className="font-medium text-foreground">Next step:</span> {client.ai_recommendation}</span>
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <Button
+                      size="sm"
+                      onClick={handleSendReply}
+                      disabled={draftSending || !client.email}
+                      className="gap-1.5"
+                    >
+                      {draftSending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                      {client.lead_reply_sent_at ? "Resend reply" : "Send reply"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setDraftEditing((v) => !v)}
+                      className="gap-1.5"
+                    >
+                      <Pencil className="w-3.5 h-3.5" /> {draftEditing ? "Done editing" : "Edit reply"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleCopyReply}
+                      className="gap-1.5"
+                    >
+                      {draftCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                      {draftCopied ? "Copied" : "Copy reply"}
+                    </Button>
+                    <div className="w-px h-5 bg-border mx-1" />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleSendIntakeForm}
+                      className="gap-1.5"
+                    >
+                      <ClipboardList className="w-3.5 h-3.5" /> Send intake form
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={generateProposal}
+                      className="gap-1.5"
+                    >
+                      <FileText className="w-3.5 h-3.5" /> Create proposal
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleMarkNotALead}
+                      disabled={markingNotLead}
+                      className="gap-1.5 text-muted-foreground hover:text-destructive ml-auto"
+                    >
+                      <Ban className="w-3.5 h-3.5" /> Mark as not a lead
+                    </Button>
+                  </div>
                 </div>
               )}
 

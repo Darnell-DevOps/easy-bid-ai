@@ -499,12 +499,15 @@ export type Database = {
           lead_inbound_from_email: string | null
           lead_inbound_subject: string | null
           lead_quality: string | null
+          lead_reply_edited: boolean
+          lead_reply_sent_at: string | null
           lead_score: string | null
           lead_score_reason: string | null
           lead_source: string | null
           lead_thread: Json
           missing_info: string[] | null
           name: string
+          not_a_lead: boolean
           original_lead_message: string | null
           phone: string | null
           project_description: string | null
@@ -531,12 +534,15 @@ export type Database = {
           lead_inbound_from_email?: string | null
           lead_inbound_subject?: string | null
           lead_quality?: string | null
+          lead_reply_edited?: boolean
+          lead_reply_sent_at?: string | null
           lead_score?: string | null
           lead_score_reason?: string | null
           lead_source?: string | null
           lead_thread?: Json
           missing_info?: string[] | null
           name: string
+          not_a_lead?: boolean
           original_lead_message?: string | null
           phone?: string | null
           project_description?: string | null
@@ -563,12 +569,15 @@ export type Database = {
           lead_inbound_from_email?: string | null
           lead_inbound_subject?: string | null
           lead_quality?: string | null
+          lead_reply_edited?: boolean
+          lead_reply_sent_at?: string | null
           lead_score?: string | null
           lead_score_reason?: string | null
           lead_source?: string | null
           lead_thread?: Json
           missing_info?: string[] | null
           name?: string
+          not_a_lead?: boolean
           original_lead_message?: string | null
           phone?: string | null
           project_description?: string | null
