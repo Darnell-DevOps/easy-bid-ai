@@ -85,6 +85,9 @@ interface ClientInfo {
   ai_recommendation: string | null;
   lead_source: string | null;
   original_lead_message: string | null;
+  lead_score: string | null;
+  lead_score_reason: string | null;
+  missing_info: string[] | null;
   created_at: string;
 }
 
