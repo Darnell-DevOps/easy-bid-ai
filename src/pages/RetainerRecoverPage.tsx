@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, CheckCircle2, CreditCard, Loader2 } from "lucide-react";
+import DynamicFavicon from "@/components/branding/DynamicFavicon";
 
 interface RetainerLite {
   user_id: string;
