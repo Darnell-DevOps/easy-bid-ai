@@ -79,13 +79,18 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: "client_has_no_email" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
-  const { data: branding } = await svc
-    .from("business_branding")
-    .select("business_name, email_signature")
-    .eq("user_id", userId)
-    .maybeSingle();
+  const [{ data: prefs }, { data: branding }] = await Promise.all([
+    svc.from("ai_preferences").select("email_signature").eq("user_id", userId).maybeSingle(),
+    svc.from("business_branding").select("business_name, email_signature").eq("user_id", userId).maybeSingle(),
+  ]);
+  const signature =
+    ((prefs as any)?.email_signature && String((prefs as any).email_signature).trim()) ||
+    ((branding as any)?.email_signature && String((branding as any).email_signature).trim()) ||
+    null;
 
-  const html = renderHtml(messageBody, (branding as any)?.email_signature ?? null);
+  // If the user has already pasted/edited the signature into the body, don't double it.
+  const bodyHasSignature = signature ? messageBody.includes(signature) : false;
+  const html = renderHtml(messageBody, bodyHasSignature ? null : signature);
   const idempotencyKey = `lead-reply:${clientId}:${Date.now()}`;
 
   const { data: sent, error: sendErr } = await svc.functions.invoke("send-email", {

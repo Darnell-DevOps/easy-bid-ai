@@ -16,6 +16,7 @@ import BrandingSettings from "@/components/settings/BrandingSettings";
 import NotificationsSettings from "@/components/settings/NotificationsSettings";
 import AutomationsSettings from "@/components/settings/AutomationsSettings";
 import AiPreferencesSettings from "@/components/settings/AiPreferencesSettings";
+import LeadAssistantSettings from "@/components/settings/LeadAssistantSettings";
 import IntegrationsSettings from "@/components/settings/IntegrationsSettings";
 import SecuritySettings from "@/components/settings/SecuritySettings";
 import BillingSettings from "@/components/settings/BillingSettings";
@@ -26,6 +27,7 @@ import {
   Palette,
   Building2,
   Mail,
+  Inbox,
   Calendar,
   CreditCard,
   FileText,
@@ -61,6 +63,7 @@ type SectionId =
   | "notifications"
   | "automations"
   | "ai"
+  | "lead-assistant"
   | "integrations"
   | "security"
   | "billing"
@@ -104,6 +107,7 @@ const SECTION_GROUPS: SectionGroup[] = [
     items: [
       { id: "automations", label: "Automations", icon: Zap, description: "Follow-ups, reminders and triggers" },
       { id: "ai", label: "AI Preferences", icon: Sparkles, description: "Tone, model and assistant behaviour" },
+      { id: "lead-assistant", label: "Lead Assistant", icon: Inbox, description: "Voice, signature, booking link and auto-send rules" },
       { id: "integrations", label: "Integrations", icon: Plug, description: "Third-party connections" },
       { id: "data", label: "Data & Exports", icon: Database, description: "Export, import and delete your data" },
     ],
@@ -316,6 +320,7 @@ export default function SettingsPage() {
             )}
             {active === "automations" && <AutomationsSettings />}
             {active === "ai" && <AiPreferencesSettings />}
+            {active === "lead-assistant" && <LeadAssistantSettings />}
             {active === "integrations" && <IntegrationsSettings />}
             {active === "data" && <DataExportsSettings />}
 
