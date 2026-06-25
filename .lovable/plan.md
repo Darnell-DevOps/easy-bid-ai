@@ -1,69 +1,51 @@
+## Lead Assistant Settings + Auto-Send Foundation
 
-## Goal
-Build on what already exists. The inbound email webhook already drafts a reply via AI and stores `lead_draft_reply` / `lead_draft_subject` on the client. We'll surface that draft on the lead detail page with a review-first action panel, plus an in-app notification so users know when a new AI draft is waiting.
+Add a dedicated Lead Assistant settings panel and lay the groundwork for future auto-send — without enabling it.
 
-## What already exists (not rebuilding)
-- AI extraction of score, missing info, recommended action, draft reply, subject (in `inbound-email-webhook`).
-- `clients.lead_draft_reply`, `lead_draft_subject`, `lead_score`, `missing_info`, `ai_recommendation`, `original_lead_message`, `lead_quality`.
-- Lead Summary card on `ClientDetail` showing original message, score, missing info, recommendation.
-- `user_notifications` table + bell UI.
+### 1. Schema — extend `ai_preferences`
+Add the missing Lead Assistant fields (most generic fields already exist):
 
-## Additions
+- `business_name` text
+- `booking_link` text
+- `email_signature` text
+- `lead_reply_style` text (default `"consultative"` — options: consultative, concise, warm, sales-forward)
+- `lead_auto_send_enabled` boolean, default **false**
+- `lead_auto_send_min_confidence` text, default `"high"` (low/medium/high)
+- `lead_auto_send_only_new_leads` boolean, default `true`
+- `lead_auto_send_block_keywords` text[] (default array of safety words: complaint, lawsuit, refund, chargeback, dispute, legal, attorney, etc.)
 
-### 1. In-app notification when a new AI draft lands (1 file)
-- In `supabase/functions/inbound-email-webhook/index.ts`, after a lead row is inserted with a draft, insert a `user_notifications` row:
-  - `category: "lead"`, `key: "ai_reply_ready"`, title `"New AI reply ready for {name}"`, body = first ~140 chars of message, `link_url: /dashboard/clients/{id}#ai-reply`, metadata `{ client_id, lead_score }`.
-- Deduped per client_id via the existing `key` unique pattern (or include client id in `key`).
+Reuse existing `business_services`, `lead_reply_tone`, `lead_reply_length` for Services / Tone / Default reply length.
 
-### 2. Schema additions (one migration)
-Add to `public.clients`:
-- `lead_reply_sent_at timestamptz` — set when user sends the reply.
-- `lead_reply_edited boolean default false` — toggled when user edits before sending.
-- `not_a_lead boolean default false` — for "Mark as Not a Lead".
+### 2. New table — `lead_auto_send_log`
+Records every auto-send attempt for future auditability.
+Columns: `user_id`, `client_id`, `subject`, `body_preview`, `confidence`, `decision` (sent / blocked_keywords / blocked_low_confidence / blocked_existing_client / blocked_disabled), `reason`, `created_at`. Full RLS + service_role grants.
 
-No RLS changes; existing client RLS already covers these columns.
+### 3. UI — `src/components/settings/LeadAssistantSettings.tsx`
+New settings card with sections:
 
-### 3. Edge function: `send-lead-reply` (new)
-- Auth: user JWT, finds client by id (owned by `auth.uid()`).
-- Body: `{ client_id, subject, body }`.
-- Sends via the existing `send-transactional-email` flow using a new template `lead-reply` (plain branded email containing the body) to `clients.email`.
-- On success: updates `clients.lead_reply_sent_at = now()`, sets `status='Contacted'` if currently `'New'`.
-- Returns `{ ok: true }`.
+- **Business profile**: Business name, Services offered, Booking link
+- **Voice & style**: Tone of voice, Default reply style, Default reply length
+- **Signature**: multi-line textarea inserted at the bottom of generated replies
+- **Auto-send (Coming soon)**: a clearly-labeled, disabled-by-default section with the toggle, min confidence selector, "only new leads" switch, and an editable block-keywords list. A persistent banner explains that auto-send is in preview and every message currently still requires manual review even if toggled on (the edge function will gate on a server-side feature flag until we ship full QA).
 
-### 4. Lead detail UI — new "AI Suggested Reply" block on `ClientDetail.tsx`
-Rendered inside the existing Lead Summary card (or directly below it) only when `lead_draft_reply` exists. Anchor id `ai-reply` so the notification deep-links to it.
+Mount under existing Settings page next to `AiPreferencesSettings`.
 
-Layout:
-```text
-┌─ AI Suggested Reply ──────────────────────┐
-│ Subject: [____editable input____]         │
-│ ┌───────────────────────────────────────┐ │
-│ │ editable textarea (draft body)        │ │
-│ └───────────────────────────────────────┘ │
-│ Missing info chips · Next action pill     │
-│ [Send Reply] [Copy] [Edit] (toggles RO)   │
-│ [Send Intake Form] [Create Proposal]      │
-│ [Mark as Not a Lead]                      │
-│ "Sent {time ago}" once lead_reply_sent_at │
-└───────────────────────────────────────────┘
-```
-Behaviour:
-- **Edit Reply**: toggles the textarea between read-only preview and editable; saves debounced to `clients.lead_draft_reply` (and sets `lead_reply_edited=true`).
-- **Send Reply**: calls `send-lead-reply`. Confirms in toast. Hides Send button once `lead_reply_sent_at` set; replaces with "Sent {when} · Resend".
-- **Copy**: writes subject + body to clipboard.
-- **Send Intake Form**: navigates to existing intake form flow with `client_id` prefilled (use existing `/dashboard/onboarding/new?client_id=`).
-- **Create Proposal**: navigates to `/dashboard/new` with the same prefill used today by the AI Lead Assistant (`prefillFromClient`).
-- **Mark as Not a Lead**: sets `not_a_lead=true`, `status='Archived'`, clears notification; toast + collapses the block.
+### 4. Edge function changes — `inbound-email-webhook`
+- Load the user's `ai_preferences` row.
+- Inject business name, services, tone, style, length, signature, and booking link into the AI system prompt so drafts reflect each user's voice.
+- Append signature to the drafted reply body if set.
+- Add (but do not activate) `evaluateAutoSend(prefs, classification, client)` helper that returns `{ allow, reason }`. Currently always returns `{ allow: false, reason: 'auto_send_disabled_global' }`. Log the decision to `lead_auto_send_log`. This gives us the audit trail and decision logic stub without ever auto-sending.
 
-### 5. Notifications bell tweak (optional, tiny)
-- Ensure bell badge picks up `category='lead'`; if existing filter excludes new categories, include it.
+### 5. `send-lead-reply` edge function
+- Append the signature once on send if not already present (so manual sends are consistent with drafted previews).
+- No auto-send path is wired up; it remains user-initiated only.
 
-## Out of scope
-- No auto-send (explicitly required).
-- No changes to manual AI Lead Assistant page flow (it already shows the draft and conversion buttons).
-- No new AI model call from the lead detail page — we reuse the draft already produced by the webhook. Regenerating draft can come later.
+### Out of scope (deferred until user re-enables)
+- Actually dispatching auto-sent emails.
+- Confidence scoring model changes.
+- Per-channel (WhatsApp) auto-send.
 
-## Technical notes
-- Email template `lead-reply` is a minimal React Email component using the brand styles already in `_shared/transactional-email-templates`. Subject from input, body wrapped in branded container, includes signature footer if `business_branding` has one.
-- `send-lead-reply` validates inputs with zod; idempotency key = `lead-reply-{client_id}-{sent_count}`.
-- All new clients query columns added via a single migration with GRANTs already in place on `clients`.
+### Technical notes
+- Default `lead_auto_send_enabled = false` at the column level **and** a hard server-side kill switch in the webhook, so even a flipped toggle won't send until we remove the global gate in a future release.
+- Keyword blocklist matched case-insensitively against subject + body.
+- All new fields are nullable / have safe defaults so existing users aren't broken.

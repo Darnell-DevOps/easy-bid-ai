@@ -73,7 +73,9 @@ export type Database = {
       }
       ai_preferences: {
         Row: {
+          booking_link: string | null
           business_ideal_client: string | null
+          business_name: string | null
           business_services: string | null
           business_target_audience: string | null
           business_what_you_do: string | null
@@ -85,9 +87,15 @@ export type Database = {
           custom_instructions: string | null
           default_tone: string
           email_length: string
+          email_signature: string | null
           email_tone: string
           id: string
+          lead_auto_send_block_keywords: string[]
+          lead_auto_send_enabled: boolean
+          lead_auto_send_min_confidence: string
+          lead_auto_send_only_new_leads: boolean
           lead_reply_length: string
+          lead_reply_style: string
           lead_reply_tone: string
           proposal_length: string
           proposal_style: string
@@ -95,7 +103,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          booking_link?: string | null
           business_ideal_client?: string | null
+          business_name?: string | null
           business_services?: string | null
           business_target_audience?: string | null
           business_what_you_do?: string | null
@@ -107,9 +117,15 @@ export type Database = {
           custom_instructions?: string | null
           default_tone?: string
           email_length?: string
+          email_signature?: string | null
           email_tone?: string
           id?: string
+          lead_auto_send_block_keywords?: string[]
+          lead_auto_send_enabled?: boolean
+          lead_auto_send_min_confidence?: string
+          lead_auto_send_only_new_leads?: boolean
           lead_reply_length?: string
+          lead_reply_style?: string
           lead_reply_tone?: string
           proposal_length?: string
           proposal_style?: string
@@ -117,7 +133,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          booking_link?: string | null
           business_ideal_client?: string | null
+          business_name?: string | null
           business_services?: string | null
           business_target_audience?: string | null
           business_what_you_do?: string | null
@@ -129,9 +147,15 @@ export type Database = {
           custom_instructions?: string | null
           default_tone?: string
           email_length?: string
+          email_signature?: string | null
           email_tone?: string
           id?: string
+          lead_auto_send_block_keywords?: string[]
+          lead_auto_send_enabled?: boolean
+          lead_auto_send_min_confidence?: string
+          lead_auto_send_only_new_leads?: boolean
           lead_reply_length?: string
+          lead_reply_style?: string
           lead_reply_tone?: string
           proposal_length?: string
           proposal_style?: string
@@ -1060,6 +1084,45 @@ export type Database = {
           path?: string | null
           referrer?: string | null
           session_id?: string | null
+        }
+        Relationships: []
+      }
+      lead_auto_send_log: {
+        Row: {
+          body_preview: string | null
+          client_id: string | null
+          confidence: string | null
+          created_at: string
+          decision: string
+          id: string
+          metadata: Json
+          reason: string | null
+          subject: string | null
+          user_id: string
+        }
+        Insert: {
+          body_preview?: string | null
+          client_id?: string | null
+          confidence?: string | null
+          created_at?: string
+          decision: string
+          id?: string
+          metadata?: Json
+          reason?: string | null
+          subject?: string | null
+          user_id: string
+        }
+        Update: {
+          body_preview?: string | null
+          client_id?: string | null
+          confidence?: string | null
+          created_at?: string
+          decision?: string
+          id?: string
+          metadata?: Json
+          reason?: string | null
+          subject?: string | null
+          user_id?: string
         }
         Relationships: []
       }
