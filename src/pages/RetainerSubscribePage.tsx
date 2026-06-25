@@ -149,6 +149,7 @@ export default function RetainerSubscribePage() {
 
   return (
     <div className="min-h-screen bg-background py-12 px-4">
+      <DynamicFavicon userId={retainer?.user_id} />
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="text-center space-y-2">
           <p className="text-xs uppercase tracking-widest text-muted-foreground">Recurring service</p>
