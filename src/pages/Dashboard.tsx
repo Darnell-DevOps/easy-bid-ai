@@ -5,6 +5,8 @@ import SalesMetrics from "@/components/dashboard/SalesMetrics";
 import PipelineView from "@/components/dashboard/PipelineView";
 import PriorityActions from "@/components/dashboard/PriorityActions";
 import DealActivity from "@/components/dashboard/DealActivity";
+import LeadActivityFeed from "@/components/dashboard/LeadActivityFeed";
+import LeadFunnelMetrics from "@/components/dashboard/LeadFunnelMetrics";
 import ProposalsList from "@/components/dashboard/ProposalsList";
 import ActivationChecklist from "@/components/dashboard/ActivationChecklist";
 import UpcomingBookings from "@/components/dashboard/UpcomingBookings";
@@ -200,6 +202,9 @@ export default function Dashboard() {
           pendingPayments={metrics.pendingPayments}
         />
 
+        {/* LEAD FUNNEL — pipeline metrics from inbound + AI flow */}
+        <LeadFunnelMetrics />
+
         {/* PIPELINE */}
         <PipelineView proposals={proposals} clients={clients} />
 
@@ -280,6 +285,13 @@ export default function Dashboard() {
                 Deal Activity
               </h2>
               <DealActivity proposals={proposals} />
+            </div>
+
+            <div>
+              <h2 className="text-sm font-semibold mb-3 uppercase tracking-wider text-muted-foreground/80">
+                Lead Activity
+              </h2>
+              <LeadActivityFeed />
             </div>
           </aside>
         </div>

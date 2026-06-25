@@ -40,6 +40,7 @@ import UpgradeModal from "@/components/plan/UpgradeModal";
 import { WhatsAppButton } from "@/components/whatsapp/WhatsAppButton";
 import InboundAddressCard from "@/components/leads/InboundAddressCard";
 import InboundReviewQueue from "@/components/leads/InboundReviewQueue";
+import LeadActivityFeed from "@/components/dashboard/LeadActivityFeed";
 
 const emptyState = {
   leadName: "",
@@ -355,6 +356,13 @@ export default function LeadAssistant() {
 
         <InboundAddressCard />
         <InboundReviewQueue />
+
+        <div>
+          <h2 className="text-sm font-semibold mb-3 uppercase tracking-wider text-muted-foreground/80">
+            Recent lead activity
+          </h2>
+          <LeadActivityFeed limit={10} />
+        </div>
 
         {/* Step indicator */}
         <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto pb-1">
