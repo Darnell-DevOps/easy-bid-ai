@@ -223,6 +223,14 @@ export default function ClientDetail() {
   const [edit, setEdit] = useState<Partial<ClientInfo>>({});
   const [replyOpen, setReplyOpen] = useState(false);
 
+  // AI Suggested Reply panel state
+  const [draftSubject, setDraftSubject] = useState("");
+  const [draftBody, setDraftBody] = useState("");
+  const [draftEditing, setDraftEditing] = useState(false);
+  const [draftSending, setDraftSending] = useState(false);
+  const [draftCopied, setDraftCopied] = useState(false);
+  const [markingNotLead, setMarkingNotLead] = useState(false);
+
   useEffect(() => {
     const fetchAll = async () => {
       const { data: c } = await supabase.from("clients").select("*").eq("id", id!).single();
