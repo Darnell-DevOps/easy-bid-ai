@@ -287,6 +287,10 @@ export default function ClientDetail() {
       });
 
       setClient(client);
+      if (client) {
+        setDraftSubject(client.lead_draft_subject || "");
+        setDraftBody(client.lead_draft_reply || "");
+      }
       setProposals(p.data || []);
       setContracts((ct.data as any) || []);
       setRetainers((r.data as any) || []);
