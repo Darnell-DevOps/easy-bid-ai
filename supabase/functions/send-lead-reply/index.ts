@@ -1,6 +1,7 @@
 // Sends the AI-drafted lead reply via the existing send-email function.
 // Review-first: only fires when the user clicks "Send reply" in the UI.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { logLeadActivity } from "../_shared/lead-activity.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -117,6 +118,15 @@ Deno.serve(async (req) => {
   };
   if (client.status === "New") updates.status = "Contacted";
   await svc.from("clients").update(updates).eq("id", clientId);
+
+  await logLeadActivity(svc, {
+    user_id: userId,
+    type: "reply_sent",
+    title: `Reply sent to ${client.name || client.email}`,
+    summary: subject.slice(0, 200),
+    client_id: clientId,
+    metadata: { to: client.email },
+  });
 
   return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 });
