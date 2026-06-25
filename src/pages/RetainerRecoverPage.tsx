@@ -29,7 +29,7 @@ export default function RetainerRecoverPage() {
       const { data } = await supabase
         .from("retainers")
         .select(
-          "client_name, title, has_failed_payment, failed_payment_reason, status, amount_cents, currency",
+          "user_id, client_name, title, has_failed_payment, failed_payment_reason, status, amount_cents, currency",
         )
         .eq("access_token", token)
         .maybeSingle();
