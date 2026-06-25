@@ -22,6 +22,7 @@ import SecuritySettings from "@/components/settings/SecuritySettings";
 import BillingSettings from "@/components/settings/BillingSettings";
 import DataExportsSettings from "@/components/settings/DataExportsSettings";
 import BusinessInformationSettings from "@/components/settings/BusinessInformationSettings";
+import DomainSettings from "@/components/settings/DomainSettings";
 import {
   User,
   Palette,
@@ -67,7 +68,8 @@ type SectionId =
   | "integrations"
   | "security"
   | "billing"
-  | "data";
+  | "data"
+  | "domains";
 
 type SectionGroup = {
   label: string;
@@ -91,6 +93,7 @@ const SECTION_GROUPS: SectionGroup[] = [
       { id: "business", label: "Business Information", icon: Building2, description: "Company details shown to clients" },
       { id: "email", label: "Email", icon: Mail, description: "Sending domains and inbound replies" },
       { id: "calendar", label: "Calendar", icon: Calendar, description: "Availability and booking links" },
+      { id: "domains", label: "Domains", icon: Globe, description: "Use your own domain for the portal and lead forms" },
     ],
   },
   {
@@ -323,6 +326,7 @@ export default function SettingsPage() {
             {active === "lead-assistant" && <LeadAssistantSettings />}
             {active === "integrations" && <IntegrationsSettings />}
             {active === "data" && <DataExportsSettings />}
+            {active === "domains" && <DomainSettings />}
 
             {/* Support always at bottom */}
             <Card>
