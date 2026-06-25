@@ -197,13 +197,28 @@ Deno.serve(async (req) => {
   const autoSubjectRe = /^(out of office|auto[- ]?reply|automatic reply|delivery status notification|undeliverable|returned mail)/i;
   const cleanedLen = message.replace(/^>.*$/gm, "").replace(/\s+/g, " ").trim().length;
 
-  let heuristicIgnored: string | null = null;
-  if (fromLower && noReplyRe.test(fromLower)) heuristicIgnored = "Sender is a no-reply / system address";
-  else if (autoSubjectRe.test(subjectLower)) heuristicIgnored = "Subject indicates auto-reply or bounce";
-  else if (/list-unsubscribe|precedence:\s*bulk|auto-submitted:\s*auto-/i.test(headersBlob)) heuristicIgnored = "Bulk / auto-submitted headers";
-  else if (cleanedLen < 20) heuristicIgnored = "Body too short to be a real enquiry";
+  // Collect explainable signals as we evaluate
+  type Signal = { label: string; detail: string; verdict: "pass" | "fail" | "info" };
+  const signals: Signal[] = [];
 
-  // Run AI unless heuristic already dismissed (still safe to skip on AI failure)
+  let heuristicIgnored: string | null = null;
+  if (fromLower && noReplyRe.test(fromLower)) {
+    heuristicIgnored = "Sender is a no-reply / system address";
+    signals.push({ label: "Sender pattern", detail: `Address "${fromLower}" matches no-reply/bounce pattern`, verdict: "fail" });
+  } else if (autoSubjectRe.test(subjectLower)) {
+    heuristicIgnored = "Subject indicates auto-reply or bounce";
+    signals.push({ label: "Subject pattern", detail: `Subject "${subject.slice(0, 80)}" matches auto-reply pattern`, verdict: "fail" });
+  } else if (/list-unsubscribe|precedence:\s*bulk|auto-submitted:\s*auto-/i.test(headersBlob)) {
+    heuristicIgnored = "Bulk / auto-submitted headers";
+    signals.push({ label: "Headers", detail: "Found List-Unsubscribe / Precedence: bulk / Auto-Submitted header", verdict: "fail" });
+  } else if (cleanedLen < 20) {
+    heuristicIgnored = "Body too short to be a real enquiry";
+    signals.push({ label: "Body length", detail: `Only ${cleanedLen} chars of meaningful content (min 20)`, verdict: "fail" });
+  } else {
+    signals.push({ label: "Heuristics", detail: "Passed no-reply, auto-reply, bulk-header and length checks", verdict: "pass" });
+  }
+
+  // Run AI unless heuristic already dismissed
   let ai: any = null;
   if (!heuristicIgnored) {
     try {
@@ -215,46 +230,54 @@ Deno.serve(async (req) => {
 
   // Decide classification
   let classification: "lead" | "needs_review" | "ignored" = "needs_review";
-  let classificationReason = "";
+  let headline = "";
   if (heuristicIgnored) {
     classification = "ignored";
-    classificationReason = heuristicIgnored;
+    headline = heuristicIgnored;
   } else if (ai) {
     if (ai.is_lead === false) {
       classification = "ignored";
-      classificationReason = ai.not_lead_reason || "AI: not a lead";
+      headline = ai.not_lead_reason || "AI classified as not a lead";
+      signals.push({ label: "AI verdict", detail: `is_lead=false — ${ai.not_lead_reason || "no reason given"}`, verdict: "fail" });
     } else if (ai.lead_confidence === "low") {
       classification = "needs_review";
-      classificationReason = ai.not_lead_reason || "AI: low confidence";
+      headline = `AI low confidence — ${ai.not_lead_reason || "unclear intent"}`;
+      signals.push({ label: "AI verdict", detail: `is_lead=true but confidence=low (${ai.quality_reason || "no detail"})`, verdict: "info" });
     } else {
       classification = "lead";
-      classificationReason = `AI: ${ai.lead_confidence} confidence`;
+      headline = `AI ${ai.lead_confidence} confidence lead`;
+      signals.push({ label: "AI verdict", detail: `is_lead=true, confidence=${ai.lead_confidence}, quality=${ai.lead_quality || "?"}`, verdict: "pass" });
     }
-  } else {
-    classificationReason = "AI unavailable — queued for manual review";
+  } else if (!heuristicIgnored) {
+    headline = "AI unavailable — queued for manual review";
+    signals.push({ label: "AI verdict", detail: "AI gateway did not return a response", verdict: "info" });
   }
 
   // Resolve existing client by sender email for dedupe
   let clientId: string | null = null;
+  let dedupeNote: string | null = null;
   if (classification === "lead" && fromEmail) {
     const { data: existing } = await svc
       .from("clients")
-      .select("id, lead_thread")
+      .select("id, name, lead_thread")
       .eq("user_id", alias.user_id)
       .ilike("email", fromEmail)
       .limit(1)
       .maybeSingle();
 
     if (existing) {
-      // Append to thread, bump unread
       const thread = Array.isArray((existing as any).lead_thread) ? (existing as any).lead_thread : [];
+      const priorCount = thread.length;
       thread.push({ subject, body: message.slice(0, 8000), received_at: new Date().toISOString() });
       await svc
         .from("clients")
         .update({ lead_thread: thread, unread_at: new Date().toISOString() })
         .eq("id", existing.id);
       clientId = existing.id;
+      dedupeNote = `Matched existing client "${(existing as any).name || fromEmail}" — appended as message #${priorCount + 1}`;
+      signals.push({ label: "Sender match", detail: dedupeNote, verdict: "info" });
     } else {
+      signals.push({ label: "Sender match", detail: `No existing client with email ${fromEmail} — created new lead`, verdict: "info" });
       const insertPayload: Record<string, unknown> = {
         user_id: alias.user_id,
         name,
@@ -290,6 +313,10 @@ Deno.serve(async (req) => {
     }
   }
 
+  // Build human-readable reason: headline + bulleted signal breakdown
+  const reasonLines = [headline, "", ...signals.map((s) => `• ${s.label}: ${s.detail}`)];
+  const classificationReason = reasonLines.filter(Boolean).join("\n");
+
   // Always log the raw inbound message
   await svc.from("inbound_messages").insert({
     user_id: alias.user_id,
@@ -312,10 +339,14 @@ Deno.serve(async (req) => {
     ok: true,
     classification,
     classification_reason: classificationReason,
+    classification_headline: headline,
+    signals,
+    dedupe: dedupeNote,
     client_id: clientId,
     draft: ai && classification === "lead"
       ? { subject: ai.reply_subject || `Re: ${subject}`, body: ai.reply }
       : null,
   });
 });
+
 
