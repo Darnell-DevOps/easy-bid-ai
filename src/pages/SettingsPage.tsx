@@ -27,6 +27,7 @@ import {
   Palette,
   Building2,
   Mail,
+  Inbox,
   Calendar,
   CreditCard,
   FileText,
@@ -319,6 +320,7 @@ export default function SettingsPage() {
             )}
             {active === "automations" && <AutomationsSettings />}
             {active === "ai" && <AiPreferencesSettings />}
+            {active === "lead-assistant" && <LeadAssistantSettings />}
             {active === "integrations" && <IntegrationsSettings />}
             {active === "data" && <DataExportsSettings />}
 
