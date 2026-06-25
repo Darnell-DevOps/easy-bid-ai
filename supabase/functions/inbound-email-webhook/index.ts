@@ -89,6 +89,13 @@ Rules:
 - Reply: warm, professional, conversion-focused, under 180 words. Reference what they said. Ask 1–2 sharp qualification questions if missing. End with a clear next step (call or proposal). Sign off as "Best,".
 - Quality: "High", "Medium", "Low" based on clarity, budget, urgency, and fit.
 - Recommendation: "High" -> "Recommend generating proposal"; "Medium" -> "Recommend asking more questions"; "Low" -> "May not be worth pursuing".
+- Lead score (use these exact rules):
+  • Hot = clear project intent AND at least one of: stated budget, stated timeline, explicit request for a call/proposal.
+  • Warm = clear project intent but missing one of budget/timeline/scope.
+  • Cold = vague intent, no qualification signals.
+  • Unclear = you can't reasonably tell, or the message lacks enough context.
+- lead_score_reason: ≤ 200 chars, justify the score using the actual words/signals in the email.
+- missing_info: 0–6 short strings naming the qualification gaps that would raise the score (e.g. "budget", "timeline", "decision maker", "project scope", "preferred contact method"). Empty array if nothing meaningful is missing.
 Return ONLY by calling the tool.`;
 
   const user = `Lead name: ${opts.name}
@@ -126,8 +133,11 @@ ${opts.message}
               lead_quality: { type: "string", enum: ["High", "Medium", "Low"] },
               quality_reason: { type: "string" },
               ai_recommendation: { type: "string" },
+              lead_score: { type: "string", enum: ["Hot", "Warm", "Cold", "Unclear"] },
+              lead_score_reason: { type: "string" },
+              missing_info: { type: "array", items: { type: "string" } },
             },
-            required: ["is_lead", "lead_confidence", "not_lead_reason", "reply", "reply_subject", "service_requested", "budget", "timeline", "goals", "notes", "lead_quality", "quality_reason", "ai_recommendation"],
+            required: ["is_lead", "lead_confidence", "not_lead_reason", "reply", "reply_subject", "service_requested", "budget", "timeline", "goals", "notes", "lead_quality", "quality_reason", "ai_recommendation", "lead_score", "lead_score_reason", "missing_info"],
             additionalProperties: false,
           },
         },
@@ -257,9 +267,12 @@ Deno.serve(async (req) => {
   let clientId: string | null = null;
   let dedupeNote: string | null = null;
   if (classification === "lead" && fromEmail) {
+    const scoreRank = (s: string | null | undefined) =>
+      s === "Hot" ? 3 : s === "Warm" ? 2 : s === "Cold" ? 1 : s === "Unclear" ? 0 : -1;
+
     const { data: existing } = await svc
       .from("clients")
-      .select("id, name, lead_thread")
+      .select("id, name, lead_thread, lead_score")
       .eq("user_id", alias.user_id)
       .ilike("email", fromEmail)
       .limit(1)
@@ -269,10 +282,19 @@ Deno.serve(async (req) => {
       const thread = Array.isArray((existing as any).lead_thread) ? (existing as any).lead_thread : [];
       const priorCount = thread.length;
       thread.push({ subject, body: message.slice(0, 8000), received_at: new Date().toISOString() });
-      await svc
-        .from("clients")
-        .update({ lead_thread: thread, unread_at: new Date().toISOString() })
-        .eq("id", existing.id);
+
+      const updatePayload: Record<string, unknown> = {
+        lead_thread: thread,
+        unread_at: new Date().toISOString(),
+      };
+      // Only bump score upward (Hot > Warm > Cold > Unclear); never demote.
+      if (ai?.lead_score && scoreRank(ai.lead_score) > scoreRank((existing as any).lead_score)) {
+        updatePayload.lead_score = ai.lead_score;
+        updatePayload.lead_score_reason = ai.lead_score_reason || null;
+        if (Array.isArray(ai.missing_info)) updatePayload.missing_info = ai.missing_info.slice(0, 6);
+      }
+
+      await svc.from("clients").update(updatePayload).eq("id", existing.id);
       clientId = existing.id;
       dedupeNote = `Matched existing client "${(existing as any).name || fromEmail}" — appended as message #${priorCount + 1}`;
       signals.push({ label: "Sender match", detail: dedupeNote, verdict: "info" });
@@ -299,6 +321,9 @@ Deno.serve(async (req) => {
         insertPayload.ai_recommendation = ai.ai_recommendation || null;
         insertPayload.lead_draft_reply = ai.reply || null;
         insertPayload.lead_draft_subject = ai.reply_subject || `Re: ${subject}`;
+        insertPayload.lead_score = ai.lead_score || "Unclear";
+        insertPayload.lead_score_reason = ai.lead_score_reason || null;
+        if (Array.isArray(ai.missing_info)) insertPayload.missing_info = ai.missing_info.slice(0, 6);
       }
       const { data: client, error: insertErr } = await svc
         .from("clients")
