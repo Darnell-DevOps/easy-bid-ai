@@ -460,6 +460,8 @@ export default function ClientDetail() {
     setClient({ ...client, not_a_lead: true, status: "Archived", is_active: false });
     toast({ title: "Marked as not a lead" });
   };
+
+  const totalRevenue = proposals
     .filter((p) => p.client_paid)
     .reduce((acc, p) => acc + (parseFloat(p.budget?.replace(/[^0-9.]/g, "") || "0") || 0), 0);
 
