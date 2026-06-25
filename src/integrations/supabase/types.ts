@@ -500,6 +500,7 @@ export type Database = {
           lead_inbound_subject: string | null
           lead_quality: string | null
           lead_source: string | null
+          lead_thread: Json
           name: string
           original_lead_message: string | null
           phone: string | null
@@ -528,6 +529,7 @@ export type Database = {
           lead_inbound_subject?: string | null
           lead_quality?: string | null
           lead_source?: string | null
+          lead_thread?: Json
           name: string
           original_lead_message?: string | null
           phone?: string | null
@@ -556,6 +558,7 @@ export type Database = {
           lead_inbound_subject?: string | null
           lead_quality?: string | null
           lead_source?: string | null
+          lead_thread?: Json
           name?: string
           original_lead_message?: string | null
           phone?: string | null
@@ -933,6 +936,66 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      inbound_messages: {
+        Row: {
+          alias_id: string | null
+          body_text: string | null
+          classification: string
+          classification_reason: string | null
+          client_id: string | null
+          created_at: string
+          from_email: string | null
+          from_name: string | null
+          id: string
+          received_at: string
+          subject: string | null
+          user_id: string
+        }
+        Insert: {
+          alias_id?: string | null
+          body_text?: string | null
+          classification?: string
+          classification_reason?: string | null
+          client_id?: string | null
+          created_at?: string
+          from_email?: string | null
+          from_name?: string | null
+          id?: string
+          received_at?: string
+          subject?: string | null
+          user_id: string
+        }
+        Update: {
+          alias_id?: string | null
+          body_text?: string | null
+          classification?: string
+          classification_reason?: string | null
+          client_id?: string | null
+          created_at?: string
+          from_email?: string | null
+          from_name?: string | null
+          id?: string
+          received_at?: string
+          subject?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbound_messages_alias_id_fkey"
+            columns: ["alias_id"]
+            isOneToOne: false
+            referencedRelation: "user_inbound_aliases"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "inbound_messages_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       internal_config: {
         Row: {
@@ -2509,6 +2572,8 @@ export type Database = {
           user_id: string
         }[]
       }
+      inbound_message_ignore: { Args: { _id: string }; Returns: undefined }
+      inbound_message_promote: { Args: { _id: string }; Returns: string }
       is_super_admin: { Args: never; Returns: boolean }
       lead_convert_to_client: { Args: { _lead_id: string }; Returns: string }
       lead_form_record_view: {
