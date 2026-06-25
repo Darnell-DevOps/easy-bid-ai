@@ -178,6 +178,7 @@ export default function PublicLeadFormPage() {
 
   return (
     <div className={`${embed ? "" : "min-h-screen"} bg-background ${embed ? "" : "py-10 sm:py-14"}`}>
+      <DynamicFavicon userId={form?.user_id} />
       <main className="max-w-2xl mx-auto px-4 sm:px-6">
         <div className="relative rounded-2xl border border-border/60 bg-card/70 backdrop-blur p-6 sm:p-10 overflow-hidden">
           {/* premium top gradient */}
