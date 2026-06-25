@@ -1,6 +1,7 @@
 // Shared helper used by lead-qualify (internal pg_net trigger) and
 // lead-requalify (authenticated user-triggered re-run).
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { logLeadActivity } from "./lead-activity.ts";
 
 export const qualifyCorsHeaders = {
   "Access-Control-Allow-Origin": "*",
