@@ -331,11 +331,23 @@ Deno.serve(async (req) => {
     signals.push({ label: "Heuristics", detail: "Passed no-reply, auto-reply, bulk-header and length checks", verdict: "pass" });
   }
 
+  // Load this user's Lead Assistant preferences for AI + auto-send rules
+  const { data: prefsRow } = await svc
+    .from("ai_preferences")
+    .select("*")
+    .eq("user_id", alias.user_id)
+    .maybeSingle();
+  const prefs: LeadPrefs | null = (prefsRow as LeadPrefs) || null;
+
   // Run AI unless heuristic already dismissed
   let ai: any = null;
   if (!heuristicIgnored) {
     try {
-      ai = await callLeadAI({ name, email: fromEmail, message });
+      ai = await callLeadAI({ name, email: fromEmail, message, prefs });
+      // Append the user's saved signature so drafted previews and sends match.
+      if (ai?.reply && prefs?.email_signature) {
+        ai.reply = appendSignature(ai.reply, prefs.email_signature);
+      }
     } catch (e) {
       console.error("AI failed, falling back to needs_review:", e);
     }
