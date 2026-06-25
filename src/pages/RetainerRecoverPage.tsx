@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, CheckCircle2, CreditCard, Loader2 } from "lucide-react";
 
 interface RetainerLite {
+  user_id: string;
   client_name: string;
   title: string;
   has_failed_payment: boolean;
