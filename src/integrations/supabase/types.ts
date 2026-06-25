@@ -1087,6 +1087,67 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_activity: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          id: string
+          lead_id: string | null
+          metadata: Json
+          proposal_id: string | null
+          summary: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          metadata?: Json
+          proposal_id?: string | null
+          summary?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          metadata?: Json
+          proposal_id?: string | null
+          summary?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_activity_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_activity_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_activity_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_auto_send_log: {
         Row: {
           body_preview: string | null

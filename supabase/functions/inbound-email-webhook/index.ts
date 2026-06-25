@@ -24,6 +24,7 @@
 // Returns: { ok: true, client_id: string, draft: { subject, body } }
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { logLeadActivity } from "../_shared/lead-activity.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -491,6 +492,42 @@ Deno.serve(async (req) => {
     .from("user_inbound_aliases")
     .update({ last_inbound_at: new Date().toISOString() })
     .eq("user_id", alias.user_id);
+
+  // Activity log: every inbound message gets a "received" row.
+  await logLeadActivity(svc, {
+    user_id: alias.user_id,
+    type: "lead_email_received",
+    title: `New email from ${name}`,
+    summary: subject.slice(0, 200),
+    client_id: clientId,
+    metadata: { classification, from_email: fromEmail },
+  });
+
+  if (classification === "lead" && ai) {
+    await logLeadActivity(svc, {
+      user_id: alias.user_id,
+      type: "lead_qualified",
+      title: `AI qualified ${name} — ${ai.lead_score || "Unclear"}`,
+      summary: ai.lead_score_reason || ai.quality_reason || null,
+      client_id: clientId,
+      metadata: {
+        lead_score: ai.lead_score || null,
+        lead_confidence: ai.lead_confidence || null,
+        lead_quality: ai.lead_quality || null,
+      },
+    });
+    if (ai.reply) {
+      await logLeadActivity(svc, {
+        user_id: alias.user_id,
+        type: "reply_drafted",
+        title: `AI reply drafted for ${name}`,
+        summary: ai.reply_subject || `Re: ${subject}`,
+        client_id: clientId,
+        metadata: { lead_confidence: ai.lead_confidence || null },
+      });
+    }
+  }
+
 
   // Evaluate auto-send rules and log the decision (no actual dispatch — hard kill switch).
   const autoSend = evaluateAutoSend({

@@ -1,6 +1,7 @@
 // Shared helper used by lead-qualify (internal pg_net trigger) and
 // lead-requalify (authenticated user-triggered re-run).
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { logLeadActivity } from "./lead-activity.ts";
 
 export const qualifyCorsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -209,6 +210,25 @@ export async function qualifyLeadById(
       console.error("Update lead failed", updErr);
       return { ok: false, error: updErr.message };
     }
+
+    await logLeadActivity(svc, {
+      user_id: lead.user_id,
+      type: "lead_qualified",
+      title: `AI qualified ${lead.name || "lead"} — ${ai.lead_quality || "Unclear"}`,
+      summary: ai.quality_reason || null,
+      lead_id: leadId,
+      metadata: { lead_quality: ai.lead_quality || null, source: lead.source || "form" },
+    });
+    if (ai.reply) {
+      await logLeadActivity(svc, {
+        user_id: lead.user_id,
+        type: "reply_drafted",
+        title: `AI reply drafted for ${lead.name || "lead"}`,
+        summary: ai.reply_subject || null,
+        lead_id: leadId,
+      });
+    }
+
     return { ok: true };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Unknown error";
