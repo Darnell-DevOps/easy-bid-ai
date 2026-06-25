@@ -113,6 +113,9 @@ ${opts.message}
           parameters: {
             type: "object",
             properties: {
+              is_lead: { type: "boolean", description: "True if this email looks like a genuine project enquiry from a potential client" },
+              lead_confidence: { type: "string", enum: ["high", "medium", "low"] },
+              not_lead_reason: { type: "string", description: "If is_lead is false, short reason (newsletter, spam, auto-reply, etc.). Else empty string." },
               reply: { type: "string" },
               reply_subject: { type: "string", description: "Short Re: style subject" },
               service_requested: { type: "string" },
@@ -124,7 +127,7 @@ ${opts.message}
               quality_reason: { type: "string" },
               ai_recommendation: { type: "string" },
             },
-            required: ["reply", "reply_subject", "service_requested", "budget", "timeline", "goals", "notes", "lead_quality", "quality_reason", "ai_recommendation"],
+            required: ["is_lead", "lead_confidence", "not_lead_reason", "reply", "reply_subject", "service_requested", "budget", "timeline", "goals", "notes", "lead_quality", "quality_reason", "ai_recommendation"],
             additionalProperties: false,
           },
         },
