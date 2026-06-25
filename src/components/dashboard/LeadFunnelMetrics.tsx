@@ -26,8 +26,7 @@ export default function LeadFunnelMetrics() {
   useEffect(() => {
     (async () => {
       const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-      const { data } = await supabase
-        .from("lead_activity")
+      const { data } = await (supabase.from("lead_activity") as any)
         .select("type")
         .gte("created_at", since);
       const next: Counts = { ...EMPTY };
