@@ -335,6 +335,23 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: "Could not save lead" }, 500);
       }
       clientId = client.id;
+
+      // Surface an in-app notification so the user knows a new AI draft is waiting.
+      if (ai?.reply) {
+        await svc.from("user_notifications").insert({
+          user_id: alias.user_id,
+          category: "lead",
+          key: `ai_reply_ready:${clientId}`,
+          title: `New AI reply ready for ${name}`,
+          body: (message || "").slice(0, 160),
+          link_url: `/dashboard/clients/${clientId}#ai-reply`,
+          metadata: {
+            client_id: clientId,
+            lead_score: ai.lead_score || "Unclear",
+            subject,
+          },
+        });
+      }
     }
   }
 
