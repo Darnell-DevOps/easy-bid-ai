@@ -389,7 +389,77 @@ export default function ClientDetail() {
     });
   };
 
-  const totalRevenue = proposals
+  // ─── AI suggested reply actions ───────────────────────────────
+  const saveDraftLocal = async (subject: string, body: string) => {
+    if (!client) return;
+    await supabase
+      .from("clients")
+      .update({ lead_draft_subject: subject, lead_draft_reply: body, lead_reply_edited: true })
+      .eq("id", client.id);
+    setClient({ ...client, lead_draft_subject: subject, lead_draft_reply: body, lead_reply_edited: true });
+  };
+
+  const handleSendReply = async () => {
+    if (!client) return;
+    if (!client.email) {
+      toast({ title: "No email on file", description: "Add an email to send a reply.", variant: "destructive" });
+      return;
+    }
+    if (!draftSubject.trim() || !draftBody.trim()) {
+      toast({ title: "Reply is empty", variant: "destructive" });
+      return;
+    }
+    setDraftSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-lead-reply", {
+        body: { client_id: client.id, subject: draftSubject.trim(), body: draftBody.trim() },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const now = new Date().toISOString();
+      setClient({
+        ...client,
+        lead_reply_sent_at: now,
+        lead_draft_subject: draftSubject.trim(),
+        lead_draft_reply: draftBody.trim(),
+        status: client.status === "New" ? "Contacted" : client.status,
+      });
+      setDraftEditing(false);
+      toast({ title: "Reply sent", description: `Sent to ${client.email}` });
+    } catch (e: any) {
+      toast({ title: "Could not send reply", description: e.message || "Try again.", variant: "destructive" });
+    } finally {
+      setDraftSending(false);
+    }
+  };
+
+  const handleCopyReply = async () => {
+    const text = `Subject: ${draftSubject}\n\n${draftBody}`;
+    await navigator.clipboard.writeText(text);
+    setDraftCopied(true);
+    setTimeout(() => setDraftCopied(false), 1500);
+  };
+
+  const handleSendIntakeForm = () => {
+    if (!client) return;
+    navigate(`/dashboard/onboarding/new?client_id=${client.id}`);
+  };
+
+  const handleMarkNotALead = async () => {
+    if (!client) return;
+    setMarkingNotLead(true);
+    const { error } = await supabase
+      .from("clients")
+      .update({ not_a_lead: true, status: "Archived", is_active: false })
+      .eq("id", client.id);
+    setMarkingNotLead(false);
+    if (error) {
+      toast({ title: "Could not update", description: error.message, variant: "destructive" });
+      return;
+    }
+    setClient({ ...client, not_a_lead: true, status: "Archived", is_active: false });
+    toast({ title: "Marked as not a lead" });
+  };
     .filter((p) => p.client_paid)
     .reduce((acc, p) => acc + (parseFloat(p.budget?.replace(/[^0-9.]/g, "") || "0") || 0), 0);
 
