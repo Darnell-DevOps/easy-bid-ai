@@ -47,7 +47,7 @@ export default function PublicLeadFormPage() {
     (async () => {
       const { data } = await supabase
         .from("lead_forms" as any)
-        .select("id, slug, title, description, fields, submit_label, success_message, redirect_url, is_active")
+        .select("id, user_id, slug, title, description, fields, submit_label, success_message, redirect_url, is_active")
         .eq("slug", slug)
         .eq("is_active", true)
         .maybeSingle();
