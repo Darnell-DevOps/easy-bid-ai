@@ -473,6 +473,7 @@ export default function ClientPortal() {
 
   return (
     <div className="relative min-h-screen pb-24 sm:pb-8 overflow-hidden">
+      <DynamicFavicon userId={proposal?.user_id} />
       {/* Ambient backdrop */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute top-[12%] left-[10%] w-[480px] h-[480px] rounded-full bg-accent/10 blur-[120px] animate-soft-pulse" />
