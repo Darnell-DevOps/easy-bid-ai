@@ -28,7 +28,7 @@ export async function logLeadActivity(args: LogLeadActivityArgs): Promise<void> 
     const { data: userRes } = await supabase.auth.getUser();
     const userId = userRes?.user?.id;
     if (!userId) return;
-    await supabase.from("lead_activity").insert({
+    await (supabase.from("lead_activity") as any).insert({
       user_id: userId,
       type: args.type,
       title: args.title,
