@@ -11,6 +11,7 @@ import { formatMoney, intervalLabel, statusBadgeClasses } from "@/lib/retainers"
 
 interface Retainer {
   id: string;
+  user_id: string;
   client_name: string;
   client_email: string | null;
   company_name: string | null;
