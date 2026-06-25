@@ -39,6 +39,7 @@ import { usePlan } from "@/hooks/use-plan";
 import UpgradeModal from "@/components/plan/UpgradeModal";
 import { WhatsAppButton } from "@/components/whatsapp/WhatsAppButton";
 import InboundAddressCard from "@/components/leads/InboundAddressCard";
+import InboundReviewQueue from "@/components/leads/InboundReviewQueue";
 
 const emptyState = {
   leadName: "",
