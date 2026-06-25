@@ -51,8 +51,7 @@ export default function LeadActivityFeed({ limit = 8 }: { limit?: number }) {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from("lead_activity")
+      const { data } = await (supabase.from("lead_activity") as any)
         .select("id, type, title, summary, client_id, proposal_id, created_at")
         .order("created_at", { ascending: false })
         .limit(limit);
