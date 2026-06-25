@@ -267,9 +267,12 @@ Deno.serve(async (req) => {
   let clientId: string | null = null;
   let dedupeNote: string | null = null;
   if (classification === "lead" && fromEmail) {
+    const scoreRank = (s: string | null | undefined) =>
+      s === "Hot" ? 3 : s === "Warm" ? 2 : s === "Cold" ? 1 : s === "Unclear" ? 0 : -1;
+
     const { data: existing } = await svc
       .from("clients")
-      .select("id, name, lead_thread")
+      .select("id, name, lead_thread, lead_score")
       .eq("user_id", alias.user_id)
       .ilike("email", fromEmail)
       .limit(1)
@@ -279,10 +282,19 @@ Deno.serve(async (req) => {
       const thread = Array.isArray((existing as any).lead_thread) ? (existing as any).lead_thread : [];
       const priorCount = thread.length;
       thread.push({ subject, body: message.slice(0, 8000), received_at: new Date().toISOString() });
-      await svc
-        .from("clients")
-        .update({ lead_thread: thread, unread_at: new Date().toISOString() })
-        .eq("id", existing.id);
+
+      const updatePayload: Record<string, unknown> = {
+        lead_thread: thread,
+        unread_at: new Date().toISOString(),
+      };
+      // Only bump score upward (Hot > Warm > Cold > Unclear); never demote.
+      if (ai?.lead_score && scoreRank(ai.lead_score) > scoreRank((existing as any).lead_score)) {
+        updatePayload.lead_score = ai.lead_score;
+        updatePayload.lead_score_reason = ai.lead_score_reason || null;
+        if (Array.isArray(ai.missing_info)) updatePayload.missing_info = ai.missing_info.slice(0, 6);
+      }
+
+      await svc.from("clients").update(updatePayload).eq("id", existing.id);
       clientId = existing.id;
       dedupeNote = `Matched existing client "${(existing as any).name || fromEmail}" — appended as message #${priorCount + 1}`;
       signals.push({ label: "Sender match", detail: dedupeNote, verdict: "info" });
@@ -309,6 +321,9 @@ Deno.serve(async (req) => {
         insertPayload.ai_recommendation = ai.ai_recommendation || null;
         insertPayload.lead_draft_reply = ai.reply || null;
         insertPayload.lead_draft_subject = ai.reply_subject || `Re: ${subject}`;
+        insertPayload.lead_score = ai.lead_score || "Unclear";
+        insertPayload.lead_score_reason = ai.lead_score_reason || null;
+        if (Array.isArray(ai.missing_info)) insertPayload.missing_info = ai.missing_info.slice(0, 6);
       }
       const { data: client, error: insertErr } = await svc
         .from("clients")
