@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useSearchParams, useNavigate } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle2, Loader2, Send, ShieldCheck, ArrowLeft } from "lucide-react";
+import { CheckCircle2, Loader2, Send, ShieldCheck } from "lucide-react";
 import SmartFieldRenderer from "@/components/forms/SmartFieldRenderer";
 import {
   groupSmartFields, isFieldVisible, missingRequired,
