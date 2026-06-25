@@ -1,81 +1,74 @@
-## Goal
-Make the existing forwarding-based inbound-email pipeline smarter: classify each incoming message as **lead / needs review / ignored**, and dedupe against existing leads so the Lead Assistant inbox only fills with real enquiries.
+# AI lead qualification — Hot / Warm / Cold / Unclear
 
-## What already exists (reuse, do not rebuild)
-- Per-user forwarding address `leads-<slug>@leads.closesync.io` via `user_inbound_aliases`.
-- `inbound-email-webhook` parses sender/subject/body, runs AI qualification, inserts into `clients` with `lead_source='Email'`, `status='New'`, `original_lead_message`, `lead_inbound_subject`, `lead_inbound_from_email`, `unread_at`.
-- Lead Assistant surfaces these via `LeadInbox` / `LeadAssistant` pages, plus the new `InboundAddressCard`.
+The inbound webhook and Lead Assistant already extract `lead_quality` (High/Medium/Low), `quality_reason`, `service_requested`, `budget`, `timeline`, and `ai_recommendation`. This plan **adds** the new fields the user asked for without touching what's already working.
 
-## Gaps to fix
-1. Every inbound email becomes a `New` lead — even auto-replies, newsletters, receipts, or random forwards.
-2. If the same sender emails twice, two duplicate client rows are created instead of appending to the existing lead.
-3. No place to see "ignored" / "needs review" messages, so the user can't audit false negatives.
+## New per-lead fields
 
-## Changes
+Stored on `public.clients` (and emitted by the AI):
 
-### 1. Database (one migration)
-Add a lightweight inbound-message log so non-lead emails are kept for audit without polluting `clients`:
+- `lead_score` — `Hot | Warm | Cold | Unclear`
+- `lead_score_reason` — short sentence the AI must justify the score with
+- `missing_info` — `text[]` of qualification gaps (e.g. `["budget", "timeline", "decision maker"]`)
 
-- `public.inbound_messages`
-  - `user_id`, `alias_id`
-  - `from_email`, `from_name`, `subject`, `body_text`, `received_at`
-  - `classification` enum-like text: `lead` | `needs_review` | `ignored`
-  - `classification_reason` text (short AI/heuristic explanation)
-  - `client_id` nullable (set when it became / was merged into a lead)
-  - `created_at`
-- Standard `id`/`created_at`, RLS scoped to `user_id = auth.uid()` for SELECT only, plus the required GRANTs (authenticated SELECT, service_role ALL — no INSERT for users; webhook writes via service role).
-- Index on `(user_id, received_at desc)` and `(user_id, classification)`.
+Existing fields are reused as-is:
+- `service_requested`, `budget`, `timeline` → "Detected service / budget / timeline"
+- `ai_recommendation` → "Recommended next step"
+- `lead_quality` / `quality_reason` → kept for backwards compatibility (Hot/Warm/Cold/Unclear is shown alongside, not in place of it)
 
-### 2. `inbound-email-webhook` — classification + dedupe
-Pipeline becomes:
-```text
-parse -> heuristic gate -> AI classify+qualify -> route
-```
+## Database
 
-**Heuristic gate (cheap, runs first):**
-- Skip AI and mark `ignored` when any of:
-  - `From:` matches common no-reply patterns (`noreply@`, `no-reply@`, `mailer-daemon@`, `postmaster@`, `notifications@`, `bounce`, `donotreply`)
-  - Headers / body contain `List-Unsubscribe`, `Precedence: bulk`, `Auto-Submitted: auto-`
-  - Subject starts with `Out of Office`, `Auto-reply`, `Delivery Status Notification`, `Undeliverable`
-  - Body < 20 chars after stripping quotes/signatures
+Single migration:
+- `ALTER TABLE public.clients ADD COLUMN lead_score text` with `CHECK (lead_score IN ('Hot','Warm','Cold','Unclear'))`
+- `ADD COLUMN lead_score_reason text`
+- `ADD COLUMN missing_info text[]`
+- Backfill: derive `lead_score` from existing `lead_quality` for current rows (`High→Hot`, `Medium→Warm`, `Low→Cold`, null→`Unclear`) so older leads still render.
 
-**AI classify+qualify (single call, replaces today's `draft_lead_reply`):**
-- Extend the existing tool schema with two new required fields:
-  - `is_lead`: boolean
-  - `lead_confidence`: `"high" | "medium" | "low"`
-  - `not_lead_reason`: string (empty when `is_lead=true`)
-- Map:
-  - `is_lead=true` AND confidence ≥ medium → **lead**
-  - `is_lead=true` AND confidence = low → **needs_review**
-  - `is_lead=false` → **ignored**
+No new table, no RLS changes (clients RLS already scopes by `user_id`).
 
-**Dedupe before insert:**
-- Look up existing `clients` row for this `user_id` where `email = from_email` (case-insensitive) AND `lead_source='Email'`.
-- If found: append new message to a new column on `clients` — `lead_thread` (jsonb array of `{subject, body, received_at}`), bump `unread_at`, leave existing `status` alone, and skip creating a new client.
-- Else (and classification = `lead`): create the client as today.
-- For `needs_review` / `ignored`: do NOT touch `clients`. Always record into `inbound_messages` with the classification + reason.
+## AI schema changes
 
-Always insert a row into `inbound_messages` regardless of outcome, linking `client_id` when a lead row exists.
+Update both `draft_lead_reply` tool definitions:
+- `supabase/functions/inbound-email-webhook/index.ts`
+- `supabase/functions/_shared/lead-qualify.ts`
 
-Add `lead_thread jsonb DEFAULT '[]'` column to `clients` in the same migration.
+Add three required fields to the tool schema and prompt:
+- `lead_score` (enum: Hot/Warm/Cold/Unclear)
+- `lead_score_reason` (string ≤ 200 chars)
+- `missing_info` (array of strings, max 6 items)
 
-### 3. Lead Assistant UI — surface the new bucket
-Small additions to `src/pages/LeadAssistant.tsx`:
-- A new tab/section "Needs review" listing rows from `inbound_messages` where `classification='needs_review'` for the current user.
-- Each row: From, subject, snippet, "Convert to lead" and "Ignore" buttons.
-  - Convert calls a new SECURITY DEFINER RPC `inbound_message_promote(_id uuid)` that creates a `clients` row from the stored fields and updates the message's `client_id` + `classification='lead'`.
-  - Ignore calls `inbound_message_ignore(_id uuid)` flipping classification to `ignored`.
-- A collapsed "Ignored" disclosure below it for transparency (read-only list, last 20).
+Prompt guidance added to the system message:
+- Hot = clear intent + budget OR timeline OR explicit ask for proposal/call
+- Warm = clear intent, missing one of budget/timeline/scope
+- Cold = vague intent, no qualification signals
+- Unclear = AI can't tell (also used when `lead_confidence = low`)
+- `missing_info` lists what would push the score up (budget, timeline, scope, decision maker, contact method, etc.)
 
-No changes to existing Lead Assistant reply-drafting flow.
+## Write-through
 
-## Out of scope (kept for later, per user)
-- Gmail / Outlook OAuth.
-- Outbound send via user's mailbox.
-- Threading by `Message-ID` / `In-Reply-To` headers (current dedupe is by sender email only — good enough for v1, noted in code comments).
+In the inbound webhook insert payload, add (when AI returned them):
+- `lead_score`, `lead_score_reason`, `missing_info`
 
-## Technical details
-- Migration includes table create + GRANTs + RLS + policies + `clients.lead_thread` column + two RPCs (`inbound_message_promote`, `inbound_message_ignore`) as SECURITY DEFINER scoping to `auth.uid()`.
-- `inbound-email-webhook` stays public (`verify_jwt = false`) and continues to use the service-role client for all writes.
-- AI call stays a single Gemini tool-call — just adds the three classification fields, so token cost is unchanged.
-- No frontend route changes; only `LeadAssistant.tsx` gains the new sections.
+Same additions in `_shared/lead-qualify.ts` `update` payload so manually re-qualified leads also get scored.
+
+Dedupe path (existing client appended to thread) gets a lightweight update too: bump `lead_score` only if the new score is **higher** than the stored one (Hot > Warm > Cold > Unclear) so a follow-up email can promote a lead but never demote it.
+
+## UI surfacing (additive only)
+
+`src/pages/ClientDetail.tsx` — existing "Lead Intelligence" card gets a new top row:
+- A colored Hot/Warm/Cold/Unclear pill (red / amber / slate / muted)
+- `lead_score_reason` as a one-liner
+- A "Missing info" chip group rendered from `missing_info` when non-empty
+- Existing `lead_quality`, `service_requested`, `budget`, `timeline`, `ai_recommendation` blocks are left in place
+
+`src/pages/LeadInbox.tsx` — list row shows the score pill next to the existing quality badge; detail pane shows score reason + missing info above the current quality block.
+
+`src/pages/LeadAssistant.tsx` — qualification form gets a read-only "AI score" badge with reason; no edit UI for the new fields (AI-owned).
+
+No changes to the proposal, contract, or onboarding flows.
+
+## Technical notes
+
+- Score ordering helper lives in `src/lib/leadScore.ts` (`scoreRank`, `scoreTone`) so list, detail, and dedupe logic share one source of truth.
+- `missing_info` is rendered with `Badge variant="outline"`; empty array hides the row entirely.
+- No new edge functions, no new cron, no new RPCs.
+- After the migration runs, redeploy `inbound-email-webhook` and `lead-response` so the new tool schema ships.
