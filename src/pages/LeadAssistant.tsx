@@ -38,6 +38,7 @@ import { templates } from "@/pages/Templates";
 import { usePlan } from "@/hooks/use-plan";
 import UpgradeModal from "@/components/plan/UpgradeModal";
 import { WhatsAppButton } from "@/components/whatsapp/WhatsAppButton";
+import InboundAddressCard from "@/components/leads/InboundAddressCard";
 
 const emptyState = {
   leadName: "",
@@ -350,6 +351,8 @@ export default function LeadAssistant() {
             toward a sale.
           </p>
         </div>
+
+        <InboundAddressCard />
 
         {/* Step indicator */}
         <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto pb-1">
