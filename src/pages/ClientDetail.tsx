@@ -869,7 +869,7 @@ export default function ClientDetail() {
 
 
         {/* Lead Summary — only if this client came through the Lead Assistant */}
-        {(client.original_lead_message || client.lead_quality || client.ai_recommendation || client.lead_source) && (
+        {(client.original_lead_message || client.lead_quality || client.ai_recommendation || client.lead_source || client.lead_score) && (
           <Card className="glass-card border-accent/20">
             <CardContent className="p-6 space-y-5">
               <div className="flex items-center justify-between flex-wrap gap-2">
@@ -883,6 +883,30 @@ export default function ClientDetail() {
                 )}
               </div>
               <div className="h-px bg-border" />
+
+              {/* AI lead score (Hot / Warm / Cold / Unclear) */}
+              {client.lead_score && (
+                <div className="rounded-lg border border-border/60 bg-muted/30 p-4 space-y-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="outline" className={`gap-1 ${scoreTone(client.lead_score)}`}>
+                      <Flame className="w-3 h-3" /> {scoreLabel(client.lead_score)} lead
+                    </Badge>
+                    {client.lead_score_reason && (
+                      <span className="text-xs text-muted-foreground">{client.lead_score_reason}</span>
+                    )}
+                  </div>
+                  {Array.isArray(client.missing_info) && client.missing_info.length > 0 && (
+                    <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Missing info:</span>
+                      {client.missing_info.map((m, i) => (
+                        <Badge key={i} variant="outline" className="text-[10px] font-normal">{m}</Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+
 
               {/* Low-quality lead CTA — de-emphasized when payment is the priority */}
               {isLowQuality && (
