@@ -72,6 +72,7 @@ import ClientBriefCard from "@/components/ai/ClientBriefCard";
 import ReplyDrafterDialog from "@/components/ai/ReplyDrafterDialog";
 import { WhatsAppButton } from "@/components/whatsapp/WhatsAppButton";
 import { scoreLabel, scoreTone } from "@/lib/leadScore";
+import { logLeadActivity } from "@/lib/lead-activity";
 import { Flame } from "lucide-react";
 
 interface ClientInfo {
@@ -369,6 +370,13 @@ export default function ClientDetail() {
 
   const generateProposal = () => {
     if (!client) return;
+    void logLeadActivity({
+      type: "proposal_created_from_lead",
+      title: `Proposal started for ${client.name}`,
+      summary: client.service_requested || undefined,
+      client_id: client.id,
+      metadata: { source: "client_detail" },
+    });
     navigate("/dashboard/new", {
       state: {
         prefillFromClient: {
@@ -425,6 +433,13 @@ export default function ClientDetail() {
         status: client.status === "New" ? "Contacted" : client.status,
       });
       setDraftEditing(false);
+      void logLeadActivity({
+        type: "reply_sent",
+        title: `AI reply sent to ${client.name}`,
+        summary: draftSubject.trim().slice(0, 200),
+        client_id: client.id,
+        metadata: { to: client.email },
+      });
       toast({ title: "Reply sent", description: `Sent to ${client.email}` });
     } catch (e: any) {
       toast({ title: "Could not send reply", description: e.message || "Try again.", variant: "destructive" });
@@ -442,6 +457,11 @@ export default function ClientDetail() {
 
   const handleSendIntakeForm = () => {
     if (!client) return;
+    void logLeadActivity({
+      type: "intake_form_sent",
+      title: `Intake form started for ${client.name}`,
+      client_id: client.id,
+    });
     navigate(`/dashboard/onboarding/new?client_id=${client.id}`);
   };
 
@@ -458,6 +478,11 @@ export default function ClientDetail() {
       return;
     }
     setClient({ ...client, not_a_lead: true, status: "Archived", is_active: false });
+    void logLeadActivity({
+      type: "lead_marked_not_a_lead",
+      title: `Marked ${client.name} as not a lead`,
+      client_id: client.id,
+    });
     toast({ title: "Marked as not a lead" });
   };
 
