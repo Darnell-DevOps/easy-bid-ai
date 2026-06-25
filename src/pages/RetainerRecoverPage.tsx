@@ -4,8 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, CheckCircle2, CreditCard, Loader2 } from "lucide-react";
+import DynamicFavicon from "@/components/branding/DynamicFavicon";
 
 interface RetainerLite {
+  user_id: string;
   client_name: string;
   title: string;
   has_failed_payment: boolean;
@@ -28,7 +30,7 @@ export default function RetainerRecoverPage() {
       const { data } = await supabase
         .from("retainers")
         .select(
-          "client_name, title, has_failed_payment, failed_payment_reason, status, amount_cents, currency",
+          "user_id, client_name, title, has_failed_payment, failed_payment_reason, status, amount_cents, currency",
         )
         .eq("access_token", token)
         .maybeSingle();
@@ -86,6 +88,7 @@ export default function RetainerRecoverPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-10">
+      <DynamicFavicon userId={retainer?.user_id} />
       <Card className="max-w-lg w-full border-border/60">
         <CardContent className="p-8 space-y-6">
           {resolved ? (

@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle2, Loader2, Send, ShieldCheck } from "lucide-react";
 import SmartFieldRenderer from "@/components/forms/SmartFieldRenderer";
+import DynamicFavicon from "@/components/branding/DynamicFavicon";
 import {
   groupSmartFields, isFieldVisible, missingRequired,
   type SmartField, type FieldResponses,
@@ -13,6 +14,7 @@ import {
 
 interface PublicForm {
   id: string;
+  user_id: string;
   slug: string;
   title: string;
   description: string;
@@ -46,7 +48,7 @@ export default function PublicLeadFormPage() {
     (async () => {
       const { data } = await supabase
         .from("lead_forms" as any)
-        .select("id, slug, title, description, fields, submit_label, success_message, redirect_url, is_active")
+        .select("id, user_id, slug, title, description, fields, submit_label, success_message, redirect_url, is_active")
         .eq("slug", slug)
         .eq("is_active", true)
         .maybeSingle();
@@ -176,6 +178,7 @@ export default function PublicLeadFormPage() {
 
   return (
     <div className={`${embed ? "" : "min-h-screen"} bg-background ${embed ? "" : "py-10 sm:py-14"}`}>
+      <DynamicFavicon userId={form?.user_id} />
       <main className="max-w-2xl mx-auto px-4 sm:px-6">
         <div className="relative rounded-2xl border border-border/60 bg-card/70 backdrop-blur p-6 sm:p-10 overflow-hidden">
           {/* premium top gradient */}

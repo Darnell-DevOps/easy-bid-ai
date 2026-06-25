@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { sendEmail } from "@/lib/email";
+import DynamicFavicon from "@/components/branding/DynamicFavicon";
 import {
   Calendar as CalendarIcon,
   Clock,
@@ -304,6 +305,7 @@ export default function PublicBookingPage() {
 
   return (
     <div className="min-h-screen bg-background py-6 px-4">
+      <DynamicFavicon userId={link?.user_id} />
       <div className="max-w-5xl mx-auto">
         <header className="flex items-center gap-2 mb-6">
           <Sparkles className="w-5 h-5 text-purple" />

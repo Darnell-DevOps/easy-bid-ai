@@ -1,77 +1,91 @@
+
 ## Goal
-Track every step of the AI lead pipeline as activity entries, and surface counts on the dashboard.
 
-## 1. New `lead_activity` table (schema)
-A single append-only log so the feed and metrics share one source of truth.
+Let each user (1) upload their own favicon that appears on all public-facing client pages, and (2) connect their own custom domain (e.g. `portal.acme.com`) via CNAME so client-facing share links use their domain instead of `closesync.io`. Internal dashboard stays on `closesync.io`.
 
-Columns (beyond id/created_at):
-- `user_id uuid` (RLS scope)
-- `client_id uuid` nullable (FK to clients)
-- `lead_id uuid` nullable (FK to leads, for form-based leads)
-- `proposal_id uuid` nullable
-- `type text` — one of:
-  - `lead_email_received`
-  - `lead_qualified`
-  - `reply_drafted`
-  - `reply_sent`
-  - `intake_form_sent`
-  - `proposal_created_from_lead`
-  - `lead_marked_not_a_lead`
-- `title text`, `summary text`
-- `metadata jsonb` (subject, score, channel, etc.)
+## Scope
 
-RLS: user reads own; service_role full. Grants for `authenticated` SELECT, `service_role` ALL. Indexed on `(user_id, created_at desc)` and `(user_id, type)`.
+**Favicon** appears on:
+- Client portal
+- Public lead forms
+- Proposal & contract sign pages
+- Onboarding & booking pages
 
-## 2. Emit activity from existing code paths
-Insert rows at the points where each event already happens — no new business logic.
+**Custom domain** rewrites only **public share links** (portal / form / proposal / contract / onboarding / booking URLs). Dashboard, emails-to-self, and internal links stay on `closesync.io`.
 
-- `supabase/functions/inbound-email-webhook/index.ts`
-  - After classification → insert `lead_email_received` (always, with classification in metadata).
-  - After AI qualify success → insert `lead_qualified` (with score, confidence).
-  - After draft saved → insert `reply_drafted`.
-- `supabase/functions/lead-qualify/index.ts` & `_shared/lead-qualify.ts`
-  - On successful qualification → insert `lead_qualified` + `reply_drafted` (form-based leads).
-- `supabase/functions/send-lead-reply/index.ts`
-  - On successful send → insert `reply_sent`.
-- `src/pages/ClientDetail.tsx` Lead Summary actions
-  - "Send intake form" handler → insert `intake_form_sent`.
-  - "Create proposal" navigation → insert `proposal_created_from_lead` once proposal exists (do it in the proposal-create flow keyed off a `from_lead_client_id` param so it fires regardless of entry point).
-  - "Mark as not a lead" → insert `lead_marked_not_a_lead`.
+---
 
-All inserts wrapped in try/catch so a logging failure never breaks the user-facing action.
+## 1. Favicon — per-user upload
 
-## 3. Dashboard feed widget
-Reuse the existing `RecentActivity` slot pattern in `src/pages/Dashboard.tsx`.
+**Storage**
+- Add `favicon_url` and `favicon_path` columns to existing `business_branding` table.
+- Create a public Supabase Storage bucket `user-favicons` (read-anon, write-authenticated-own-folder).
 
-- New `src/components/dashboard/LeadActivityFeed.tsx`
-  - Pulls last 10 rows from `lead_activity` for `auth.uid()`.
-  - Icon + colour per `type`, relative time, click-through to the client/lead detail.
-- Placed alongside `DealActivity` / `RecentActivity` so the user sees lead lifecycle + deal lifecycle side by side.
+**Upload UI**
+- Add a "Browser tab icon (favicon)" section to `BrandingSettings.tsx` — drag/drop, PNG/ICO/SVG, max 256KB, recommended 256×256. Live preview chip.
+- Persist URL into `business_branding.favicon_url`.
 
-## 4. Dashboard metrics
-Add a new `LeadFunnelMetrics` card group on the dashboard (above the existing stats grid, scoped to "Last 30 days"):
+**Runtime injection**
+- Create `src/components/branding/DynamicFavicon.tsx` — fetches the page-owner's branding by `user_id` (resolved from the route's slug/token/proposal/etc.) and injects `<link rel="icon">` via `react-helmet-async` (already viable; install if not present).
+- Mount it on: `ClientPortal.tsx`, `PublicLeadFormPage.tsx`, `ProposalView.tsx`, `ContractSignPage.tsx`, `OnboardingFormPage.tsx`, `PublicBookingPage.tsx`, `RetainerSubscribePage.tsx`, `RetainerRecoverPage.tsx`, `TestimonialSubmitPage.tsx`.
+- Falls back to the existing `/favicon.png` when none set.
 
-- New leads — count of `lead_email_received` rows ∪ leads created via forms in window
-- Qualified leads — count of `lead_qualified`
-- Replies drafted — count of `reply_drafted`
-- Replies sent — count of `reply_sent`
-- Proposals from leads — count of `proposal_created_from_lead`
+---
 
-Implementation:
-- New component `src/components/dashboard/LeadFunnelMetrics.tsx` (5 small stat tiles, matching existing `StatsCards` styling).
-- Single Supabase query: `select type, count(*) from lead_activity where user_id = $me and created_at > now() - 30d group by type`.
-- Wired into `Dashboard.tsx` between hero stats and the activity feeds.
+## 2. Custom domain — CNAME with managed SSL
 
-## 5. Lead Assistant page integration
-On `src/pages/LeadAssistant.tsx`, add a compact "Recent lead activity" section under the inbound review queue so users can audit the AI pipeline in one place.
+**Data model**
+- New table `user_custom_domains`:
+  - `user_id`, `hostname` (unique), `purpose` enum (`portal` | `forms` | `proposals` | `contracts` | `onboarding` | `booking` | `all`), `status` (`pending` | `verifying` | `active` | `failed`), `verification_token`, `ssl_status`, `last_checked_at`, `verified_at`.
+- GRANTs + RLS scoped to `auth.uid()`; `service_role` full access for the verification cron.
 
-## Out of scope
-- No changes to existing dashboard cards' counts (Total Clients, Proposals, etc.).
-- No backfill of historic events — feed starts from the moment of deploy.
-- No email/Slack notifications for activity entries (in-app feed only).
+**Verification flow (BYO domain)**
+- User adds hostname in **Settings → Domains for client pages**.
+- We display two DNS records to add at their registrar:
+  - `CNAME <subdomain> → portal.closesync.io`
+  - `TXT _closesync-verify.<subdomain> → <verification_token>`
+- New edge function `custom-domain-manage` (actions: `add`, `verify`, `remove`, `list`, `set_purpose`) does DNS lookups via Cloudflare DoH (`https://cloudflare-dns.com/dns-query`).
+- Once both records resolve correctly → status `active`.
 
-## Files touched
-- New SQL migration for `lead_activity` table.
-- New: `src/components/dashboard/LeadActivityFeed.tsx`, `src/components/dashboard/LeadFunnelMetrics.tsx`.
-- Edit: `Dashboard.tsx`, `LeadAssistant.tsx`, `ClientDetail.tsx`.
-- Edit edge functions: `inbound-email-webhook`, `send-lead-reply`, `lead-qualify`, `_shared/lead-qualify.ts`.
+**SSL / hostname routing**
+- Since Lovable hosting can't natively provision certs for arbitrary customer hostnames, we use **Cloudflare for SaaS** (Custom Hostnames API):
+  - Add `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ZONE_ID` secrets (requested via `add_secret`).
+  - On verify, `custom-domain-manage` calls Cloudflare to register the custom hostname → CF auto-issues a cert and proxies to our origin.
+  - Origin (`portal.closesync.io`) is a CNAME alias of our Lovable app; the React app reads `window.location.hostname`, resolves it back to a `user_id` via a public RPC `resolve_custom_domain(hostname)`, and renders the right tenant.
+
+**Link rewriting (public share links only)**
+- New helper `src/lib/public-urls.ts` → `buildShareUrl(userId, surface, path)`:
+  - Looks up the user's active custom domain matching the surface (or `all`).
+  - Returns `https://<custom-host><path>` if active, else falls back to current `closesync.io` URL.
+- Update all "Copy link" / "Send" call sites:
+  - `ClientPortalLauncher`, `ProposalView` share, `ContractDetail` share, `LeadFormsDashboard` share, `OnboardingDashboard` share, `PublicBookingPage` host share, retainer subscribe link generators.
+- Outbound emails (`send-lead-reply`, proposal/contract/onboarding/reminder crons) read the same helper server-side so links in emails also use the custom domain.
+
+**UI**
+- New `src/components/settings/CustomDomainsSettings.tsx` — list, add, verify, set per-surface purpose, remove. Mirrors the look of existing `SendingDomainsCard.tsx`.
+- Surface in `SettingsPage.tsx` under a new "Domains" section (alongside sending domains).
+
+---
+
+## 3. Phasing
+
+1. **Favicon** (small, self-contained) — DB column, storage bucket, upload UI, runtime injection.
+2. **Custom domain DB + UI + verification** — works in "DNS verified" state without SSL automation.
+3. **Cloudflare for SaaS integration** — once user provides Cloudflare API token, automates SSL & routing.
+4. **Link rewriting** — flip share-link generators to use the helper.
+
+---
+
+## Technical notes
+
+- `react-helmet-async`: confirm install — favicon injection uses `<link rel="icon">` inside `<Helmet>`.
+- Cloudflare for SaaS is the standard path for multi-tenant custom hostnames with managed SSL; alternative (Let's Encrypt + custom ALB) is heavier and requires infra we don't control.
+- `resolve_custom_domain` RPC must be `SECURITY DEFINER`, anon-callable, returns only `user_id` + `purpose` (no PII).
+- Existing routes use slugs/tokens for tenant resolution; we only need to detect "am I on a custom hostname?" to render the branded favicon and skip the default `closesync.io` chrome — route structure stays unchanged.
+- Email link generators currently hardcode `https://closesync.io` in several places — audit and route through the new helper.
+
+---
+
+## Open question before build
+
+Cloudflare for SaaS requires a paid CF plan + API token. Do you already have a Cloudflare account on the domain `closesync.io` you'd like to use, or should phase 3 ship as "DNS-verified only" (user provides their own cert via their proxy) until you set that up?

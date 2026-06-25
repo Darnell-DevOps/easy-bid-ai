@@ -13,6 +13,7 @@ import {
 import { isFieldVisible, type FieldResponses } from "@/lib/form-fields";
 import SmartFieldRenderer from "@/components/forms/SmartFieldRenderer";
 import OnboardingProgressTracker from "@/components/onboarding/OnboardingProgressTracker";
+import DynamicFavicon from "@/components/branding/DynamicFavicon";
 
 function hydrate(raw: Record<string, string> | undefined): FieldResponses {
   const out: FieldResponses = {};
@@ -164,6 +165,7 @@ export default function OnboardingFormPage() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      <DynamicFavicon userId={form?.user_id} />
       <header className="border-b border-border bg-card/50 backdrop-blur sticky top-0 z-10">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 min-w-0">

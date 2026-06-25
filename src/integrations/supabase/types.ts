@@ -2700,6 +2700,13 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_public_branding: {
+        Args: { p_user_id: string }
+        Returns: {
+          business_name: string
+          favicon_url: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -8,9 +8,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { initializePaddle, isPaymentsConfigured, isTestMode } from "@/lib/paddle";
 import { formatMoney, intervalLabel, statusBadgeClasses } from "@/lib/retainers";
+import DynamicFavicon from "@/components/branding/DynamicFavicon";
 
 interface Retainer {
   id: string;
+  user_id: string;
   client_name: string;
   client_email: string | null;
   company_name: string | null;
@@ -40,7 +42,7 @@ export default function RetainerSubscribePage() {
     const { data } = await supabase
       .from("retainers")
       .select(
-        "id, client_name, client_email, company_name, title, description, amount_cents, currency, billing_interval, custom_interval_days, status, start_date, next_billing_date, current_period_end, cancel_at_period_end, paddle_subscription_id",
+        "id, user_id, client_name, client_email, company_name, title, description, amount_cents, currency, billing_interval, custom_interval_days, status, start_date, next_billing_date, current_period_end, cancel_at_period_end, paddle_subscription_id",
       )
       .eq("access_token", token)
       .maybeSingle();
@@ -147,6 +149,7 @@ export default function RetainerSubscribePage() {
 
   return (
     <div className="min-h-screen bg-background py-12 px-4">
+      <DynamicFavicon userId={retainer?.user_id} />
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="text-center space-y-2">
           <p className="text-xs uppercase tracking-widest text-muted-foreground">Recurring service</p>
