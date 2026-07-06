@@ -2802,6 +2802,67 @@ export type Database = {
         Args: { _complete?: boolean; _responses: Json; _token: string }
         Returns: string
       }
+      public_get_booking_link_busy: {
+        Args: { _slug: string }
+        Returns: {
+          duration_minutes: number
+          scheduled_at: string
+        }[]
+      }
+      public_get_booking_link_by_slug: {
+        Args: { _slug: string }
+        Returns: {
+          available_days: number[]
+          created_at: string
+          custom_location: string | null
+          description: string | null
+          duration_minutes: number
+          end_time: string
+          id: string
+          is_active: boolean
+          location_type: string
+          meeting_url: string | null
+          name: string
+          slug: string
+          start_time: string
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "booking_links"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      public_get_bookings_for_proposal: {
+        Args: { _proposal_id: string }
+        Returns: {
+          booking_link_id: string | null
+          client_email: string
+          client_message: string | null
+          client_name: string
+          created_at: string
+          duration_minutes: number
+          id: string
+          location_details: string | null
+          location_type: string
+          meeting_name: string
+          meeting_url: string | null
+          proposal_id: string | null
+          reschedule_token: string
+          scheduled_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "bookings"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       public_get_contract_by_token: {
         Args: { _token: string }
         Returns: {
@@ -2884,6 +2945,41 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "contract_signatures"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      public_get_first_booking_link_for_user: {
+        Args: { _user_id: string }
+        Returns: {
+          name: string
+          slug: string
+        }[]
+      }
+      public_get_onboarding_by_token: {
+        Args: { _token: string }
+        Returns: {
+          access_token: string
+          client_email: string | null
+          client_id: string | null
+          client_name: string
+          completed_at: string | null
+          created_at: string
+          fields: Json
+          id: string
+          proposal_id: string | null
+          reminded_at: string | null
+          responses: Json
+          sent_at: string | null
+          service_type: string | null
+          started_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "onboarding_forms"
           isOneToOne: false
           isSetofReturn: true
         }
