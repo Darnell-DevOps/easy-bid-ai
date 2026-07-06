@@ -110,16 +110,13 @@ export default function ContractSignPage() {
       supabase.rpc("contract_record_view", { _token: token });
 
       // Fetch first booking link from owner (for kickoff CTA)
-      supabase
-        .from("booking_links")
-        .select("slug")
-        .eq("user_id", (data as any).user_id)
-        .eq("is_active", true)
-        .order("created_at", { ascending: true })
-        .limit(1)
-        .maybeSingle()
-        .then(({ data: bl }) => {
-          if (bl) setBookingSlug((bl as any).slug);
+      (supabase.rpc(
+        "public_get_first_booking_link_for_user" as never,
+        { _user_id: (data as any).user_id } as never,
+      ) as unknown as Promise<{ data: any }>)
+        .then(({ data: rows }) => {
+          const bl = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+          if (bl?.slug) setBookingSlug(bl.slug);
         });
 
       // If this contract is tied to a proposal that also has a retainer, surface
