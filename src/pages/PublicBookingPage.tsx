@@ -83,12 +83,11 @@ export default function PublicBookingPage() {
   useEffect(() => {
     if (!slug) return;
     const load = async () => {
-      const { data: linkData, error } = await supabase
-        .from("booking_links")
-        .select("*")
-        .eq("slug", slug)
-        .eq("is_active", true)
-        .maybeSingle();
+      const { data: linkRows, error } = (await supabase.rpc(
+        "public_get_booking_link_by_slug" as never,
+        { _slug: slug } as never,
+      )) as { data: any; error: any };
+      const linkData = Array.isArray(linkRows) && linkRows.length > 0 ? linkRows[0] : null;
 
       if (error || !linkData) {
         setNotFound(true);
@@ -103,14 +102,13 @@ export default function PublicBookingPage() {
           .select("buffer_minutes, min_notice_hours")
           .eq("user_id", linkData.user_id)
           .maybeSingle(),
-        supabase
-          .from("bookings")
-          .select("scheduled_at, duration_minutes")
-          .eq("user_id", linkData.user_id)
-          .gte("scheduled_at", new Date().toISOString()),
+        supabase.rpc(
+          "public_get_booking_link_busy" as never,
+          { _slug: slug } as never,
+        ) as unknown as Promise<{ data: any }>,
       ]);
       if (availRes.data) setAvailability(availRes.data as AvailabilitySettings);
-      setExisting(bookingsRes.data || []);
+      setExisting((bookingsRes.data as any) || []);
       setHostName("");
       setLoading(false);
     };
