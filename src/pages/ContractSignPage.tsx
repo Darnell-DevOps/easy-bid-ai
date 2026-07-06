@@ -125,24 +125,22 @@ export default function ContractSignPage() {
       // If this contract is tied to a proposal that also has a retainer, surface
       // the retainer subscribe link so the client can start their subscription.
       if ((data as any).proposal_id) {
-        supabase
-          .from("retainers")
-          .select("access_token")
-          .eq("proposal_id", (data as any).proposal_id)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle()
+        (supabase.rpc(
+          "public_get_retainer_token_for_proposal" as never,
+          { _proposal_id: (data as any).proposal_id } as never,
+        ) as unknown as Promise<{ data: any }>)
           .then(({ data: rt }) => {
-            if (rt) setRetainerToken((rt as any).access_token);
+            const row = Array.isArray(rt) && rt.length > 0 ? rt[0] : null;
+            if (row?.access_token) setRetainerToken(row.access_token);
           });
 
-        supabase
-          .from("proposals")
-          .select("client_paid")
-          .eq("id", (data as any).proposal_id)
-          .maybeSingle()
+        (supabase.rpc(
+          "public_get_proposal_by_id" as never,
+          { _id: (data as any).proposal_id } as never,
+        ) as unknown as Promise<{ data: any }>)
           .then(({ data: pr }) => {
-            if (pr) setProposalPaid(!!(pr as any).client_paid);
+            const row = Array.isArray(pr) && pr.length > 0 ? pr[0] : null;
+            if (row) setProposalPaid(!!row.client_paid);
           });
       }
 
