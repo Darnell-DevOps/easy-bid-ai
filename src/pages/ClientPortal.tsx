@@ -139,13 +139,11 @@ export default function ClientPortal() {
   useEffect(() => {
     if (!id) return;
     const load = async () => {
-      const { data, error } = await supabase
-        .from("proposals")
-        .select(
-          "id, user_id, client_name, company_name, service_type, proposal_content, pricing_breakdown, created_at, status, sent_at, viewed_at, accepted_at, rejected_at, client_response_message, amount_cents, currency, client_paid"
-        )
-        .eq("id", id)
-        .maybeSingle();
+      const { data: rows, error } = (await supabase.rpc(
+        "public_get_proposal_by_id" as never,
+        { _id: id } as never,
+      )) as { data: any; error: any };
+      const data = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
 
       if (error || !data) {
         setNotFound(true);
