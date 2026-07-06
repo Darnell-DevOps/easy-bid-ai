@@ -278,7 +278,7 @@ Deno.serve(async (req) => {
 
   const { data: alias, error: aliasErr } = await svc
     .from("user_inbound_aliases")
-    .select("user_id, inbound_secret")
+    .select("user_id, inbound_secret, rate_window_started_at, rate_window_count")
     .eq("slug", slug)
     .maybeSingle();
   if (aliasErr || !alias) {
@@ -286,11 +286,30 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Unknown inbound alias" }, 404);
   }
 
-  // Optional shared-secret enforcement
+  // Shared-secret enforcement: if the alias has a secret configured, a matching
+  // secret is REQUIRED. If no secret is configured, ingest stays open.
   const providedSecret = body.secret || req.headers.get("x-inbound-secret");
-  if (providedSecret && providedSecret !== alias.inbound_secret) {
+  if (alias.inbound_secret && providedSecret !== alias.inbound_secret) {
     return jsonResponse({ error: "Invalid secret" }, 401);
   }
+
+  // Per-alias rate limit: max 20 requests per 5-minute rolling window.
+  const RATE_LIMIT_MAX = 20;
+  const RATE_WINDOW_MS = 5 * 60 * 1000;
+  const now = Date.now();
+  const windowStart = alias.rate_window_started_at ? new Date(alias.rate_window_started_at).getTime() : 0;
+  const windowActive = windowStart && (now - windowStart) < RATE_WINDOW_MS;
+  const currentCount = windowActive ? (alias.rate_window_count || 0) : 0;
+  if (windowActive && currentCount >= RATE_LIMIT_MAX) {
+    return jsonResponse({ error: "Rate limit exceeded for this inbound alias" }, 429);
+  }
+  await svc
+    .from("user_inbound_aliases")
+    .update({
+      rate_window_started_at: windowActive ? alias.rate_window_started_at : new Date(now).toISOString(),
+      rate_window_count: currentCount + 1,
+    })
+    .eq("slug", slug);
 
   const fromRaw = String(body.from ?? body.sender ?? body.envelope?.from ?? "");
   const { name, email: fromEmail } = parseFromName(fromRaw);
