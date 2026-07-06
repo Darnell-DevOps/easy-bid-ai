@@ -2956,6 +2956,34 @@ export type Database = {
           slug: string
         }[]
       }
+      public_get_onboarding_by_proposal: {
+        Args: { _proposal_id: string }
+        Returns: {
+          access_token: string
+          client_email: string | null
+          client_id: string | null
+          client_name: string
+          completed_at: string | null
+          created_at: string
+          fields: Json
+          id: string
+          proposal_id: string | null
+          reminded_at: string | null
+          responses: Json
+          sent_at: string | null
+          service_type: string | null
+          started_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "onboarding_forms"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       public_get_onboarding_by_token: {
         Args: { _token: string }
         Returns: {
