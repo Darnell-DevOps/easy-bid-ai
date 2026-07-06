@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.admin_grant_self_super_admin(TEXT);

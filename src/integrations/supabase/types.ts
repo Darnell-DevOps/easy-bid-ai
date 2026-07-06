@@ -2667,10 +2667,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      admin_grant_self_super_admin: {
-        Args: { _secret: string }
-        Returns: boolean
-      }
       admin_revenue_stats: { Args: never; Returns: Json }
       admin_usage_stats: { Args: never; Returns: Json }
       admin_user_list: {
