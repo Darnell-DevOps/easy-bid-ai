@@ -2802,6 +2802,192 @@ export type Database = {
         Args: { _complete?: boolean; _responses: Json; _token: string }
         Returns: string
       }
+      public_get_contract_by_token: {
+        Args: { _token: string }
+        Returns: {
+          amount_cents: number | null
+          body: string
+          client_email: string | null
+          client_id: string | null
+          client_name: string
+          company_name: string | null
+          contract_type: string
+          countersigned_at: string | null
+          countersigner_name: string | null
+          created_at: string
+          currency: string | null
+          id: string
+          proposal_id: string | null
+          sent_at: string | null
+          signed_at: string | null
+          signing_token: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+          viewed_at: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "contracts"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      public_get_contract_for_proposal: {
+        Args: { _proposal_id: string }
+        Returns: {
+          amount_cents: number | null
+          body: string
+          client_email: string | null
+          client_id: string | null
+          client_name: string
+          company_name: string | null
+          contract_type: string
+          countersigned_at: string | null
+          countersigner_name: string | null
+          created_at: string
+          currency: string | null
+          id: string
+          proposal_id: string | null
+          sent_at: string | null
+          signed_at: string | null
+          signing_token: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+          viewed_at: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "contracts"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      public_get_contract_signatures_by_token: {
+        Args: { _token: string }
+        Returns: {
+          contract_id: string
+          id: string
+          ip_address: string | null
+          method: string
+          signature_data: string
+          signed_at: string
+          signer_email: string | null
+          signer_name: string
+          signer_role: string
+          user_agent: string | null
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "contract_signatures"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      public_get_proposal_by_id: {
+        Args: { _id: string }
+        Returns: {
+          accepted_at: string | null
+          amount_cents: number | null
+          budget: string
+          client_id: string | null
+          client_name: string
+          client_paid: boolean
+          client_response_message: string | null
+          company_name: string
+          created_at: string
+          currency: string | null
+          id: string
+          invoice_content: string | null
+          notes: string | null
+          paddle_transaction_id: string | null
+          paid_at: string | null
+          pricing_breakdown: string | null
+          project_scope: string
+          proposal_content: string | null
+          rejected_at: string | null
+          sent_at: string | null
+          service_type: string
+          status: string
+          timeline: string
+          updated_at: string
+          user_id: string
+          viewed_at: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "proposals"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      public_get_retainer_by_token: {
+        Args: { _token: string }
+        Returns: {
+          access_token: string
+          amount_cents: number
+          auto_renew: boolean
+          billing_interval: string
+          cancel_at_period_end: boolean
+          cancelled_at: string | null
+          client_email: string | null
+          client_id: string | null
+          client_name: string
+          company_name: string | null
+          contract_id: string | null
+          created_at: string
+          currency: string
+          current_period_end: string | null
+          custom_interval_days: number | null
+          description: string | null
+          end_date: string | null
+          environment: string | null
+          failed_payment_at: string | null
+          failed_payment_reason: string | null
+          has_failed_payment: boolean
+          id: string
+          last_billed_date: string | null
+          last_recovery_email_at: string | null
+          last_renewal_email_at: string | null
+          next_billing_date: string | null
+          notes: string | null
+          paddle_customer_id: string | null
+          paddle_price_id: string | null
+          paddle_product_id: string | null
+          paddle_subscription_id: string | null
+          paused_at: string | null
+          payment_recovered_at: string | null
+          payment_retry_count: number
+          proposal_id: string | null
+          renewed_at: string | null
+          scheduled_change: Json | null
+          service_type: string | null
+          start_date: string
+          status: string
+          template_key: string | null
+          title: string
+          total_billed_cents: number
+          total_payments_count: number
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "retainers"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      public_get_retainer_token_for_proposal: {
+        Args: { _proposal_id: string }
+        Returns: {
+          access_token: string
+        }[]
+      }
       testimonial_request_get: { Args: { _token: string }; Returns: Json }
       testimonial_submit: {
         Args: {
