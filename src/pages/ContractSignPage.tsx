@@ -85,7 +85,7 @@ export default function ContractSignPage() {
         "public_get_contract_by_token" as never,
         { _token: token } as never,
       );
-      const data = Array.isArray(rows) ? rows[0] : null;
+      const data = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
       if (error || !data) {
         setNotFound(true);
         setLoading(false);
