@@ -81,11 +81,12 @@ export default function ContractSignPage() {
   useEffect(() => {
     if (!token) return;
     const load = async () => {
-      const { data, error } = await supabase
-        .from("contracts")
-        .select("*")
-        .eq("signing_token", token)
-        .maybeSingle();
+      const { data: rows, error } = (await supabase.rpc(
+        "public_get_contract_by_token" as never,
+        { _token: token } as never,
+      )) as { data: any; error: any };
+      const arr: any[] = Array.isArray(rows) ? rows : [];
+      const data = arr.length > 0 ? arr[0] : null;
       if (error || !data) {
         setNotFound(true);
         setLoading(false);
@@ -99,12 +100,9 @@ export default function ContractSignPage() {
       // If already signed, load existing signatures so they render inside the contract.
       if ((data as any).status === "signed" || (data as any).status === "executed") {
         supabase
-          .from("contract_signatures")
-          .select("id, signer_name, signer_email, method, signature_data, signed_at, signer_role")
-          .eq("contract_id", (data as any).id)
-          .order("signed_at", { ascending: true })
+          .rpc("public_get_contract_signatures_by_token" as never, { _token: token } as never)
           .then(({ data: sigs }) => {
-            if (sigs) setSignatures(sigs as any);
+            if (Array.isArray(sigs)) setSignatures(sigs as any);
           });
       }
 
@@ -127,24 +125,22 @@ export default function ContractSignPage() {
       // If this contract is tied to a proposal that also has a retainer, surface
       // the retainer subscribe link so the client can start their subscription.
       if ((data as any).proposal_id) {
-        supabase
-          .from("retainers")
-          .select("access_token")
-          .eq("proposal_id", (data as any).proposal_id)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle()
+        (supabase.rpc(
+          "public_get_retainer_token_for_proposal" as never,
+          { _proposal_id: (data as any).proposal_id } as never,
+        ) as unknown as Promise<{ data: any }>)
           .then(({ data: rt }) => {
-            if (rt) setRetainerToken((rt as any).access_token);
+            const row = Array.isArray(rt) && rt.length > 0 ? rt[0] : null;
+            if (row?.access_token) setRetainerToken(row.access_token);
           });
 
-        supabase
-          .from("proposals")
-          .select("client_paid")
-          .eq("id", (data as any).proposal_id)
-          .maybeSingle()
+        (supabase.rpc(
+          "public_get_proposal_by_id" as never,
+          { _id: (data as any).proposal_id } as never,
+        ) as unknown as Promise<{ data: any }>)
           .then(({ data: pr }) => {
-            if (pr) setProposalPaid(!!(pr as any).client_paid);
+            const row = Array.isArray(pr) && pr.length > 0 ? pr[0] : null;
+            if (row) setProposalPaid(!!row.client_paid);
           });
       }
 
@@ -290,12 +286,11 @@ export default function ContractSignPage() {
       if (error) throw error;
       setContract({ ...contract, status: "signed", signed_at: new Date().toISOString() });
       // Pull all signatures for this contract so they appear inline immediately.
-      const { data: sigs } = await supabase
-        .from("contract_signatures")
-        .select("id, signer_name, signer_email, method, signature_data, signed_at, signer_role")
-        .eq("contract_id", contract.id)
-        .order("signed_at", { ascending: true });
-      if (sigs) setSignatures(sigs as any);
+      const { data: sigs } = (await supabase.rpc(
+        "public_get_contract_signatures_by_token" as never,
+        { _token: contract.signing_token } as never,
+      )) as { data: any };
+      if (Array.isArray(sigs)) setSignatures(sigs as any);
       toast({ title: "Contract signed", description: "Thank you — your signature has been recorded. The provider will countersign shortly." });
 
       // Notify the contract owner so they can countersign.

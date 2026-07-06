@@ -39,13 +39,11 @@ export default function RetainerSubscribePage() {
 
   const load = async () => {
     if (!token) return;
-    const { data } = await supabase
-      .from("retainers")
-      .select(
-        "id, user_id, client_name, client_email, company_name, title, description, amount_cents, currency, billing_interval, custom_interval_days, status, start_date, next_billing_date, current_period_end, cancel_at_period_end, paddle_subscription_id",
-      )
-      .eq("access_token", token)
-      .maybeSingle();
+    const { data: rows } = (await supabase.rpc(
+      "public_get_retainer_by_token" as never,
+      { _token: token } as never,
+    )) as { data: any };
+    const data = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
     setRetainer(data as Retainer | null);
     setLoading(false);
   };

@@ -27,13 +27,11 @@ export default function RetainerRecoverPage() {
   useEffect(() => {
     if (!token) return;
     (async () => {
-      const { data } = await supabase
-        .from("retainers")
-        .select(
-          "user_id, client_name, title, has_failed_payment, failed_payment_reason, status, amount_cents, currency",
-        )
-        .eq("access_token", token)
-        .maybeSingle();
+      const { data: rows } = (await supabase.rpc(
+        "public_get_retainer_by_token" as never,
+        { _token: token } as never,
+      )) as { data: any };
+      const data = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
       setRetainer(data as RetainerLite | null);
       setLoading(false);
     })();
