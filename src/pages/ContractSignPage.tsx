@@ -81,11 +81,11 @@ export default function ContractSignPage() {
   useEffect(() => {
     if (!token) return;
     const load = async () => {
-      const { data, error } = await supabase
-        .from("contracts")
-        .select("*")
-        .eq("signing_token", token)
-        .maybeSingle();
+      const { data: rows, error } = await supabase.rpc(
+        "public_get_contract_by_token" as never,
+        { _token: token } as never,
+      );
+      const data = Array.isArray(rows) ? rows[0] : null;
       if (error || !data) {
         setNotFound(true);
         setLoading(false);
@@ -99,12 +99,9 @@ export default function ContractSignPage() {
       // If already signed, load existing signatures so they render inside the contract.
       if ((data as any).status === "signed" || (data as any).status === "executed") {
         supabase
-          .from("contract_signatures")
-          .select("id, signer_name, signer_email, method, signature_data, signed_at, signer_role")
-          .eq("contract_id", (data as any).id)
-          .order("signed_at", { ascending: true })
+          .rpc("public_get_contract_signatures_by_token" as never, { _token: token } as never)
           .then(({ data: sigs }) => {
-            if (sigs) setSignatures(sigs as any);
+            if (Array.isArray(sigs)) setSignatures(sigs as any);
           });
       }
 
