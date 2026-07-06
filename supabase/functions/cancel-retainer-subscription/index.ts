@@ -19,6 +19,28 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: cors });
   }
   try {
+    // Require a valid caller and verify they own the retainer BEFORE any mutation.
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: cors,
+      });
+    }
+    const token = authHeader.slice("Bearer ".length);
+    const authClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+    );
+    const { data: userData, error: userErr } = await authClient.auth.getUser(token);
+    if (userErr || !userData?.user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: cors,
+      });
+    }
+    const callerId = userData.user.id;
+
     const { retainerId, mode } = await req.json();
     if (!retainerId) {
       return new Response(JSON.stringify({ error: "retainerId required" }), {
@@ -29,11 +51,25 @@ Deno.serve(async (req) => {
 
     const { data: retainer, error } = await supabase
       .from("retainers")
-      .select("paddle_subscription_id, environment")
+      .select("user_id, paddle_subscription_id, environment")
       .eq("id", retainerId)
       .maybeSingle();
 
-    if (error || !retainer?.paddle_subscription_id) {
+    if (error || !retainer) {
+      return new Response(JSON.stringify({ error: "Not found" }), {
+        status: 404,
+        headers: cors,
+      });
+    }
+
+    if (retainer.user_id !== callerId) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: cors,
+      });
+    }
+
+    if (!retainer.paddle_subscription_id) {
       return new Response(JSON.stringify({ error: "No active subscription" }), {
         status: 400,
         headers: cors,
