@@ -178,10 +178,11 @@ export default function ClientPortal() {
       (supabase.rpc(
         "public_get_onboarding_by_proposal" as never,
         { _proposal_id: id } as never,
-      ) as unknown as Promise<{ data: any }>).catch(() => ({ data: null })).then(() => {});
-      // Fallback: filter proposal-scoped bookings RPC returns via new function
-      // We fetch the onboarding form (if any) using a proposal-scoped call.
-      // Since we didn't add that RPC, derive it from the bookings/proposal path below.
+      ) as unknown as Promise<{ data: any }>)
+        .then(({ data: rows }) => {
+          const ob = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+          if (ob) setOnboarding(ob as unknown as OnboardingFormRow);
+        });
 
       // Fetch bookings for this proposal
       (supabase.rpc(
