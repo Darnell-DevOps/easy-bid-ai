@@ -165,7 +165,7 @@ export default function PublicBookingPage() {
       linkMeetingUrl: link.meeting_url,
       bookingId,
     });
-    const { data: inserted, error } = await supabase.from("bookings").insert({
+    const { error } = await supabase.from("bookings").insert({
       id: bookingId,
       user_id: link.user_id,
       booking_link_id: link.id,
@@ -180,15 +180,22 @@ export default function PublicBookingPage() {
       meeting_url: meetingUrl || null,
       client_message: message.trim().slice(0, 1000) || null,
       status: "confirmed",
-    }).select("reschedule_token").maybeSingle();
+    });
     setSubmitting(false);
     if (error) {
       toast({ title: "Couldn't book", description: error.message, variant: "destructive" });
       return;
     }
 
-    const rescheduleUrl = inserted?.reschedule_token
-      ? `${window.location.origin}/reschedule/${inserted.reschedule_token}`
+    // Fetch the auto-generated reschedule_token via public RPC
+    const { data: tokRows } = (await supabase.rpc(
+      "public_get_booking_reschedule_token" as never,
+      { _booking_id: bookingId } as never,
+    )) as { data: any };
+    const rescheduleToken =
+      (Array.isArray(tokRows) && tokRows.length > 0 ? tokRows[0]?.reschedule_token : null) || null;
+    const rescheduleUrl = rescheduleToken
+      ? `${window.location.origin}/reschedule/${rescheduleToken}`
       : undefined;
 
     const locationDisplay = meetingUrl || locationLabel(link.location_type, link.custom_location);
