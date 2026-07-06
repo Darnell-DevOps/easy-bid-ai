@@ -286,12 +286,11 @@ export default function ContractSignPage() {
       if (error) throw error;
       setContract({ ...contract, status: "signed", signed_at: new Date().toISOString() });
       // Pull all signatures for this contract so they appear inline immediately.
-      const { data: sigs } = await supabase
-        .from("contract_signatures")
-        .select("id, signer_name, signer_email, method, signature_data, signed_at, signer_role")
-        .eq("contract_id", contract.id)
-        .order("signed_at", { ascending: true });
-      if (sigs) setSignatures(sigs as any);
+      const { data: sigs } = (await supabase.rpc(
+        "public_get_contract_signatures_by_token" as never,
+        { _token: contract.signing_token } as never,
+      )) as { data: any };
+      if (Array.isArray(sigs)) setSignatures(sigs as any);
       toast({ title: "Contract signed", description: "Thank you — your signature has been recorded. The provider will countersign shortly." });
 
       // Notify the contract owner so they can countersign.
