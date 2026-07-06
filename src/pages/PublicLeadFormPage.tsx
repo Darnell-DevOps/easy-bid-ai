@@ -46,14 +46,10 @@ export default function PublicLeadFormPage() {
   useEffect(() => {
     if (!slug) return;
     (async () => {
-      const { data } = await supabase
-        .from("lead_forms" as any)
-        .select("id, user_id, slug, title, description, fields, submit_label, success_message, redirect_url, is_active")
-        .eq("slug", slug)
-        .eq("is_active", true)
-        .maybeSingle();
-      if (!data) { setNotFound(true); setLoading(false); return; }
-      setForm(data as any);
+      const { data } = await supabase.rpc("public_get_lead_form_by_slug" as any, { _slug: slug });
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row) { setNotFound(true); setLoading(false); return; }
+      setForm(row as any);
       setLoading(false);
       supabase.rpc("lead_form_record_view" as any, {
         _slug: slug,
