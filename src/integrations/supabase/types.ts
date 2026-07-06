@@ -2439,6 +2439,8 @@ export type Database = {
           last_digest_sent_at: string | null
           last_inbound_at: string | null
           notify_digest: boolean
+          rate_window_count: number
+          rate_window_started_at: string | null
           slug: string
           updated_at: string
           user_id: string
@@ -2450,6 +2452,8 @@ export type Database = {
           last_digest_sent_at?: string | null
           last_inbound_at?: string | null
           notify_digest?: boolean
+          rate_window_count?: number
+          rate_window_started_at?: string | null
           slug?: string
           updated_at?: string
           user_id: string
@@ -2461,6 +2465,8 @@ export type Database = {
           last_digest_sent_at?: string | null
           last_inbound_at?: string | null
           notify_digest?: boolean
+          rate_window_count?: number
+          rate_window_started_at?: string | null
           slug?: string
           updated_at?: string
           user_id?: string
