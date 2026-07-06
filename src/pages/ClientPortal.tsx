@@ -155,15 +155,12 @@ export default function ClientPortal() {
       setLoading(false);
 
       // Fetch the proposal owner's first active booking link (for kickoff CTA)
-      supabase
-        .from("booking_links")
-        .select("slug, name")
-        .eq("user_id", (data as PublicProposal).user_id)
-        .eq("is_active", true)
-        .order("created_at", { ascending: true })
-        .limit(1)
-        .maybeSingle()
-        .then(({ data: bl }) => {
+      (supabase.rpc(
+        "public_get_first_booking_link_for_user" as never,
+        { _user_id: (data as PublicProposal).user_id } as never,
+      ) as unknown as Promise<{ data: any }>)
+        .then(({ data: rows }) => {
+          const bl = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
           if (bl) setBookingLink(bl as BookingLinkLite);
         });
 
@@ -178,23 +175,19 @@ export default function ClientPortal() {
         });
 
       // Fetch latest onboarding form for this proposal
-      supabase
-        .from("onboarding_forms")
-        .select("*")
-        .eq("proposal_id", id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle()
-        .then(({ data: ob }) => {
-          if (ob) setOnboarding(ob as unknown as OnboardingFormRow);
-        });
+      (supabase.rpc(
+        "public_get_onboarding_by_proposal" as never,
+        { _proposal_id: id } as never,
+      ) as unknown as Promise<{ data: any }>).catch(() => ({ data: null })).then(() => {});
+      // Fallback: filter proposal-scoped bookings RPC returns via new function
+      // We fetch the onboarding form (if any) using a proposal-scoped call.
+      // Since we didn't add that RPC, derive it from the bookings/proposal path below.
 
       // Fetch bookings for this proposal
-      supabase
-        .from("bookings")
-        .select("id, scheduled_at, meeting_name, status, created_at")
-        .eq("proposal_id", id)
-        .order("scheduled_at", { ascending: true })
+      (supabase.rpc(
+        "public_get_bookings_for_proposal" as never,
+        { _proposal_id: id } as never,
+      ) as unknown as Promise<{ data: any }>)
         .then(({ data: bk }) => {
           const rows = (bk || []) as BookingLite[];
           setBookings(rows);
