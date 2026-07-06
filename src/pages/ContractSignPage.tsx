@@ -81,11 +81,12 @@ export default function ContractSignPage() {
   useEffect(() => {
     if (!token) return;
     const load = async () => {
-      const { data: rows, error } = await supabase.rpc(
+      const { data: rows, error } = (await supabase.rpc(
         "public_get_contract_by_token" as never,
         { _token: token } as never,
-      );
-      const data = rows && Array.isArray(rows) && rows.length > 0 ? (rows as any[])[0] : null;
+      )) as { data: any; error: any };
+      const arr: any[] = Array.isArray(rows) ? rows : [];
+      const data = arr.length > 0 ? arr[0] : null;
       if (error || !data) {
         setNotFound(true);
         setLoading(false);
