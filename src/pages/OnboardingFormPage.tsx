@@ -53,11 +53,11 @@ export default function OnboardingFormPage() {
   useEffect(() => {
     if (!token) return;
     (async () => {
-      const { data, error } = await supabase
-        .from("onboarding_forms")
-        .select("*")
-        .eq("access_token", token)
-        .maybeSingle();
+      const { data: rows, error } = (await supabase.rpc(
+        "public_get_onboarding_by_token" as never,
+        { _token: token } as never,
+      )) as { data: any; error: any };
+      const data = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
       if (error || !data) {
         setNotFound(true);
         setLoading(false);
