@@ -2835,6 +2835,12 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      public_get_booking_reschedule_token: {
+        Args: { _booking_id: string }
+        Returns: {
+          reschedule_token: string
+        }[]
+      }
       public_get_bookings_for_proposal: {
         Args: { _proposal_id: string }
         Returns: {
