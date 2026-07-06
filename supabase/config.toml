@@ -4,7 +4,7 @@ project_id = "avtogztwdoemxuffnwyv"
   [functions.auth-email-hook]
     verify_jwt = false
   [functions.cancel-retainer-subscription]
-    verify_jwt = false
+    verify_jwt = true
   [functions.create-proposal-checkout]
     verify_jwt = false
   [functions.create-retainer-subscription]
