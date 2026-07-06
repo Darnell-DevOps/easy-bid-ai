@@ -168,14 +168,12 @@ export default function ClientPortal() {
         });
 
       // Fetch latest contract for this proposal
-      supabase
-        .from("contracts")
-        .select("id, title, status, signing_token, signed_at")
-        .eq("proposal_id", id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle()
-        .then(({ data: ct }) => {
+      (supabase.rpc(
+        "public_get_contract_for_proposal" as never,
+        { _proposal_id: id } as never,
+      ) as unknown as Promise<{ data: any }>)
+        .then(({ data: rows }) => {
+          const ct = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
           if (ct) setContract(ct as ContractLite);
         });
 
