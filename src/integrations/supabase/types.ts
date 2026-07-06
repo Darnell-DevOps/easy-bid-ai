@@ -2962,6 +2962,33 @@ export type Database = {
           slug: string
         }[]
       }
+      public_get_lead_form_by_slug: {
+        Args: { _slug: string }
+        Returns: {
+          brand: Json
+          created_at: string
+          description: string
+          fields: Json
+          id: string
+          is_active: boolean
+          name: string
+          redirect_url: string | null
+          slug: string
+          submission_count: number
+          submit_label: string
+          success_message: string
+          title: string
+          updated_at: string
+          user_id: string
+          view_count: number
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "lead_forms"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       public_get_onboarding_by_proposal: {
         Args: { _proposal_id: string }
         Returns: {
@@ -3117,6 +3144,58 @@ export type Database = {
         Returns: {
           access_token: string
         }[]
+      }
+      public_get_review_request_by_token: {
+        Args: { _token: string }
+        Returns: {
+          client_email: string | null
+          client_id: string | null
+          client_name: string
+          completed_at: string | null
+          contract_id: string | null
+          created_at: string
+          id: string
+          last_reminder_at: string | null
+          proposal_id: string | null
+          reminder_count: number
+          sent_at: string | null
+          source: string
+          status: string
+          testimonial_id: string | null
+          token: string
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "review_requests"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      public_get_verified_domain: {
+        Args: { _domain: string }
+        Returns: {
+          created_at: string
+          domain: string
+          id: string
+          is_primary: boolean
+          last_check_error: string | null
+          last_checked_at: string | null
+          updated_at: string
+          use_for_forms: boolean
+          use_for_portal: boolean
+          user_id: string
+          verification_token: string
+          verified: boolean
+          verified_at: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "custom_domains"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       testimonial_request_get: { Args: { _token: string }; Returns: Json }
       testimonial_submit: {
