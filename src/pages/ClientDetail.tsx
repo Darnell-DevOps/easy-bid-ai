@@ -1333,12 +1333,13 @@ export default function ClientDetail() {
                   </div>
                   <div className="md:col-span-2">
                     <Label>Timeline</Label>
-                    <Input
+                    <TimelineInput
                       value={edit.timeline || ""}
-                      onChange={(e) => setEdit({ ...edit, timeline: e.target.value })}
-                      className="mt-2"
+                      onChange={(v) => setEdit({ ...edit, timeline: v })}
+                      originalRaw={client.timeline}
                     />
                   </div>
+
                 </div>
                 <div>
                   <Label>Project Description</Label>
