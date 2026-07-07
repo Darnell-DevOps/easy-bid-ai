@@ -304,12 +304,26 @@ export default function OnboardingFormPage() {
           );
         })}
 
+        <div className="rounded-xl border border-border bg-card p-5">
+          <div className="flex items-start gap-2.5">
+            <Checkbox
+              id="confirm-accurate"
+              checked={confirmedAccurate}
+              onCheckedChange={(c) => setConfirmedAccurate(c === true)}
+              className="mt-0.5"
+            />
+            <label htmlFor="confirm-accurate" className="text-sm text-foreground/90 leading-relaxed cursor-pointer select-none">
+              I confirm the information provided is accurate and the project can begin.
+            </label>
+          </div>
+        </div>
+
         <div className="flex flex-col sm:flex-row gap-3 sticky bottom-3">
           <Button
             size="lg"
             onClick={() => handleSubmit(true)}
-            disabled={submitting}
-            className="flex-1 gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 h-12"
+            disabled={submitting || !confirmedAccurate}
+            className="flex-1 gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 h-12 disabled:opacity-50"
           >
             {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
             Submit onboarding
