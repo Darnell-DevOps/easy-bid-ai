@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_actions_log: {
+        Row: {
+          action_type: string
+          admin_user_id: string
+          created_at: string
+          details: Json
+          id: string
+          target_user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          admin_user_id: string
+          created_at?: string
+          details?: Json
+          id?: string
+          target_user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          admin_user_id?: string
+          created_at?: string
+          details?: Json
+          id?: string
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
       ai_insights: {
         Row: {
           action_url: string | null
@@ -2673,16 +2700,35 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_get_actions_log: {
+        Args: { _limit?: number }
+        Returns: {
+          action_type: string
+          admin_email: string
+          admin_user_id: string
+          created_at: string
+          details: Json
+          id: string
+          target_email: string
+          target_user_id: string
+        }[]
+      }
+      admin_is_super_admin_user: {
+        Args: { _target_user_id: string }
+        Returns: boolean
+      }
       admin_revenue_stats: { Args: never; Returns: Json }
       admin_usage_stats: { Args: never; Returns: Json }
       admin_user_list: {
         Args: { _limit?: number; _offset?: number; _search?: string }
         Returns: {
+          banned_until: string
           bookings_count: number
           clients_count: number
           contracts_signed: number
           created_at: string
           email: string
+          full_name: string
           last_active: string
           proposals_count: number
           retainers_active: number

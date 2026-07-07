@@ -13,8 +13,15 @@ import {
   BarChart, Bar,
 } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
-import { Shield, Users, DollarSign, Activity, RefreshCw } from "lucide-react";
+import { Shield, Users, DollarSign, Activity, RefreshCw, MoreHorizontal, History } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 type UserStats = {
   total_users: number;
@@ -36,9 +43,15 @@ type UsageStats = {
   emails_7d_sent: number; emails_7d_failed: number;
 };
 type UserRow = {
-  user_id: string; email: string; created_at: string; last_active: string;
+  user_id: string; email: string; full_name?: string | null; banned_until?: string | null;
+  created_at: string; last_active: string;
   clients_count: number; proposals_count: number; contracts_signed: number;
   bookings_count: number; retainers_active: number; revenue_cents: number;
+};
+type AdminLogRow = {
+  id: string; admin_user_id: string; admin_email: string | null;
+  target_user_id: string | null; target_email: string | null;
+  action_type: string; details: any; created_at: string;
 };
 type PaddleMetrics = {
   revenue: any; mrr: any; subscribers: any; window: { from: string; to: string };
@@ -52,6 +65,18 @@ const fmtDate = (iso: string) => {
   return new Date(iso).toLocaleDateString();
 };
 
+const fmtDateTime = (iso: string) => {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleString();
+};
+
+function isUserBanned(u: { banned_until?: string | null }): boolean {
+  if (!u.banned_until) return false;
+  const t = Date.parse(u.banned_until);
+  if (Number.isNaN(t)) return false;
+  return t > Date.now();
+}
+
 export default function AdminDashboard() {
   const { toast } = useToast();
   const [userStats, setUserStats] = useState<UserStats | null>(null);
@@ -62,6 +87,115 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [search, setSearch] = useState("");
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [actionsLog, setActionsLog] = useState<AdminLogRow[]>([]);
+  const [loadingLog, setLoadingLog] = useState(false);
+
+  const [editUser, setEditUser] = useState<UserRow | null>(null);
+  const [editEmail, setEditEmail] = useState("");
+  const [editFullName, setEditFullName] = useState("");
+  const [editBusinessName, setEditBusinessName] = useState("");
+  const [editBusy, setEditBusy] = useState(false);
+
+  const [deleteUser, setDeleteUser] = useState<UserRow | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleteBusy, setDeleteBusy] = useState(false);
+
+  const [rowBusy, setRowBusy] = useState<string | null>(null);
+
+  const loadLog = async () => {
+    setLoadingLog(true);
+    const { data, error } = await supabase.rpc("admin_get_actions_log", { _limit: 100 });
+    setLoadingLog(false);
+    if (error) {
+      toast({ title: "Failed to load admin log", description: error.message, variant: "destructive" });
+      return;
+    }
+    setActionsLog((data as AdminLogRow[]) ?? []);
+  };
+
+  const invokeManage = async (payload: Record<string, unknown>) => {
+    return supabase.functions.invoke("admin-manage-user", { body: payload });
+  };
+
+  const openEdit = (u: UserRow) => {
+    setEditUser(u);
+    setEditEmail(u.email ?? "");
+    setEditFullName(u.full_name ?? "");
+    setEditBusinessName("");
+  };
+
+  const submitEdit = async () => {
+    if (!editUser) return;
+    setEditBusy(true);
+    const { error } = await invokeManage({
+      action: "update_profile",
+      target_user_id: editUser.user_id,
+      email: editEmail !== editUser.email ? editEmail : undefined,
+      full_name: editFullName,
+      business_name: editBusinessName || undefined,
+    });
+    setEditBusy(false);
+    if (error) {
+      toast({ title: "Update failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "User updated" });
+    setEditUser(null);
+    loadUsers(search);
+    loadLog();
+  };
+
+  const sendReset = async (u: UserRow) => {
+    setRowBusy(u.user_id);
+    const { error } = await invokeManage({
+      action: "reset_password",
+      target_user_id: u.user_id,
+      redirect_to: `${window.location.origin}/reset-password`,
+    });
+    setRowBusy(null);
+    if (error) {
+      toast({ title: "Reset failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Password reset sent", description: `Email sent to ${u.email}` });
+    loadLog();
+  };
+
+  const toggleSuspend = async (u: UserRow) => {
+    const isBanned = isUserBanned(u);
+    setRowBusy(u.user_id);
+    const { error } = await invokeManage({
+      action: isBanned ? "reactivate" : "suspend",
+      target_user_id: u.user_id,
+    });
+    setRowBusy(null);
+    if (error) {
+      toast({ title: "Action failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: isBanned ? "User reactivated" : "User suspended" });
+    loadUsers(search);
+    loadLog();
+  };
+
+  const submitDelete = async () => {
+    if (!deleteUser) return;
+    setDeleteBusy(true);
+    const { error } = await invokeManage({
+      action: "delete",
+      target_user_id: deleteUser.user_id,
+    });
+    setDeleteBusy(false);
+    if (error) {
+      toast({ title: "Delete failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "User deleted" });
+    setDeleteUser(null);
+    setDeleteConfirm("");
+    loadUsers(search);
+    loadLog();
+  };
 
   const loadAll = async () => {
     const [u, r, g] = await Promise.all([
@@ -102,6 +236,7 @@ export default function AdminDashboard() {
     loadAll();
     loadUsers();
     loadPaddle();
+    loadLog();
   }, []);
 
   const signupChart = useMemo(
@@ -133,7 +268,7 @@ export default function AdminDashboard() {
             </h1>
             <p className="text-sm text-muted-foreground mt-1">Platform-wide stats. Only visible to super admins.</p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => { loadAll(); loadPaddle(); loadUsers(search); }}>
+          <Button variant="outline" size="sm" onClick={() => { loadAll(); loadPaddle(); loadUsers(search); loadLog(); }}>
             <RefreshCw className="w-4 h-4 mr-2" /> Refresh
           </Button>
         </div>
@@ -281,28 +416,104 @@ export default function AdminDashboard() {
                       <TableHead className="text-right">Bookings</TableHead>
                       <TableHead className="text-right">Retainers</TableHead>
                       <TableHead className="text-right">Revenue</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {loadingUsers && (
-                      <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">Loading…</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">Loading…</TableCell></TableRow>
                     )}
                     {!loadingUsers && users.length === 0 && (
-                      <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">No users found</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">No users found</TableCell></TableRow>
                     )}
-                    {!loadingUsers && users.map(u => (
-                      <TableRow key={u.user_id}>
-                        <TableCell className="font-mono text-xs">{u.email}</TableCell>
-                        <TableCell className="text-sm">{fmtDate(u.created_at)}</TableCell>
-                        <TableCell className="text-sm">{fmtDate(u.last_active)}</TableCell>
-                        <TableCell className="text-right">{u.clients_count}</TableCell>
-                        <TableCell className="text-right">{u.proposals_count}</TableCell>
-                        <TableCell className="text-right">{u.contracts_signed}</TableCell>
-                        <TableCell className="text-right">{u.bookings_count}</TableCell>
-                        <TableCell className="text-right">
-                          {u.retainers_active > 0 ? <Badge variant="secondary">{u.retainers_active}</Badge> : 0}
+                    {!loadingUsers && users.map(u => {
+                      const banned = isUserBanned(u);
+                      return (
+                        <TableRow key={u.user_id}>
+                          <TableCell className="font-mono text-xs">
+                            <div className="flex items-center gap-2">
+                              <span>{u.email}</span>
+                              {banned && <Badge variant="destructive" className="text-[10px]">suspended</Badge>}
+                            </div>
+                            {u.full_name && <div className="text-[11px] text-muted-foreground">{u.full_name}</div>}
+                          </TableCell>
+                          <TableCell className="text-sm">{fmtDate(u.created_at)}</TableCell>
+                          <TableCell className="text-sm">{fmtDate(u.last_active)}</TableCell>
+                          <TableCell className="text-right">{u.clients_count}</TableCell>
+                          <TableCell className="text-right">{u.proposals_count}</TableCell>
+                          <TableCell className="text-right">{u.contracts_signed}</TableCell>
+                          <TableCell className="text-right">{u.bookings_count}</TableCell>
+                          <TableCell className="text-right">
+                            {u.retainers_active > 0 ? <Badge variant="secondary">{u.retainers_active}</Badge> : 0}
+                          </TableCell>
+                          <TableCell className="text-right font-medium">{fmtMoney(u.revenue_cents)}</TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" disabled={rowBusy === u.user_id}>
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => openEdit(u)}>Edit details</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => sendReset(u)}>Send password reset</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => toggleSuspend(u)}>
+                                  {banned ? "Reactivate" : "Suspend"}
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() => { setDeleteUser(u); setDeleteConfirm(""); }}
+                                >
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Recent admin activity */}
+        <section>
+          <h2 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+            <History className="w-4 h-4" /> Recent admin activity
+          </h2>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>When</TableHead>
+                      <TableHead>Admin</TableHead>
+                      <TableHead>Action</TableHead>
+                      <TableHead>Target</TableHead>
+                      <TableHead>Details</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {loadingLog && (
+                      <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Loading…</TableCell></TableRow>
+                    )}
+                    {!loadingLog && actionsLog.length === 0 && (
+                      <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No admin activity yet</TableCell></TableRow>
+                    )}
+                    {!loadingLog && actionsLog.map(l => (
+                      <TableRow key={l.id}>
+                        <TableCell className="text-xs">{fmtDateTime(l.created_at)}</TableCell>
+                        <TableCell className="text-xs font-mono">{l.admin_email ?? l.admin_user_id.slice(0, 8)}</TableCell>
+                        <TableCell><Badge variant="outline">{l.action_type}</Badge></TableCell>
+                        <TableCell className="text-xs font-mono">{l.target_email ?? l.target_user_id?.slice(0, 8) ?? "—"}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground max-w-md truncate">
+                          {l.details ? JSON.stringify(l.details) : "—"}
                         </TableCell>
-                        <TableCell className="text-right font-medium">{fmtMoney(u.revenue_cents)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -312,6 +523,65 @@ export default function AdminDashboard() {
           </Card>
         </section>
       </div>
+
+      {/* Edit user dialog */}
+      <Dialog open={!!editUser} onOpenChange={(o) => !o && setEditUser(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit user</DialogTitle>
+            <DialogDescription>Update the user's account details. Leave business name blank to skip.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label>Email</Label>
+              <Input value={editEmail} onChange={(e) => setEditEmail(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Full name</Label>
+              <Input value={editFullName} onChange={(e) => setEditFullName(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Business name (optional)</Label>
+              <Input value={editBusinessName} onChange={(e) => setEditBusinessName(e.target.value)} placeholder="Leave blank to skip" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEditUser(null)} disabled={editBusy}>Cancel</Button>
+            <Button onClick={submitEdit} disabled={editBusy}>{editBusy ? "Saving…" : "Save changes"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete user dialog */}
+      <Dialog open={!!deleteUser} onOpenChange={(o) => { if (!o) { setDeleteUser(null); setDeleteConfirm(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-destructive">Delete user</DialogTitle>
+            <DialogDescription>
+              This permanently deletes <span className="font-mono">{deleteUser?.email}</span> and their auth account. Type the email below to confirm.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1.5">
+            <Label>Type email to confirm</Label>
+            <Input
+              value={deleteConfirm}
+              onChange={(e) => setDeleteConfirm(e.target.value)}
+              placeholder={deleteUser?.email ?? ""}
+              autoComplete="off"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => { setDeleteUser(null); setDeleteConfirm(""); }} disabled={deleteBusy}>Cancel</Button>
+            <Button
+              variant="destructive"
+              onClick={submitDelete}
+              disabled={deleteBusy || !deleteUser || deleteConfirm.trim() !== (deleteUser?.email ?? "").trim()}
+            >
+              {deleteBusy ? "Deleting…" : "Delete permanently"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
