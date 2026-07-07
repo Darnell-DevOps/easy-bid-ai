@@ -225,10 +225,12 @@ async function callAI(systemPrompt: string, userPrompt: string) {
     },
     body: JSON.stringify({
       model: "google/gemini-3-flash-preview",
+      temperature: 0.9,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
+
     }),
   });
 
