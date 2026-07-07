@@ -548,6 +548,15 @@ export default function ClientPortal() {
 
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 lg:py-10 space-y-6 lg:space-y-8">
+        {paymentConfirmMsg && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="rounded-lg border border-accent/40 bg-accent/10 px-4 py-3 text-sm text-foreground/90"
+          >
+            {paymentConfirmMsg}
+          </div>
+        )}
         {/* Project Overview */}
         {!isRejected && (
           <>
