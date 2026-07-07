@@ -416,28 +416,104 @@ export default function AdminDashboard() {
                       <TableHead className="text-right">Bookings</TableHead>
                       <TableHead className="text-right">Retainers</TableHead>
                       <TableHead className="text-right">Revenue</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {loadingUsers && (
-                      <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">Loading…</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">Loading…</TableCell></TableRow>
                     )}
                     {!loadingUsers && users.length === 0 && (
-                      <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">No users found</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">No users found</TableCell></TableRow>
                     )}
-                    {!loadingUsers && users.map(u => (
-                      <TableRow key={u.user_id}>
-                        <TableCell className="font-mono text-xs">{u.email}</TableCell>
-                        <TableCell className="text-sm">{fmtDate(u.created_at)}</TableCell>
-                        <TableCell className="text-sm">{fmtDate(u.last_active)}</TableCell>
-                        <TableCell className="text-right">{u.clients_count}</TableCell>
-                        <TableCell className="text-right">{u.proposals_count}</TableCell>
-                        <TableCell className="text-right">{u.contracts_signed}</TableCell>
-                        <TableCell className="text-right">{u.bookings_count}</TableCell>
-                        <TableCell className="text-right">
-                          {u.retainers_active > 0 ? <Badge variant="secondary">{u.retainers_active}</Badge> : 0}
+                    {!loadingUsers && users.map(u => {
+                      const banned = isUserBanned(u);
+                      return (
+                        <TableRow key={u.user_id}>
+                          <TableCell className="font-mono text-xs">
+                            <div className="flex items-center gap-2">
+                              <span>{u.email}</span>
+                              {banned && <Badge variant="destructive" className="text-[10px]">suspended</Badge>}
+                            </div>
+                            {u.full_name && <div className="text-[11px] text-muted-foreground">{u.full_name}</div>}
+                          </TableCell>
+                          <TableCell className="text-sm">{fmtDate(u.created_at)}</TableCell>
+                          <TableCell className="text-sm">{fmtDate(u.last_active)}</TableCell>
+                          <TableCell className="text-right">{u.clients_count}</TableCell>
+                          <TableCell className="text-right">{u.proposals_count}</TableCell>
+                          <TableCell className="text-right">{u.contracts_signed}</TableCell>
+                          <TableCell className="text-right">{u.bookings_count}</TableCell>
+                          <TableCell className="text-right">
+                            {u.retainers_active > 0 ? <Badge variant="secondary">{u.retainers_active}</Badge> : 0}
+                          </TableCell>
+                          <TableCell className="text-right font-medium">{fmtMoney(u.revenue_cents)}</TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" disabled={rowBusy === u.user_id}>
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => openEdit(u)}>Edit details</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => sendReset(u)}>Send password reset</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => toggleSuspend(u)}>
+                                  {banned ? "Reactivate" : "Suspend"}
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() => { setDeleteUser(u); setDeleteConfirm(""); }}
+                                >
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Recent admin activity */}
+        <section>
+          <h2 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+            <History className="w-4 h-4" /> Recent admin activity
+          </h2>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>When</TableHead>
+                      <TableHead>Admin</TableHead>
+                      <TableHead>Action</TableHead>
+                      <TableHead>Target</TableHead>
+                      <TableHead>Details</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {loadingLog && (
+                      <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Loading…</TableCell></TableRow>
+                    )}
+                    {!loadingLog && actionsLog.length === 0 && (
+                      <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No admin activity yet</TableCell></TableRow>
+                    )}
+                    {!loadingLog && actionsLog.map(l => (
+                      <TableRow key={l.id}>
+                        <TableCell className="text-xs">{fmtDateTime(l.created_at)}</TableCell>
+                        <TableCell className="text-xs font-mono">{l.admin_email ?? l.admin_user_id.slice(0, 8)}</TableCell>
+                        <TableCell><Badge variant="outline">{l.action_type}</Badge></TableCell>
+                        <TableCell className="text-xs font-mono">{l.target_email ?? l.target_user_id?.slice(0, 8) ?? "—"}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground max-w-md truncate">
+                          {l.details ? JSON.stringify(l.details) : "—"}
                         </TableCell>
-                        <TableCell className="text-right font-medium">{fmtMoney(u.revenue_cents)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -447,6 +523,65 @@ export default function AdminDashboard() {
           </Card>
         </section>
       </div>
+
+      {/* Edit user dialog */}
+      <Dialog open={!!editUser} onOpenChange={(o) => !o && setEditUser(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit user</DialogTitle>
+            <DialogDescription>Update the user's account details. Leave business name blank to skip.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label>Email</Label>
+              <Input value={editEmail} onChange={(e) => setEditEmail(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Full name</Label>
+              <Input value={editFullName} onChange={(e) => setEditFullName(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Business name (optional)</Label>
+              <Input value={editBusinessName} onChange={(e) => setEditBusinessName(e.target.value)} placeholder="Leave blank to skip" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEditUser(null)} disabled={editBusy}>Cancel</Button>
+            <Button onClick={submitEdit} disabled={editBusy}>{editBusy ? "Saving…" : "Save changes"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete user dialog */}
+      <Dialog open={!!deleteUser} onOpenChange={(o) => { if (!o) { setDeleteUser(null); setDeleteConfirm(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-destructive">Delete user</DialogTitle>
+            <DialogDescription>
+              This permanently deletes <span className="font-mono">{deleteUser?.email}</span> and their auth account. Type the email below to confirm.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1.5">
+            <Label>Type email to confirm</Label>
+            <Input
+              value={deleteConfirm}
+              onChange={(e) => setDeleteConfirm(e.target.value)}
+              placeholder={deleteUser?.email ?? ""}
+              autoComplete="off"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => { setDeleteUser(null); setDeleteConfirm(""); }} disabled={deleteBusy}>Cancel</Button>
+            <Button
+              variant="destructive"
+              onClick={submitDelete}
+              disabled={deleteBusy || !deleteUser || deleteConfirm.trim() !== (deleteUser?.email ?? "").trim()}
+            >
+              {deleteBusy ? "Deleting…" : "Delete permanently"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
