@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
+import { TimelineInput } from "@/components/TimelineInput";
 import { Skeleton } from "@/components/ui/skeleton";
 import { contractTypeLabel, contractStatusLabel } from "@/lib/contracts";
 import { formatMoney, intervalLabel, statusBadgeClasses as retainerStatusBadge } from "@/lib/retainers";
