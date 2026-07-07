@@ -1,9 +1,59 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+// Plan proposal-per-month limits. MUST be kept in sync with src/lib/plans.ts
+// (free=2, starter=10, pro=unlimited) until plan limits are unified in one place.
+const PLAN_MONTHLY_PROPOSAL_LIMIT: Record<string, number | "unlimited"> = {
+  free: 2,
+  starter: 10,
+  pro: "unlimited",
+};
+
+async function enforcePlanLimit(req: Request): Promise<Response | null> {
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const token = authHeader.replace(/^Bearer\s+/i, "");
+  if (!token) {
+    return new Response(JSON.stringify({ error: "Not authenticated" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+  const { data: userData } = await supabase.auth.getUser(token);
+  const user = userData?.user;
+  if (!user) {
+    return new Response(JSON.stringify({ error: "Not authenticated" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const { data: sub } = await supabase
+    .from("subscriptions").select("plan").eq("user_id", user.id).maybeSingle();
+  const plan = (sub?.plan as string) ?? "pro";
+  const limit = PLAN_MONTHLY_PROPOSAL_LIMIT[plan] ?? "unlimited";
+  if (limit === "unlimited") return null;
+
+  const monthStart = new Date();
+  monthStart.setUTCDate(1);
+  monthStart.setUTCHours(0, 0, 0, 0);
+  const { count } = await supabase
+    .from("proposals")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .gte("created_at", monthStart.toISOString());
+  if ((count ?? 0) >= (limit as number)) {
+    return new Response(JSON.stringify({
+      error: `You've reached your ${plan} plan limit of ${limit} proposals this month. Upgrade to keep generating.`,
+    }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+  return null;
+}
 
 const SECTION_HEADINGS = [
   "What You'll Get",
@@ -225,6 +275,9 @@ serve(async (req) => {
     }
 
     // Full proposal generation (preserves original API contract)
+    const limitResponse = await enforcePlanLimit(req);
+    if (limitResponse) return limitResponse;
+
     const content = await callAI(buildSystemPrompt(), buildFullPrompt(payload));
 
     let parsed;
