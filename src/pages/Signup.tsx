@@ -9,6 +9,18 @@ import { useToast } from "@/hooks/use-toast";
 import { track } from "@/lib/landing-analytics";
 import { sendEmail } from "@/lib/email";
 
+function getPasswordStrength(password: string) {
+  const length = password.length;
+  const hasLetters = /[a-zA-Z]/.test(password);
+  const hasNumbers = /\d/.test(password);
+  const hasSymbols = /[^a-zA-Z0-9]/.test(password);
+
+  if (length < 8) return "Weak";
+  if (length >= 12 && hasLetters && hasNumbers && hasSymbols) return "Strong";
+  if (length >= 8 && hasLetters && (hasNumbers || hasSymbols)) return "Good";
+  return "Weak";
+}
+
 export default function Signup() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -16,6 +28,7 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const passwordStrength = getPasswordStrength(password);
   const navigate = useNavigate();
   const { toast } = useToast();
 
