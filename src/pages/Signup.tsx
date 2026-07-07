@@ -140,7 +140,7 @@ export default function Signup() {
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Enter password"
                       required
-                      minLength={6}
+                      minLength={8}
                       className="pr-10"
                     />
                     <button
@@ -152,6 +152,33 @@ export default function Signup() {
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
+                  <p className="text-xs text-muted-foreground mt-1.5">At least 8 characters</p>
+                  {password.length > 0 && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-200 ${
+                            passwordStrength === "Strong"
+                              ? "w-full bg-emerald-500"
+                              : passwordStrength === "Good"
+                                ? "w-2/3 bg-amber-500"
+                                : "w-1/3 bg-rose-500"
+                          }`}
+                        />
+                      </div>
+                      <span
+                        className={`text-xs font-medium ${
+                          passwordStrength === "Strong"
+                            ? "text-emerald-500"
+                            : passwordStrength === "Good"
+                              ? "text-amber-500"
+                              : "text-rose-500"
+                        }`}
+                      >
+                        {passwordStrength}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <p className="text-xs text-muted-foreground leading-relaxed">
