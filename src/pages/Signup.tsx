@@ -49,6 +49,12 @@ export default function Signup() {
     setLoading(false);
     if (error) {
       toast({ title: "Signup failed", description: error.message, variant: "destructive" });
+    } else if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      toast({
+        title: "Account already exists",
+        description: "An account with this email already exists. Try logging in instead.",
+      });
+      navigate("/login");
     } else {
       track("signup_submit_success");
       const userId = data.user?.id;
