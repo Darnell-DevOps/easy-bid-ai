@@ -187,18 +187,31 @@ QUALITY CHECKLIST:
 Return ONLY the JSON object. No markdown code fences. No extra text.`;
 }
 
+function extractSection(fullMarkdown: string, sectionTitle: string): string {
+  if (!fullMarkdown) return "";
+  const escaped = sectionTitle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp(`##\\s+${escaped}\\s*\\n([\\s\\S]*?)(?=\\n##\\s|$)`, "i");
+  const m = fullMarkdown.match(re);
+  return m ? m[0].trim() : "";
+}
+
 function buildSectionPrompt(p: any, section: string) {
   const tone = toneInstruction(p.tone);
+  const currentSectionText = extractSection(p.existing_proposal || "", section);
+  const previousBlock = currentSectionText
+    ? `PREVIOUS VERSION OF THIS SECTION (this is a regeneration request — produce a genuinely different take: new opening line, different structure or ordering of points, different specific phrasing and word choice — do not restate this almost verbatim, but keep it factually consistent with the client details):\n${currentSectionText}\n\n`
+    : "";
   return `Rewrite ONLY the "${section}" section of a proposal for this project. Keep it consistent with the rest of the proposal.
 
 CLIENT DETAILS:
 ${buildClientContext(p)}
 
-EXISTING PROPOSAL CONTEXT (for reference — do NOT rewrite anything other than the "${section}" section):
+${previousBlock}EXISTING PROPOSAL CONTEXT (for reference — do NOT rewrite anything other than the "${section}" section):
 ${(p.existing_proposal || "").slice(0, 4000)}
 
 ${tone ? tone + "\n\n" : ""}Return valid JSON with a single key "section" whose value is the new Markdown for the "${section}" section, starting with "## ${section}" as the heading. No other sections. No code fences. No commentary.`;
 }
+
 
 async function callAI(systemPrompt: string, userPrompt: string) {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
