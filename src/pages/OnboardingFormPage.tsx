@@ -95,6 +95,19 @@ export default function OnboardingFormPage() {
       setForm(row);
       setResponses(hydrate(row.responses));
       setLoading(false);
+
+      if (row.proposal_id) {
+        try {
+          const { data: pRows } = (await supabase.rpc(
+            "public_get_proposal_by_id" as never,
+            { _id: row.proposal_id } as never,
+          )) as { data: any };
+          const p = Array.isArray(pRows) && pRows.length > 0 ? pRows[0] : null;
+          if (p) setProposalSummary(p as ProposalSummary);
+        } catch {
+          // Silently skip — summary card is best-effort.
+        }
+      }
     })();
   }, [token]);
 
