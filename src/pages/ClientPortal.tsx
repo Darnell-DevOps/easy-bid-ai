@@ -417,7 +417,13 @@ export default function ClientPortal() {
         description: "Look through the details below, then accept to receive your contract.",
         icon: FileCheck,
         ctaLabel: "Review proposal",
-        onClick: () => document.getElementById("accept-section")?.scrollIntoView({ behavior: "smooth", block: "start" }),
+        onClick: () => {
+          const el = document.getElementById("proposal-section");
+          if (el && el.tagName === "DETAILS") {
+            (el as HTMLDetailsElement).open = true;
+          }
+          el?.scrollIntoView({ behavior: "smooth", block: "start" });
+        },
       };
     } else if (stage === "contract" && contract) {
       nextAction = {
@@ -513,7 +519,7 @@ export default function ClientPortal() {
         )}
 
         {/* Proposal — collapsible (click to view, like the contract card) */}
-        <details className="group rounded-xl border border-purple/30 bg-gradient-to-br from-purple/5 via-card to-accent/5 p-6 lg:p-8 [&_summary::-webkit-details-marker]:hidden">
+        <details id="proposal-section" className="group rounded-xl border border-purple/30 bg-gradient-to-br from-purple/5 via-card to-accent/5 p-6 lg:p-8 scroll-mt-24 [&_summary::-webkit-details-marker]:hidden">
           <summary className="flex items-start gap-4 cursor-pointer list-none">
             <div className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 bg-purple/15 text-purple">
               <FileText className="w-5 h-5" />
