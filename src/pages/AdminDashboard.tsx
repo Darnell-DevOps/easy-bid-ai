@@ -224,6 +224,7 @@ export default function AdminDashboard() {
     loadAll();
     loadUsers();
     loadPaddle();
+    loadLog();
   }, []);
 
   const signupChart = useMemo(
