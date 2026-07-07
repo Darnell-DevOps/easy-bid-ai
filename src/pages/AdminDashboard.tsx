@@ -13,8 +13,15 @@ import {
   BarChart, Bar,
 } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
-import { Shield, Users, DollarSign, Activity, RefreshCw } from "lucide-react";
+import { Shield, Users, DollarSign, Activity, RefreshCw, MoreHorizontal, History } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 type UserStats = {
   total_users: number;
