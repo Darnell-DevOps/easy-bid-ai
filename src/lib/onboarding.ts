@@ -45,7 +45,7 @@ const BASE_FIELDS: OnboardingField[] = [
   { id: "brand_preferences", label: "Brand preferences", type: "long_text", placeholder: "Tone, vibe, colours, fonts you love", group: "Brand" },
   { id: "important_links", label: "Important links", type: "long_text", placeholder: "Website, socials, references — one per line", group: "Resources" },
   { id: "assets_required", label: "Assets you'll provide", type: "long_text", placeholder: "Logos, photos, copy, videos…", group: "Resources" },
-  { id: "login_access", label: "Login / access details (optional)", type: "long_text", placeholder: "Share securely if needed", group: "Resources" },
+  { id: "login_access", label: "How can we get access?", type: "long_text", placeholder: "e.g. invite us as a collaborator/admin on your platform, or let us know how you'd like to share access — please don't type passwords here.", group: "Resources" },
   { id: "extra_notes", label: "Anything else we should know?", type: "long_text", group: "Notes" },
 ];
 
