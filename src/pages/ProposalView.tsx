@@ -136,7 +136,7 @@ export default function ProposalView() {
     setRegenerating(key);
     try {
       const { data, error } = await supabase.functions.invoke("generate-proposal", {
-        body: { ...source, tone },
+        body: { ...source, tone, proposal_id: id },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
