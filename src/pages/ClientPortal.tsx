@@ -135,6 +135,54 @@ export default function ClientPortal() {
   const [hasBooking, setHasBooking] = useState(false);
   const [bookings, setBookings] = useState<BookingLite[]>([]);
   const { openCheckout, loading: payLoading, available: paymentsAvailable } = useProposalCheckout();
+  const [paymentConfirmMsg, setPaymentConfirmMsg] = useState<string | null>(null);
+
+  // Safety net: when Paddle hard-redirects back with ?paid=1, poll for the
+  // webhook to flip client_paid before trusting the initial fetch.
+  useEffect(() => {
+    if (!id) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("paid") !== "1") return;
+    // Clean the URL so a later manual refresh doesn't re-trigger polling.
+    window.history.replaceState({}, document.title, window.location.pathname);
+
+    let cancelled = false;
+    let attempts = 0;
+    const maxAttempts = 8;
+    setPaymentConfirmMsg("Confirming your payment… this usually takes a few seconds.");
+
+    const poll = async () => {
+      if (cancelled) return;
+      try {
+        const { data: rows } = (await supabase.rpc(
+          "public_get_proposal_by_id" as never,
+          { _id: id } as never,
+        )) as { data: any };
+        if (cancelled) return;
+        const data = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+        if (data?.client_paid) {
+          setProposal(data as PublicProposal);
+          setPaymentConfirmMsg(null);
+          return;
+        }
+      } catch {
+        // ignore, keep polling
+      }
+      attempts++;
+      if (attempts >= maxAttempts) {
+        setPaymentConfirmMsg(
+          "Payment received — we're just confirming it on our end. This can take a minute; refresh this page shortly if it doesn't update automatically.",
+        );
+        return;
+      }
+      setTimeout(poll, 1500);
+    };
+    setTimeout(poll, 1500);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
 
   useEffect(() => {
     if (!id) return;
