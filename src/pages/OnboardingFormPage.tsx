@@ -3,7 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Loader2, CheckCircle2, ClipboardList, Sparkles, ArrowRight } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2, CheckCircle2, ClipboardList, Sparkles, ArrowRight, Briefcase } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   groupFields,
@@ -14,6 +15,31 @@ import { isFieldVisible, type FieldResponses } from "@/lib/form-fields";
 import SmartFieldRenderer from "@/components/forms/SmartFieldRenderer";
 import OnboardingProgressTracker from "@/components/onboarding/OnboardingProgressTracker";
 import DynamicFavicon from "@/components/branding/DynamicFavicon";
+
+const CURRENCY_SYMBOL: Record<string, string> = {
+  GBP: "£", USD: "$", EUR: "€", CAD: "C$", AUD: "A$",
+};
+
+function formatAmount(cents: number | null | undefined, currency: string | null | undefined) {
+  if (!cents) return null;
+  const cur = (currency || "USD").toUpperCase();
+  const symbol = CURRENCY_SYMBOL[cur] || "";
+  const value = (cents / 100).toLocaleString(undefined, {
+    minimumFractionDigits: cents % 100 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  });
+  return `${symbol}${value}`;
+}
+
+interface ProposalSummary {
+  service_type?: string | null;
+  client_name?: string | null;
+  company_name?: string | null;
+  amount_cents?: number | null;
+  currency?: string | null;
+  budget?: string | null;
+  timeline?: string | null;
+}
 
 function hydrate(raw: Record<string, string> | undefined): FieldResponses {
   const out: FieldResponses = {};
@@ -49,6 +75,8 @@ export default function OnboardingFormPage() {
   const [notFound, setNotFound] = useState(false);
   const [responses, setResponses] = useState<FieldResponses>({});
   const [submitting, setSubmitting] = useState(false);
+  const [confirmedAccurate, setConfirmedAccurate] = useState(false);
+  const [proposalSummary, setProposalSummary] = useState<ProposalSummary | null>(null);
 
   useEffect(() => {
     if (!token) return;
@@ -67,6 +95,19 @@ export default function OnboardingFormPage() {
       setForm(row);
       setResponses(hydrate(row.responses));
       setLoading(false);
+
+      if (row.proposal_id) {
+        try {
+          const { data: pRows } = (await supabase.rpc(
+            "public_get_proposal_by_id" as never,
+            { _id: row.proposal_id } as never,
+          )) as { data: any };
+          const p = Array.isArray(pRows) && pRows.length > 0 ? pRows[0] : null;
+          if (p) setProposalSummary(p as ProposalSummary);
+        } catch {
+          // Silently skip — summary card is best-effort.
+        }
+      }
     })();
   }, [token]);
 
@@ -179,6 +220,43 @@ export default function OnboardingFormPage() {
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 lg:py-10 space-y-6">
         <OnboardingProgressTracker currentStage="onboarding" />
 
+        {proposalSummary && (() => {
+          const money =
+            formatAmount(proposalSummary.amount_cents ?? null, proposalSummary.currency ?? null) ||
+            proposalSummary.budget ||
+            null;
+          const rows: { label: string; value: string }[] = [];
+          if (proposalSummary.service_type) rows.push({ label: "Project", value: proposalSummary.service_type });
+          const client = proposalSummary.company_name || proposalSummary.client_name;
+          if (client) rows.push({ label: "Client", value: client });
+          if (money) rows.push({ label: "Budget", value: money });
+          if (proposalSummary.timeline) rows.push({ label: "Timeline", value: proposalSummary.timeline });
+          rows.push({ label: "Status", value: "Awaiting onboarding" });
+          return (
+            <section className="rounded-xl border border-border bg-card p-6 lg:p-8">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-purple/15 flex items-center justify-center shrink-0">
+                  <Briefcase className="w-5 h-5 text-purple" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs uppercase tracking-[0.2em] text-purple font-semibold">Project summary</p>
+                  <h2 className="text-lg font-semibold text-foreground mt-1">Here's what we already have on file</h2>
+                </div>
+              </div>
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+                {rows.map((r) => (
+                  <div key={r.label} className="flex flex-col">
+                    <dt className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">{r.label}</dt>
+                    <dd className="text-sm text-foreground mt-0.5 break-words">{r.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          );
+        })()}
+
+
+
         <section className="rounded-xl border border-border bg-card p-6 lg:p-8">
           <div className="flex items-start gap-3 mb-2">
             <div className="w-10 h-10 rounded-lg bg-purple/15 flex items-center justify-center">
@@ -226,12 +304,26 @@ export default function OnboardingFormPage() {
           );
         })}
 
+        <div className="rounded-xl border border-border bg-card p-5">
+          <div className="flex items-start gap-2.5">
+            <Checkbox
+              id="confirm-accurate"
+              checked={confirmedAccurate}
+              onCheckedChange={(c) => setConfirmedAccurate(c === true)}
+              className="mt-0.5"
+            />
+            <label htmlFor="confirm-accurate" className="text-sm text-foreground/90 leading-relaxed cursor-pointer select-none">
+              I confirm the information provided is accurate and the project can begin.
+            </label>
+          </div>
+        </div>
+
         <div className="flex flex-col sm:flex-row gap-3 sticky bottom-3">
           <Button
             size="lg"
             onClick={() => handleSubmit(true)}
-            disabled={submitting}
-            className="flex-1 gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 h-12"
+            disabled={submitting || !confirmedAccurate}
+            className="flex-1 gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 h-12 disabled:opacity-50"
           >
             {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
             Submit onboarding

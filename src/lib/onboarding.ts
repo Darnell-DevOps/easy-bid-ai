@@ -46,6 +46,8 @@ const BASE_FIELDS: OnboardingField[] = [
   { id: "important_links", label: "Important links", type: "long_text", placeholder: "Website, socials, references — one per line", group: "Resources" },
   { id: "assets_required", label: "Assets you'll provide", type: "long_text", placeholder: "Logos, photos, copy, videos…", group: "Resources" },
   { id: "login_access", label: "How can we get access?", type: "long_text", placeholder: "e.g. invite us as a collaborator/admin on your platform, or let us know how you'd like to share access — please don't type passwords here.", group: "Resources" },
+  { id: "decision_maker", label: "Who is the main decision-maker for this project?", type: "short_text", group: "Approvals & Contact" },
+  { id: "preferred_contact_method", label: "Best way to reach you", type: "short_text", placeholder: "e.g. email, phone, WhatsApp, Slack", group: "Approvals & Contact" },
   { id: "extra_notes", label: "Anything else we should know?", type: "long_text", group: "Notes" },
 ];
 
