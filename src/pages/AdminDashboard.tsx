@@ -268,7 +268,7 @@ export default function AdminDashboard() {
             </h1>
             <p className="text-sm text-muted-foreground mt-1">Platform-wide stats. Only visible to super admins.</p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => { loadAll(); loadPaddle(); loadUsers(search); }}>
+          <Button variant="outline" size="sm" onClick={() => { loadAll(); loadPaddle(); loadUsers(search); loadLog(); }}>
             <RefreshCw className="w-4 h-4 mr-2" /> Refresh
           </Button>
         </div>
