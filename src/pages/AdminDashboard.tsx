@@ -65,6 +65,18 @@ const fmtDate = (iso: string) => {
   return new Date(iso).toLocaleDateString();
 };
 
+const fmtDateTime = (iso: string) => {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleString();
+};
+
+function isUserBanned(u: { banned_until?: string | null }): boolean {
+  if (!u.banned_until) return false;
+  const t = Date.parse(u.banned_until);
+  if (Number.isNaN(t)) return false;
+  return t > Date.now();
+}
+
 export default function AdminDashboard() {
   const { toast } = useToast();
   const [userStats, setUserStats] = useState<UserStats | null>(null);
