@@ -75,6 +75,8 @@ export default function OnboardingFormPage() {
   const [notFound, setNotFound] = useState(false);
   const [responses, setResponses] = useState<FieldResponses>({});
   const [submitting, setSubmitting] = useState(false);
+  const [confirmedAccurate, setConfirmedAccurate] = useState(false);
+  const [proposalSummary, setProposalSummary] = useState<ProposalSummary | null>(null);
 
   useEffect(() => {
     if (!token) return;
