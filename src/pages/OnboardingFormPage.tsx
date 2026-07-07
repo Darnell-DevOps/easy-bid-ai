@@ -220,6 +220,43 @@ export default function OnboardingFormPage() {
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 lg:py-10 space-y-6">
         <OnboardingProgressTracker currentStage="onboarding" />
 
+        {proposalSummary && (() => {
+          const money =
+            formatAmount(proposalSummary.amount_cents ?? null, proposalSummary.currency ?? null) ||
+            proposalSummary.budget ||
+            null;
+          const rows: { label: string; value: string }[] = [];
+          if (proposalSummary.service_type) rows.push({ label: "Project", value: proposalSummary.service_type });
+          const client = proposalSummary.company_name || proposalSummary.client_name;
+          if (client) rows.push({ label: "Client", value: client });
+          if (money) rows.push({ label: "Budget", value: money });
+          if (proposalSummary.timeline) rows.push({ label: "Timeline", value: proposalSummary.timeline });
+          rows.push({ label: "Status", value: "Awaiting onboarding" });
+          return (
+            <section className="rounded-xl border border-border bg-card p-6 lg:p-8">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-purple/15 flex items-center justify-center shrink-0">
+                  <Briefcase className="w-5 h-5 text-purple" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs uppercase tracking-[0.2em] text-purple font-semibold">Project summary</p>
+                  <h2 className="text-lg font-semibold text-foreground mt-1">Here's what we already have on file</h2>
+                </div>
+              </div>
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+                {rows.map((r) => (
+                  <div key={r.label} className="flex flex-col">
+                    <dt className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">{r.label}</dt>
+                    <dd className="text-sm text-foreground mt-0.5 break-words">{r.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          );
+        })()}
+
+
+
         <section className="rounded-xl border border-border bg-card p-6 lg:p-8">
           <div className="flex items-start gap-3 mb-2">
             <div className="w-10 h-10 rounded-lg bg-purple/15 flex items-center justify-center">
