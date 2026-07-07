@@ -14,7 +14,7 @@ const PLAN_MONTHLY_PROPOSAL_LIMIT: Record<string, number | "unlimited"> = {
   pro: "unlimited",
 };
 
-async function enforcePlanLimit(req: Request): Promise<Response | null> {
+async function enforcePlanLimit(req: Request, payload: any): Promise<Response | null> {
   const authHeader = req.headers.get("Authorization") ?? "";
   const token = authHeader.replace(/^Bearer\s+/i, "");
   if (!token) {
@@ -33,6 +33,15 @@ async function enforcePlanLimit(req: Request): Promise<Response | null> {
       status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
+
+  // If this is a regeneration of an existing proposal owned by the caller, skip the limit.
+  const proposalId = payload?.proposal_id;
+  if (proposalId && typeof proposalId === "string") {
+    const { data: existing } = await supabase
+      .from("proposals").select("user_id").eq("id", proposalId).maybeSingle();
+    if (existing && existing.user_id === user.id) return null;
+  }
+
   const { data: sub } = await supabase
     .from("subscriptions").select("plan").eq("user_id", user.id).maybeSingle();
   const plan = (sub?.plan as string) ?? "pro";
@@ -54,6 +63,7 @@ async function enforcePlanLimit(req: Request): Promise<Response | null> {
   }
   return null;
 }
+
 
 const SECTION_HEADINGS = [
   "What You'll Get",
