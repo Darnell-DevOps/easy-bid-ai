@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { TimelineInput } from "@/components/TimelineInput";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
 
@@ -210,14 +211,12 @@ export default function NewClient() {
                 </div>
                 <div>
                   <Label htmlFor="timeline">Timeline / Deadline</Label>
-                  <Input
-                    id="timeline"
+                  <TimelineInput
                     value={form.timeline}
-                    onChange={(e) => update("timeline", e.target.value)}
-                    placeholder="e.g. 6 weeks or May 30"
-                    className="mt-2"
+                    onChange={(v) => update("timeline", v)}
                   />
                 </div>
+
               </div>
             </CardContent>
           </Card>
