@@ -1,39 +1,46 @@
 import { useCallback, useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { PLANS, type Plan, type PlanId, type PlanFeatures, hasFeature as hasFeatureFn } from "@/lib/plans";
 
-// LocalStorage-backed plan state. Replace with a Supabase `subscriptions`
-// query when Lovable Cloud payments are wired up — keep this hook's API
-// identical so callers don't change.
-const PLAN_STORAGE_KEY = "plan:current";
-const SOFT_WARN_KEY_PREFIX = "plan:warned:"; // per-feature "first allow" flag
-
-function readPlan(): PlanId {
-  if (typeof window === "undefined") return "free";
-  const v = localStorage.getItem(PLAN_STORAGE_KEY);
-  if (v === "starter" || v === "pro" || v === "free") return v;
-  return "free";
-}
+// Plan state is backed by the `subscriptions` table (one row per user, auto-provisioned
+// with plan='pro' on signup). Users may update their own row's `plan` column via RLS,
+// which powers the self-service switcher on Billing.tsx. The soft-warn "warned once"
+// flags stay in localStorage — they're just a UI nicety, not an entitlement check.
+const SOFT_WARN_KEY_PREFIX = "plan:warned:";
 
 function emitPlanChange() {
-  // Notify same-tab listeners (storage event only fires across tabs).
   window.dispatchEvent(new CustomEvent("plan:changed"));
 }
 
 export function usePlan() {
-  const [planId, setPlanId] = useState<PlanId>(() => readPlan());
+  const [planId, setPlanId] = useState<PlanId>("pro");
 
-  useEffect(() => {
-    const sync = () => setPlanId(readPlan());
-    window.addEventListener("storage", sync);
-    window.addEventListener("plan:changed", sync as EventListener);
-    return () => {
-      window.removeEventListener("storage", sync);
-      window.removeEventListener("plan:changed", sync as EventListener);
-    };
+  const refresh = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data } = await supabase
+      .from("subscriptions")
+      .select("plan")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    const next = (data?.plan as PlanId | undefined) ?? "pro";
+    setPlanId(next);
   }, []);
 
-  const setPlan = useCallback((next: PlanId) => {
-    localStorage.setItem(PLAN_STORAGE_KEY, next);
+  useEffect(() => {
+    refresh();
+    const sync = () => refresh();
+    window.addEventListener("plan:changed", sync as EventListener);
+    return () => window.removeEventListener("plan:changed", sync as EventListener);
+  }, [refresh]);
+
+  const setPlan = useCallback(async (next: PlanId) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    // Row is auto-provisioned by trigger, but upsert defends against races.
+    await supabase
+      .from("subscriptions")
+      .upsert({ user_id: user.id, plan: next }, { onConflict: "user_id" });
     setPlanId(next);
     emitPlanChange();
   }, []);
@@ -45,12 +52,6 @@ export function usePlan() {
     [planId],
   );
 
-  /**
-   * Soft-warn gate. First call returns { allowed: true, warned: true } and
-   * persists a "warned" flag so the second call returns { allowed: false }.
-   * Use for "allow once, then block" UX (e.g. Pro features used by a Free user).
-   * If the plan already meets the requirement, returns { allowed: true }.
-   */
   const checkSoftGate = useCallback(
     (feature: keyof PlanFeatures): { allowed: boolean; warned: boolean; firstUse: boolean } => {
       if (hasFeatureFn(planId, feature)) {
