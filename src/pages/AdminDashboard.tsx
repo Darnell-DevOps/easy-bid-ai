@@ -43,9 +43,15 @@ type UsageStats = {
   emails_7d_sent: number; emails_7d_failed: number;
 };
 type UserRow = {
-  user_id: string; email: string; created_at: string; last_active: string;
+  user_id: string; email: string; full_name?: string | null; banned_until?: string | null;
+  created_at: string; last_active: string;
   clients_count: number; proposals_count: number; contracts_signed: number;
   bookings_count: number; retainers_active: number; revenue_cents: number;
+};
+type AdminLogRow = {
+  id: string; admin_user_id: string; admin_email: string | null;
+  target_user_id: string | null; target_email: string | null;
+  action_type: string; details: any; created_at: string;
 };
 type PaddleMetrics = {
   revenue: any; mrr: any; subscribers: any; window: { from: string; to: string };
