@@ -3,7 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Loader2, CheckCircle2, ClipboardList, Sparkles, ArrowRight } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2, CheckCircle2, ClipboardList, Sparkles, ArrowRight, Briefcase } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   groupFields,
@@ -14,6 +15,31 @@ import { isFieldVisible, type FieldResponses } from "@/lib/form-fields";
 import SmartFieldRenderer from "@/components/forms/SmartFieldRenderer";
 import OnboardingProgressTracker from "@/components/onboarding/OnboardingProgressTracker";
 import DynamicFavicon from "@/components/branding/DynamicFavicon";
+
+const CURRENCY_SYMBOL: Record<string, string> = {
+  GBP: "£", USD: "$", EUR: "€", CAD: "C$", AUD: "A$",
+};
+
+function formatAmount(cents: number | null | undefined, currency: string | null | undefined) {
+  if (!cents) return null;
+  const cur = (currency || "USD").toUpperCase();
+  const symbol = CURRENCY_SYMBOL[cur] || "";
+  const value = (cents / 100).toLocaleString(undefined, {
+    minimumFractionDigits: cents % 100 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  });
+  return `${symbol}${value}`;
+}
+
+interface ProposalSummary {
+  service_type?: string | null;
+  client_name?: string | null;
+  company_name?: string | null;
+  amount_cents?: number | null;
+  currency?: string | null;
+  budget?: string | null;
+  timeline?: string | null;
+}
 
 function hydrate(raw: Record<string, string> | undefined): FieldResponses {
   const out: FieldResponses = {};
