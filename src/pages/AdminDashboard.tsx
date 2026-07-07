@@ -75,6 +75,115 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [search, setSearch] = useState("");
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [actionsLog, setActionsLog] = useState<AdminLogRow[]>([]);
+  const [loadingLog, setLoadingLog] = useState(false);
+
+  const [editUser, setEditUser] = useState<UserRow | null>(null);
+  const [editEmail, setEditEmail] = useState("");
+  const [editFullName, setEditFullName] = useState("");
+  const [editBusinessName, setEditBusinessName] = useState("");
+  const [editBusy, setEditBusy] = useState(false);
+
+  const [deleteUser, setDeleteUser] = useState<UserRow | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleteBusy, setDeleteBusy] = useState(false);
+
+  const [rowBusy, setRowBusy] = useState<string | null>(null);
+
+  const loadLog = async () => {
+    setLoadingLog(true);
+    const { data, error } = await supabase.rpc("admin_get_actions_log", { _limit: 100 });
+    setLoadingLog(false);
+    if (error) {
+      toast({ title: "Failed to load admin log", description: error.message, variant: "destructive" });
+      return;
+    }
+    setActionsLog((data as AdminLogRow[]) ?? []);
+  };
+
+  const invokeManage = async (payload: Record<string, unknown>) => {
+    return supabase.functions.invoke("admin-manage-user", { body: payload });
+  };
+
+  const openEdit = (u: UserRow) => {
+    setEditUser(u);
+    setEditEmail(u.email ?? "");
+    setEditFullName(u.full_name ?? "");
+    setEditBusinessName("");
+  };
+
+  const submitEdit = async () => {
+    if (!editUser) return;
+    setEditBusy(true);
+    const { error } = await invokeManage({
+      action: "update_profile",
+      target_user_id: editUser.user_id,
+      email: editEmail !== editUser.email ? editEmail : undefined,
+      full_name: editFullName,
+      business_name: editBusinessName || undefined,
+    });
+    setEditBusy(false);
+    if (error) {
+      toast({ title: "Update failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "User updated" });
+    setEditUser(null);
+    loadUsers(search);
+    loadLog();
+  };
+
+  const sendReset = async (u: UserRow) => {
+    setRowBusy(u.user_id);
+    const { error } = await invokeManage({
+      action: "reset_password",
+      target_user_id: u.user_id,
+      redirect_to: `${window.location.origin}/reset-password`,
+    });
+    setRowBusy(null);
+    if (error) {
+      toast({ title: "Reset failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Password reset sent", description: `Email sent to ${u.email}` });
+    loadLog();
+  };
+
+  const toggleSuspend = async (u: UserRow) => {
+    const isBanned = isUserBanned(u);
+    setRowBusy(u.user_id);
+    const { error } = await invokeManage({
+      action: isBanned ? "reactivate" : "suspend",
+      target_user_id: u.user_id,
+    });
+    setRowBusy(null);
+    if (error) {
+      toast({ title: "Action failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: isBanned ? "User reactivated" : "User suspended" });
+    loadUsers(search);
+    loadLog();
+  };
+
+  const submitDelete = async () => {
+    if (!deleteUser) return;
+    setDeleteBusy(true);
+    const { error } = await invokeManage({
+      action: "delete",
+      target_user_id: deleteUser.user_id,
+    });
+    setDeleteBusy(false);
+    if (error) {
+      toast({ title: "Delete failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "User deleted" });
+    setDeleteUser(null);
+    setDeleteConfirm("");
+    loadUsers(search);
+    loadLog();
+  };
 
   const loadAll = async () => {
     const [u, r, g] = await Promise.all([
