@@ -300,7 +300,7 @@ serve(async (req) => {
     }
 
     // Full proposal generation (preserves original API contract)
-    const limitResponse = await enforcePlanLimit(req);
+    const limitResponse = await enforcePlanLimit(req, payload);
     if (limitResponse) return limitResponse;
 
     const content = await callAI(buildSystemPrompt(), buildFullPrompt(payload));
