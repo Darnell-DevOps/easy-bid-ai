@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { TimelineInput } from "@/components/TimelineInput";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
 
