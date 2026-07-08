@@ -56,6 +56,10 @@ const SERVICE_SPECIFIC: Record<string, OnboardingField[]> = {
     { id: "sitemap_needs", label: "Pages / sitemap you need", type: "long_text", placeholder: "Home, About, Services, Contact…", group: "Website specifics" },
     { id: "inspiration_sites", label: "Inspiration websites", type: "long_text", placeholder: "URLs of sites you love", group: "Website specifics" },
     { id: "hosting_domain", label: "Hosting / domain details", type: "long_text", group: "Website specifics" },
+    { id: "current_website_url", label: "Current website URL (if any)", type: "short_text", group: "Website specifics" },
+    { id: "needs_copywriting", label: "Do you need copywriting for the site?", type: "short_text", placeholder: "Yes/No — or let us know if you'll provide the text", group: "Website specifics" },
+    { id: "forms_needed", label: "Do you need booking, payment, or contact forms?", type: "long_text", placeholder: "List any forms or interactive features needed", group: "Website specifics" },
+    { id: "competitor_websites", label: "Competitor websites", type: "long_text", placeholder: "Sites of similar businesses, for reference", group: "Website specifics" },
   ],
   branding: [
     { id: "color_preferences", label: "Colour preferences", type: "long_text", group: "Branding specifics" },
