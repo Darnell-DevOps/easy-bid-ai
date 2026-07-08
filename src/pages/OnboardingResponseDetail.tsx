@@ -14,7 +14,7 @@ import {
   onboardingStatusLabel,
   type OnboardingFormRow,
 } from "@/lib/onboarding";
-import { parseFilePayload, type FilePayload } from "@/lib/form-fields";
+import { parseFilePayload, parseFilePayloads, type FilePayload } from "@/lib/form-fields";
 import { useToast } from "@/hooks/use-toast";
 
 function formatBytes(n: number): string {
