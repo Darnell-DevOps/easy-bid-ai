@@ -86,6 +86,12 @@ const SERVICE_SPECIFIC: Record<string, OnboardingField[]> = {
     { id: "business_goals", label: "Business goals", type: "long_text", group: "Consulting specifics" },
     { id: "priorities", label: "Top priorities right now", type: "long_text", group: "Consulting specifics" },
   ],
+  automation: [
+    { id: "process_to_automate", label: "What process do you want automated?", type: "long_text", group: "Automation specifics" },
+    { id: "current_tools", label: "What tools/software do you currently use?", type: "long_text", placeholder: "e.g. Gmail, Notion, Airtable, a specific CRM…", group: "Automation specifics" },
+    { id: "automation_trigger", label: "What should trigger this workflow?", type: "long_text", placeholder: "e.g. a new form submission, a new lead, a specific time each day", group: "Automation specifics" },
+    { id: "automation_outcome", label: "What should happen after it's triggered?", type: "long_text", placeholder: "e.g. send an email, create a task, notify the team", group: "Automation specifics" },
+  ],
 };
 
 export function detectServiceKey(service: string | null | undefined): keyof typeof SERVICE_SPECIFIC | "general" {
