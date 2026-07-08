@@ -87,6 +87,7 @@ export default function ContractRenderer({
         if (isPlaceholder && matchedSig) {
           const label = lastLabel;
           lastLabel = ""; // consume
+          skipNextDate = true;
           return (
             <div key={i} className="my-3 flex flex-wrap items-end gap-x-8 gap-y-2">
               <div className="flex flex-col">
