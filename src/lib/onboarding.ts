@@ -56,12 +56,18 @@ const SERVICE_SPECIFIC: Record<string, OnboardingField[]> = {
     { id: "sitemap_needs", label: "Pages / sitemap you need", type: "long_text", placeholder: "Home, About, Services, Contact…", group: "Website specifics" },
     { id: "inspiration_sites", label: "Inspiration websites", type: "long_text", placeholder: "URLs of sites you love", group: "Website specifics" },
     { id: "hosting_domain", label: "Hosting / domain details", type: "long_text", group: "Website specifics" },
+    { id: "current_website_url", label: "Current website URL (if any)", type: "short_text", group: "Website specifics" },
+    { id: "needs_copywriting", label: "Do you need copywriting for the site?", type: "short_text", placeholder: "Yes/No — or let us know if you'll provide the text", group: "Website specifics" },
+    { id: "forms_needed", label: "Do you need booking, payment, or contact forms?", type: "long_text", placeholder: "List any forms or interactive features needed", group: "Website specifics" },
+    { id: "competitor_websites", label: "Competitor websites", type: "long_text", placeholder: "Sites of similar businesses, for reference", group: "Website specifics" },
   ],
   branding: [
     { id: "color_preferences", label: "Colour preferences", type: "long_text", group: "Branding specifics" },
     { id: "competitors", label: "Main competitors", type: "long_text", group: "Branding specifics" },
     { id: "style_references", label: "Style references", type: "long_text", placeholder: "Brands, moodboards, Pinterest…", group: "Branding specifics" },
     { id: "logo_inspiration", label: "Logo inspiration", type: "long_text", group: "Branding specifics" },
+    { id: "has_existing_logo", label: "Do you already have a logo?", type: "short_text", placeholder: "Yes/No — if yes, you can upload it under Assets you'll provide", group: "Branding specifics" },
+    { id: "logo_usage", label: "Where will the logo be used?", type: "long_text", placeholder: "Website, packaging, signage, social media…", group: "Branding specifics" },
   ],
   social: [
     { id: "platforms", label: "Platforms used", type: "long_text", placeholder: "Instagram, TikTok, LinkedIn…", group: "Social specifics" },
@@ -80,6 +86,12 @@ const SERVICE_SPECIFIC: Record<string, OnboardingField[]> = {
     { id: "business_goals", label: "Business goals", type: "long_text", group: "Consulting specifics" },
     { id: "priorities", label: "Top priorities right now", type: "long_text", group: "Consulting specifics" },
   ],
+  automation: [
+    { id: "process_to_automate", label: "What process do you want automated?", type: "long_text", group: "Automation specifics" },
+    { id: "current_tools", label: "What tools/software do you currently use?", type: "long_text", placeholder: "e.g. Gmail, Notion, Airtable, a specific CRM…", group: "Automation specifics" },
+    { id: "automation_trigger", label: "What should trigger this workflow?", type: "long_text", placeholder: "e.g. a new form submission, a new lead, a specific time each day", group: "Automation specifics" },
+    { id: "automation_outcome", label: "What should happen after it's triggered?", type: "long_text", placeholder: "e.g. send an email, create a task, notify the team", group: "Automation specifics" },
+  ],
 };
 
 export function detectServiceKey(service: string | null | undefined): keyof typeof SERVICE_SPECIFIC | "general" {
@@ -88,6 +100,7 @@ export function detectServiceKey(service: string | null | undefined): keyof type
   if (/(brand|logo|identity)/i.test(s)) return "branding";
   if (/(social|instagram|tiktok|content|community)/i.test(s)) return "social";
   if (/(market|ads?|seo|paid|growth|email)/i.test(s)) return "marketing";
+  if (/(automation|workflow|zapier|make\.com|integration|ai agent|chatbot|whatsapp bot)/i.test(s)) return "automation";
   if (/(consult|advis|coach|strateg)/i.test(s)) return "consulting";
   return "general";
 }
