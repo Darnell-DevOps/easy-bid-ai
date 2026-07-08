@@ -121,6 +121,11 @@ export default function OnboardingDashboard() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
+                      <Button asChild size="sm" className="gap-1.5">
+                        <Link to={`/dashboard/onboarding/${f.id}`}>
+                          <Eye className="w-3.5 h-3.5" /> View responses
+                        </Link>
+                      </Button>
                       <Button size="sm" variant="outline" className="gap-1.5" onClick={() => copyLink(f.access_token)}>
                         <Copy className="w-3.5 h-3.5" /> Copy link
                       </Button>
