@@ -3,7 +3,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
-const MAX_BYTES = 20 * 1024 * 1024; // 20 MB
+const MAX_BYTES = 30 * 1024 * 1024; // 30 MB
 const ALLOWED_PREFIXES = ["image/", "text/"];
 const ALLOWED_EXACT = new Set([
   "application/pdf",
