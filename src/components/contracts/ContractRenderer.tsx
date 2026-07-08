@@ -31,6 +31,9 @@ export default function ContractRenderer({
   // Track the last non-empty label (e.g. "Client", "Service Provider")
   // so we can attach the signature to the right slot.
   let lastLabel = "";
+  // Track when the immediately previous block was a rendered signature
+  // placeholder, so we can suppress the following redundant "Date: ___" line.
+  let skipNextDate = false;
 
   return (
     <article className="max-w-none text-foreground leading-relaxed">
