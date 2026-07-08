@@ -86,7 +86,7 @@ const SERVICE_SPECIFIC: Record<string, OnboardingField[]> = {
     { id: "offers", label: "Offers / promotions", type: "long_text", group: "Marketing specifics" },
     { id: "campaign_goals", label: "Campaign goals", type: "long_text", group: "Marketing specifics" },
     { id: "ad_budget", label: "Ad budget", type: "short_text", placeholder: "Monthly spend", group: "Marketing specifics" },
-    { id: "ad_creative_upload", label: "Ad creative examples you like", type: "file", accept: "image/*,.pdf", maxSizeMb: 15, group: "Marketing specifics" },
+    { id: "ad_creative_upload", label: "Ad creative examples you like", type: "file", accept: "image/*,.pdf", maxSizeMb: 15, multiple: true, group: "Marketing specifics" },
   ],
   consulting: [
     { id: "current_challenges", label: "Current challenges", type: "long_text", group: "Consulting specifics" },
