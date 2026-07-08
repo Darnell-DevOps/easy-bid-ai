@@ -40,23 +40,28 @@ function formatBytes(n: number): string {
   return `${v.toFixed(v < 10 && i > 0 ? 1 : 0)} ${units[i]}`;
 }
 
+const MULTI_CAP = 5;
+
 function FileFieldInput({ field, value, onChange, formContext }: Props) {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const existing: FilePayload | null = parseFilePayload(value);
   const maxBytes = (field.maxSizeMb || 20) * 1024 * 1024;
+  const isMulti = !!field.multiple;
+
+  const existingSingle: FilePayload | null = isMulti ? null : parseFilePayload(value);
+  const existingList: FilePayload[] = isMulti ? parseFilePayloads(value) : [];
 
   const pick = () => inputRef.current?.click();
 
-  const handleFile = async (file: File) => {
+  const uploadOne = async (file: File): Promise<FilePayload | null> => {
     if (file.size > maxBytes) {
       toast({
         title: "File too large",
         description: `Max ${field.maxSizeMb || 20} MB.`,
         variant: "destructive",
       });
-      return;
+      return null;
     }
     if (!formContext?.token && !formContext?.slug) {
       toast({
@@ -64,38 +69,47 @@ function FileFieldInput({ field, value, onChange, formContext }: Props) {
         description: "Form context is missing — please reload and try again.",
         variant: "destructive",
       });
-      return;
+      return null;
     }
+    const { data, error } = await supabase.functions.invoke("form-upload-sign", {
+      body: {
+        token: formContext.token,
+        slug: formContext.slug,
+        field_id: field.id,
+        filename: file.name,
+        content_type: file.type || "application/octet-stream",
+        size: file.size,
+      },
+    });
+    if (error) throw error;
+    const payload = data as { path: string; upload_url: string };
+    if (!payload?.upload_url) throw new Error("No signed URL returned");
+
+    const res = await fetch(payload.upload_url, {
+      method: "PUT",
+      headers: { "Content-Type": file.type || "application/octet-stream" },
+      body: file,
+    });
+    if (!res.ok) throw new Error(`Upload failed (${res.status})`);
+
+    return {
+      path: payload.path,
+      name: file.name,
+      size: file.size,
+      type: file.type || "application/octet-stream",
+    };
+  };
+
+  const handleFile = async (file: File) => {
     setUploading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("form-upload-sign", {
-        body: {
-          token: formContext.token,
-          slug: formContext.slug,
-          field_id: field.id,
-          filename: file.name,
-          content_type: file.type || "application/octet-stream",
-          size: file.size,
-        },
-      });
-      if (error) throw error;
-      const payload = data as { path: string; upload_url: string };
-      if (!payload?.upload_url) throw new Error("No signed URL returned");
-
-      const res = await fetch(payload.upload_url, {
-        method: "PUT",
-        headers: { "Content-Type": file.type || "application/octet-stream" },
-        body: file,
-      });
-      if (!res.ok) throw new Error(`Upload failed (${res.status})`);
-
-      const final: FilePayload = {
-        path: payload.path,
-        name: file.name,
-        size: file.size,
-        type: file.type || "application/octet-stream",
-      };
-      onChange(serializeFilePayload(final));
+      const final = await uploadOne(file);
+      if (!final) return;
+      if (isMulti) {
+        onChange(serializeFilePayloads([...existingList, final]));
+      } else {
+        onChange(serializeFilePayload(final));
+      }
     } catch (e: any) {
       toast({
         title: "Upload failed",
@@ -109,25 +123,65 @@ function FileFieldInput({ field, value, onChange, formContext }: Props) {
   };
 
   const clear = () => onChange("");
+  const removeAt = (idx: number) => {
+    const next = existingList.filter((_, i) => i !== idx);
+    onChange(serializeFilePayloads(next));
+  };
+
+  const hiddenInput = (
+    <input
+      ref={inputRef}
+      type="file"
+      accept={field.accept}
+      className="hidden"
+      onChange={(e) => {
+        const f = e.target.files?.[0];
+        if (f) handleFile(f);
+      }}
+    />
+  );
+
+  if (isMulti) {
+    const atCap = existingList.length >= MULTI_CAP;
+    return (
+      <div className="space-y-2">
+        {hiddenInput}
+        {existingList.map((p, idx) => (
+          <div key={`${p.path}-${idx}`} className="flex items-center gap-2 rounded-md border border-border bg-muted/30 p-2.5">
+            <FileText className="w-4 h-4 text-purple shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="text-sm text-foreground truncate">{p.name}</div>
+              <div className="text-[11px] text-muted-foreground">{formatBytes(p.size)}</div>
+            </div>
+            <Button type="button" size="icon" variant="ghost" onClick={() => removeAt(idx)} disabled={uploading} className="h-7 w-7">
+              <X className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        ))}
+        <Button
+          type="button"
+          variant="outline"
+          onClick={pick}
+          disabled={uploading || atCap}
+          className="w-full justify-start gap-2 h-10"
+        >
+          {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
+          {uploading ? "Uploading…" : atCap ? "Maximum reached" : (existingList.length === 0 ? (field.placeholder || "Add a file") : "Add another file")}
+        </Button>
+        <p className="text-[11px] text-muted-foreground">Up to {MULTI_CAP} files.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-2">
-      <input
-        ref={inputRef}
-        type="file"
-        accept={field.accept}
-        className="hidden"
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) handleFile(f);
-        }}
-      />
-      {existing ? (
+      {hiddenInput}
+      {existingSingle ? (
         <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 p-2.5">
           <FileText className="w-4 h-4 text-purple shrink-0" />
           <div className="flex-1 min-w-0">
-            <div className="text-sm text-foreground truncate">{existing.name}</div>
-            <div className="text-[11px] text-muted-foreground">{formatBytes(existing.size)}</div>
+            <div className="text-sm text-foreground truncate">{existingSingle.name}</div>
+            <div className="text-[11px] text-muted-foreground">{formatBytes(existingSingle.size)}</div>
           </div>
           <Button type="button" size="sm" variant="ghost" onClick={pick} disabled={uploading}>
             Replace
