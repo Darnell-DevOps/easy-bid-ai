@@ -72,7 +72,7 @@ const SERVICE_SPECIFIC: Record<string, OnboardingField[]> = {
     { id: "has_existing_logo", label: "Do you already have a logo?", type: "short_text", placeholder: "Yes/No — if yes, you can upload it under Assets you'll provide", group: "Branding specifics" },
     { id: "logo_usage", label: "Where will the logo be used?", type: "long_text", placeholder: "Website, packaging, signage, social media…", group: "Branding specifics" },
     { id: "current_logo_file_upload", label: "Your current logo (if you have one)", type: "file", accept: "image/*", maxSizeMb: 10, group: "Branding specifics" },
-    { id: "moodboard_upload", label: "Moodboard or style references", type: "file", accept: "image/*", maxSizeMb: 15, group: "Branding specifics" },
+    { id: "moodboard_upload", label: "Moodboard or style references", type: "file", accept: "image/*", maxSizeMb: 15, multiple: true, group: "Branding specifics" },
   ],
   social: [
     { id: "platforms", label: "Platforms used", type: "long_text", placeholder: "Instagram, TikTok, LinkedIn…", group: "Social specifics" },
