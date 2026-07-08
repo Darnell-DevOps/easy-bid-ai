@@ -46,9 +46,7 @@ const BASE_FIELDS: OnboardingField[] = [
   { id: "important_links", label: "Important links", type: "long_text", placeholder: "Website, socials, references — one per line", group: "Resources" },
   { id: "assets_required", label: "Assets you'll provide", type: "long_text", placeholder: "Logos, photos, copy, videos…", group: "Resources" },
   { id: "login_access", label: "How can we get access?", type: "long_text", placeholder: "e.g. invite us as a collaborator/admin on your platform, or let us know how you'd like to share access — please don't type passwords here.", group: "Resources" },
-  { id: "logo_upload", label: "Upload your logo (if you have one)", type: "file", accept: "image/*", maxSizeMb: 10, group: "Uploads" },
-  { id: "favicon_upload", label: "Upload a favicon (small square icon, optional)", type: "file", accept: "image/*", maxSizeMb: 5, group: "Uploads" },
-  { id: "business_description_upload", label: "Upload a business description or brief document (optional)", type: "file", accept: ".pdf,.doc,.docx,.txt", maxSizeMb: 15, group: "Uploads" },
+  { id: "reference_materials_upload", label: "Upload any reference documents (brand guidelines, briefs, past materials)", type: "file", accept: "image/*,.pdf,.doc,.docx", maxSizeMb: 20, group: "Uploads" },
   { id: "decision_maker", label: "Who is the main decision-maker for this project?", type: "short_text", group: "Approvals & Contact" },
   { id: "preferred_contact_method", label: "Best way to reach you", type: "short_text", placeholder: "e.g. email, phone, WhatsApp, Slack", group: "Approvals & Contact" },
   { id: "extra_notes", label: "Anything else we should know?", type: "long_text", group: "Notes" },
@@ -63,6 +61,8 @@ const SERVICE_SPECIFIC: Record<string, OnboardingField[]> = {
     { id: "needs_copywriting", label: "Do you need copywriting for the site?", type: "short_text", placeholder: "Yes/No — or let us know if you'll provide the text", group: "Website specifics" },
     { id: "forms_needed", label: "Do you need booking, payment, or contact forms?", type: "long_text", placeholder: "List any forms or interactive features needed", group: "Website specifics" },
     { id: "competitor_websites", label: "Competitor websites", type: "long_text", placeholder: "Sites of similar businesses, for reference", group: "Website specifics" },
+    { id: "content_copy_upload", label: "Upload your website copy/content (if ready)", type: "file", accept: ".doc,.docx,.pdf,.txt", maxSizeMb: 15, group: "Website specifics" },
+    { id: "site_reference_screenshots_upload", label: "Screenshots of sites you like or dislike", type: "file", accept: "image/*", maxSizeMb: 15, group: "Website specifics" },
   ],
   branding: [
     { id: "color_preferences", label: "Colour preferences", type: "long_text", group: "Branding specifics" },
@@ -71,18 +71,22 @@ const SERVICE_SPECIFIC: Record<string, OnboardingField[]> = {
     { id: "logo_inspiration", label: "Logo inspiration", type: "long_text", group: "Branding specifics" },
     { id: "has_existing_logo", label: "Do you already have a logo?", type: "short_text", placeholder: "Yes/No — if yes, you can upload it under Assets you'll provide", group: "Branding specifics" },
     { id: "logo_usage", label: "Where will the logo be used?", type: "long_text", placeholder: "Website, packaging, signage, social media…", group: "Branding specifics" },
+    { id: "current_logo_file_upload", label: "Your current logo (if you have one)", type: "file", accept: "image/*", maxSizeMb: 10, group: "Branding specifics" },
+    { id: "moodboard_upload", label: "Moodboard or style references", type: "file", accept: "image/*", maxSizeMb: 15, group: "Branding specifics" },
   ],
   social: [
     { id: "platforms", label: "Platforms used", type: "long_text", placeholder: "Instagram, TikTok, LinkedIn…", group: "Social specifics" },
     { id: "post_frequency", label: "Posting frequency", type: "short_text", placeholder: "e.g. 3x/week", group: "Social specifics" },
     { id: "brand_tone", label: "Brand tone", type: "long_text", group: "Social specifics" },
     { id: "content_goals", label: "Content goals", type: "long_text", group: "Social specifics" },
+    { id: "existing_media_upload", label: "Existing photos to work from", type: "file", accept: "image/*", maxSizeMb: 20, group: "Social specifics" },
   ],
   marketing: [
     { id: "audience", label: "Who is the audience?", type: "long_text", group: "Marketing specifics" },
     { id: "offers", label: "Offers / promotions", type: "long_text", group: "Marketing specifics" },
     { id: "campaign_goals", label: "Campaign goals", type: "long_text", group: "Marketing specifics" },
     { id: "ad_budget", label: "Ad budget", type: "short_text", placeholder: "Monthly spend", group: "Marketing specifics" },
+    { id: "ad_creative_upload", label: "Ad creative examples you like", type: "file", accept: "image/*,.pdf", maxSizeMb: 15, group: "Marketing specifics" },
   ],
   consulting: [
     { id: "current_challenges", label: "Current challenges", type: "long_text", group: "Consulting specifics" },
@@ -94,6 +98,8 @@ const SERVICE_SPECIFIC: Record<string, OnboardingField[]> = {
     { id: "current_tools", label: "What tools/software do you currently use?", type: "long_text", placeholder: "e.g. Gmail, Notion, Airtable, a specific CRM…", group: "Automation specifics" },
     { id: "automation_trigger", label: "What should trigger this workflow?", type: "long_text", placeholder: "e.g. a new form submission, a new lead, a specific time each day", group: "Automation specifics" },
     { id: "automation_outcome", label: "What should happen after it's triggered?", type: "long_text", placeholder: "e.g. send an email, create a task, notify the team", group: "Automation specifics" },
+    { id: "process_screenshot_upload", label: "Screenshot or export of your current process", type: "file", accept: "image/*,.pdf,.csv,.xlsx", maxSizeMb: 15, group: "Automation specifics" },
+    { id: "sample_data_upload", label: "Sample data file (e.g. a spreadsheet of leads)", type: "file", accept: ".csv,.xlsx,.xls", maxSizeMb: 15, group: "Automation specifics" },
   ],
 };
 
