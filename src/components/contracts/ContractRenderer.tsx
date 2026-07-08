@@ -86,7 +86,6 @@ export default function ContractRenderer({
                       src={matchedSig.signature_data}
                       alt={`Signature of ${matchedSig.signer_name}`}
                       className="max-h-14 object-contain"
-                      style={{ filter: "invert(1) brightness(2) contrast(1.1)" }}
                     />
                   ) : (
                     <span
