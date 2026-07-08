@@ -37,8 +37,16 @@ export default function ContractRenderer({
 
   return (
     <article className="max-w-none text-foreground leading-relaxed">
-      {blocks.map((b, i) => {
-        if (b.type === "h1")
+    {blocks.map((b, i) => {
+      // If the previous block was a rendered signature placeholder, suppress
+      // a lone "Date: ___" placeholder line that immediately follows it.
+      if (skipNextDate && b.type === "p" && /^(\*\*)?date:?(\*\*)?\s*_{3,}/i.test(b.text)) {
+        skipNextDate = false;
+        return null;
+      }
+      skipNextDate = false;
+
+      if (b.type === "h1")
           return (
             <h1 key={i} className="text-3xl font-bold text-foreground mt-2 mb-4 tracking-tight">
               {renderInline(b.text)}
