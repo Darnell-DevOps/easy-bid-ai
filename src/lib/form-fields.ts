@@ -39,6 +39,7 @@ export interface SmartField {
   condition?: FieldCondition | null;
   maxSizeMb?: number; // file
   accept?: string; // file — comma-separated MIME or extensions
+  multiple?: boolean; // file — allow multiple files (stored as JSON array)
 }
 
 export type FieldResponses = Record<string, string | string[] | boolean>;
