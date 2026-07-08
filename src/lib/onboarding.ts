@@ -79,7 +79,7 @@ const SERVICE_SPECIFIC: Record<string, OnboardingField[]> = {
     { id: "post_frequency", label: "Posting frequency", type: "short_text", placeholder: "e.g. 3x/week", group: "Social specifics" },
     { id: "brand_tone", label: "Brand tone", type: "long_text", group: "Social specifics" },
     { id: "content_goals", label: "Content goals", type: "long_text", group: "Social specifics" },
-    { id: "existing_media_upload", label: "Existing photos to work from", type: "file", accept: "image/*", maxSizeMb: 20, group: "Social specifics" },
+    { id: "existing_media_upload", label: "Existing photos to work from", type: "file", accept: "image/*", maxSizeMb: 30, multiple: true, group: "Social specifics" },
   ],
   marketing: [
     { id: "audience", label: "Who is the audience?", type: "long_text", group: "Marketing specifics" },
