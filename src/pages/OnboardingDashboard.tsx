@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ClipboardList, Copy, ArrowRight, Loader2, ExternalLink, Send, Clock, CheckCircle2 } from "lucide-react";
+import { ClipboardList, Copy, ArrowRight, Loader2, ExternalLink, Send, Clock, CheckCircle2, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { onboardingProgress, type OnboardingFormRow } from "@/lib/onboarding";
 
