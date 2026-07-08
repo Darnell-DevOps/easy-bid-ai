@@ -263,6 +263,33 @@ export default function OnboardingResponseDetail() {
           </Card>
         ))}
       </div>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit onboarding questions</DialogTitle>
+            <DialogDescription>
+              {form.status === "completed"
+                ? "This client has already completed onboarding — they won't be prompted again unless they revisit the link."
+                : "The client will see these updated questions next time they open their onboarding link."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <FieldListEditor
+              fields={editedFields}
+              onChange={setEditedFields}
+              context="onboarding"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEditOpen(false)} disabled={saving}>Cancel</Button>
+            <Button onClick={saveFields} disabled={saving} className="gap-1.5">
+              {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              Save changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
