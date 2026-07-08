@@ -39,6 +39,7 @@ export interface SmartField {
   condition?: FieldCondition | null;
   maxSizeMb?: number; // file
   accept?: string; // file — comma-separated MIME or extensions
+  multiple?: boolean; // file — allow multiple files (stored as JSON array)
 }
 
 export type FieldResponses = Record<string, string | string[] | boolean>;
@@ -158,4 +159,41 @@ export function parseFilePayload(value: unknown): FilePayload | null {
 export function serializeFilePayload(p: FilePayload | null | undefined): string {
   if (!p) return "";
   return JSON.stringify(p);
+}
+
+export function parseFilePayloads(value: unknown): FilePayload[] {
+  if (!value) return [];
+  // Array in-memory
+  if (Array.isArray(value)) {
+    return value
+      .map((v) => parseFilePayload(v))
+      .filter((v): v is FilePayload => v !== null);
+  }
+  // Single object in-memory
+  if (typeof value === "object" && value !== null && "path" in (value as any)) {
+    const one = parseFilePayload(value);
+    return one ? [one] : [];
+  }
+  if (typeof value !== "string") return [];
+  const s = value.trim();
+  if (!s) return [];
+  if (s.startsWith("[")) {
+    try {
+      const arr = JSON.parse(s);
+      if (Array.isArray(arr)) {
+        return arr
+          .map((o) => parseFilePayload(o))
+          .filter((v): v is FilePayload => v !== null);
+      }
+    } catch { /* ignore */ }
+    return [];
+  }
+  // Legacy single-object format
+  const one = parseFilePayload(s);
+  return one ? [one] : [];
+}
+
+export function serializeFilePayloads(list: FilePayload[]): string {
+  if (!list || list.length === 0) return "";
+  return JSON.stringify(list);
 }
