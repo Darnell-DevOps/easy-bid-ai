@@ -149,6 +149,9 @@ export default function OnboardingResponseDetail() {
                 <ExternalLink className="w-3.5 h-3.5" /> Open client form
               </a>
             </Button>
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={openEditor}>
+              <Pencil className="w-3.5 h-3.5" /> Edit questions
+            </Button>
           </div>
         </div>
 
