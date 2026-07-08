@@ -37,6 +37,7 @@ import ContractDetail from "./pages/ContractDetail";
 import ContractSignPage from "./pages/ContractSignPage";
 import OnboardingFormPage from "./pages/OnboardingFormPage";
 import OnboardingDashboard from "./pages/OnboardingDashboard";
+import OnboardingResponseDetail from "./pages/OnboardingResponseDetail";
 import RetainersPage from "./pages/RetainersPage";
 import NewRetainerPage from "./pages/NewRetainerPage";
 import RetainerDetail from "./pages/RetainerDetail";
