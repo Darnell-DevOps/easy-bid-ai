@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
   parseFilePayload, serializeFilePayload,
+  parseFilePayloads, serializeFilePayloads,
   type SmartField, type FieldResponses, type FilePayload,
 } from "@/lib/form-fields";
 
