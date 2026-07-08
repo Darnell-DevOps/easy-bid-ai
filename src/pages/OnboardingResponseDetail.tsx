@@ -36,6 +36,32 @@ export default function OnboardingResponseDetail() {
   const [form, setForm] = useState<OnboardingFormRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [downloadingPath, setDownloadingPath] = useState<string | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editedFields, setEditedFields] = useState<SmartField[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  const openEditor = () => {
+    if (!form) return;
+    setEditedFields(JSON.parse(JSON.stringify(form.fields)) as SmartField[]);
+    setEditOpen(true);
+  };
+
+  const saveFields = async () => {
+    if (!form) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from("onboarding_forms")
+      .update({ fields: editedFields as any })
+      .eq("id", form.id);
+    setSaving(false);
+    if (error) {
+      toast({ title: "Save failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    setForm({ ...form, fields: editedFields });
+    setEditOpen(false);
+    toast({ title: "Questions updated" });
+  };
 
   useEffect(() => {
     let alive = true;
