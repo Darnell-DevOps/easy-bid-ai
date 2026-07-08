@@ -88,6 +88,7 @@ export function detectServiceKey(service: string | null | undefined): keyof type
   if (/(brand|logo|identity)/i.test(s)) return "branding";
   if (/(social|instagram|tiktok|content|community)/i.test(s)) return "social";
   if (/(market|ads?|seo|paid|growth|email)/i.test(s)) return "marketing";
+  if (/(automation|workflow|zapier|make\.com|integration|ai agent|chatbot|whatsapp bot)/i.test(s)) return "automation";
   if (/(consult|advis|coach|strateg)/i.test(s)) return "consulting";
   return "general";
 }
