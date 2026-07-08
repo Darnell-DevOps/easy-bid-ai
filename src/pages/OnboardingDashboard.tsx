@@ -103,6 +103,11 @@ export default function OnboardingDashboard() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-sm font-semibold text-foreground truncate">{f.client_name || "Client"}</p>
+                        {!f.client_id && f.client_name && (
+                          <Badge variant="outline" className="text-[10px] text-muted-foreground border-muted/60 font-normal">
+                            Client deleted
+                          </Badge>
+                        )}
                         <StatusBadge status={f.status} />
                         {stale && (
                           <Badge variant="outline" className="border-amber-500/40 text-amber-500 text-[10px]">
