@@ -160,6 +160,11 @@ export default function OnboardingResponseDetail() {
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
                 <CardTitle className="text-xl">{form.client_name || "Client"}</CardTitle>
+                {!form.client_id && form.client_name && (
+                  <Badge variant="outline" className="text-[10px] text-muted-foreground border-muted/60 font-normal mt-1">
+                    Client deleted
+                  </Badge>
+                )}
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {form.service_type || "Project"}
                   {form.client_email ? ` · ${form.client_email}` : ""}
