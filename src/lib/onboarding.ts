@@ -66,6 +66,8 @@ const SERVICE_SPECIFIC: Record<string, OnboardingField[]> = {
     { id: "competitors", label: "Main competitors", type: "long_text", group: "Branding specifics" },
     { id: "style_references", label: "Style references", type: "long_text", placeholder: "Brands, moodboards, Pinterest…", group: "Branding specifics" },
     { id: "logo_inspiration", label: "Logo inspiration", type: "long_text", group: "Branding specifics" },
+    { id: "has_existing_logo", label: "Do you already have a logo?", type: "short_text", placeholder: "Yes/No — if yes, you can upload it under Assets you'll provide", group: "Branding specifics" },
+    { id: "logo_usage", label: "Where will the logo be used?", type: "long_text", placeholder: "Website, packaging, signage, social media…", group: "Branding specifics" },
   ],
   social: [
     { id: "platforms", label: "Platforms used", type: "long_text", placeholder: "Instagram, TikTok, LinkedIn…", group: "Social specifics" },
