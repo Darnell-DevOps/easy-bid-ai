@@ -62,7 +62,7 @@ const SERVICE_SPECIFIC: Record<string, OnboardingField[]> = {
     { id: "forms_needed", label: "Do you need booking, payment, or contact forms?", type: "long_text", placeholder: "List any forms or interactive features needed", group: "Website specifics" },
     { id: "competitor_websites", label: "Competitor websites", type: "long_text", placeholder: "Sites of similar businesses, for reference", group: "Website specifics" },
     { id: "content_copy_upload", label: "Upload your website copy/content (if ready)", type: "file", accept: ".doc,.docx,.pdf,.txt", maxSizeMb: 15, group: "Website specifics" },
-    { id: "site_reference_screenshots_upload", label: "Screenshots of sites you like or dislike", type: "file", accept: "image/*", maxSizeMb: 15, group: "Website specifics" },
+    { id: "site_reference_screenshots_upload", label: "Screenshots of sites you like or dislike", type: "file", accept: "image/*", maxSizeMb: 15, multiple: true, group: "Website specifics" },
   ],
   branding: [
     { id: "color_preferences", label: "Colour preferences", type: "long_text", group: "Branding specifics" },
