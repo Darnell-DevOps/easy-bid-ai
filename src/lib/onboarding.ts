@@ -87,23 +87,6 @@ const SERVICE_SPECIFIC: Record<string, OnboardingField[]> = {
     { id: "campaign_goals", label: "Campaign goals", type: "long_text", group: "Marketing specifics" },
     { id: "ad_budget", label: "Ad budget", type: "short_text", placeholder: "Monthly spend", group: "Marketing specifics" },
     { id: "ad_creative_upload", label: "Ad creative examples you like", type: "file", accept: "image/*,.pdf", maxSizeMb: 15, group: "Marketing specifics" },
-    { id: "competitors", label: "Main competitors", type: "long_text", group: "Branding specifics" },
-    { id: "style_references", label: "Style references", type: "long_text", placeholder: "Brands, moodboards, Pinterest…", group: "Branding specifics" },
-    { id: "logo_inspiration", label: "Logo inspiration", type: "long_text", group: "Branding specifics" },
-    { id: "has_existing_logo", label: "Do you already have a logo?", type: "short_text", placeholder: "Yes/No — if yes, you can upload it under Assets you'll provide", group: "Branding specifics" },
-    { id: "logo_usage", label: "Where will the logo be used?", type: "long_text", placeholder: "Website, packaging, signage, social media…", group: "Branding specifics" },
-  ],
-  social: [
-    { id: "platforms", label: "Platforms used", type: "long_text", placeholder: "Instagram, TikTok, LinkedIn…", group: "Social specifics" },
-    { id: "post_frequency", label: "Posting frequency", type: "short_text", placeholder: "e.g. 3x/week", group: "Social specifics" },
-    { id: "brand_tone", label: "Brand tone", type: "long_text", group: "Social specifics" },
-    { id: "content_goals", label: "Content goals", type: "long_text", group: "Social specifics" },
-  ],
-  marketing: [
-    { id: "audience", label: "Who is the audience?", type: "long_text", group: "Marketing specifics" },
-    { id: "offers", label: "Offers / promotions", type: "long_text", group: "Marketing specifics" },
-    { id: "campaign_goals", label: "Campaign goals", type: "long_text", group: "Marketing specifics" },
-    { id: "ad_budget", label: "Ad budget", type: "short_text", placeholder: "Monthly spend", group: "Marketing specifics" },
   ],
   consulting: [
     { id: "current_challenges", label: "Current challenges", type: "long_text", group: "Consulting specifics" },
