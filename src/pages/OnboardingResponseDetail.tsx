@@ -6,15 +6,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  ArrowLeft, Loader2, Download, FileText, ExternalLink, User, Briefcase,
+  ArrowLeft, Loader2, Download, FileText, ExternalLink, User, Briefcase, Pencil,
 } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
+import FieldListEditor from "@/components/forms/FieldListEditor";
 import {
   groupFields,
   onboardingProgress,
   onboardingStatusLabel,
   type OnboardingFormRow,
 } from "@/lib/onboarding";
-import { parseFilePayload, parseFilePayloads, type FilePayload } from "@/lib/form-fields";
+import { parseFilePayload, parseFilePayloads, type FilePayload, type SmartField } from "@/lib/form-fields";
 import { useToast } from "@/hooks/use-toast";
 
 function formatBytes(n: number): string {
@@ -32,6 +36,32 @@ export default function OnboardingResponseDetail() {
   const [form, setForm] = useState<OnboardingFormRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [downloadingPath, setDownloadingPath] = useState<string | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editedFields, setEditedFields] = useState<SmartField[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  const openEditor = () => {
+    if (!form) return;
+    setEditedFields(JSON.parse(JSON.stringify(form.fields)) as SmartField[]);
+    setEditOpen(true);
+  };
+
+  const saveFields = async () => {
+    if (!form) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from("onboarding_forms")
+      .update({ fields: editedFields as any })
+      .eq("id", form.id);
+    setSaving(false);
+    if (error) {
+      toast({ title: "Save failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    setForm({ ...form, fields: editedFields });
+    setEditOpen(false);
+    toast({ title: "Questions updated" });
+  };
 
   useEffect(() => {
     let alive = true;
@@ -118,6 +148,9 @@ export default function OnboardingResponseDetail() {
               <a href={`/onboard/${form.access_token}`} target="_blank" rel="noreferrer">
                 <ExternalLink className="w-3.5 h-3.5" /> Open client form
               </a>
+            </Button>
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={openEditor}>
+              <Pencil className="w-3.5 h-3.5" /> Edit questions
             </Button>
           </div>
         </div>
@@ -230,6 +263,33 @@ export default function OnboardingResponseDetail() {
           </Card>
         ))}
       </div>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit onboarding questions</DialogTitle>
+            <DialogDescription>
+              {form.status === "completed"
+                ? "This client has already completed onboarding — they won't be prompted again unless they revisit the link."
+                : "The client will see these updated questions next time they open their onboarding link."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <FieldListEditor
+              fields={editedFields}
+              onChange={setEditedFields}
+              context="onboarding"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEditOpen(false)} disabled={saving}>Cancel</Button>
+            <Button onClick={saveFields} disabled={saving} className="gap-1.5">
+              {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              Save changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

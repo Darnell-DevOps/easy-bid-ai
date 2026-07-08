@@ -178,30 +178,39 @@ export default function FieldListEditor({ fields, onChange, context = "onboardin
                   )}
 
                   {isFile && (
-                    <div className="grid sm:grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <Label className="text-xs">Max size (MB)</Label>
-                        <Input
-                          type="number"
-                          min={1}
-                          max={20}
-                          value={field.maxSizeMb ?? 20}
-                          onChange={(e) =>
-                            update(idx, { maxSizeMb: Math.max(1, Math.min(20, Number(e.target.value) || 20)) })
-                          }
-                          className="h-8 text-sm"
-                        />
+                    <>
+                      <div className="grid sm:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Max size (MB)</Label>
+                          <Input
+                            type="number"
+                            min={1}
+                            max={30}
+                            value={field.maxSizeMb ?? 30}
+                            onChange={(e) =>
+                              update(idx, { maxSizeMb: Math.max(1, Math.min(30, Number(e.target.value) || 30)) })
+                            }
+                            className="h-8 text-sm"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Accepted types</Label>
+                          <Input
+                            value={field.accept || ""}
+                            onChange={(e) => update(idx, { accept: e.target.value })}
+                            className="h-8 text-sm"
+                            placeholder="image/*, .pdf"
+                          />
+                        </div>
                       </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs">Accepted types</Label>
-                        <Input
-                          value={field.accept || ""}
-                          onChange={(e) => update(idx, { accept: e.target.value })}
-                          className="h-8 text-sm"
-                          placeholder="image/*, .pdf"
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={!!field.multiple}
+                          onCheckedChange={(v) => update(idx, { multiple: v })}
                         />
+                        <Label className="text-xs">Allow multiple files</Label>
                       </div>
-                    </div>
+                    </>
                   )}
 
                   <div className="space-y-1">
