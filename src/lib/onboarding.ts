@@ -98,6 +98,8 @@ const SERVICE_SPECIFIC: Record<string, OnboardingField[]> = {
     { id: "current_tools", label: "What tools/software do you currently use?", type: "long_text", placeholder: "e.g. Gmail, Notion, Airtable, a specific CRM…", group: "Automation specifics" },
     { id: "automation_trigger", label: "What should trigger this workflow?", type: "long_text", placeholder: "e.g. a new form submission, a new lead, a specific time each day", group: "Automation specifics" },
     { id: "automation_outcome", label: "What should happen after it's triggered?", type: "long_text", placeholder: "e.g. send an email, create a task, notify the team", group: "Automation specifics" },
+    { id: "process_screenshot_upload", label: "Screenshot or export of your current process", type: "file", accept: "image/*,.pdf,.csv,.xlsx", maxSizeMb: 15, group: "Automation specifics" },
+    { id: "sample_data_upload", label: "Sample data file (e.g. a spreadsheet of leads)", type: "file", accept: ".csv,.xlsx,.xls", maxSizeMb: 15, group: "Automation specifics" },
   ],
 };
 
