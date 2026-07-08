@@ -164,33 +164,49 @@ export default function OnboardingResponseDetail() {
               {g.fields.map((field) => {
                 const raw = form.responses?.[field.id];
                 if (field.type === "file") {
+                  const renderRow = (payload: FilePayload, key: string) => (
+                    <div key={key} className="flex items-center gap-3 p-3 rounded-lg border border-border/60 bg-muted/20">
+                      <div className="w-9 h-9 rounded-md bg-purple/15 flex items-center justify-center flex-shrink-0">
+                        <FileText className="w-4 h-4 text-purple" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{payload.name}</p>
+                        <p className="text-[11px] text-muted-foreground">{formatBytes(payload.size)}</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5"
+                        onClick={() => download(payload)}
+                        disabled={downloadingPath === payload.path}
+                      >
+                        {downloadingPath === payload.path
+                          ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          : <Download className="w-3.5 h-3.5" />}
+                        Download
+                      </Button>
+                    </div>
+                  );
+                  if (field.multiple) {
+                    const list = parseFilePayloads(raw);
+                    return (
+                      <div key={field.id} className="space-y-1.5">
+                        <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">{field.label}</p>
+                        {list.length > 0 ? (
+                          <div className="space-y-2">
+                            {list.map((p, idx) => renderRow(p, `${p.path}-${idx}`))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground italic">Not uploaded yet</p>
+                        )}
+                      </div>
+                    );
+                  }
                   const payload = parseFilePayload(raw);
                   return (
                     <div key={field.id} className="space-y-1.5">
                       <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">{field.label}</p>
-                      {payload ? (
-                        <div className="flex items-center gap-3 p-3 rounded-lg border border-border/60 bg-muted/20">
-                          <div className="w-9 h-9 rounded-md bg-purple/15 flex items-center justify-center flex-shrink-0">
-                            <FileText className="w-4 h-4 text-purple" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">{payload.name}</p>
-                            <p className="text-[11px] text-muted-foreground">{formatBytes(payload.size)}</p>
-                          </div>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="gap-1.5"
-                            onClick={() => download(payload)}
-                            disabled={downloadingPath === payload.path}
-                          >
-                            {downloadingPath === payload.path
-                              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                              : <Download className="w-3.5 h-3.5" />}
-                            Download
-                          </Button>
-                        </div>
-                      ) : (
+                      {payload ? renderRow(payload, payload.path) : (
                         <p className="text-sm text-muted-foreground italic">Not uploaded yet</p>
                       )}
                     </div>
