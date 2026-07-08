@@ -31,11 +31,22 @@ export default function ContractRenderer({
   // Track the last non-empty label (e.g. "Client", "Service Provider")
   // so we can attach the signature to the right slot.
   let lastLabel = "";
+  // Track when the immediately previous block was a rendered signature
+  // placeholder, so we can suppress the following redundant "Date: ___" line.
+  let skipNextDate = false;
 
   return (
     <article className="max-w-none text-foreground leading-relaxed">
-      {blocks.map((b, i) => {
-        if (b.type === "h1")
+    {blocks.map((b, i) => {
+      // If the previous block was a rendered signature placeholder, suppress
+      // a lone "Date: ___" placeholder line that immediately follows it.
+      if (skipNextDate && b.type === "p" && /^(\*\*)?date:?(\*\*)?\s*_{3,}/i.test(b.text)) {
+        skipNextDate = false;
+        return null;
+      }
+      skipNextDate = false;
+
+      if (b.type === "h1")
           return (
             <h1 key={i} className="text-3xl font-bold text-foreground mt-2 mb-4 tracking-tight">
               {renderInline(b.text)}
@@ -76,6 +87,7 @@ export default function ContractRenderer({
         if (isPlaceholder && matchedSig) {
           const label = lastLabel;
           lastLabel = ""; // consume
+          skipNextDate = true;
           return (
             <div key={i} className="my-3 flex flex-wrap items-end gap-x-8 gap-y-2">
               <div className="flex flex-col">
