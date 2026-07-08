@@ -6,15 +6,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  ArrowLeft, Loader2, Download, FileText, ExternalLink, User, Briefcase,
+  ArrowLeft, Loader2, Download, FileText, ExternalLink, User, Briefcase, Pencil,
 } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
+import FieldListEditor from "@/components/forms/FieldListEditor";
 import {
   groupFields,
   onboardingProgress,
   onboardingStatusLabel,
   type OnboardingFormRow,
 } from "@/lib/onboarding";
-import { parseFilePayload, parseFilePayloads, type FilePayload } from "@/lib/form-fields";
+import { parseFilePayload, parseFilePayloads, type FilePayload, type SmartField } from "@/lib/form-fields";
 import { useToast } from "@/hooks/use-toast";
 
 function formatBytes(n: number): string {
