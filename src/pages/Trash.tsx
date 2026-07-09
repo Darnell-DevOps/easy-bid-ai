@@ -199,13 +199,16 @@ export default function Trash() {
                       {item.proposalCount > 0 && (
                         <Badge variant="secondary" className="text-[10px]">{item.proposalCount} proposal{item.proposalCount !== 1 ? "s" : ""}</Badge>
                       )}
+                      {item.contractCount > 0 && (
+                        <Badge variant="secondary" className="text-[10px]">{item.contractCount} contract{item.contractCount !== 1 ? "s" : ""}</Badge>
+                      )}
                       {item.onboardingCount > 0 && (
                         <Badge variant="secondary" className="text-[10px]">{item.onboardingCount} onboarding form{item.onboardingCount !== 1 ? "s" : ""}</Badge>
                       )}
                       {item.deadlineCount > 0 && (
                         <Badge variant="secondary" className="text-[10px]">{item.deadlineCount} deadline{item.deadlineCount !== 1 ? "s" : ""}</Badge>
                       )}
-                      {item.proposalCount + item.onboardingCount + item.deadlineCount === 0 && (
+                      {item.proposalCount + item.contractCount + item.onboardingCount + item.deadlineCount === 0 && (
                         <span className="text-[11px] text-muted-foreground">No cascaded records</span>
                       )}
                     </div>
