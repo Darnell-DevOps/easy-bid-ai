@@ -51,7 +51,7 @@ export default function ActivationChecklist() {
         supabase.from("proposals").select("id", { count: "exact", head: true }).eq("user_id", user.id).not("sent_at", "is", null),
         supabase.from("proposals").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("client_paid", true),
         supabase.from("booking_links").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-        supabase.from("retainers").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("retainers").select("id", { count: "exact", head: true }).eq("user_id", user.id).is("deleted_at", null),
       ]);
       if (cancelled) return;
       setCounts({
