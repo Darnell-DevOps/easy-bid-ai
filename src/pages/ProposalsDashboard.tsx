@@ -23,6 +23,7 @@ export default function ProposalsDashboard() {
       const { data } = await supabase
         .from("proposals")
         .select("id, status, created_at")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
       setProposals(data || []);
       setLoading(false);

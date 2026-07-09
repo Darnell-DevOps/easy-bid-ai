@@ -19,6 +19,7 @@ export default function OnboardingDashboard() {
     const { data } = await supabase
       .from("onboarding_forms")
       .select("*")
+      .is("deleted_at", null)
       .order("created_at", { ascending: false });
     setForms(((data as unknown) as OnboardingFormRow[]) || []);
     setLoading(false);

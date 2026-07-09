@@ -235,7 +235,7 @@ export default function ClientDetail() {
 
   useEffect(() => {
     const fetchAll = async () => {
-      const { data: c } = await supabase.from("clients").select("*").eq("id", id!).single();
+      const { data: c } = await supabase.from("clients").select("*").eq("id", id!).is("deleted_at", null).maybeSingle();
       const client = c as ClientInfo | null;
       const email = client?.email?.toLowerCase() || null;
       const name = client?.name || null;
@@ -245,6 +245,7 @@ export default function ClientDetail() {
           .from("proposals")
           .select("id, service_type, budget, created_at, status, client_paid, invoice_content")
           .eq("client_id", id!)
+          .is("deleted_at", null)
           .order("created_at", { ascending: false }),
         supabase
           .from("contracts")
@@ -260,6 +261,7 @@ export default function ClientDetail() {
           .from("onboarding_forms")
           .select("id, service_type, status, access_token, sent_at, completed_at, created_at")
           .eq("client_id", id!)
+          .is("deleted_at", null)
           .order("created_at", { ascending: false }),
         email
           ? supabase
@@ -360,11 +362,16 @@ export default function ClientDetail() {
   const deleteClient = async () => {
     if (!client) return;
     setDeleting(true);
-    await supabase.from("proposals").delete().eq("client_id", client.id);
-    await supabase.from("clients").delete().eq("id", client.id);
+    const now = new Date().toISOString();
+    await Promise.all([
+      supabase.from("proposals").update({ deleted_at: now }).eq("client_id", client.id).is("deleted_at", null),
+      supabase.from("onboarding_forms").update({ deleted_at: now }).eq("client_id", client.id).is("deleted_at", null),
+      supabase.from("deadlines").update({ deleted_at: now }).eq("client_id", client.id).is("deleted_at", null),
+    ]);
+    await supabase.from("clients").update({ deleted_at: now }).eq("id", client.id);
     toast({
-      title: "Client deleted",
-      description: "Client and all associated data have been permanently removed.",
+      title: "Client moved to Trash",
+      description: "You can restore this client from Trash before it's permanently removed.",
     });
     navigate("/dashboard/clients");
   };
@@ -1400,10 +1407,10 @@ export default function ClientDetail() {
         <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete {client.name}?</AlertDialogTitle>
+              <AlertDialogTitle>Move {client.name} to Trash?</AlertDialogTitle>
               <AlertDialogDescription>
-                This will permanently delete this client and all associated proposals
-                and invoices. This action cannot be undone.
+                This will move {client.name} and their proposals, onboarding forms, and deadlines to Trash.
+                You can restore them later, or they'll be permanently deleted after your configured retention period.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -1413,7 +1420,7 @@ export default function ClientDetail() {
                 disabled={deleting}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
-                {deleting ? "Deleting…" : "Delete permanently"}
+                {deleting ? "Moving…" : "Move to Trash"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

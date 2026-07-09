@@ -73,10 +73,12 @@ export default function Dashboard() {
         .select(
           "id, client_name, company_name, service_type, created_at, proposal_content, invoice_content, budget, client_paid, status, sent_at, viewed_at, accepted_at, rejected_at, paid_at",
         )
+        .is("deleted_at", null)
         .order("created_at", { ascending: false }),
       supabase
         .from("clients")
         .select("id, name, status, created_at, company, service_requested, budget, timeline, goals, project_description")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false }),
     ]);
     setProposals(propRes.data || []);

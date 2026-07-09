@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   FileText, Plus, Settings, LogOut, Menu, X, LayoutTemplate, Users, Sparkles,
   ScrollText, Calendar, FileSignature, ClipboardList, Repeat, LifeBuoy, Mail,
-  Shield, Star, ChevronLeft, ChevronRight, CreditCard, TrendingUp, Eye,
+  Shield, Star, ChevronLeft, ChevronRight, CreditCard, TrendingUp, Eye, Trash2,
 } from "lucide-react";
 import { useIsSuperAdmin } from "@/hooks/useIsSuperAdmin";
 import { useUnreadLeadsCount } from "@/hooks/use-unread-leads";
@@ -70,7 +70,10 @@ const navGroups: NavGroup[] = [
   },
   {
     label: "System",
-    items: [{ label: "Settings", icon: Settings, href: "/dashboard/settings" }],
+    items: [
+      { label: "Settings", icon: Settings, href: "/dashboard/settings" },
+      { label: "Trash", icon: Trash2, href: "/dashboard/trash" },
+    ],
   },
 ];
 
