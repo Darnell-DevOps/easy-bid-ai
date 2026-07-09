@@ -151,28 +151,25 @@ export default function UpcomingAndRecent({ proposals }: Props) {
                 View all <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
-            {activities.length === 0 ? (
-              <div className="px-4 py-6 text-xs text-muted-foreground">Nothing recent yet.</div>
-            ) : (
-              <ul className="divide-y divide-border/60">
-                {activities.map((e) => {
-                  const Icon = e.icon;
-                  return (
-                    <li key={e.id}>
-                      <Link
-                        to={e.href}
-                        className="px-4 py-3 flex items-center gap-3 hover:bg-muted/30 transition-colors"
-                      >
-                        <Icon className={`w-4 h-4 flex-shrink-0 ${e.tone}`} />
-                        <span className="text-sm text-foreground flex-1 truncate">{e.text}</span>
-                        <span className="text-xs text-muted-foreground flex-shrink-0">{timeAgo(e.iso)}</span>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </CardContent>
-          </Card>
+            <ul className="divide-y divide-border/60">
+              {activities.map((e) => {
+                const Icon = e.icon;
+                return (
+                  <li key={e.id}>
+                    <Link
+                      to={e.href}
+                      className="px-4 py-3 flex items-center gap-3 hover:bg-muted/30 transition-colors"
+                    >
+                      <Icon className={`w-4 h-4 flex-shrink-0 ${e.tone}`} />
+                      <span className="text-sm text-foreground flex-1 truncate">{e.text}</span>
+                      <span className="text-xs text-muted-foreground flex-shrink-0">{timeAgo(e.iso)}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </CardContent>
+        </Card>
         )}
       </div>
     </section>
