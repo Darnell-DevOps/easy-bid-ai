@@ -367,6 +367,7 @@ export default function ClientDetail() {
       supabase.from("proposals").update({ deleted_at: now }).eq("client_id", client.id).is("deleted_at", null),
       supabase.from("onboarding_forms").update({ deleted_at: now }).eq("client_id", client.id).is("deleted_at", null),
       supabase.from("deadlines").update({ deleted_at: now }).eq("client_id", client.id).is("deleted_at", null),
+      supabase.from("contracts").update({ deleted_at: now }).eq("client_id", client.id).is("deleted_at", null),
     ]);
     await supabase.from("clients").update({ deleted_at: now }).eq("id", client.id);
     toast({
