@@ -508,14 +508,22 @@ export default function ClientPortal() {
         ctaLabel: onboardingStarted ? "Continue" : "Start onboarding",
         href: `/onboard/${onboarding.access_token}`,
       };
-    } else if (stage === "kickoff" && bookingLink) {
-      nextAction = {
-        title: "Book your kickoff call",
-        description: "Pick a time that works for you and we'll get started.",
-        icon: CalendarPlus,
-        ctaLabel: "Schedule call",
-        href: `/book/${bookingLink.slug}?proposal=${proposal.id}`,
-      };
+    } else if (stage === "kickoff" && (ownerKickoffUrl || bookingLink)) {
+      nextAction = ownerKickoffUrl
+        ? {
+            title: "Book your kickoff call",
+            description: "Pick a time that works for you and we'll get started.",
+            icon: CalendarPlus,
+            ctaLabel: "Schedule call",
+            onClick: () => window.open(ownerKickoffUrl, "_blank", "noopener,noreferrer"),
+          }
+        : {
+            title: "Book your kickoff call",
+            description: "Pick a time that works for you and we'll get started.",
+            icon: CalendarPlus,
+            ctaLabel: "Schedule call",
+            href: `/book/${bookingLink!.slug}?proposal=${proposal.id}`,
+          };
     }
   }
 
