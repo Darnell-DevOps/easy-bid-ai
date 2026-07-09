@@ -147,7 +147,8 @@ export async function syncAutoDeadlines(userId: string): Promise<number> {
     supabase
       .from("contracts")
       .select("id, client_id, client_name, contract_type, title, body, status, signed_at, sent_at, created_at")
-      .eq("user_id", userId),
+      .eq("user_id", userId)
+      .is("deleted_at", null),
     supabase
       .from("retainers")
       .select("id, client_id, client_name, title, end_date, next_billing_date, status, auto_renew")
