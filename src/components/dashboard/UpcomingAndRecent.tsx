@@ -171,9 +171,9 @@ export default function UpcomingAndRecent({ proposals }: Props) {
                   );
                 })}
               </ul>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </section>
   );
