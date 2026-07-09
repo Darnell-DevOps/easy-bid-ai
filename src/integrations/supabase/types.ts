@@ -563,6 +563,7 @@ export type Database = {
           original_lead_message: string | null
           phone: string | null
           project_description: string | null
+          project_stage: string | null
           service_requested: string | null
           status: string
           timeline: string | null
@@ -599,6 +600,7 @@ export type Database = {
           original_lead_message?: string | null
           phone?: string | null
           project_description?: string | null
+          project_stage?: string | null
           service_requested?: string | null
           status?: string
           timeline?: string | null
@@ -635,6 +637,7 @@ export type Database = {
           original_lead_message?: string | null
           phone?: string | null
           project_description?: string | null
+          project_stage?: string | null
           service_requested?: string | null
           status?: string
           timeline?: string | null
@@ -2645,16 +2648,19 @@ export type Database = {
       }
       user_settings: {
         Row: {
+          kickoff_booking_url: string | null
           trash_retention_days: number
           updated_at: string
           user_id: string
         }
         Insert: {
+          kickoff_booking_url?: string | null
           trash_retention_days?: number
           updated_at?: string
           user_id: string
         }
         Update: {
+          kickoff_booking_url?: string | null
           trash_retention_days?: number
           updated_at?: string
           user_id?: string
@@ -3070,6 +3076,10 @@ export type Database = {
           slug: string
         }[]
       }
+      public_get_kickoff_booking_url: {
+        Args: { _user_id: string }
+        Returns: string
+      }
       public_get_lead_form_by_slug: {
         Args: { _slug: string }
         Returns: {
@@ -3307,6 +3317,10 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      recompute_kickoff_readiness: {
+        Args: { _client_id: string }
+        Returns: undefined
       }
       testimonial_request_get: { Args: { _token: string }; Returns: Json }
       testimonial_submit: {
