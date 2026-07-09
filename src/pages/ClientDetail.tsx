@@ -251,6 +251,7 @@ export default function ClientDetail() {
           .from("contracts")
           .select("id, title, contract_type, status, amount_cents, currency, signed_at, countersigned_at, created_at")
           .eq("client_id", id!)
+          .is("deleted_at", null)
           .order("created_at", { ascending: false }),
         supabase
           .from("retainers")
