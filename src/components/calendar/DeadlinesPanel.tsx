@@ -103,9 +103,9 @@ export default function DeadlinesPanel() {
     if (!user) return;
     setUserId(user.id);
     const [dRes, cRes, pRes, kRes] = await Promise.all([
-      supabase.from("deadlines").select("*").order("due_date", { ascending: true }),
-      supabase.from("clients").select("id, name").order("name"),
-      supabase.from("proposals").select("id, client_name, service_type").order("created_at", { ascending: false }),
+      supabase.from("deadlines").select("*").is("deleted_at", null).order("due_date", { ascending: true }),
+      supabase.from("clients").select("id, name").is("deleted_at", null).order("name"),
+      supabase.from("proposals").select("id, client_name, service_type").is("deleted_at", null).order("created_at", { ascending: false }),
       supabase.from("contracts").select("id, title, client_name").order("created_at", { ascending: false }),
     ]);
     setRows((dRes.data as DeadlineRow[]) || []);
@@ -572,6 +572,7 @@ export function DeadlineAlerts() {
     supabase
       .from("deadlines")
       .select("*")
+      .is("deleted_at", null)
       .neq("status", "completed")
       .order("due_date", { ascending: true })
       .limit(50)

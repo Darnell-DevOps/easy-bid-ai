@@ -22,6 +22,7 @@ export default function OnboardingWidget({ className }: Props) {
     const { data } = await supabase
       .from("onboarding_forms")
       .select("*")
+      .is("deleted_at", null)
       .order("created_at", { ascending: false })
       .limit(20);
     setForms(((data as unknown) as OnboardingFormRow[]) || []);

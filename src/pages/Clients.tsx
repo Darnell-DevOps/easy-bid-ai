@@ -98,6 +98,7 @@ export default function Clients() {
       const { data } = await supabase
         .from("clients")
         .select("*")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
       setClients((data as Client[]) || []);
       setLoading(false);
