@@ -397,9 +397,38 @@ export default function AttentionCenter({ proposals, clients, proposalClientName
       }
     }
 
+    // 9. Deadlines — overdue (critical) and due within 7d (warning)
+    for (const d of deadlines) {
+      const status = deriveStatus(d);
+      if (status === "overdue") {
+        const daysLate = Math.floor((Date.now() - new Date(d.due_date + "T00:00:00").getTime()) / 86400000);
+        out.push({
+          key: `dl-${d.id}`,
+          tone: "critical",
+          icon: AlertTriangle,
+          title: `Overdue: ${d.title}`,
+          subtitle: `${daysLate} day${daysLate === 1 ? "" : "s"} past due${d.client_name ? " · " + d.client_name : ""}`,
+          cta: "Open",
+          onClick: () => navigate("/dashboard/calendar"),
+          priority: 98 + Math.min(daysLate, 20),
+        });
+      } else if (status === "due_soon") {
+        out.push({
+          key: `dl-${d.id}`,
+          tone: "warning",
+          icon: CalendarClock,
+          title: `Due soon: ${d.title}`,
+          subtitle: `${new Date(d.due_date + "T00:00:00").toLocaleDateString()}${d.client_name ? " · " + d.client_name : ""}`,
+          cta: "Open",
+          onClick: () => navigate("/dashboard/calendar"),
+          priority: 65,
+        });
+      }
+    }
+
     out.sort((a, b) => b.priority - a.priority);
-    return out.slice(0, 6);
-  }, [proposals, clients, proposalClientNames, contracts, onboarding, bookings, navigate]);
+    return out;
+  }, [proposals, clients, proposalClientNames, contracts, onboarding, bookings, deadlines, navigate]);
 
   const followUpProposal = followUpTarget?.proposal;
   const clientUrl = followUpProposal
