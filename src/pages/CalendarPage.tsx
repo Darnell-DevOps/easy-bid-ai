@@ -40,6 +40,7 @@ import {
   CalendarPlus,
   ExternalLink,
   X,
+  Star,
 } from "lucide-react";
 import {
   DAY_NAMES,
