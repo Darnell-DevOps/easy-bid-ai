@@ -535,7 +535,7 @@ export default function DataExportsSettings() {
               <p className="text-xs text-muted-foreground">How long deleted items remain recoverable</p>
             </div>
           </div>
-          <Select value={retention} onValueChange={(v: Retention) => setRetention(v)}>
+          <Select value={retention} onValueChange={(v: Retention) => updateRetention(v)} disabled={retentionSaving}>
             <SelectTrigger className="max-w-md">
               <SelectValue />
             </SelectTrigger>
