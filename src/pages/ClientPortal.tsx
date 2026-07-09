@@ -320,6 +320,7 @@ export default function ClientPortal() {
             .insert({
               user_id: proposal.user_id,
               proposal_id: proposal.id,
+              client_id: (proposal as any).client_id || null,
               contract_type: "service_agreement",
               title: data.title || "Service Agreement",
               body: data.body,
