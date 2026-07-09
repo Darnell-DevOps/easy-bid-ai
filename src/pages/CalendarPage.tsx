@@ -671,6 +671,21 @@ export default function CalendarPage() {
                         {link.available_days.map((d) => DAY_NAMES[d]).join(", ")}
                       </Badge>
                     </div>
+                    {(() => {
+                      const isKickoff = !!(link as BookingLinkRow & { is_kickoff_default?: boolean }).is_kickoff_default;
+                      return (
+                        <Button
+                          size="sm"
+                          variant={isKickoff ? "default" : "outline"}
+                          onClick={() => setKickoffDefault(link.id)}
+                          className="w-full gap-1.5 text-xs"
+                          title={isKickoff ? "Currently used for client kickoff CTAs. Click to unset." : "Use this link for client kickoff CTAs."}
+                        >
+                          <Star className={`w-3 h-3 ${isKickoff ? "fill-current" : ""}`} />
+                          {isKickoff ? "Kickoff link" : "Set as kickoff link"}
+                        </Button>
+                      );
+                    })()}
                     <div className="flex gap-2">
                       <Button size="sm" variant="outline" onClick={() => copyLink(link.slug)} className="flex-1 gap-1.5 text-xs">
                         <Copy className="w-3 h-3" /> Copy link
