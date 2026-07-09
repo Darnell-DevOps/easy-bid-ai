@@ -104,7 +104,13 @@ function deriveProjectStage(
   onboarding: OnboardingFormRow | null,
   hasBooking: boolean,
 ): ProjectStage {
-  if (onboarding?.status === "completed") return hasBooking ? "active" : "kickoff";
+  if (onboarding?.status === "completed") {
+    // Kickoff/active require a fully executed contract (client-signed + provider-countersigned).
+    // If onboarding is done but the contract isn't executed yet, keep showing "onboarding"
+    // so we don't prematurely surface the kickoff CTA.
+    if (contract && contract.status !== "executed") return "onboarding";
+    return hasBooking ? "active" : "kickoff";
+  }
   if (p.client_paid) return "onboarding";
   if (contract?.status === "signed") return "payment";
   if (p.status === "accepted" || p.accepted_at) return "contract";
