@@ -477,7 +477,7 @@ export default function AttentionCenter({ proposals, clients, proposalClientName
       </div>
 
       <div className="space-y-2">
-        {items.map((item) => {
+        {(expanded ? items : items.slice(0, 4)).map((item) => {
           const Icon = item.icon;
           const styles = TONE[item.tone];
           return (
@@ -504,6 +504,16 @@ export default function AttentionCenter({ proposals, clients, proposalClientName
             </Card>
           );
         })}
+        {items.length > 4 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full text-xs text-muted-foreground hover:text-foreground"
+            onClick={() => setExpanded((v) => !v)}
+          >
+            {expanded ? "Show less" : `Show ${items.length - 4} more`}
+          </Button>
+        )}
       </div>
 
       {followUpTarget && followUpProposal && (
