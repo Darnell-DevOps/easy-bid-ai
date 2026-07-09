@@ -99,8 +99,13 @@ export default function Trash() {
       supabase.from("proposals").update({ deleted_at: null }).eq("client_id", item.id),
       supabase.from("onboarding_forms").update({ deleted_at: null }).eq("client_id", item.id),
       supabase.from("deadlines").update({ deleted_at: null }).eq("client_id", item.id),
+      supabase.from("contracts").update({ deleted_at: null }).eq("client_id", item.id),
     ]);
     await supabase.from("clients").update({ deleted_at: null }).eq("id", item.id);
+    toast({ title: "Client restored", description: `${item.name || "Client"} and their records are back.` });
+    setBusy(null);
+    load();
+  };
     toast({ title: "Client restored", description: `${item.name || "Client"} and their records are back.` });
     setBusy(null);
     load();
