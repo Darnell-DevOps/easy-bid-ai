@@ -239,7 +239,7 @@ export default function Trash() {
           <AlertDialogHeader>
             <AlertDialogTitle>Permanently delete {confirmPurge?.name || "client"}?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently erase this client and their proposals, onboarding forms, deadlines, and any uploaded files.
+              This will permanently erase this client and their proposals, contracts, onboarding forms, deadlines, and any uploaded files.
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
