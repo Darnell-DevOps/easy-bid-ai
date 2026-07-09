@@ -78,7 +78,7 @@ export default function Dashboard() {
         .order("created_at", { ascending: false }),
       supabase
         .from("clients")
-        .select("id, name, status, created_at, company, service_requested, budget, timeline, goals, project_description")
+        .select("id, name, status, created_at, company, service_requested, budget, timeline, goals, project_description, lead_score")
         .is("deleted_at", null)
         .order("created_at", { ascending: false }),
     ]);
