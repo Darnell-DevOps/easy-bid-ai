@@ -94,6 +94,7 @@ interface Item {
   priority: number;
   value?: number;
   waitedFor?: string;
+  hint?: string;
 }
 
 const TONE: Record<Tone, { card: string; iconWrap: string; icon: string; btn: string; chip: string }> = {
