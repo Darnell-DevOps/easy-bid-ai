@@ -757,7 +757,7 @@ export default function ClientPortal() {
                 >
                   <RouterLink to={`/sign/${contract.signing_token}`}>
                     <FileSignature className="w-4 h-4" />
-                    {contract.status === "signed" ? "View signed contract" : "Review & sign contract"}
+                    {contract.status === "signed" || contract.status === "executed" ? "Review" : "Review & sign contract"}
                   </RouterLink>
                 </Button>
               </div>
@@ -822,9 +822,11 @@ export default function ClientPortal() {
               Payment received — we're on it
             </h2>
             <p className="text-muted-foreground text-sm mb-5">
-              Thanks! A confirmation has been sent. {(ownerKickoffUrl || bookingLink) ? "Lock in your kickoff call below." : "We'll be in touch shortly to kick things off."}
+              Thanks! A confirmation has been sent. {upcomingBooking
+                ? `Your kickoff call is booked for ${new Date(upcomingBooking.scheduled_at).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}.`
+                : (ownerKickoffUrl || bookingLink) ? "Lock in your kickoff call below." : "We'll be in touch shortly to kick things off."}
             </p>
-            {(ownerKickoffUrl || bookingLink) && (
+            {!upcomingBooking && (ownerKickoffUrl || bookingLink) && (
               <Button
                 size="lg"
                 asChild
@@ -844,7 +846,7 @@ export default function ClientPortal() {
               </Button>
             )}
           </section>
-        ) : isAccepted && isContractSigned && !hasPrice && (ownerKickoffUrl || bookingLink) ? (
+        ) : isAccepted && isContractSigned && !hasPrice && !upcomingBooking && (ownerKickoffUrl || bookingLink) ? (
           <section className="rounded-xl border border-purple/30 bg-gradient-to-br from-purple/10 via-accent/5 to-transparent p-6 lg:p-10 text-center">
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-purple/15 mb-4">
               <CalendarPlus className="w-6 h-6 text-purple" />
