@@ -815,18 +815,25 @@ export default function ClientPortal() {
               Payment received — we're on it
             </h2>
             <p className="text-muted-foreground text-sm mb-5">
-              Thanks! A confirmation has been sent. {bookingLink ? "Lock in your kickoff call below." : "We'll be in touch shortly to kick things off."}
+              Thanks! A confirmation has been sent. {(ownerKickoffUrl || bookingLink) ? "Lock in your kickoff call below." : "We'll be in touch shortly to kick things off."}
             </p>
-            {bookingLink && (
+            {(ownerKickoffUrl || bookingLink) && (
               <Button
                 size="lg"
                 asChild
                 className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110"
               >
-                <RouterLink to={`/book/${bookingLink.slug}?proposal=${proposal.id}`}>
-                  <CalendarPlus className="w-4 h-4" />
-                  Book your kickoff call
-                </RouterLink>
+                {ownerKickoffUrl ? (
+                  <a href={ownerKickoffUrl} target="_blank" rel="noopener noreferrer">
+                    <CalendarPlus className="w-4 h-4" />
+                    Book your kickoff call
+                  </a>
+                ) : (
+                  <RouterLink to={`/book/${bookingLink!.slug}?proposal=${proposal.id}`}>
+                    <CalendarPlus className="w-4 h-4" />
+                    Book your kickoff call
+                  </RouterLink>
+                )}
               </Button>
             )}
           </section>
