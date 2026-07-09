@@ -35,6 +35,7 @@ export default function RetainersWidget() {
         .select(
           "id, client_name, amount_cents, currency, billing_interval, custom_interval_days, status, next_billing_date, end_date, has_failed_payment",
         )
+        .is("deleted_at", null)
         .order("next_billing_date", { ascending: true, nullsFirst: false });
       setRows((data as Row[]) || []);
       setLoading(false);

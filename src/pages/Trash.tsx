@@ -22,6 +22,7 @@ interface TrashedClient {
   onboardingCount: number;
   deadlineCount: number;
   contractCount: number;
+  retainerCount: number;
   onboardingIds: string[];
 }
 
@@ -59,11 +60,12 @@ export default function Trash() {
       return;
     }
     const ids = rows.map((c) => c.id);
-    const [propRes, onbRes, dlRes, ctRes] = await Promise.all([
+    const [propRes, onbRes, dlRes, ctRes, rtRes] = await Promise.all([
       supabase.from("proposals").select("client_id").in("client_id", ids).not("deleted_at", "is", null),
       supabase.from("onboarding_forms").select("id, client_id").in("client_id", ids).not("deleted_at", "is", null),
       supabase.from("deadlines").select("client_id").in("client_id", ids).not("deleted_at", "is", null),
       supabase.from("contracts").select("client_id").in("client_id", ids).not("deleted_at", "is", null),
+      supabase.from("retainers").select("client_id").in("client_id", ids).not("deleted_at", "is", null),
     ]);
     const propCount = new Map<string, number>();
     (propRes.data || []).forEach((r: any) => propCount.set(r.client_id, (propCount.get(r.client_id) || 0) + 1));
@@ -79,6 +81,8 @@ export default function Trash() {
     (dlRes.data || []).forEach((r: any) => dlCount.set(r.client_id, (dlCount.get(r.client_id) || 0) + 1));
     const ctCount = new Map<string, number>();
     (ctRes.data || []).forEach((r: any) => ctCount.set(r.client_id, (ctCount.get(r.client_id) || 0) + 1));
+    const rtCount = new Map<string, number>();
+    (rtRes.data || []).forEach((r: any) => rtCount.set(r.client_id, (rtCount.get(r.client_id) || 0) + 1));
 
     setItems(rows.map((c) => ({
       ...c,
@@ -86,6 +90,7 @@ export default function Trash() {
       onboardingCount: onbCount.get(c.id) || 0,
       deadlineCount: dlCount.get(c.id) || 0,
       contractCount: ctCount.get(c.id) || 0,
+      retainerCount: rtCount.get(c.id) || 0,
       onboardingIds: onbIds.get(c.id) || [],
     })));
     setLoading(false);
@@ -100,6 +105,8 @@ export default function Trash() {
       supabase.from("onboarding_forms").update({ deleted_at: null }).eq("client_id", item.id),
       supabase.from("deadlines").update({ deleted_at: null }).eq("client_id", item.id),
       supabase.from("contracts").update({ deleted_at: null }).eq("client_id", item.id),
+      supabase.from("retainers").update({ deleted_at: null }).eq("client_id", item.id),
+      supabase.from("lead_auto_send_log").update({ deleted_at: null }).eq("client_id", item.id),
     ]);
     await supabase.from("clients").update({ deleted_at: null }).eq("id", item.id);
     toast({ title: "Client restored", description: `${item.name || "Client"} and their records are back.` });
@@ -141,6 +148,8 @@ export default function Trash() {
         supabase.from("onboarding_forms").delete().eq("client_id", item.id),
         supabase.from("deadlines").delete().eq("client_id", item.id),
         supabase.from("contracts").delete().eq("client_id", item.id),
+        supabase.from("retainers").delete().eq("client_id", item.id),
+        supabase.from("lead_auto_send_log").delete().eq("client_id", item.id),
       ]);
       const { error } = await supabase.from("clients").delete().eq("id", item.id);
       if (error) throw error;
@@ -202,13 +211,16 @@ export default function Trash() {
                       {item.contractCount > 0 && (
                         <Badge variant="secondary" className="text-[10px]">{item.contractCount} contract{item.contractCount !== 1 ? "s" : ""}</Badge>
                       )}
+                      {item.retainerCount > 0 && (
+                        <Badge variant="secondary" className="text-[10px]">{item.retainerCount} retainer{item.retainerCount !== 1 ? "s" : ""}</Badge>
+                      )}
                       {item.onboardingCount > 0 && (
                         <Badge variant="secondary" className="text-[10px]">{item.onboardingCount} onboarding form{item.onboardingCount !== 1 ? "s" : ""}</Badge>
                       )}
                       {item.deadlineCount > 0 && (
                         <Badge variant="secondary" className="text-[10px]">{item.deadlineCount} deadline{item.deadlineCount !== 1 ? "s" : ""}</Badge>
                       )}
-                      {item.proposalCount + item.contractCount + item.onboardingCount + item.deadlineCount === 0 && (
+                      {item.proposalCount + item.contractCount + item.retainerCount + item.onboardingCount + item.deadlineCount === 0 && (
                         <span className="text-[11px] text-muted-foreground">No cascaded records</span>
                       )}
                     </div>

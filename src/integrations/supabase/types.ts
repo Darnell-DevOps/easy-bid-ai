@@ -1261,6 +1261,7 @@ export type Database = {
           confidence: string | null
           created_at: string
           decision: string
+          deleted_at: string | null
           id: string
           metadata: Json
           reason: string | null
@@ -1273,6 +1274,7 @@ export type Database = {
           confidence?: string | null
           created_at?: string
           decision: string
+          deleted_at?: string | null
           id?: string
           metadata?: Json
           reason?: string | null
@@ -1285,13 +1287,22 @@ export type Database = {
           confidence?: string | null
           created_at?: string
           decision?: string
+          deleted_at?: string | null
           id?: string
           metadata?: Json
           reason?: string | null
           subject?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "lead_auto_send_log_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lead_form_submission_log: {
         Row: {
@@ -2157,6 +2168,7 @@ export type Database = {
           currency: string
           current_period_end: string | null
           custom_interval_days: number | null
+          deleted_at: string | null
           description: string | null
           end_date: string | null
           environment: string | null
@@ -2205,6 +2217,7 @@ export type Database = {
           currency?: string
           current_period_end?: string | null
           custom_interval_days?: number | null
+          deleted_at?: string | null
           description?: string | null
           end_date?: string | null
           environment?: string | null
@@ -2253,6 +2266,7 @@ export type Database = {
           currency?: string
           current_period_end?: string | null
           custom_interval_days?: number | null
+          deleted_at?: string | null
           description?: string | null
           end_date?: string | null
           environment?: string | null
@@ -2285,7 +2299,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "retainers_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       review_requests: {
         Row: {
@@ -3253,6 +3275,7 @@ export type Database = {
           currency: string
           current_period_end: string | null
           custom_interval_days: number | null
+          deleted_at: string | null
           description: string | null
           end_date: string | null
           environment: string | null

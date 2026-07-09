@@ -127,6 +127,7 @@ export default function RecoveryDashboard() {
           .select(
             "id, client_name, client_email, title, amount_cents, currency, status, has_failed_payment, failed_payment_reason, failed_payment_at, payment_retry_count, end_date, access_token, paddle_subscription_id, auto_renew, client_id, service_type",
           )
+          .is("deleted_at", null)
           .order("failed_payment_at", { ascending: false, nullsFirst: false }),
         supabase
           .from("retainer_invoices")
