@@ -55,6 +55,7 @@ import LeadFormEditor from "./pages/LeadFormEditor";
 import PublicLeadFormPage from "./pages/PublicLeadFormPage";
 import LeadInbox from "./pages/LeadInbox";
 import Trash from "./pages/Trash";
+import KickoffDashboard from "./pages/KickoffDashboard";
 import NotFound from "./pages/NotFound";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { PageTransition } from "@/components/PageTransition";
@@ -90,6 +91,7 @@ const App = () => (
             <Route path="/onboarding" element={<AuthGuard><Onboarding /></AuthGuard>} />
             <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
             <Route path="/dashboard/trash" element={<AuthGuard><Trash /></AuthGuard>} />
+            <Route path="/dashboard/kickoff" element={<AuthGuard><KickoffDashboard /></AuthGuard>} />
             <Route path="/dashboard/onboarding" element={<AuthGuard><OnboardingDashboard /></AuthGuard>} />
             <Route path="/dashboard/onboarding/:id" element={<AuthGuard><OnboardingResponseDetail /></AuthGuard>} />
             <Route path="/dashboard/calendar" element={<AuthGuard><CalendarPage /></AuthGuard>} />

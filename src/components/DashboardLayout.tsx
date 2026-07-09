@@ -52,6 +52,7 @@ const navGroups: NavGroup[] = [
     items: [
       { label: "Calendar", icon: Calendar, href: "/dashboard/calendar" },
       { label: "Onboarding", icon: ClipboardList, href: "/dashboard/onboarding" },
+      { label: "Kickoff", icon: FileSignature, href: "/dashboard/kickoff" },
     ],
   },
   {
