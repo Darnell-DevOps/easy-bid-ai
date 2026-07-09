@@ -539,6 +539,7 @@ export type Database = {
           budget: string | null
           company: string | null
           created_at: string
+          deleted_at: string | null
           email: string | null
           goals: string | null
           id: string
@@ -574,6 +575,7 @@ export type Database = {
           budget?: string | null
           company?: string | null
           created_at?: string
+          deleted_at?: string | null
           email?: string | null
           goals?: string | null
           id?: string
@@ -609,6 +611,7 @@ export type Database = {
           budget?: string | null
           company?: string | null
           created_at?: string
+          deleted_at?: string | null
           email?: string | null
           goals?: string | null
           id?: string
@@ -889,6 +892,7 @@ export type Database = {
           completed_at: string | null
           contract_id: string | null
           created_at: string
+          deleted_at: string | null
           due_date: string
           id: string
           notes: string | null
@@ -911,6 +915,7 @@ export type Database = {
           completed_at?: string | null
           contract_id?: string | null
           created_at?: string
+          deleted_at?: string | null
           due_date: string
           id?: string
           notes?: string | null
@@ -933,6 +938,7 @@ export type Database = {
           completed_at?: string | null
           contract_id?: string | null
           created_at?: string
+          deleted_at?: string | null
           due_date?: string
           id?: string
           notes?: string | null
@@ -1511,6 +1517,7 @@ export type Database = {
           client_name: string
           completed_at: string | null
           created_at: string
+          deleted_at: string | null
           fields: Json
           id: string
           proposal_id: string | null
@@ -1530,6 +1537,7 @@ export type Database = {
           client_name?: string
           completed_at?: string | null
           created_at?: string
+          deleted_at?: string | null
           fields?: Json
           id?: string
           proposal_id?: string | null
@@ -1549,6 +1557,7 @@ export type Database = {
           client_name?: string
           completed_at?: string | null
           created_at?: string
+          deleted_at?: string | null
           fields?: Json
           id?: string
           proposal_id?: string | null
@@ -1816,6 +1825,7 @@ export type Database = {
           company_name: string
           created_at: string
           currency: string | null
+          deleted_at: string | null
           id: string
           invoice_content: string | null
           notes: string | null
@@ -1844,6 +1854,7 @@ export type Database = {
           company_name: string
           created_at?: string
           currency?: string | null
+          deleted_at?: string | null
           id?: string
           invoice_content?: string | null
           notes?: string | null
@@ -1872,6 +1883,7 @@ export type Database = {
           company_name?: string
           created_at?: string
           currency?: string | null
+          deleted_at?: string | null
           id?: string
           invoice_content?: string | null
           notes?: string | null
@@ -3076,6 +3088,7 @@ export type Database = {
           client_name: string
           completed_at: string | null
           created_at: string
+          deleted_at: string | null
           fields: Json
           id: string
           proposal_id: string | null
@@ -3104,6 +3117,7 @@ export type Database = {
           client_name: string
           completed_at: string | null
           created_at: string
+          deleted_at: string | null
           fields: Json
           id: string
           proposal_id: string | null
@@ -3136,6 +3150,7 @@ export type Database = {
           company_name: string
           created_at: string
           currency: string | null
+          deleted_at: string | null
           id: string
           invoice_content: string | null
           notes: string | null
