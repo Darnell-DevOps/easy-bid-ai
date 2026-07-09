@@ -757,7 +757,7 @@ export default function ClientPortal() {
                 >
                   <RouterLink to={`/sign/${contract.signing_token}`}>
                     <FileSignature className="w-4 h-4" />
-                    {contract.status === "signed" ? "View signed contract" : "Review & sign contract"}
+                    {contract.status === "signed" || contract.status === "executed" ? "Review" : "Review & sign contract"}
                   </RouterLink>
                 </Button>
               </div>
