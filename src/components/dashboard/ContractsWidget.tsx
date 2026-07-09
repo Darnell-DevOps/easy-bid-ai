@@ -30,6 +30,7 @@ export default function ContractsWidget() {
       const { data } = await supabase
         .from("contracts")
         .select("id, title, client_name, status, signed_at, created_at")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false })
         .limit(50);
       const list = (data as any[]) || [];
