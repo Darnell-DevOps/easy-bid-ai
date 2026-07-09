@@ -837,7 +837,7 @@ export default function ClientPortal() {
               </Button>
             )}
           </section>
-        ) : isAccepted && isContractSigned && !hasPrice && bookingLink ? (
+        ) : isAccepted && isContractSigned && !hasPrice && (ownerKickoffUrl || bookingLink) ? (
           <section className="rounded-xl border border-purple/30 bg-gradient-to-br from-purple/10 via-accent/5 to-transparent p-6 lg:p-10 text-center">
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-purple/15 mb-4">
               <CalendarPlus className="w-6 h-6 text-purple" />
@@ -853,10 +853,17 @@ export default function ClientPortal() {
               asChild
               className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110"
             >
-              <RouterLink to={`/book/${bookingLink.slug}?proposal=${proposal.id}`}>
-                <CalendarPlus className="w-4 h-4" />
-                Schedule Call
-              </RouterLink>
+              {ownerKickoffUrl ? (
+                <a href={ownerKickoffUrl} target="_blank" rel="noopener noreferrer">
+                  <CalendarPlus className="w-4 h-4" />
+                  Schedule Call
+                </a>
+              ) : (
+                <RouterLink to={`/book/${bookingLink!.slug}?proposal=${proposal.id}`}>
+                  <CalendarPlus className="w-4 h-4" />
+                  Schedule Call
+                </RouterLink>
+              )}
             </Button>
           </section>
         ) : isRejected ? (
