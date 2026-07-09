@@ -211,7 +211,7 @@ export default function ClientPortal() {
 
       // Fetch the proposal owner's first active booking link (for kickoff CTA)
       (supabase.rpc(
-        "public_get_first_booking_link_for_user" as never,
+        "public_get_kickoff_booking_link_for_user" as never,
         { _user_id: (data as PublicProposal).user_id } as never,
       ) as unknown as Promise<{ data: any }>)
         .then(({ data: rows }) => {

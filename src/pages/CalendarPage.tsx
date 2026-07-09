@@ -40,6 +40,7 @@ import {
   CalendarPlus,
   ExternalLink,
   X,
+  Star,
 } from "lucide-react";
 import {
   DAY_NAMES,
@@ -221,6 +222,43 @@ export default function CalendarPage() {
     if (error) {
       toast({ title: "Couldn't delete", description: error.message, variant: "destructive" });
       return;
+    }
+    fetchAll();
+  };
+
+  const setKickoffDefault = async (id: string) => {
+    if (!userId) return;
+    const target = links.find((l) => l.id === id) as (BookingLinkRow & { is_kickoff_default?: boolean }) | undefined;
+    const currentlyDefault = !!target?.is_kickoff_default;
+    if (currentlyDefault) {
+      const { error } = await supabase
+        .from("booking_links")
+        .update({ is_kickoff_default: false } as never)
+        .eq("id", id);
+      if (error) {
+        toast({ title: "Couldn't update", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: "Kickoff link unset" });
+    } else {
+      const { error: clearErr } = await supabase
+        .from("booking_links")
+        .update({ is_kickoff_default: false } as never)
+        .eq("user_id", userId)
+        .eq("is_kickoff_default", true as never);
+      if (clearErr) {
+        toast({ title: "Couldn't update", description: clearErr.message, variant: "destructive" });
+        return;
+      }
+      const { error } = await supabase
+        .from("booking_links")
+        .update({ is_kickoff_default: true } as never)
+        .eq("id", id);
+      if (error) {
+        toast({ title: "Couldn't update", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: "Kickoff link set", description: "This link will be used for client kickoff CTAs." });
     }
     fetchAll();
   };
@@ -633,6 +671,21 @@ export default function CalendarPage() {
                         {link.available_days.map((d) => DAY_NAMES[d]).join(", ")}
                       </Badge>
                     </div>
+                    {(() => {
+                      const isKickoff = !!(link as BookingLinkRow & { is_kickoff_default?: boolean }).is_kickoff_default;
+                      return (
+                        <Button
+                          size="sm"
+                          variant={isKickoff ? "default" : "outline"}
+                          onClick={() => setKickoffDefault(link.id)}
+                          className="w-full gap-1.5 text-xs"
+                          title={isKickoff ? "Currently used for client kickoff CTAs. Click to unset." : "Use this link for client kickoff CTAs."}
+                        >
+                          <Star className={`w-3 h-3 ${isKickoff ? "fill-current" : ""}`} />
+                          {isKickoff ? "Kickoff link" : "Set as kickoff link"}
+                        </Button>
+                      );
+                    })()}
                     <div className="flex gap-2">
                       <Button size="sm" variant="outline" onClick={() => copyLink(link.slug)} className="flex-1 gap-1.5 text-xs">
                         <Copy className="w-3 h-3" /> Copy link
