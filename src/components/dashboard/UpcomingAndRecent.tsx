@@ -90,18 +90,22 @@ export default function UpcomingAndRecent({ proposals }: Props) {
 
   if (bookings.length === 0 && activities.length === 0) return null;
 
+  const showBookings = bookings.length > 0;
+  const showActivity = activities.length > 0;
+  const gridCols = showBookings && showActivity ? "md:grid-cols-2" : "md:grid-cols-1";
+
   return (
     <section aria-labelledby="upcoming-heading" className="space-y-3">
       <div className="flex items-end justify-between">
         <div>
           <h2 id="upcoming-heading" className="text-lg font-semibold text-foreground">
-            Upcoming &amp; recent
+            {showBookings && showActivity ? "Upcoming & recent" : showBookings ? "Upcoming" : "Recent activity"}
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">Your next meetings and latest client moves.</p>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
+      <div className={`grid grid-cols-1 ${gridCols} gap-4`}>
+        {showBookings && (
           <CardContent className="p-0">
             <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
               <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Upcoming</p>
