@@ -83,7 +83,6 @@ type Retention = "30" | "60" | "0";
 type LastExport = { at: string; sizeMb: number } | null;
 
 const LS_SCHEDULE = "data:schedule";
-const LS_RETENTION = "data:retention";
 const LS_LAST_EXPORT = "data:lastExport";
 
 function toCSV(rows: any[]): string {
