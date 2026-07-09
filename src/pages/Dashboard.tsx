@@ -156,7 +156,6 @@ export default function Dashboard() {
         </header>
 
         <ActivationChecklist />
-        <DeadlineAlerts />
 
         {/* MAIN ROW: Attention + Business Pulse */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
