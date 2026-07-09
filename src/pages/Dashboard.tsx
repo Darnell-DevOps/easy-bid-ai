@@ -75,10 +75,23 @@ export default function Dashboard() {
     ]);
     setProposals(propRes.data || []);
     setClients(clientRes.data || []);
-    const meta = (userRes.data.user?.user_metadata as any) || {};
-    const nm: string =
-      meta.full_name || meta.name || userRes.data.user?.email?.split("@")[0] || "";
-    if (nm) setFirstName(String(nm).split(" ")[0]);
+
+    const user = userRes.data.user;
+    if (user) {
+      // Prefer user_profiles.first_name → user_metadata → email local part (skip generic "admin")
+      const { data: prof } = await supabase
+        .from("user_profiles")
+        .select("first_name, last_name, business_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const meta = (user.user_metadata as any) || {};
+      const raw: string =
+        (prof?.first_name || "").trim() ||
+        (meta.full_name || meta.name || "").split(" ")[0] ||
+        "";
+      const first = raw && raw.toLowerCase() !== "admin" ? raw : "";
+      setFirstName(first);
+    }
   };
 
   useEffect(() => {
