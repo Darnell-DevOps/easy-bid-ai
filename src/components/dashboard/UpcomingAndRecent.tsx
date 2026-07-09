@@ -90,31 +90,33 @@ export default function UpcomingAndRecent({ proposals }: Props) {
 
   if (bookings.length === 0 && activities.length === 0) return null;
 
+  const showBookings = bookings.length > 0;
+  const showActivity = activities.length > 0;
+  const gridCols = showBookings && showActivity ? "md:grid-cols-2" : "md:grid-cols-1";
+
   return (
     <section aria-labelledby="upcoming-heading" className="space-y-3">
       <div className="flex items-end justify-between">
         <div>
           <h2 id="upcoming-heading" className="text-lg font-semibold text-foreground">
-            Upcoming &amp; recent
+            {showBookings && showActivity ? "Upcoming & recent" : showBookings ? "Upcoming" : "Recent activity"}
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">Your next meetings and latest client moves.</p>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <CardContent className="p-0">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Upcoming</p>
-              <Link
-                to="/dashboard/calendar"
-                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
-              >
-                Calendar <ArrowRight className="w-3 h-3" />
-              </Link>
-            </div>
-            {bookings.length === 0 ? (
-              <div className="px-4 py-6 text-xs text-muted-foreground">No calls scheduled.</div>
-            ) : (
+      <div className={`grid grid-cols-1 ${gridCols} gap-4`}>
+        {showBookings && (
+          <Card>
+            <CardContent className="p-0">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Upcoming</p>
+                <Link
+                  to="/dashboard/calendar"
+                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                >
+                  Calendar <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
               <ul className="divide-y divide-border/60">
                 {bookings.map((b) => (
                   <li key={b.id} className="px-4 py-3 flex items-start gap-3">
@@ -133,11 +135,12 @@ export default function UpcomingAndRecent({ proposals }: Props) {
                   </li>
                 ))}
               </ul>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
-        <Card>
+        {showActivity && (
+          <Card>
           <CardContent className="p-0">
             <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
               <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Recent activity</p>
@@ -148,29 +151,26 @@ export default function UpcomingAndRecent({ proposals }: Props) {
                 View all <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
-            {activities.length === 0 ? (
-              <div className="px-4 py-6 text-xs text-muted-foreground">Nothing recent yet.</div>
-            ) : (
-              <ul className="divide-y divide-border/60">
-                {activities.map((e) => {
-                  const Icon = e.icon;
-                  return (
-                    <li key={e.id}>
-                      <Link
-                        to={e.href}
-                        className="px-4 py-3 flex items-center gap-3 hover:bg-muted/30 transition-colors"
-                      >
-                        <Icon className={`w-4 h-4 flex-shrink-0 ${e.tone}`} />
-                        <span className="text-sm text-foreground flex-1 truncate">{e.text}</span>
-                        <span className="text-xs text-muted-foreground flex-shrink-0">{timeAgo(e.iso)}</span>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
+            <ul className="divide-y divide-border/60">
+              {activities.map((e) => {
+                const Icon = e.icon;
+                return (
+                  <li key={e.id}>
+                    <Link
+                      to={e.href}
+                      className="px-4 py-3 flex items-center gap-3 hover:bg-muted/30 transition-colors"
+                    >
+                      <Icon className={`w-4 h-4 flex-shrink-0 ${e.tone}`} />
+                      <span className="text-sm text-foreground flex-1 truncate">{e.text}</span>
+                      <span className="text-xs text-muted-foreground flex-shrink-0">{timeAgo(e.iso)}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
           </CardContent>
         </Card>
+        )}
       </div>
     </section>
   );

@@ -77,19 +77,23 @@ export default function BusinessPulse({ proposals }: Props) {
         <p className="text-xs text-muted-foreground mt-0.5">Where the money is right now.</p>
       </div>
       <Card>
-        <CardContent className="p-0 divide-y divide-border/60">
-          {stats.map((s) => (
-            <button
-              key={s.label}
-              onClick={() => navigate(s.href)}
-              className="w-full flex items-baseline justify-between px-4 py-3.5 hover:bg-muted/30 transition-colors text-left"
-            >
-              <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-                {s.label}
-              </span>
-              <span className={`text-xl font-bold tabular-nums ${s.tone}`}>{s.value}</span>
-            </button>
-          ))}
+        <CardContent className="p-0">
+          <div className="grid grid-cols-2 divide-x divide-y divide-border/60 [&>*:nth-child(-n+2)]:border-t-0 [&>*:nth-child(2n+1)]:border-l-0">
+            {stats.map((s) => (
+              <button
+                key={s.label}
+                onClick={() => navigate(s.href)}
+                className="flex flex-col items-start gap-1 px-4 py-4 sm:py-5 hover:bg-muted/30 transition-colors text-left"
+              >
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                  {s.label}
+                </span>
+                <span className={`text-2xl font-bold tabular-nums leading-none ${s.tone}`}>
+                  {s.value}
+                </span>
+              </button>
+            ))}
+          </div>
         </CardContent>
       </Card>
     </section>

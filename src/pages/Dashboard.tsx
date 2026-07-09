@@ -6,7 +6,6 @@ import ConversionPipeline from "@/components/dashboard/ConversionPipeline";
 import BusinessPulse from "@/components/dashboard/BusinessPulse";
 import UpcomingAndRecent from "@/components/dashboard/UpcomingAndRecent";
 import ActivationChecklist from "@/components/dashboard/ActivationChecklist";
-import { DeadlineAlerts } from "@/components/calendar/DeadlinesPanel";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -76,10 +75,23 @@ export default function Dashboard() {
     ]);
     setProposals(propRes.data || []);
     setClients(clientRes.data || []);
-    const meta = (userRes.data.user?.user_metadata as any) || {};
-    const nm: string =
-      meta.full_name || meta.name || userRes.data.user?.email?.split("@")[0] || "";
-    if (nm) setFirstName(String(nm).split(" ")[0]);
+
+    const user = userRes.data.user;
+    if (user) {
+      // Prefer user_profiles.first_name → user_metadata → email local part (skip generic "admin")
+      const { data: prof } = await supabase
+        .from("user_profiles")
+        .select("first_name, last_name, business_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const meta = (user.user_metadata as any) || {};
+      const raw: string =
+        (prof?.first_name || "").trim() ||
+        (meta.full_name || meta.name || "").split(" ")[0] ||
+        "";
+      const first = raw && raw.toLowerCase() !== "admin" ? raw : "";
+      setFirstName(first);
+    }
   };
 
   useEffect(() => {
@@ -157,7 +169,6 @@ export default function Dashboard() {
         </header>
 
         <ActivationChecklist />
-        <DeadlineAlerts />
 
         {/* MAIN ROW: Attention + Business Pulse */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

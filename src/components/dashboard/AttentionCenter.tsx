@@ -15,11 +15,13 @@ import {
   UserPlus,
   ArrowRight,
   CheckCircle2,
+  AlertTriangle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getFollowUpScenario, FOLLOW_UP_META, type FollowUpScenario } from "@/lib/follow-up";
 import { scoreRank } from "@/lib/leadScore";
 import FollowUpDialog from "@/components/proposal/FollowUpDialog";
+import { deriveStatus, type DeadlineRow } from "@/lib/deadlines";
 
 interface ProposalLite {
   id: string;
@@ -92,6 +94,7 @@ interface Item {
   priority: number;
   value?: number;
   waitedFor?: string;
+  hint?: string;
 }
 
 const TONE: Record<Tone, { card: string; iconWrap: string; icon: string; btn: string; chip: string }> = {
@@ -161,6 +164,8 @@ export default function AttentionCenter({ proposals, clients, proposalClientName
   const [contracts, setContracts] = useState<ContractLite[]>([]);
   const [onboarding, setOnboarding] = useState<OnboardingLite[]>([]);
   const [bookings, setBookings] = useState<BookingLite[]>([]);
+  const [deadlines, setDeadlines] = useState<DeadlineRow[]>([]);
+  const [expanded, setExpanded] = useState(false);
   const [followUpTarget, setFollowUpTarget] = useState<{
     proposal: ProposalLite;
     scenario: Exclude<FollowUpScenario, "none">;
@@ -170,7 +175,7 @@ export default function AttentionCenter({ proposals, clients, proposalClientName
     (async () => {
       const now = new Date();
       const in48h = new Date(now.getTime() + 48 * 3600 * 1000).toISOString();
-      const [c, o, b] = await Promise.all([
+      const [c, o, b, d] = await Promise.all([
         supabase
           .from("contracts")
           .select("id, title, client_name, status, created_at, signed_at")
@@ -190,10 +195,18 @@ export default function AttentionCenter({ proposals, clients, proposalClientName
           .lte("scheduled_at", in48h)
           .order("scheduled_at", { ascending: true })
           .limit(10),
+        supabase
+          .from("deadlines")
+          .select("*")
+          .is("deleted_at", null)
+          .neq("status", "completed")
+          .order("due_date", { ascending: true })
+          .limit(50),
       ]);
       setContracts(((c.data as any[]) || []) as ContractLite[]);
       setOnboarding(((o.data as any[]) || []) as OnboardingLite[]);
       setBookings(((b.data as any[]) || []) as BookingLite[]);
+      setDeadlines(((d.data as any[]) || []) as DeadlineRow[]);
     })();
   }, [proposals.length, clients.length]);
 
@@ -384,9 +397,38 @@ export default function AttentionCenter({ proposals, clients, proposalClientName
       }
     }
 
+    // 9. Deadlines — overdue (critical) and due within 7d (warning)
+    for (const d of deadlines) {
+      const status = deriveStatus(d);
+      if (status === "overdue") {
+        const daysLate = Math.floor((Date.now() - new Date(d.due_date + "T00:00:00").getTime()) / 86400000);
+        out.push({
+          key: `dl-${d.id}`,
+          tone: "critical",
+          icon: AlertTriangle,
+          title: `Overdue: ${d.title}`,
+          subtitle: `${daysLate} day${daysLate === 1 ? "" : "s"} past due${d.client_name ? " · " + d.client_name : ""}`,
+          cta: "Open",
+          onClick: () => navigate("/dashboard/calendar"),
+          priority: 98 + Math.min(daysLate, 20),
+        });
+      } else if (status === "due_soon") {
+        out.push({
+          key: `dl-${d.id}`,
+          tone: "warning",
+          icon: CalendarClock,
+          title: `Due soon: ${d.title}`,
+          subtitle: `${new Date(d.due_date + "T00:00:00").toLocaleDateString()}${d.client_name ? " · " + d.client_name : ""}`,
+          cta: "Open",
+          onClick: () => navigate("/dashboard/calendar"),
+          priority: 65,
+        });
+      }
+    }
+
     out.sort((a, b) => b.priority - a.priority);
-    return out.slice(0, 6);
-  }, [proposals, clients, proposalClientNames, contracts, onboarding, bookings, navigate]);
+    return out;
+  }, [proposals, clients, proposalClientNames, contracts, onboarding, bookings, deadlines, navigate]);
 
   const followUpProposal = followUpTarget?.proposal;
   const clientUrl = followUpProposal
@@ -435,7 +477,7 @@ export default function AttentionCenter({ proposals, clients, proposalClientName
       </div>
 
       <div className="space-y-2">
-        {items.map((item) => {
+        {(expanded ? items : items.slice(0, 4)).map((item) => {
           const Icon = item.icon;
           const styles = TONE[item.tone];
           return (
@@ -462,6 +504,16 @@ export default function AttentionCenter({ proposals, clients, proposalClientName
             </Card>
           );
         })}
+        {items.length > 4 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full text-xs text-muted-foreground hover:text-foreground"
+            onClick={() => setExpanded((v) => !v)}
+          >
+            {expanded ? "Show less" : `Show ${items.length - 4} more`}
+          </Button>
+        )}
       </div>
 
       {followUpTarget && followUpProposal && (
