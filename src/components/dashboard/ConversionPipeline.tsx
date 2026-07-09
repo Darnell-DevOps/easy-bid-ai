@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import { UserPlus, Sparkles, FileText, CheckCircle2, FileSignature, Banknote, ChevronRight } from "lucide-react";
-import EmptyState from "@/components/EmptyState";
-import { GitBranch } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { UserPlus, Sparkles, FileText, CheckCircle2, FileSignature, Banknote, ChevronRight, GitBranch } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { scoreRank } from "@/lib/leadScore";
 
