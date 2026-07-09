@@ -15,11 +15,13 @@ import {
   UserPlus,
   ArrowRight,
   CheckCircle2,
+  AlertTriangle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getFollowUpScenario, FOLLOW_UP_META, type FollowUpScenario } from "@/lib/follow-up";
 import { scoreRank } from "@/lib/leadScore";
 import FollowUpDialog from "@/components/proposal/FollowUpDialog";
+import { deriveStatus, type DeadlineRow } from "@/lib/deadlines";
 
 interface ProposalLite {
   id: string;
