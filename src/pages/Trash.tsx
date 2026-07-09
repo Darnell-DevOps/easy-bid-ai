@@ -21,6 +21,7 @@ interface TrashedClient {
   proposalCount: number;
   onboardingCount: number;
   deadlineCount: number;
+  contractCount: number;
   onboardingIds: string[];
 }
 
