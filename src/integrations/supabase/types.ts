@@ -264,6 +264,7 @@ export type Database = {
           end_time: string
           id: string
           is_active: boolean
+          is_kickoff_default: boolean
           location_type: string
           meeting_url: string | null
           name: string
@@ -281,6 +282,7 @@ export type Database = {
           end_time?: string
           id?: string
           is_active?: boolean
+          is_kickoff_default?: boolean
           location_type?: string
           meeting_url?: string | null
           name: string
@@ -298,6 +300,7 @@ export type Database = {
           end_time?: string
           id?: string
           is_active?: boolean
+          is_kickoff_default?: boolean
           location_type?: string
           meeting_url?: string | null
           name?: string
@@ -2934,6 +2937,7 @@ export type Database = {
           end_time: string
           id: string
           is_active: boolean
+          is_kickoff_default: boolean
           location_type: string
           meeting_url: string | null
           name: string
@@ -3070,6 +3074,13 @@ export type Database = {
         }
       }
       public_get_first_booking_link_for_user: {
+        Args: { _user_id: string }
+        Returns: {
+          name: string
+          slug: string
+        }[]
+      }
+      public_get_kickoff_booking_link_for_user: {
         Args: { _user_id: string }
         Returns: {
           name: string
