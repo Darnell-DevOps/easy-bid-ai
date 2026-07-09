@@ -164,6 +164,8 @@ export default function AttentionCenter({ proposals, clients, proposalClientName
   const [contracts, setContracts] = useState<ContractLite[]>([]);
   const [onboarding, setOnboarding] = useState<OnboardingLite[]>([]);
   const [bookings, setBookings] = useState<BookingLite[]>([]);
+  const [deadlines, setDeadlines] = useState<DeadlineRow[]>([]);
+  const [expanded, setExpanded] = useState(false);
   const [followUpTarget, setFollowUpTarget] = useState<{
     proposal: ProposalLite;
     scenario: Exclude<FollowUpScenario, "none">;
@@ -173,7 +175,7 @@ export default function AttentionCenter({ proposals, clients, proposalClientName
     (async () => {
       const now = new Date();
       const in48h = new Date(now.getTime() + 48 * 3600 * 1000).toISOString();
-      const [c, o, b] = await Promise.all([
+      const [c, o, b, d] = await Promise.all([
         supabase
           .from("contracts")
           .select("id, title, client_name, status, created_at, signed_at")
@@ -193,10 +195,18 @@ export default function AttentionCenter({ proposals, clients, proposalClientName
           .lte("scheduled_at", in48h)
           .order("scheduled_at", { ascending: true })
           .limit(10),
+        supabase
+          .from("deadlines")
+          .select("*")
+          .is("deleted_at", null)
+          .neq("status", "completed")
+          .order("due_date", { ascending: true })
+          .limit(50),
       ]);
       setContracts(((c.data as any[]) || []) as ContractLite[]);
       setOnboarding(((o.data as any[]) || []) as OnboardingLite[]);
       setBookings(((b.data as any[]) || []) as BookingLite[]);
+      setDeadlines(((d.data as any[]) || []) as DeadlineRow[]);
     })();
   }, [proposals.length, clients.length]);
 
