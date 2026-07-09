@@ -1,28 +1,16 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
-import SalesMetrics from "@/components/dashboard/SalesMetrics";
-import PipelineView from "@/components/dashboard/PipelineView";
 import AttentionCenter from "@/components/dashboard/AttentionCenter";
-import OpportunitiesToRevenue from "@/components/dashboard/OpportunitiesToRevenue";
-import DealActivity from "@/components/dashboard/DealActivity";
-import LeadActivityFeed from "@/components/dashboard/LeadActivityFeed";
-import LeadFunnelMetrics from "@/components/dashboard/LeadFunnelMetrics";
-import ProposalsList from "@/components/dashboard/ProposalsList";
+import ConversionPipeline from "@/components/dashboard/ConversionPipeline";
+import BusinessPulse from "@/components/dashboard/BusinessPulse";
+import UpcomingAndRecent from "@/components/dashboard/UpcomingAndRecent";
 import ActivationChecklist from "@/components/dashboard/ActivationChecklist";
-import UpcomingBookings from "@/components/dashboard/UpcomingBookings";
-import ContractsWidget from "@/components/dashboard/ContractsWidget";
-import OnboardingWidget from "@/components/dashboard/OnboardingWidget";
-import RetainersWidget from "@/components/dashboard/RetainersWidget";
-import CoachFeedWidget from "@/components/dashboard/CoachFeedWidget";
-import WeeklyBriefingCard from "@/components/dashboard/WeeklyBriefingCard";
 import { DeadlineAlerts } from "@/components/calendar/DeadlinesPanel";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, ArrowRight, UserPlus, Lightbulb } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getOnboardingKey } from "@/pages/Onboarding";
-import { getFollowUpScenario } from "@/lib/follow-up";
 
 interface FullProposal {
   id: string;
@@ -53,22 +41,25 @@ interface ClientLite {
   timeline?: string | null;
   goals?: string | null;
   project_description?: string | null;
+  lead_score?: string | null;
 }
 
-function parseAmount(s?: string | null): number {
-  if (!s) return 0;
-  const n = parseFloat(s.replace(/[^0-9.]/g, ""));
-  return Number.isFinite(n) ? n : 0;
+function greeting(): string {
+  const h = new Date().getHours();
+  if (h < 5) return "Working late";
+  if (h < 12) return "Good morning";
+  if (h < 18) return "Good afternoon";
+  return "Good evening";
 }
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [proposals, setProposals] = useState<FullProposal[]>([]);
   const [clients, setClients] = useState<ClientLite[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [firstName, setFirstName] = useState<string>("");
 
   const fetchData = async () => {
-    const [propRes, clientRes] = await Promise.all([
+    const [propRes, clientRes, userRes] = await Promise.all([
       supabase
         .from("proposals")
         .select(
@@ -81,10 +72,14 @@ export default function Dashboard() {
         .select("id, name, status, created_at, company, service_requested, budget, timeline, goals, project_description, lead_score")
         .is("deleted_at", null)
         .order("created_at", { ascending: false }),
+      supabase.auth.getUser(),
     ]);
     setProposals(propRes.data || []);
     setClients(clientRes.data || []);
-    setLoading(false);
+    const meta = (userRes.data.user?.user_metadata as any) || {};
+    const nm: string =
+      meta.full_name || meta.name || userRes.data.user?.email?.split("@")[0] || "";
+    if (nm) setFirstName(String(nm).split(" ")[0]);
   };
 
   useEffect(() => {
@@ -108,199 +103,85 @@ export default function Dashboard() {
     [proposals],
   );
 
-  const metrics = useMemo(() => {
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-
-    const sentThisMonth = proposals.filter((p) => {
-      if (!p.sent_at) return false;
-      return new Date(p.sent_at).getTime() >= monthStart;
-    }).length;
-
-    const accepted = proposals.filter((p) => (p.status || "").toLowerCase() === "accepted" || p.client_paid).length;
-    const revenuePaid = proposals.filter((p) => p.client_paid).reduce((acc, p) => acc + parseAmount(p.budget), 0);
-    const pendingPayments = proposals
-      .filter((p) => (p.status || "").toLowerCase() === "accepted" && !p.client_paid)
-      .reduce((acc, p) => acc + parseAmount(p.budget), 0);
-
-    return { sentThisMonth, accepted, revenuePaid, pendingPayments };
-  }, [proposals]);
-
-  // Dynamic tip based on user state
-  const tip = useMemo(() => {
-    if (proposals.length === 0)
-      return {
-        title: "Get started",
-        body: "Add your first client, then generate a proposal in under 2 minutes.",
-      };
-    const acceptedUnpaid = proposals.filter(
+  // Contextual primary CTA
+  const primaryCta = useMemo(() => {
+    const acceptedUnpaid = proposals.some(
       (p) => (p.status || "").toLowerCase() === "accepted" && !p.client_paid,
-    ).length;
-    if (acceptedUnpaid > 0)
-      return {
-        title: "Request payment",
-        body: "A client said yes. Open the proposal and send the payment link to close the deal.",
-      };
-    const drafts = proposals.filter((p) => !p.status || p.status === "draft").length;
-    if (drafts > 0)
-      return {
-        title: "Send your draft",
-        body: "Drafts don't get paid. Share your draft proposal with the client today.",
-      };
-    const sent = proposals.filter((p) => {
-      const s = (p.status || "").toLowerCase();
-      return s === "sent" || s === "viewed";
-    }).length;
-    if (sent > 0)
-      return {
-        title: "Follow up",
-        body: "Most deals close after a follow-up. Nudge clients who haven't responded yet.",
-      };
-    return {
-      title: "Keep growing",
-      body: "Add more clients to your pipeline and generate proposals to scale revenue.",
-    };
-  }, [proposals]);
-
-  const priorityCount = useMemo(() => {
-    let n = 0;
-    for (const p of proposals) if (getFollowUpScenario(p) !== "none") n++;
-    for (const c of clients) {
-      if ((c.status || "").toLowerCase() === "new" && !proposalClientNames.has(c.name.toLowerCase().trim())) n++;
+    );
+    if (acceptedUnpaid) {
+      const first = proposals.find(
+        (p) => (p.status || "").toLowerCase() === "accepted" && !p.client_paid,
+      )!;
+      return { label: "Request payment", href: `/dashboard/proposal/${first.id}`, icon: null };
     }
-    return n;
+    if (proposals.length === 0 && clients.length === 0) {
+      return { label: "Add first lead", href: "/dashboard/clients/new", icon: UserPlus };
+    }
+    // Warm/hot lead without proposal → nudge to proposal
+    const hotLead = clients.find(
+      (c) =>
+        (c.status || "").toLowerCase() === "new" &&
+        !proposalClientNames.has(c.name.toLowerCase().trim()),
+    );
+    if (hotLead) {
+      return { label: "New lead", href: "/dashboard/clients/new", icon: UserPlus };
+    }
+    return { label: "New lead", href: "/dashboard/clients/new", icon: UserPlus };
   }, [proposals, clients, proposalClientNames]);
+
+  const CtaIcon = primaryCta.icon;
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Sales Command Center</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {priorityCount > 0
-              ? `${priorityCount} action${priorityCount > 1 ? "s" : ""} need your attention to close more deals.`
-              : "You're caught up. Keep momentum by adding leads or sending new proposals."}
-          </p>
-        </div>
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* HEADER */}
+        <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+              {greeting()}{firstName ? `, ${firstName}` : ""}
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1.5 max-w-xl">
+              Here's what needs your attention and where your next revenue could come from.
+            </p>
+          </div>
+          <Button
+            asChild
+            size="lg"
+            className="h-11 px-5 gap-2 self-start sm:self-auto shrink-0"
+          >
+            <Link to={primaryCta.href}>
+              {CtaIcon && <CtaIcon className="w-4 h-4" />}
+              {primaryCta.label}
+            </Link>
+          </Button>
+        </header>
 
         <ActivationChecklist />
-
-        {/* 1. NEEDS YOUR ATTENTION — most prominent */}
         <DeadlineAlerts />
-        <AttentionCenter
+
+        {/* MAIN ROW: Attention + Business Pulse */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-8">
+            <AttentionCenter
+              proposals={proposals}
+              clients={clients}
+              proposalClientNames={proposalClientNames}
+            />
+          </div>
+          <div className="lg:col-span-4">
+            <BusinessPulse proposals={proposals} />
+          </div>
+        </div>
+
+        {/* CONVERSION PIPELINE */}
+        <ConversionPipeline
           proposals={proposals}
           clients={clients}
           proposalClientNames={proposalClientNames}
         />
 
-        {/* 2. OPPORTUNITIES CLOSEST TO REVENUE */}
-        <OpportunitiesToRevenue proposals={proposals} />
-
-        {/* 3. AI SALES COACH — contextual next-move guidance */}
-        <WeeklyBriefingCard />
-        <CoachFeedWidget />
-
-        {/* 4. KEY METRICS */}
-        <SalesMetrics
-          proposalsSentThisMonth={metrics.sentThisMonth}
-          acceptedProposals={metrics.accepted}
-          revenuePaid={metrics.revenuePaid}
-          pendingPayments={metrics.pendingPayments}
-        />
-
-        {/* LEAD FUNNEL — pipeline metrics from inbound + AI flow */}
-        <LeadFunnelMetrics />
-
-        {/* PIPELINE */}
-        <PipelineView proposals={proposals} clients={clients} />
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-          {/* LEFT: Hero + Saved Proposals */}
-          <div className="lg:col-span-7 xl:col-span-8 space-y-6">
-            {/* Hero */}
-            <Card className="relative overflow-hidden border-accent/20 bg-gradient-to-br from-accent/10 via-card to-purple/10">
-              <CardContent className="p-5 sm:p-8 space-y-4 sm:space-y-5">
-                <div className="space-y-2">
-                  <h2 className="text-xl sm:text-3xl font-bold text-foreground leading-tight">
-                    Create a proposal and get paid faster
-                  </h2>
-                  <p className="text-sm sm:text-base text-muted-foreground">
-                    Turn your next lead into a paying client in minutes.
-                  </p>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
-                  <Button
-                    asChild
-                    size="lg"
-                    className="w-full sm:w-auto bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 gap-2 h-12 px-6 text-base font-semibold shadow-lg shadow-accent/20"
-                  >
-                    <Link to="/dashboard/new">
-                      <Sparkles className="w-4 h-4" /> Create Proposal <ArrowRight className="w-4 h-4" />
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" size="lg" className="w-full sm:w-auto gap-2 h-12 px-5">
-                    <Link to="/dashboard/clients/new">
-                      <UserPlus className="w-4 h-4" /> Add Client
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Saved Proposals */}
-            <div>
-              <div className="flex items-end justify-between mb-3">
-                <div>
-                  <h2 className="text-lg font-semibold text-foreground">
-                    Saved Proposals
-                    {!loading && proposals.length > 0 && (
-                      <span className="text-sm font-normal text-muted-foreground ml-2">({proposals.length})</span>
-                    )}
-                  </h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">Pick up where you left off.</p>
-                </div>
-              </div>
-              <ProposalsList proposals={proposals} loading={loading} onRefresh={fetchData} />
-            </div>
-          </div>
-
-          {/* RIGHT: Tip + Deal Activity */}
-          <aside className="lg:col-span-5 xl:col-span-4 lg:border-l lg:border-border/50 lg:pl-6 xl:pl-8 space-y-6">
-            <Card className="border-accent/20 bg-gradient-to-br from-accent/5 to-transparent">
-              <CardContent className="p-4 flex gap-3">
-                <div className="w-9 h-9 rounded-lg bg-accent/15 flex items-center justify-center flex-shrink-0">
-                  <Lightbulb className="w-4 h-4 text-accent" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{tip.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{tip.body}</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <UpcomingBookings />
-
-            <ContractsWidget />
-
-            <RetainersWidget />
-
-            <OnboardingWidget />
-
-            <div>
-              <h2 className="text-sm font-semibold mb-3 uppercase tracking-wider text-muted-foreground/80">
-                Deal Activity
-              </h2>
-              <DealActivity proposals={proposals} />
-            </div>
-
-            <div>
-              <h2 className="text-sm font-semibold mb-3 uppercase tracking-wider text-muted-foreground/80">
-                Lead Activity
-              </h2>
-              <LeadActivityFeed />
-            </div>
-          </aside>
-        </div>
+        {/* SECONDARY: Upcoming & Recent (auto-hides if empty) */}
+        <UpcomingAndRecent proposals={proposals} />
       </div>
     </DashboardLayout>
   );
