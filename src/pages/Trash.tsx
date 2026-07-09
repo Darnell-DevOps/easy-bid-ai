@@ -163,7 +163,7 @@ export default function Trash() {
             Trash
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Recently deleted clients and their proposals, onboarding forms, and deadlines. Restore them or delete permanently.
+            Recently deleted clients and their proposals, contracts, onboarding forms, and deadlines. Restore them or delete permanently.
           </p>
         </div>
 
