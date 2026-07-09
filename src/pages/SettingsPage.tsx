@@ -290,13 +290,7 @@ export default function SettingsPage() {
             {active === "notifications" && <NotificationsSettings />}
 
             {active === "business" && <BusinessInformationSettings />}
-            {active === "calendar" && (
-              <ComingSoonCard
-                title="Calendar defaults"
-                description="Manage availability, buffers and timezone defaults here. For now, edit per booking link on the Calendar page."
-                action={{ label: "Go to Calendar", href: "/dashboard/calendar" }}
-              />
-            )}
+            {active === "calendar" && <KickoffBookingUrlCard />}
             {active === "payments" && (
               <ComingSoonCard
                 title="Payments"
