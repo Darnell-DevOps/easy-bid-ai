@@ -3,7 +3,8 @@ import { useNavigate, Link } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import SalesMetrics from "@/components/dashboard/SalesMetrics";
 import PipelineView from "@/components/dashboard/PipelineView";
-import PriorityActions from "@/components/dashboard/PriorityActions";
+import AttentionCenter from "@/components/dashboard/AttentionCenter";
+import OpportunitiesToRevenue from "@/components/dashboard/OpportunitiesToRevenue";
 import DealActivity from "@/components/dashboard/DealActivity";
 import LeadActivityFeed from "@/components/dashboard/LeadActivityFeed";
 import LeadFunnelMetrics from "@/components/dashboard/LeadFunnelMetrics";
@@ -77,7 +78,7 @@ export default function Dashboard() {
         .order("created_at", { ascending: false }),
       supabase
         .from("clients")
-        .select("id, name, status, created_at, company, service_requested, budget, timeline, goals, project_description")
+        .select("id, name, status, created_at, company, service_requested, budget, timeline, goals, project_description, lead_score")
         .is("deleted_at", null)
         .order("created_at", { ascending: false }),
     ]);
@@ -184,19 +185,22 @@ export default function Dashboard() {
 
         <ActivationChecklist />
 
-        {/* AI SALES COACH — premium intelligence layer */}
-        <WeeklyBriefingCard />
-        <CoachFeedWidget />
-
-        {/* PRIORITY ACTIONS — top of the dashboard */}
+        {/* 1. NEEDS YOUR ATTENTION — most prominent */}
         <DeadlineAlerts />
-        <PriorityActions
+        <AttentionCenter
           proposals={proposals}
           clients={clients}
           proposalClientNames={proposalClientNames}
         />
 
-        {/* METRICS */}
+        {/* 2. OPPORTUNITIES CLOSEST TO REVENUE */}
+        <OpportunitiesToRevenue proposals={proposals} />
+
+        {/* 3. AI SALES COACH — contextual next-move guidance */}
+        <WeeklyBriefingCard />
+        <CoachFeedWidget />
+
+        {/* 4. KEY METRICS */}
         <SalesMetrics
           proposalsSentThisMonth={metrics.sentThisMonth}
           acceptedProposals={metrics.accepted}
