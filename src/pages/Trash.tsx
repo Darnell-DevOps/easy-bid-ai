@@ -59,10 +59,11 @@ export default function Trash() {
       return;
     }
     const ids = rows.map((c) => c.id);
-    const [propRes, onbRes, dlRes] = await Promise.all([
+    const [propRes, onbRes, dlRes, ctRes] = await Promise.all([
       supabase.from("proposals").select("client_id").in("client_id", ids).not("deleted_at", "is", null),
       supabase.from("onboarding_forms").select("id, client_id").in("client_id", ids).not("deleted_at", "is", null),
       supabase.from("deadlines").select("client_id").in("client_id", ids).not("deleted_at", "is", null),
+      supabase.from("contracts").select("client_id").in("client_id", ids).not("deleted_at", "is", null),
     ]);
     const propCount = new Map<string, number>();
     (propRes.data || []).forEach((r: any) => propCount.set(r.client_id, (propCount.get(r.client_id) || 0) + 1));
@@ -76,12 +77,15 @@ export default function Trash() {
     });
     const dlCount = new Map<string, number>();
     (dlRes.data || []).forEach((r: any) => dlCount.set(r.client_id, (dlCount.get(r.client_id) || 0) + 1));
+    const ctCount = new Map<string, number>();
+    (ctRes.data || []).forEach((r: any) => ctCount.set(r.client_id, (ctCount.get(r.client_id) || 0) + 1));
 
     setItems(rows.map((c) => ({
       ...c,
       proposalCount: propCount.get(c.id) || 0,
       onboardingCount: onbCount.get(c.id) || 0,
       deadlineCount: dlCount.get(c.id) || 0,
+      contractCount: ctCount.get(c.id) || 0,
       onboardingIds: onbIds.get(c.id) || [],
     })));
     setLoading(false);
