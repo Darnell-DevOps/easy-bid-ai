@@ -179,6 +179,7 @@ export default function AttentionCenter({ proposals, clients, proposalClientName
         supabase
           .from("contracts")
           .select("id, title, client_name, status, created_at, signed_at")
+          .is("deleted_at", null)
           .order("created_at", { ascending: false })
           .limit(50),
         supabase
