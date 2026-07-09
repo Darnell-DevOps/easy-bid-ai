@@ -140,6 +140,7 @@ export default function Trash() {
         supabase.from("proposals").delete().eq("client_id", item.id),
         supabase.from("onboarding_forms").delete().eq("client_id", item.id),
         supabase.from("deadlines").delete().eq("client_id", item.id),
+        supabase.from("contracts").delete().eq("client_id", item.id),
       ]);
       const { error } = await supabase.from("clients").delete().eq("id", item.id);
       if (error) throw error;
