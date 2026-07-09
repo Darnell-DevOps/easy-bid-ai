@@ -226,6 +226,43 @@ export default function CalendarPage() {
     fetchAll();
   };
 
+  const setKickoffDefault = async (id: string) => {
+    if (!userId) return;
+    const target = links.find((l) => l.id === id) as (BookingLinkRow & { is_kickoff_default?: boolean }) | undefined;
+    const currentlyDefault = !!target?.is_kickoff_default;
+    if (currentlyDefault) {
+      const { error } = await supabase
+        .from("booking_links")
+        .update({ is_kickoff_default: false } as never)
+        .eq("id", id);
+      if (error) {
+        toast({ title: "Couldn't update", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: "Kickoff link unset" });
+    } else {
+      const { error: clearErr } = await supabase
+        .from("booking_links")
+        .update({ is_kickoff_default: false } as never)
+        .eq("user_id", userId)
+        .eq("is_kickoff_default", true as never);
+      if (clearErr) {
+        toast({ title: "Couldn't update", description: clearErr.message, variant: "destructive" });
+        return;
+      }
+      const { error } = await supabase
+        .from("booking_links")
+        .update({ is_kickoff_default: true } as never)
+        .eq("id", id);
+      if (error) {
+        toast({ title: "Couldn't update", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: "Kickoff link set", description: "This link will be used for client kickoff CTAs." });
+    }
+    fetchAll();
+  };
+
   const cancelBooking = async (b: BookingRow) => {
     if (!confirm(`Cancel meeting with ${b.client_name}? They'll be notified by email.`)) return;
     const { error } = await supabase.from("bookings").update({ status: "cancelled" }).eq("id", b.id);
