@@ -130,6 +130,7 @@ export default function ClientPortal() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [submitting, setSubmitting] = useState<"accept" | "reject" | null>(null);
   const [bookingLink, setBookingLink] = useState<BookingLinkLite | null>(null);
+  const [ownerKickoffUrl, setOwnerKickoffUrl] = useState<string | null>(null);
   const [contract, setContract] = useState<ContractLite | null>(null);
   const [onboarding, setOnboarding] = useState<OnboardingFormRow | null>(null);
   const [hasBooking, setHasBooking] = useState(false);
@@ -210,6 +211,15 @@ export default function ClientPortal() {
         .then(({ data: rows }) => {
           const bl = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
           if (bl) setBookingLink(bl as BookingLinkLite);
+        });
+
+      // Fetch owner's external kickoff booking URL (overrides internal booking link when set)
+      (supabase.rpc(
+        "public_get_kickoff_booking_url" as never,
+        { _user_id: (data as PublicProposal).user_id } as never,
+      ) as unknown as Promise<{ data: any }>)
+        .then(({ data: url }) => {
+          if (typeof url === "string" && url.trim()) setOwnerKickoffUrl(url.trim());
         });
 
       // Fetch latest contract for this proposal
