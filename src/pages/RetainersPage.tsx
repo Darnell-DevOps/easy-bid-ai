@@ -51,6 +51,7 @@ export default function RetainersPage() {
       const { data } = await supabase
         .from("retainers")
         .select("*")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
       setRows((data as Retainer[]) || []);
       setLoading(false);

@@ -152,7 +152,8 @@ export async function syncAutoDeadlines(userId: string): Promise<number> {
     supabase
       .from("retainers")
       .select("id, client_id, client_name, title, end_date, next_billing_date, status, auto_renew")
-      .eq("user_id", userId),
+      .eq("user_id", userId)
+      .is("deleted_at", null),
   ]);
 
   // Proposals — extract delivery date from timeline / scope / notes

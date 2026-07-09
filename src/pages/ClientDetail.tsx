@@ -257,6 +257,7 @@ export default function ClientDetail() {
           .from("retainers")
           .select("id, title, service_type, status, amount_cents, currency, billing_interval, custom_interval_days, next_billing_date, created_at")
           .eq("client_id", id!)
+          .is("deleted_at", null)
           .order("created_at", { ascending: false }),
         supabase
           .from("onboarding_forms")
@@ -369,6 +370,8 @@ export default function ClientDetail() {
       supabase.from("onboarding_forms").update({ deleted_at: now }).eq("client_id", client.id).is("deleted_at", null),
       supabase.from("deadlines").update({ deleted_at: now }).eq("client_id", client.id).is("deleted_at", null),
       supabase.from("contracts").update({ deleted_at: now }).eq("client_id", client.id).is("deleted_at", null),
+      supabase.from("retainers").update({ deleted_at: now }).eq("client_id", client.id).is("deleted_at", null),
+      supabase.from("lead_auto_send_log").update({ deleted_at: now }).eq("client_id", client.id).is("deleted_at", null),
     ]);
     await supabase.from("clients").update({ deleted_at: now }).eq("id", client.id);
     toast({

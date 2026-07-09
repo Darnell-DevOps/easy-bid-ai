@@ -33,7 +33,8 @@ export default function BusinessPulse({ proposals }: Props) {
     (async () => {
       const { data } = await supabase
         .from("retainers")
-        .select("amount_cents, billing_interval, custom_interval_days, status");
+        .select("amount_cents, billing_interval, custom_interval_days, status")
+        .is("deleted_at", null);
       const cents = ((data as any[]) || [])
         .filter((r) => r.status === "active")
         .reduce(
