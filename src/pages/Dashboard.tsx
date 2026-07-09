@@ -6,7 +6,6 @@ import ConversionPipeline from "@/components/dashboard/ConversionPipeline";
 import BusinessPulse from "@/components/dashboard/BusinessPulse";
 import UpcomingAndRecent from "@/components/dashboard/UpcomingAndRecent";
 import ActivationChecklist from "@/components/dashboard/ActivationChecklist";
-import { DeadlineAlerts } from "@/components/calendar/DeadlinesPanel";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
