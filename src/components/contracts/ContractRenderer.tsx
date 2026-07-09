@@ -94,11 +94,13 @@ export default function ContractRenderer({
                 <div className="min-h-12 flex items-end">
                   {matchedSig.method === "drawn" &&
                   matchedSig.signature_data?.startsWith("data:image") ? (
-                    <img
-                      src={matchedSig.signature_data}
-                      alt={`Signature of ${matchedSig.signer_name}`}
-                      className="max-h-14 object-contain"
-                    />
+                    <div className="inline-block bg-white rounded-md px-3 py-1.5 border border-slate-200">
+                      <img
+                        src={matchedSig.signature_data}
+                        alt={`Signature of ${matchedSig.signer_name}`}
+                        className="max-h-14 object-contain"
+                      />
+                    </div>
                   ) : (
                     <span
                       className="text-2xl text-foreground"
