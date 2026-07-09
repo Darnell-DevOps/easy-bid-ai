@@ -2643,6 +2643,24 @@ export type Database = {
         }
         Relationships: []
       }
+      user_settings: {
+        Row: {
+          trash_retention_days: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          trash_retention_days?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          trash_retention_days?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       whatsapp_send_log: {
         Row: {
           body: string
