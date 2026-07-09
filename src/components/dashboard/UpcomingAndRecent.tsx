@@ -106,19 +106,17 @@ export default function UpcomingAndRecent({ proposals }: Props) {
       </div>
       <div className={`grid grid-cols-1 ${gridCols} gap-4`}>
         {showBookings && (
-          <CardContent className="p-0">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Upcoming</p>
-              <Link
-                to="/dashboard/calendar"
-                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
-              >
-                Calendar <ArrowRight className="w-3 h-3" />
-              </Link>
-            </div>
-            {bookings.length === 0 ? (
-              <div className="px-4 py-6 text-xs text-muted-foreground">No calls scheduled.</div>
-            ) : (
+          <Card>
+            <CardContent className="p-0">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Upcoming</p>
+                <Link
+                  to="/dashboard/calendar"
+                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                >
+                  Calendar <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
               <ul className="divide-y divide-border/60">
                 {bookings.map((b) => (
                   <li key={b.id} className="px-4 py-3 flex items-start gap-3">
@@ -137,11 +135,12 @@ export default function UpcomingAndRecent({ proposals }: Props) {
                   </li>
                 ))}
               </ul>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
-        <Card>
+        {showActivity && (
+          <Card>
           <CardContent className="p-0">
             <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
               <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Recent activity</p>
