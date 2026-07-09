@@ -23,6 +23,7 @@ import BillingSettings from "@/components/settings/BillingSettings";
 import DataExportsSettings from "@/components/settings/DataExportsSettings";
 import BusinessInformationSettings from "@/components/settings/BusinessInformationSettings";
 import DomainSettings from "@/components/settings/DomainSettings";
+import { KickoffBookingUrlCard } from "@/components/settings/KickoffBookingUrlCard";
 import {
   User,
   Palette,
@@ -290,13 +291,7 @@ export default function SettingsPage() {
             {active === "notifications" && <NotificationsSettings />}
 
             {active === "business" && <BusinessInformationSettings />}
-            {active === "calendar" && (
-              <ComingSoonCard
-                title="Calendar defaults"
-                description="Manage availability, buffers and timezone defaults here. For now, edit per booking link on the Calendar page."
-                action={{ label: "Go to Calendar", href: "/dashboard/calendar" }}
-              />
-            )}
+            {active === "calendar" && <KickoffBookingUrlCard />}
             {active === "payments" && (
               <ComingSoonCard
                 title="Payments"

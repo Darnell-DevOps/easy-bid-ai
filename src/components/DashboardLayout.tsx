@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   FileText, Plus, Settings, LogOut, Menu, X, LayoutTemplate, Users, Sparkles,
   ScrollText, Calendar, FileSignature, ClipboardList, Repeat, LifeBuoy, Mail,
-  Shield, Star, ChevronLeft, ChevronRight, CreditCard, TrendingUp, Eye, Trash2,
+  Shield, Star, ChevronLeft, ChevronRight, CreditCard, TrendingUp, Eye, Trash2, Rocket,
 } from "lucide-react";
 import { useIsSuperAdmin } from "@/hooks/useIsSuperAdmin";
 import { useUnreadLeadsCount } from "@/hooks/use-unread-leads";
@@ -52,6 +52,7 @@ const navGroups: NavGroup[] = [
     items: [
       { label: "Calendar", icon: Calendar, href: "/dashboard/calendar" },
       { label: "Onboarding", icon: ClipboardList, href: "/dashboard/onboarding" },
+      { label: "Kickoff", icon: Rocket, href: "/dashboard/kickoff" },
     ],
   },
   {

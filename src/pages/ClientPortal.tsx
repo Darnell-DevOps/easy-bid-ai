@@ -130,6 +130,7 @@ export default function ClientPortal() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [submitting, setSubmitting] = useState<"accept" | "reject" | null>(null);
   const [bookingLink, setBookingLink] = useState<BookingLinkLite | null>(null);
+  const [ownerKickoffUrl, setOwnerKickoffUrl] = useState<string | null>(null);
   const [contract, setContract] = useState<ContractLite | null>(null);
   const [onboarding, setOnboarding] = useState<OnboardingFormRow | null>(null);
   const [hasBooking, setHasBooking] = useState(false);
@@ -210,6 +211,15 @@ export default function ClientPortal() {
         .then(({ data: rows }) => {
           const bl = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
           if (bl) setBookingLink(bl as BookingLinkLite);
+        });
+
+      // Fetch owner's external kickoff booking URL (overrides internal booking link when set)
+      (supabase.rpc(
+        "public_get_kickoff_booking_url" as never,
+        { _user_id: (data as PublicProposal).user_id } as never,
+      ) as unknown as Promise<{ data: any }>)
+        .then(({ data: url }) => {
+          if (typeof url === "string" && url.trim()) setOwnerKickoffUrl(url.trim());
         });
 
       // Fetch latest contract for this proposal
@@ -498,14 +508,22 @@ export default function ClientPortal() {
         ctaLabel: onboardingStarted ? "Continue" : "Start onboarding",
         href: `/onboard/${onboarding.access_token}`,
       };
-    } else if (stage === "kickoff" && bookingLink) {
-      nextAction = {
-        title: "Book your kickoff call",
-        description: "Pick a time that works for you and we'll get started.",
-        icon: CalendarPlus,
-        ctaLabel: "Schedule call",
-        href: `/book/${bookingLink.slug}?proposal=${proposal.id}`,
-      };
+    } else if (stage === "kickoff" && (ownerKickoffUrl || bookingLink)) {
+      nextAction = ownerKickoffUrl
+        ? {
+            title: "Book your kickoff call",
+            description: "Pick a time that works for you and we'll get started.",
+            icon: CalendarPlus,
+            ctaLabel: "Schedule call",
+            onClick: () => window.open(ownerKickoffUrl, "_blank", "noopener,noreferrer"),
+          }
+        : {
+            title: "Book your kickoff call",
+            description: "Pick a time that works for you and we'll get started.",
+            icon: CalendarPlus,
+            ctaLabel: "Schedule call",
+            href: `/book/${bookingLink!.slug}?proposal=${proposal.id}`,
+          };
     }
   }
 
@@ -797,22 +815,29 @@ export default function ClientPortal() {
               Payment received — we're on it
             </h2>
             <p className="text-muted-foreground text-sm mb-5">
-              Thanks! A confirmation has been sent. {bookingLink ? "Lock in your kickoff call below." : "We'll be in touch shortly to kick things off."}
+              Thanks! A confirmation has been sent. {(ownerKickoffUrl || bookingLink) ? "Lock in your kickoff call below." : "We'll be in touch shortly to kick things off."}
             </p>
-            {bookingLink && (
+            {(ownerKickoffUrl || bookingLink) && (
               <Button
                 size="lg"
                 asChild
                 className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110"
               >
-                <RouterLink to={`/book/${bookingLink.slug}?proposal=${proposal.id}`}>
-                  <CalendarPlus className="w-4 h-4" />
-                  Book your kickoff call
-                </RouterLink>
+                {ownerKickoffUrl ? (
+                  <a href={ownerKickoffUrl} target="_blank" rel="noopener noreferrer">
+                    <CalendarPlus className="w-4 h-4" />
+                    Book your kickoff call
+                  </a>
+                ) : (
+                  <RouterLink to={`/book/${bookingLink!.slug}?proposal=${proposal.id}`}>
+                    <CalendarPlus className="w-4 h-4" />
+                    Book your kickoff call
+                  </RouterLink>
+                )}
               </Button>
             )}
           </section>
-        ) : isAccepted && isContractSigned && !hasPrice && bookingLink ? (
+        ) : isAccepted && isContractSigned && !hasPrice && (ownerKickoffUrl || bookingLink) ? (
           <section className="rounded-xl border border-purple/30 bg-gradient-to-br from-purple/10 via-accent/5 to-transparent p-6 lg:p-10 text-center">
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-purple/15 mb-4">
               <CalendarPlus className="w-6 h-6 text-purple" />
@@ -828,10 +853,17 @@ export default function ClientPortal() {
               asChild
               className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110"
             >
-              <RouterLink to={`/book/${bookingLink.slug}?proposal=${proposal.id}`}>
-                <CalendarPlus className="w-4 h-4" />
-                Schedule Call
-              </RouterLink>
+              {ownerKickoffUrl ? (
+                <a href={ownerKickoffUrl} target="_blank" rel="noopener noreferrer">
+                  <CalendarPlus className="w-4 h-4" />
+                  Schedule Call
+                </a>
+              ) : (
+                <RouterLink to={`/book/${bookingLink!.slug}?proposal=${proposal.id}`}>
+                  <CalendarPlus className="w-4 h-4" />
+                  Schedule Call
+                </RouterLink>
+              )}
             </Button>
           </section>
         ) : isRejected ? (
