@@ -106,7 +106,7 @@ export default function DeadlinesPanel() {
       supabase.from("deadlines").select("*").is("deleted_at", null).order("due_date", { ascending: true }),
       supabase.from("clients").select("id, name").is("deleted_at", null).order("name"),
       supabase.from("proposals").select("id, client_name, service_type").is("deleted_at", null).order("created_at", { ascending: false }),
-      supabase.from("contracts").select("id, title, client_name").order("created_at", { ascending: false }),
+      supabase.from("contracts").select("id, title, client_name").is("deleted_at", null).order("created_at", { ascending: false }),
     ]);
     setRows((dRes.data as DeadlineRow[]) || []);
     setClients((cRes.data as ClientLite[]) || []);
