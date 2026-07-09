@@ -185,19 +185,22 @@ export default function Dashboard() {
 
         <ActivationChecklist />
 
-        {/* AI SALES COACH — premium intelligence layer */}
-        <WeeklyBriefingCard />
-        <CoachFeedWidget />
-
-        {/* PRIORITY ACTIONS — top of the dashboard */}
+        {/* 1. NEEDS YOUR ATTENTION — most prominent */}
         <DeadlineAlerts />
-        <PriorityActions
+        <AttentionCenter
           proposals={proposals}
           clients={clients}
           proposalClientNames={proposalClientNames}
         />
 
-        {/* METRICS */}
+        {/* 2. OPPORTUNITIES CLOSEST TO REVENUE */}
+        <OpportunitiesToRevenue proposals={proposals} />
+
+        {/* 3. AI SALES COACH — contextual next-move guidance */}
+        <WeeklyBriefingCard />
+        <CoachFeedWidget />
+
+        {/* 4. KEY METRICS */}
         <SalesMetrics
           proposalsSentThisMonth={metrics.sentThisMonth}
           acceptedProposals={metrics.accepted}
