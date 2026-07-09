@@ -89,7 +89,7 @@ export default function ContractsPage() {
   const fetchData = async () => {
     setLoading(true);
     const [{ data: c }, { data: p }, { data: cl }] = await Promise.all([
-      supabase.from("contracts").select("*").order("created_at", { ascending: false }),
+      supabase.from("contracts").select("*").is("deleted_at", null).order("created_at", { ascending: false }),
       supabase
         .from("proposals")
         .select("id, client_id, client_name, company_name, service_type, project_scope, timeline, budget, amount_cents, currency, status, accepted_at")

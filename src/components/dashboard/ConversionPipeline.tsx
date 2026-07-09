@@ -42,6 +42,7 @@ export default function ConversionPipeline({ proposals, clients, proposalClientN
       const { data } = await supabase
         .from("contracts")
         .select("status, client_paid")
+        .is("deleted_at", null)
         .in("status", ["signed", "executed"]);
       const c = ((data as any[]) || []).filter((r) => !r.client_paid).length;
       setSignedCount(c);

@@ -21,6 +21,7 @@ interface TrashedClient {
   proposalCount: number;
   onboardingCount: number;
   deadlineCount: number;
+  contractCount: number;
   onboardingIds: string[];
 }
 
@@ -58,10 +59,11 @@ export default function Trash() {
       return;
     }
     const ids = rows.map((c) => c.id);
-    const [propRes, onbRes, dlRes] = await Promise.all([
+    const [propRes, onbRes, dlRes, ctRes] = await Promise.all([
       supabase.from("proposals").select("client_id").in("client_id", ids).not("deleted_at", "is", null),
       supabase.from("onboarding_forms").select("id, client_id").in("client_id", ids).not("deleted_at", "is", null),
       supabase.from("deadlines").select("client_id").in("client_id", ids).not("deleted_at", "is", null),
+      supabase.from("contracts").select("client_id").in("client_id", ids).not("deleted_at", "is", null),
     ]);
     const propCount = new Map<string, number>();
     (propRes.data || []).forEach((r: any) => propCount.set(r.client_id, (propCount.get(r.client_id) || 0) + 1));
@@ -75,12 +77,15 @@ export default function Trash() {
     });
     const dlCount = new Map<string, number>();
     (dlRes.data || []).forEach((r: any) => dlCount.set(r.client_id, (dlCount.get(r.client_id) || 0) + 1));
+    const ctCount = new Map<string, number>();
+    (ctRes.data || []).forEach((r: any) => ctCount.set(r.client_id, (ctCount.get(r.client_id) || 0) + 1));
 
     setItems(rows.map((c) => ({
       ...c,
       proposalCount: propCount.get(c.id) || 0,
       onboardingCount: onbCount.get(c.id) || 0,
       deadlineCount: dlCount.get(c.id) || 0,
+      contractCount: ctCount.get(c.id) || 0,
       onboardingIds: onbIds.get(c.id) || [],
     })));
     setLoading(false);
@@ -94,6 +99,7 @@ export default function Trash() {
       supabase.from("proposals").update({ deleted_at: null }).eq("client_id", item.id),
       supabase.from("onboarding_forms").update({ deleted_at: null }).eq("client_id", item.id),
       supabase.from("deadlines").update({ deleted_at: null }).eq("client_id", item.id),
+      supabase.from("contracts").update({ deleted_at: null }).eq("client_id", item.id),
     ]);
     await supabase.from("clients").update({ deleted_at: null }).eq("id", item.id);
     toast({ title: "Client restored", description: `${item.name || "Client"} and their records are back.` });
@@ -134,6 +140,7 @@ export default function Trash() {
         supabase.from("proposals").delete().eq("client_id", item.id),
         supabase.from("onboarding_forms").delete().eq("client_id", item.id),
         supabase.from("deadlines").delete().eq("client_id", item.id),
+        supabase.from("contracts").delete().eq("client_id", item.id),
       ]);
       const { error } = await supabase.from("clients").delete().eq("id", item.id);
       if (error) throw error;
@@ -156,7 +163,7 @@ export default function Trash() {
             Trash
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Recently deleted clients and their proposals, onboarding forms, and deadlines. Restore them or delete permanently.
+            Recently deleted clients and their proposals, contracts, onboarding forms, and deadlines. Restore them or delete permanently.
           </p>
         </div>
 
@@ -192,13 +199,16 @@ export default function Trash() {
                       {item.proposalCount > 0 && (
                         <Badge variant="secondary" className="text-[10px]">{item.proposalCount} proposal{item.proposalCount !== 1 ? "s" : ""}</Badge>
                       )}
+                      {item.contractCount > 0 && (
+                        <Badge variant="secondary" className="text-[10px]">{item.contractCount} contract{item.contractCount !== 1 ? "s" : ""}</Badge>
+                      )}
                       {item.onboardingCount > 0 && (
                         <Badge variant="secondary" className="text-[10px]">{item.onboardingCount} onboarding form{item.onboardingCount !== 1 ? "s" : ""}</Badge>
                       )}
                       {item.deadlineCount > 0 && (
                         <Badge variant="secondary" className="text-[10px]">{item.deadlineCount} deadline{item.deadlineCount !== 1 ? "s" : ""}</Badge>
                       )}
-                      {item.proposalCount + item.onboardingCount + item.deadlineCount === 0 && (
+                      {item.proposalCount + item.contractCount + item.onboardingCount + item.deadlineCount === 0 && (
                         <span className="text-[11px] text-muted-foreground">No cascaded records</span>
                       )}
                     </div>
@@ -229,7 +239,7 @@ export default function Trash() {
           <AlertDialogHeader>
             <AlertDialogTitle>Permanently delete {confirmPurge?.name || "client"}?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently erase this client and their proposals, onboarding forms, deadlines, and any uploaded files.
+              This will permanently erase this client and their proposals, contracts, onboarding forms, deadlines, and any uploaded files.
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

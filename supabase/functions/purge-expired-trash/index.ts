@@ -96,6 +96,7 @@ Deno.serve(async (req) => {
       await svc.from("proposals").delete().eq("client_id", row.id);
       await svc.from("onboarding_forms").delete().eq("client_id", row.id);
       await svc.from("deadlines").delete().eq("client_id", row.id);
+      await svc.from("contracts").delete().eq("client_id", row.id);
       const { error: delErr } = await svc.from("clients").delete().eq("id", row.id);
       if (delErr) { console.error("client delete", row.id, delErr); retained++; continue; }
       purged++;

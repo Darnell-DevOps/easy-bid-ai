@@ -87,6 +87,7 @@ export default function OpportunitiesToRevenue({ proposals }: Props) {
       const { data } = await supabase
         .from("contracts")
         .select("id, title, client_name, status, created_at, signed_at, proposal_id")
+        .is("deleted_at", null)
         .in("status", ["sent", "viewed", "signed"])
         .order("created_at", { ascending: false })
         .limit(50);

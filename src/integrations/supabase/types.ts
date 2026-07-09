@@ -782,6 +782,7 @@ export type Database = {
           countersigner_name: string | null
           created_at: string
           currency: string | null
+          deleted_at: string | null
           id: string
           proposal_id: string | null
           sent_at: string | null
@@ -805,6 +806,7 @@ export type Database = {
           countersigner_name?: string | null
           created_at?: string
           currency?: string | null
+          deleted_at?: string | null
           id?: string
           proposal_id?: string | null
           sent_at?: string | null
@@ -828,6 +830,7 @@ export type Database = {
           countersigner_name?: string | null
           created_at?: string
           currency?: string | null
+          deleted_at?: string | null
           id?: string
           proposal_id?: string | null
           sent_at?: string | null
@@ -3009,6 +3012,7 @@ export type Database = {
           countersigner_name: string | null
           created_at: string
           currency: string | null
+          deleted_at: string | null
           id: string
           proposal_id: string | null
           sent_at: string | null
@@ -3041,6 +3045,7 @@ export type Database = {
           countersigner_name: string | null
           created_at: string
           currency: string | null
+          deleted_at: string | null
           id: string
           proposal_id: string | null
           sent_at: string | null

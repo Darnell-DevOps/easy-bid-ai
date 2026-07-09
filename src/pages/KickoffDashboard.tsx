@@ -46,7 +46,7 @@ export default function KickoffDashboard() {
 
     const [{ data: proposals }, { data: contracts }, { data: forms }] = await Promise.all([
       supabase.from("proposals").select("*").in("client_id", ids).order("created_at", { ascending: false }),
-      supabase.from("contracts").select("id, client_id, status").in("client_id", ids).order("created_at", { ascending: false }),
+      supabase.from("contracts").select("id, client_id, status").in("client_id", ids).is("deleted_at", null).order("created_at", { ascending: false }),
       supabase.from("onboarding_forms").select("id, client_id, status").in("client_id", ids).order("created_at", { ascending: false }),
     ]);
 
