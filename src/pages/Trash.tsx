@@ -106,10 +106,6 @@ export default function Trash() {
     setBusy(null);
     load();
   };
-    toast({ title: "Client restored", description: `${item.name || "Client"} and their records are back.` });
-    setBusy(null);
-    load();
-  };
 
   const purge = async (item: TrashedClient) => {
     setBusy(item.id);
