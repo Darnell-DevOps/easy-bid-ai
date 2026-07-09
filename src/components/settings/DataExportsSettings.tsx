@@ -124,9 +124,8 @@ export default function DataExportsSettings() {
       return { weekly: false, monthly: false, delivery: "email" };
     }
   });
-  const [retention, setRetention] = useState<Retention>(() => {
-    return (localStorage.getItem(LS_RETENTION) as Retention) || "30";
-  });
+  const [retention, setRetention] = useState<Retention>("30");
+  const [retentionSaving, setRetentionSaving] = useState(false);
   const [lastExport, setLastExport] = useState<LastExport>(() => {
     try {
       return JSON.parse(localStorage.getItem(LS_LAST_EXPORT) || "null");
@@ -144,8 +143,39 @@ export default function DataExportsSettings() {
   }, [schedule]);
 
   useEffect(() => {
-    localStorage.setItem(LS_RETENTION, retention);
-  }, [retention]);
+    let cancelled = false;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("user_settings")
+        .select("trash_retention_days")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      const v = data?.trash_retention_days;
+      if (v === 0) setRetention("0");
+      else if (v === 60) setRetention("60");
+      else setRetention("30");
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const updateRetention = async (v: Retention) => {
+    setRetention(v);
+    setRetentionSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      await supabase
+        .from("user_settings")
+        .upsert({ user_id: user.id, trash_retention_days: parseInt(v, 10) }, { onConflict: "user_id" });
+    } catch (e: any) {
+      toast({ title: "Couldn't save retention", description: e?.message, variant: "destructive" });
+    } finally {
+      setRetentionSaving(false);
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
