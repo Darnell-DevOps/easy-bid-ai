@@ -505,7 +505,6 @@ export default function Index() {
       {/* ============ Capability marquee ============ */}
       <CapabilityMarquee />
 
-      
 
       {/* ============ Platform grid ============ */}
       <section id="platform" className="py-24 px-4 scroll-mt-20">
