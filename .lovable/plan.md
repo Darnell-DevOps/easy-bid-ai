@@ -1,22 +1,27 @@
-## Client Portal fixes
+## Plan: Trim two landing-page sections
 
-Two small tweaks in `src/pages/ClientPortal.tsx`, no logic beyond presentation.
+### What will change
+1. **Remove the "See it work in 60 seconds" live demo**
+   - Delete `src/components/landing/LiveDemo.tsx`.
+   - Remove the `import LiveDemo` and `<LiveDemo />` usage in `src/pages/Index.tsx`.
+   - Remove the "Demo" anchor in the landing nav (`<a href="#live-demo">`).
+   - Replace the hero "See 60-second demo" outline button with a still-relevant secondary CTA (e.g. "Explore the platform" linking to `#platform`) so no broken anchor remains.
 
-### 1. Contract CTA wording after signing
-On the agreement card (around line 760), the button currently reads "Review & sign contract" until signed and "View signed contract" after. Change the signed/executed state label to simply **"Review"** as requested.
+2. **Remove the "Stop paying for 7 tools" consolidation section**
+   - Delete the entire `{/* ============ Consolidation ============ */}` section from `src/pages/Index.tsx` (lines 575–650).
+   - Remove the now-unused `replacedTools` data constant and `XCircle` import.
 
-- When `contract.status === "signed"` or `"executed"` → button label = `Review`
-- Otherwise → keep `Review & sign contract`
+3. **Verify no broken references**
+   - Confirm no other file imports `LiveDemo`, links to `#live-demo`, or references `replacedTools`.
+   - Run a type check and view the landing page to ensure layout and remaining CTAs are intact.
 
-### 2. Hide "Book your kickoff call" once a call is already booked
-Two sections currently show a kickoff CTA:
-- Post-payment card (~line 816): "Payment received — we're on it" + Book kickoff button
-- Post-signature no-price card (~line 847): "Book your kickoff call"
+### What will NOT change
+- All other landing sections (Hero, Platform grid, Journey, AI Assistant, Retainers, Client Portal, Social proof, Pricing, Footer).
+- Existing analytics `track()` calls for CTAs that remain.
+- No backend or route changes.
 
-Both should stop offering a booking action once the client has an active upcoming booking. `upcomingBooking` is already computed at line 474.
-
-Changes:
-- Post-payment card: keep the "Payment received" confirmation, but hide the Book button and swap the subtitle to a friendly "Your kickoff call is booked for <date/time>." when `upcomingBooking` exists.
-- Post-signature kickoff card: hide the entire section when `upcomingBooking` exists (the Overview already surfaces the upcoming booking).
-
-No changes to data fetching, RPCs, or other files.
+### Acceptance criteria
+- Landing page no longer contains the heading "See it work in 60 seconds".
+- Landing page no longer contains the heading "Stop paying for 7 tools. Use one.".
+- No broken `#live-demo` links in nav or hero.
+- Build passes.

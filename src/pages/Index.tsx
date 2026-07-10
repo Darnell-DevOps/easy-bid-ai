@@ -10,7 +10,6 @@ import {
   HandCoins,
   Star,
   Lock,
-  PlayCircle,
   MessageSquare,
   Repeat,
   Calendar,
@@ -23,11 +22,10 @@ import {
   BarChart3,
   Send,
   LayoutDashboard,
-  XCircle,
   Terminal,
 } from "lucide-react";
 import { AnimateIn } from "@/hooks/use-scroll-animation";
-import LiveDemo from "@/components/landing/LiveDemo";
+
 import AIAssistant from "@/components/landing/AIAssistant";
 import RetainersSection from "@/components/landing/RetainersSection";
 import ClientPortalShowcase from "@/components/landing/ClientPortalShowcase";
@@ -63,15 +61,6 @@ const journey = [
   { icon: Brain, title: "Ongoing Client", sub: "Managed by AI", desc: "Bookings, follow-ups, churn alerts and weekly briefings on autopilot." },
 ];
 
-const replacedTools = [
-  { name: "Proposify", role: "Proposals" },
-  { name: "DocuSign", role: "Contracts" },
-  { name: "Stripe Invoicing", role: "Payments" },
-  { name: "Calendly", role: "Bookings" },
-  { name: "Notion / Forms", role: "Onboarding" },
-  { name: "Chargebee", role: "Recurring billing" },
-  { name: "Mailshake / Zapier", role: "Follow-ups" },
-];
 
 const terminalLog = [
   { t: "09:41:02", text: "inbound lead received — sarah@acme.co", tag: "LEAD" },
@@ -407,7 +396,7 @@ export default function Index() {
           <div className="hidden md:flex items-center gap-7 text-sm text-muted-foreground">
             <a href="#platform" className="hover:text-foreground transition-colors">Platform</a>
             <a href="#ai" className="hover:text-foreground transition-colors">AI</a>
-            <a href="#live-demo" className="hover:text-foreground transition-colors">Demo</a>
+            
             <a href="#workflow" className="hover:text-foreground transition-colors">Workflow</a>
             <a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a>
             <Link to="/login" className="hover:text-foreground transition-colors">Login</Link>
@@ -482,9 +471,9 @@ export default function Index() {
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
-              <a href="#live-demo" className="w-full sm:w-auto" onClick={() => track("cta_click", { location: "hero_demo" })}>
+              <a href="#platform" className="w-full sm:w-auto" onClick={() => track("cta_click", { location: "hero_platform" })}>
                 <Button size="lg" variant="outline" className="w-full sm:w-auto px-9 h-14 text-base bg-secondary/40 border-border hover:bg-secondary hover:border-accent/40 transition-colors gap-2">
-                  <PlayCircle className="w-4 h-4" /> See 60-second demo
+                  <ArrowRight className="w-4 h-4" /> Explore the platform
                 </Button>
               </a>
             </div>
@@ -516,8 +505,6 @@ export default function Index() {
       {/* ============ Capability marquee ============ */}
       <CapabilityMarquee />
 
-      {/* ============ Live demo (kept animated section) ============ */}
-      <LiveDemo />
 
       {/* ============ Platform grid ============ */}
       <section id="platform" className="py-24 px-4 scroll-mt-20">
@@ -571,84 +558,6 @@ export default function Index() {
           </div>
         </div>
       </section>
-
-      {/* ============ Consolidation ============ */}
-      <section className="py-24 px-4 relative overflow-hidden">
-        <div className="container max-w-5xl">
-          <AnimateIn className="text-center mb-14">
-            <MonoTag>Consolidate the stack</MonoTag>
-            <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight mt-4 text-balance">
-              Stop paying for 7 tools. <span className="text-gradient-sync">Use one.</span>
-            </h2>
-          </AnimateIn>
-
-          <div className="grid md:grid-cols-2 gap-6 items-stretch">
-            {/* Before */}
-            <AnimateIn direction="left">
-              <div className="h-full rounded-xl border border-border bg-card/50 p-6">
-                <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground mb-5">
-                  Before — 7 logins · ≈ $300+/mo
-                </p>
-                <div className="space-y-2">
-                  {replacedTools.map((tool) => (
-                    <div key={tool.name} className="flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-lg border border-border/60 bg-secondary/30">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span className="font-mono text-[10px] text-muted-foreground/60 w-4">×</span>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-foreground/70 line-through decoration-destructive/50 decoration-1 truncate">{tool.name}</p>
-                          <p className="font-mono text-[10px] text-muted-foreground truncate uppercase tracking-wider">{tool.role}</p>
-                        </div>
-                      </div>
-                      <XCircle className="w-3.5 h-3.5 text-destructive/50 shrink-0" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </AnimateIn>
-
-            {/* After */}
-            <AnimateIn direction="right">
-              <div className="relative h-full rounded-xl border border-accent/30 bg-accent/[0.05] p-6 flex flex-col">
-                <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-accent mb-5">
-                  After — one login · from £29/mo
-                </p>
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-14 h-14 rounded-xl bg-accent flex items-center justify-center shrink-0">
-                    <Zap className="w-6 h-6 text-accent-foreground" />
-                  </div>
-                  <div>
-                    <p className="text-xl font-bold text-foreground">
-                      Close<span className="text-gradient-sync">Sync</span> AI
-                    </p>
-                    <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">
-                      Lead → Proposal → Contract → Payment → Retainer
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-3 pt-5 border-t border-accent/15 flex-1">
-                  {[
-                    "All 12 workflows in one place",
-                    "One login, one bill, one source of truth",
-                    "AI orchestrates every handoff",
-                    "No Zapier duct tape required",
-                  ].map((b) => (
-                    <div key={b} className="flex items-center gap-2.5">
-                      <CheckCircle className="w-4 h-4 text-accent shrink-0" />
-                      <span className="text-sm text-foreground">{b}</span>
-                    </div>
-                  ))}
-                </div>
-                <Link to="/signup" className="mt-6" onClick={() => track("cta_click", { location: "consolidation" })}>
-                  <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90 h-11 gap-2 transition-colors">
-                    Replace your stack <ArrowRight className="w-4 h-4" />
-                  </Button>
-                </Link>
-              </div>
-            </AnimateIn>
-          </div>
-        </div>
-      </section>
-
       {/* ============ Scroll-pinned journey ============ */}
       <ScrollJourney />
 
