@@ -74,7 +74,7 @@ import ReplyDrafterDialog from "@/components/ai/ReplyDrafterDialog";
 import { WhatsAppButton } from "@/components/whatsapp/WhatsAppButton";
 import { scoreLabel, scoreTone } from "@/lib/leadScore";
 import { logLeadActivity } from "@/lib/lead-activity";
-import { Flame } from "lucide-react";
+import LeadInsightPanel from "@/components/leads/LeadInsightPanel";
 
 interface ClientInfo {
   id: string;
