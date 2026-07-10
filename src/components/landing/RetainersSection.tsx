@@ -22,7 +22,7 @@ const features = [
   { icon: Repeat, label: "Renewal automation" },
 ];
 
-export default function RetainersSection() {
+export default function RetainersSection({ embedded = false }: { embedded?: boolean } = {}) {
   const [animateBars, setAnimateBars] = useState(false);
   const [mrr, setMrr] = useState(0);
 
@@ -49,7 +49,7 @@ export default function RetainersSection() {
   }, []);
 
   return (
-    <section id="retainers" className="py-24 px-4 relative overflow-hidden scroll-mt-20">
+    <section id="retainers" className={`${embedded ? "py-10 md:py-14" : "py-24"} px-4 relative overflow-hidden scroll-mt-20 w-full`}>
       <div aria-hidden className="absolute inset-0 -z-10 pointer-events-none">
         <div
           className="absolute top-1/4 -right-24 w-[520px] h-[520px] rounded-full blur-3xl opacity-30"

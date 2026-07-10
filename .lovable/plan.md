@@ -1,30 +1,38 @@
-## Goal
-Shrink the "Everything you need to run client work" platform grid so it stops dominating the page, while keeping every workflow visible — as an animation instead of a static 14-cell wall.
+# Side-by-side horizontal scroll: AI Assistant → Retainers
 
-## Current state
-`src/pages/Index.tsx` (lines ~510-560) renders a heading + a 3-column CSS grid of 13 workflow cards plus a CTA cell. On desktop this is ~5 tall rows of large tiles; on mobile it stacks into ~14 full-width cards. That's the height the user wants to reclaim.
+Combine the two landing sections — **"AI that helps you close clients faster"** (`AIAssistant.tsx`) and **"Turn one-time projects into recurring revenue"** (`RetainersSection.tsx`) — into a single pinned horizontal-scroll experience.
 
-## Proposed change (frontend only)
-Replace the static grid with a compact animated **workflow reel**:
+## Behavior
+- As the user scrolls down the page, the section pins to the viewport.
+- Two panels sit side-by-side on a 200vw-wide track. Panel 1 (AI Assistant) starts centered.
+- Continued vertical scroll translates the track leftward, sliding Panel 1 out to the left while Panel 2 (Retainers) slides in from the right.
+- Once fully scrolled, the pin releases and normal vertical scrolling resumes into the next section (Client Portal).
 
-1. **Keep** the heading block, MonoTag ("Platform / 13 workflows"), and the right-side descriptive paragraph — but tighten spacing (`py-24` → `py-16`, `mb-14` → `mb-8`).
-2. **Replace** the `.grid sm:grid-cols-2 lg:grid-cols-3 ...` block with a new `PlatformReel` component rendered inline in `Index.tsx`:
-   - A single fixed-height panel (~`h-64` desktop / `h-72` mobile) with a subtle bordered frame matching current card styling.
-   - **Left side (desktop) / top (mobile):** a vertical list of the 13 workflow titles as clickable/hoverable chips. The active one is highlighted (accent color + left border). Auto-advances every ~3s; pauses on hover; arrow-key + click navigation for a11y.
-   - **Right side:** the active workflow's icon (large), title, and description, cross-fading in with `animate-fade-in` / a small `translateY`. Number badge ("07 / 13") for context.
-   - Progress bar underneath the reel that fills over the 3s dwell to signal auto-advance.
-3. **Continuous marquee variant for mobile:** if the split panel feels heavy on narrow screens, fall back to a single horizontally scrolling row of pill-sized workflow cards (icon + title) using the existing `.lp-marquee-track` primitive from `index.css`, pausing on touch. Decision: use the split panel at `md+` and the marquee at `< md`.
-4. **Preserve the CTA** ("Try every workflow free" → `/signup`) as a single accent button under the reel instead of a filler grid cell — same `track("cta_click", { location: "platform_grid" })` call so analytics stay intact.
-5. Keep the `platform` data array untouched — the reel reads from it, so all 13 items remain in the DOM and are still crawlable for SEO.
+## Implementation
 
-## Files touched
-- `src/pages/Index.tsx` — swap the grid JSX for the reel, tighten section padding, keep heading + CTA analytics.
-- (Optional) new `src/components/landing/PlatformReel.tsx` if the reel logic grows beyond ~40 lines, to keep `Index.tsx` readable. Uses `useState` + `useEffect` interval, `useReducedMotion` respect via existing `@media (prefers-reduced-motion)` rule (auto-advance disabled → user clicks chips).
+**New file:** `src/components/landing/AiRetainersScroller.tsx`
+- Outer wrapper with `height: 200vh` (drives the scroll distance).
+- Inner sticky container: `sticky top-0 h-screen overflow-hidden`.
+- Track: `flex w-[200vw] h-full` containing two `w-screen` panels.
+- Track `translateX` bound to scroll progress via `useScroll` + `useTransform` from `framer-motion` (already installed) — maps 0→1 progress to `0% → -50%`.
+- Each panel wraps the existing `<AIAssistant />` and `<RetainersSection />` unchanged, but with their outer `<section>` height constraints normalized to fit `h-screen` (padding tightened, `min-h-screen` → `h-full`).
+- Add a subtle progress indicator (2 dots) bottom-center to hint at the horizontal motion.
+- Mobile (`<md`): fall back to stacked vertical layout — pinning + horizontal scroll disabled via a `matchMedia` check, panels render normally one above the other.
+- Respect `prefers-reduced-motion`: same fallback as mobile.
+
+**Edit:** `src/pages/Index.tsx`
+- Replace the two adjacent renders (`<AIAssistant />` around line 488 and `<RetainersSection />` at line 492) with a single `<AiRetainersScroller />`.
+- Remove the outer `<section>` wrappers inside AIAssistant/Retainers only if needed to avoid double padding (will adjust in-place with a `variant="embedded"` prop rather than editing the source components heavily).
+
+**Minor edits:** `AIAssistant.tsx` and `RetainersSection.tsx`
+- Accept an optional `embedded?: boolean` prop. When true: remove `min-h-screen`/large vertical padding so content fits within a single viewport panel. Visual design untouched.
+
+## Technical notes
+- Uses existing `framer-motion` package — no new deps.
+- Pin technique: `sticky top-0` inside a taller parent is the standard scroll-jack pattern and works without ScrollTrigger/GSAP.
+- Total added vertical scroll length: ~100vh extra (parent is 200vh, one screen for the transition).
+- No changes to business logic, copy, or the two sections' internal designs.
 
 ## Out of scope
-- No copy changes to workflow titles/descriptions.
-- No changes to any other landing section, tokens, or the `platform` data source.
-- No new dependencies (pure React + Tailwind + existing keyframes).
-
-## Verification
-Build passes; visually confirm on desktop and mobile viewports that (a) the section is noticeably shorter, (b) all 13 workflows cycle through, (c) hover pauses auto-advance, (d) reduced-motion users see a static first item and can navigate manually.
+- No visual redesign of either section.
+- No changes to other landing sections.
