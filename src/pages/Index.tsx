@@ -1,8 +1,31 @@
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { FileText, Zap, AlertTriangle, Clock, XCircle, UserX, ArrowRight, CheckCircle, Briefcase, ShieldCheck, CreditCard, HandCoins, FileCheck, Star, Lock, PlayCircle, MessageSquare, Repeat, Calendar, Users, Brain, Sparkles, PenLine, Inbox, Upload, RefreshCw, BarChart3, Send, LayoutDashboard } from "lucide-react";
+import {
+  FileText,
+  Zap,
+  ArrowRight,
+  CheckCircle,
+  ShieldCheck,
+  HandCoins,
+  Star,
+  Lock,
+  PlayCircle,
+  MessageSquare,
+  Repeat,
+  Calendar,
+  Users,
+  Brain,
+  PenLine,
+  Inbox,
+  Upload,
+  RefreshCw,
+  BarChart3,
+  Send,
+  LayoutDashboard,
+  XCircle,
+  Terminal,
+} from "lucide-react";
 import { AnimateIn } from "@/hooks/use-scroll-animation";
 import LiveDemo from "@/components/landing/LiveDemo";
 import AIAssistant from "@/components/landing/AIAssistant";
@@ -10,18 +33,9 @@ import RetainersSection from "@/components/landing/RetainersSection";
 import ClientPortalShowcase from "@/components/landing/ClientPortalShowcase";
 import { track } from "@/lib/landing-analytics";
 
-const steps = [
-  { number: "1", title: "Capture & qualify leads", description: "AI replies to inbound emails, scores deals, and surfaces who's worth your time — no manual triage." },
-  { number: "2", title: "Close with proposals & contracts", description: "Generate a polished proposal, e-sign contract, and one-click Accept & Pay flow — all from one link." },
-  { number: "3", title: "Run & grow accounts", description: "Onboarding, retainers, bookings, churn alerts and AI insights keep every client moving forward." },
-];
-
-const painPoints = [
-  { icon: UserX, text: "Clients ghost after proposals" },
-  { icon: Clock, text: "You chase invoices manually" },
-  { icon: XCircle, text: "Deals fall through the cracks" },
-  { icon: AlertTriangle, text: "Retainers churn without warning" },
-];
+/* ------------------------------------------------------------------ */
+/* Data                                                                */
+/* ------------------------------------------------------------------ */
 
 const platform = [
   { icon: FileText, title: "AI Proposals", desc: "Polished, on-brand proposals generated in seconds." },
@@ -39,11 +53,49 @@ const platform = [
   { icon: Star, title: "Review Collection", desc: "Auto-request reviews after kickoff and turn happy clients into social proof." },
 ];
 
-const deliverables = [
-  "Win more deals with AI-crafted proposals",
-  "Get paid the moment a client accepts",
-  "Lock in recurring revenue with retainers",
-  "Spot churn and slipping deals before they happen",
+const journey = [
+  { icon: MessageSquare, title: "Lead", sub: "Inbound enquiry", desc: "AI replies, qualifies and scores the lead the moment it lands." },
+  { icon: FileText, title: "Proposal", sub: "Sent in minutes", desc: "Generate a polished, on-brand proposal from a short brief." },
+  { icon: PenLine, title: "Contract", sub: "E-signed", desc: "Send and legally bind your terms — no DocuSign required." },
+  { icon: HandCoins, title: "Payment", sub: "Collected", desc: "One-click Accept & Pay. Money lands the moment they sign." },
+  { icon: LayoutDashboard, title: "Onboarding", sub: "Auto-kickoff", desc: "Smart intake forms collect everything you need without back-and-forth." },
+  { icon: Repeat, title: "Retainer", sub: "Recurring revenue", desc: "Subscriptions, renewals and dunning recovery handled for you." },
+  { icon: Brain, title: "Ongoing Client", sub: "Managed by AI", desc: "Bookings, follow-ups, churn alerts and weekly briefings on autopilot." },
+];
+
+const replacedTools = [
+  { name: "Proposify", role: "Proposals" },
+  { name: "DocuSign", role: "Contracts" },
+  { name: "Stripe Invoicing", role: "Payments" },
+  { name: "Calendly", role: "Bookings" },
+  { name: "Notion / Forms", role: "Onboarding" },
+  { name: "Chargebee", role: "Recurring billing" },
+  { name: "Mailshake / Zapier", role: "Follow-ups" },
+];
+
+const terminalLog = [
+  { t: "09:41:02", text: "inbound lead received — sarah@acme.co", tag: "LEAD" },
+  { t: "09:41:04", text: "ai reply sent · lead scored 87/100", tag: "AI" },
+  { t: "09:52:18", text: "proposal generated — brand refresh · £4,800", tag: "DOC" },
+  { t: "11:03:45", text: "contract e-signed by client", tag: "SIGN" },
+  { t: "11:03:51", text: "payment collected · £4,800.00", tag: "PAID" },
+  { t: "11:04:00", text: "onboarding form dispatched", tag: "FLOW" },
+  { t: "11:04:02", text: "retainer scheduled · £1,200/mo", tag: "REV" },
+];
+
+const marqueeItems = [
+  "AI PROPOSALS",
+  "E-SIGNATURES",
+  "ONE-CLICK PAYMENTS",
+  "RETAINERS",
+  "LEAD REPLIES",
+  "CLIENT PORTAL",
+  "BOOKINGS",
+  "ONBOARDING",
+  "FOLLOW-UPS",
+  "RECURRING BILLING",
+  "CHURN ALERTS",
+  "REVIEW COLLECTION",
 ];
 
 const plans = [
@@ -52,12 +104,7 @@ const plans = [
     price: "£0",
     period: "/month",
     description: "Try the platform — no card required",
-    features: [
-      "1 proposal per month",
-      "Watermarked proposals",
-      "No payment collection",
-      "Limited AI insights",
-    ],
+    features: ["1 proposal per month", "Watermarked proposals", "No payment collection", "Limited AI insights"],
     cta: "Start Free",
     popular: false,
   },
@@ -81,58 +128,287 @@ const plans = [
   },
 ];
 
-const journey = [
-  { icon: MessageSquare, title: "Lead", sub: "Inbound enquiry", desc: "AI replies, qualifies and scores the lead the moment it lands." },
-  { icon: FileText, title: "Proposal", sub: "Sent in minutes", desc: "Generate a polished, on-brand proposal from a short brief." },
-  { icon: PenLine, title: "Contract", sub: "E-signed", desc: "Send and legally bind your terms — no DocuSign required." },
-  { icon: HandCoins, title: "Payment", sub: "Collected", desc: "One-click Accept & Pay. Money lands the moment they sign." },
-  { icon: LayoutDashboard, title: "Onboarding", sub: "Auto-kickoff", desc: "Smart intake forms collect everything you need without back-and-forth." },
-  { icon: Repeat, title: "Retainer", sub: "Recurring revenue", desc: "Subscriptions, renewals and dunning recovery handled for you." },
-  { icon: Brain, title: "Ongoing Client", sub: "Managed by AI", desc: "Bookings, follow-ups, churn alerts and weekly briefings on autopilot." },
-];
+/* ------------------------------------------------------------------ */
+/* Scroll hooks (page-local)                                           */
+/* ------------------------------------------------------------------ */
 
-export default function Index() {
-  const [activeStep, setActiveStep] = useState(0);
-  const [activeJourney, setActiveJourney] = useState(0);
-  const [showStickyCta, setShowStickyCta] = useState(false);
-
+function useScrollY() {
+  const [scrollY, setScrollY] = useState(0);
   useEffect(() => {
-    track("landing_view");
-    const id = setInterval(() => setActiveStep((s) => (s + 1) % 3), 1600);
-    const j = setInterval(() => setActiveJourney((s) => (s + 1) % journey.length), 1800);
-    return () => { clearInterval(id); clearInterval(j); };
-  }, []);
-
-  useEffect(() => {
-    const onScroll = () => setShowStickyCta(window.scrollY > 600);
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => setScrollY(window.scrollY));
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+  return scrollY;
+}
+
+/** Progress (0 → 1) through a tall scroll-pinned container. */
+function usePinnedProgress() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const el = ref.current;
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const scrollable = rect.height - window.innerHeight;
+        if (scrollable <= 0) return;
+        setProgress(Math.min(1, Math.max(0, -rect.top / scrollable)));
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    onScroll();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+  return { ref, progress };
+}
+
+/* ------------------------------------------------------------------ */
+/* Sub-components                                                      */
+/* ------------------------------------------------------------------ */
+
+function MonoTag({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-accent">
+      <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+      {children}
+    </span>
+  );
+}
+
+function HeroTerminal() {
+  const [visibleLines, setVisibleLines] = useState(1);
+  useEffect(() => {
+    const id = setInterval(() => {
+      setVisibleLines((v) => (v >= terminalLog.length ? 1 : v + 1));
+    }, 1400);
+    return () => clearInterval(id);
   }, []);
 
   return (
-    <div className="min-h-screen bg-background relative overflow-x-hidden">
-      {/* Single subtle hero glow */}
-      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <div
-          className="absolute -top-[20%] left-1/2 -translate-x-1/2 w-[80vw] h-[60vw] max-w-[1000px] max-h-[700px] rounded-full blur-3xl"
-          style={{ background: "radial-gradient(closest-side, hsl(var(--accent) / 0.08), transparent 70%)" }}
-        />
+    <div className="relative rounded-xl border border-border bg-card/80 backdrop-blur-xl overflow-hidden shadow-2xl shadow-black/40">
+      {/* Title bar */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-secondary/50">
+        <div className="flex items-center gap-2">
+          <Terminal className="w-3.5 h-3.5 text-muted-foreground" />
+          <span className="font-mono text-[11px] text-muted-foreground tracking-wide">closesync — workflow.log</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-accent">live</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+        </div>
       </div>
-      {/* Sticky premium nav */}
+      {/* Log body */}
+      <div className="p-4 sm:p-5 font-mono text-[11px] sm:text-xs leading-relaxed min-h-[280px]">
+        {terminalLog.slice(0, visibleLines).map((line, i) => (
+          <div key={`${line.t}-${i}`} className="lp-log-in flex items-start gap-3 py-1">
+            <span className="text-muted-foreground/60 shrink-0">{line.t}</span>
+            <span
+              className={`shrink-0 w-12 text-center rounded px-1 py-px text-[9px] font-semibold tracking-wider ${
+                line.tag === "PAID"
+                  ? "bg-success/15 text-success"
+                  : line.tag === "AI"
+                    ? "bg-purple/15 text-purple"
+                    : "bg-accent/10 text-accent"
+              }`}
+            >
+              {line.tag}
+            </span>
+            <span className="text-foreground/85">{line.text}</span>
+          </div>
+        ))}
+        <div className="flex items-center gap-2 py-1 text-muted-foreground">
+          <span className="text-accent">→</span>
+          <span className="lp-caret inline-block w-2 h-3.5 bg-accent/80" />
+        </div>
+      </div>
+      {/* Bottom status strip */}
+      <div className="flex items-center justify-between px-4 py-2.5 border-t border-border bg-secondary/30 font-mono text-[10px] text-muted-foreground">
+        <span>PIPELINE: ACTIVE</span>
+        <span className="text-accent">£4,800 COLLECTED</span>
+        <span>0 MANUAL STEPS</span>
+      </div>
+    </div>
+  );
+}
+
+function CapabilityMarquee() {
+  const items = [...marqueeItems, ...marqueeItems];
+  return (
+    <div className="lp-marquee relative border-y border-border/60 bg-secondary/20 py-4 overflow-hidden" aria-hidden>
+      <div className="lp-marquee-track items-center gap-0">
+        {items.map((item, i) => (
+          <span key={`${item}-${i}`} className="flex items-center shrink-0">
+            <span className="font-mono text-xs tracking-[0.25em] text-muted-foreground px-6">{item}</span>
+            <span className="text-accent/50 text-xs">✦</span>
+          </span>
+        ))}
+      </div>
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-background to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-background to-transparent" />
+    </div>
+  );
+}
+
+/** Scroll-pinned client journey — the immersive centerpiece. */
+function ScrollJourney() {
+  const { ref, progress } = usePinnedProgress();
+  const active = Math.min(journey.length - 1, Math.floor(progress * journey.length));
+  const stage = journey[active];
+  const Icon = stage.icon;
+
+  return (
+    <section id="workflow" ref={ref} className="relative scroll-mt-20" style={{ height: `${journey.length * 60 + 100}vh` }}>
+      <div className="sticky top-0 h-screen flex flex-col justify-center overflow-hidden px-4">
+        {/* Backdrop */}
+        <div aria-hidden className="absolute inset-0 -z-10 lp-dot-grid opacity-[0.35]" style={{ maskImage: "radial-gradient(ellipse at center, black 30%, transparent 75%)", WebkitMaskImage: "radial-gradient(ellipse at center, black 30%, transparent 75%)" }} />
+
+        <div className="container max-w-6xl">
+          <div className="text-center mb-10 md:mb-14">
+            <MonoTag>The full client journey</MonoTag>
+            <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight mt-4 text-balance">
+              From first hello to <span className="text-gradient-sync">lifetime client</span>
+            </h2>
+          </div>
+
+          <div className="grid lg:grid-cols-[1fr_1.2fr] gap-8 lg:gap-16 items-center max-w-5xl mx-auto">
+            {/* Left: giant stage index */}
+            <div className="relative text-center lg:text-left">
+              <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground mb-2">
+                Stage {String(active + 1).padStart(2, "0")} / {String(journey.length).padStart(2, "0")}
+              </p>
+              <p className="text-7xl md:text-8xl lg:text-9xl font-bold tracking-tighter text-foreground/[0.08] select-none leading-none" aria-hidden>
+                {String(active + 1).padStart(2, "0")}
+              </p>
+              <div className="-mt-8 md:-mt-12">
+                <h3 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight">{stage.title}</h3>
+                <p className="font-mono text-xs text-accent mt-2 uppercase tracking-widest">{stage.sub}</p>
+                <p className="text-muted-foreground mt-4 max-w-sm mx-auto lg:mx-0 leading-relaxed">{stage.desc}</p>
+              </div>
+            </div>
+
+            {/* Right: stage rail */}
+            <div className="relative hidden sm:block">
+              <div aria-hidden className="absolute left-[23px] top-4 bottom-4 w-px bg-border">
+                <div
+                  className="absolute top-0 inset-x-0 bg-accent transition-[height] duration-300 ease-out"
+                  style={{ height: `${((active + 1) / journey.length) * 100}%` }}
+                />
+              </div>
+              <div className="space-y-1.5">
+                {journey.map((s, i) => {
+                  const SIcon = s.icon;
+                  const isActive = i === active;
+                  const isDone = i < active;
+                  return (
+                    <div
+                      key={s.title}
+                      className={`relative flex items-center gap-4 rounded-lg py-2.5 pl-1 pr-4 transition-all duration-300 ${
+                        isActive ? "bg-accent/[0.06]" : ""
+                      }`}
+                    >
+                      <div
+                        className={`relative z-10 w-[46px] h-[46px] rounded-lg border flex items-center justify-center shrink-0 transition-all duration-300 ${
+                          isActive
+                            ? "border-accent bg-accent text-accent-foreground"
+                            : isDone
+                              ? "border-accent/40 bg-card text-accent"
+                              : "border-border bg-card text-muted-foreground"
+                        }`}
+                      >
+                        <SIcon className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className={`text-sm font-semibold transition-colors duration-300 ${isActive ? "text-foreground" : isDone ? "text-foreground/70" : "text-muted-foreground"}`}>
+                          {s.title}
+                        </p>
+                        <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/70 truncate">{s.sub}</p>
+                      </div>
+                      {isDone && <CheckCircle className="w-3.5 h-3.5 text-accent ml-auto shrink-0" />}
+                      {isActive && (
+                        <span className="ml-auto font-mono text-[9px] uppercase tracking-widest text-accent shrink-0 flex items-center gap-1.5">
+                          <span className="w-1 h-1 rounded-full bg-accent animate-pulse" /> live
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Mobile: compact progress dots */}
+            <div className="flex sm:hidden items-center justify-center gap-2">
+              {journey.map((s, i) => (
+                <span
+                  key={s.title}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${i === active ? "w-6 bg-accent" : i < active ? "w-1.5 bg-accent/50" : "w-1.5 bg-border"}`}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Scroll hint */}
+          <p className="text-center font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/60 mt-10 md:mt-14">
+            Keep scrolling to advance the pipeline
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Page                                                                */
+/* ------------------------------------------------------------------ */
+
+export default function Index() {
+  const scrollY = useScrollY();
+  const [docProgress, setDocProgress] = useState(0);
+  const showStickyCta = scrollY > 700;
+
+  useEffect(() => {
+    track("landing_view");
+  }, []);
+
+  useEffect(() => {
+    const total = document.documentElement.scrollHeight - window.innerHeight;
+    setDocProgress(total > 0 ? Math.min(1, scrollY / total) : 0);
+  }, [scrollY]);
+
+  return (
+    <div className="min-h-screen bg-background relative overflow-x-clip">
+      {/* Nav with scroll progress */}
       <nav className="fixed top-0 inset-x-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
         <div className="container flex items-center justify-between h-16 px-4 md:px-8">
-          <div className="flex items-baseline gap-2">
-            <span className="text-xl font-semibold text-foreground tracking-tight">
-              Close<span className="text-gradient-sync">Sync</span> <span className="text-foreground">AI</span>
+          <div className="flex items-baseline gap-3">
+            <span className="text-lg font-semibold text-foreground tracking-tight">
+              Close<span className="text-gradient-sync">Sync</span> AI
             </span>
-            <span className="hidden sm:inline text-[10px] uppercase tracking-widest text-muted-foreground">by CloseSync</span>
+            <span className="hidden lg:inline font-mono text-[9px] uppercase tracking-[0.25em] text-muted-foreground">
+              SYS.ONLINE
+            </span>
           </div>
-          <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
+          <div className="hidden md:flex items-center gap-7 text-sm text-muted-foreground">
             <a href="#platform" className="hover:text-foreground transition-colors">Platform</a>
             <a href="#ai" className="hover:text-foreground transition-colors">AI</a>
             <a href="#live-demo" className="hover:text-foreground transition-colors">Demo</a>
-            <a href="#how-it-works" className="hover:text-foreground transition-colors">How it works</a>
+            <a href="#workflow" className="hover:text-foreground transition-colors">Workflow</a>
             <a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a>
             <Link to="/login" className="hover:text-foreground transition-colors">Login</Link>
           </div>
@@ -141,757 +417,391 @@ export default function Index() {
               <Button variant="ghost" size="sm">Log in</Button>
             </Link>
             <Link to="/signup" onClick={() => track("cta_click", { location: "nav" })}>
-              <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90 transition-colors h-9">Start free</Button>
+              <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90 transition-colors h-9">
+                Start free
+              </Button>
             </Link>
           </div>
         </div>
+        {/* Scroll progress bar */}
+        <div aria-hidden className="absolute bottom-0 left-0 h-px w-full bg-transparent">
+          <div className="h-full bg-accent origin-left transition-transform duration-150 ease-out" style={{ transform: `scaleX(${docProgress})` }} />
+        </div>
       </nav>
 
-      {/* Cinematic Hero */}
-      <section className="relative min-h-[92vh] flex items-center pt-24 pb-16 md:pt-28 md:pb-20 px-4 overflow-hidden">
-        {/* Layered animated background */}
-        <div aria-hidden className="absolute inset-0 -z-10">
+      {/* ============ Hero ============ */}
+      <section className="relative min-h-screen flex items-center pt-28 pb-20 px-4 overflow-hidden">
+        {/* Grid + beam backdrop with subtle parallax */}
+        <div aria-hidden className="absolute inset-0 -z-10" style={{ transform: `translateY(${scrollY * 0.12}px)` }}>
           <div
-            className="absolute -top-32 left-1/2 -translate-x-1/2 w-[640px] h-[520px] rounded-full blur-3xl opacity-50"
-            style={{ background: "radial-gradient(closest-side, hsl(var(--accent) / 0.25), transparent 70%)" }}
-          />
-          <div
-            className="absolute inset-0 opacity-[0.05]"
+            className="absolute inset-0 opacity-[0.06]"
             style={{
               backgroundImage:
                 "linear-gradient(hsl(var(--foreground) / 0.5) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground) / 0.5) 1px, transparent 1px)",
-              backgroundSize: "44px 44px",
-              maskImage: "radial-gradient(ellipse at center, black 40%, transparent 80%)",
-              WebkitMaskImage: "radial-gradient(ellipse at center, black 40%, transparent 80%)",
+              backgroundSize: "56px 56px",
+              maskImage: "radial-gradient(ellipse 70% 60% at 50% 35%, black 30%, transparent 75%)",
+              WebkitMaskImage: "radial-gradient(ellipse 70% 60% at 50% 35%, black 30%, transparent 75%)",
             }}
           />
+          <div
+            className="absolute -top-40 left-1/2 -translate-x-1/2 w-[720px] h-[560px] rounded-full blur-3xl opacity-40"
+            style={{ background: "radial-gradient(closest-side, hsl(var(--accent) / 0.22), transparent 70%)" }}
+          />
+          {/* Scanning beam */}
+          <div className="lp-beam absolute left-1/2 -translate-x-1/2 w-[56rem] max-w-full h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
         </div>
 
-        <div className="relative container grid lg:grid-cols-12 gap-10 lg:gap-6 items-center">
-          {/* Left: copy */}
-          <div className="lg:col-span-7 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm text-xs text-muted-foreground mb-6 animate-hero-fade-up">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-              The AI client workflow platform — replace 8 tools with one
+        <div className="relative container grid lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+          {/* Copy */}
+          <div className="lg:col-span-6 text-center lg:text-left">
+            <div className="animate-hero-fade-up mb-6">
+              <MonoTag>The AI client workflow platform</MonoTag>
             </div>
             <h1
-              className="text-5xl sm:text-6xl lg:text-7xl font-bold text-foreground tracking-tight leading-[1.05] mb-6 animate-hero-fade-up"
+              className="text-5xl sm:text-6xl lg:text-7xl font-bold text-foreground tracking-tighter leading-[0.98] mb-6 animate-hero-fade-up text-balance"
               style={{ animationDelay: "0.1s" }}
             >
               Run your entire client business.
               <br />
-              <span className="text-gradient-sync">
-                From lead to retainer. On autopilot.
-              </span>
+              <span className="text-gradient-sync">On autopilot.</span>
             </h1>
             <p
-              className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed animate-hero-fade-up"
+              className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-9 leading-relaxed animate-hero-fade-up"
               style={{ animationDelay: "0.2s" }}
             >
-              Win proposals, e-sign contracts, collect payments, onboard new clients, run bookings and grow retainers — orchestrated by <span className="text-foreground font-semibold">one AI workflow</span> that runs while you sleep.
+              Win proposals, e-sign contracts, collect payments, onboard clients and grow retainers — orchestrated by{" "}
+              <span className="text-foreground font-semibold">one AI workflow</span> that runs while you sleep.
             </p>
             <div
               className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4 animate-hero-fade-up"
               style={{ animationDelay: "0.3s" }}
             >
               <Link to="/signup" className="w-full sm:w-auto" onClick={() => track("cta_click", { location: "hero" })}>
-                <Button size="lg" className="w-full sm:w-auto bg-accent text-accent-foreground hover:bg-accent/90 transition-colors px-10 h-14 text-base gap-2">
+                <Button size="lg" className="w-full sm:w-auto bg-accent text-accent-foreground hover:bg-accent/90 transition-colors px-9 h-14 text-base gap-2">
                   Start free
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
               <a href="#live-demo" className="w-full sm:w-auto" onClick={() => track("cta_click", { location: "hero_demo" })}>
-                <Button size="lg" variant="outline" className="w-full sm:w-auto px-10 h-14 text-base bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 hover:border-accent/40 hover:-translate-y-0.5 transition-all duration-300 gap-2">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto px-9 h-14 text-base bg-secondary/40 border-border hover:bg-secondary hover:border-accent/40 transition-colors gap-2">
                   <PlayCircle className="w-4 h-4" /> See 60-second demo
                 </Button>
               </a>
             </div>
-            <p
-              className="text-xs text-muted-foreground mt-6 animate-hero-fade-up"
+            <div
+              className="flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-2 mt-8 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground animate-hero-fade-up"
               style={{ animationDelay: "0.45s" }}
             >
-              Built for freelancers, consultants, and agencies. ·{" "}
-              <Link to="/sample" className="underline hover:text-foreground" onClick={() => track("sample_view")}>
-                View static sample proposal
+              <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-accent" /> Replaces 8 tools</span>
+              <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-accent" /> 12 workflows</span>
+              <Link to="/sample" className="underline underline-offset-4 hover:text-foreground transition-colors normal-case tracking-normal text-xs" onClick={() => track("sample_view")}>
+                View sample proposal
               </Link>
-            </p>
-          </div>
-
-          {/* Right: layered glassmorphism mockups */}
-          <div className="lg:col-span-5 relative h-[420px] sm:h-[480px] lg:h-[540px] hidden md:block">
-            <div className="absolute inset-8 rounded-[2rem] bg-accent/10 blur-2xl" />
-
-            {/* Subtle directional flow hint */}
-            <div
-              aria-hidden
-              className="pointer-events-none absolute left-1/2 top-[12%] bottom-[12%] w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-accent/40 to-transparent animate-flow-hint"
-            />
-
-            {/* Proposal mockup card */}
-            <div
-              className="absolute top-2 left-2 sm:left-4 w-[78%] rounded-2xl border border-white/10 bg-card/70 backdrop-blur-xl shadow-2xl shadow-accent/10 p-5 animate-float-slower animate-hero-fade-up"
-              style={{ animationDelay: "0.35s", transform: "rotate(-3deg)" }}
-            >
-              <div className="absolute inset-0 rounded-2xl pointer-events-none animate-hero-card-glow" style={{ animationDelay: "0s" }} />
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
-                  <FileText className="w-4 h-4 text-accent-foreground" />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-foreground">Proposal — Brand Refresh</p>
-                  <p className="text-[10px] text-muted-foreground">Sent to acme.co · just now</p>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <div className="h-2 rounded bg-foreground/10 w-[90%]" />
-                <div className="h-2 rounded bg-foreground/10 w-[75%]" />
-                <div className="h-2 rounded bg-foreground/10 w-[82%]" />
-              </div>
-              <div className="mt-4 flex items-center justify-between pt-3 border-t border-white/5">
-                <span className="text-[10px] text-muted-foreground">Total</span>
-                <span className="text-sm font-bold text-foreground">£4,800.00</span>
-              </div>
-            </div>
-
-            {/* Acceptance badge */}
-            <div
-              className="absolute top-[42%] left-[-12px] sm:left-2 rounded-2xl border border-accent/30 bg-card/85 backdrop-blur-xl shadow-2xl shadow-accent/20 px-5 py-4 sm:px-6 sm:py-5 flex items-center gap-4 animate-float-slow animate-hero-fade-up"
-              style={{ animationDelay: "0.55s" }}
-            >
-              <div className="absolute inset-0 rounded-2xl pointer-events-none animate-hero-card-glow" style={{ animationDelay: "-6s" }} />
-              <div className="w-12 h-12 rounded-full bg-accent/15 flex items-center justify-center shrink-0">
-                <FileCheck className="w-6 h-6 text-accent" />
-              </div>
-              <div className="pr-1">
-                <p className="text-sm font-semibold text-foreground">Client accepted</p>
-                <p className="text-[11px] text-muted-foreground">Sarah K. · 2 min ago</p>
-                <span className="inline-block mt-1.5 text-[10px] font-semibold text-accent bg-accent/10 px-2 py-0.5 rounded-full">Signed & approved</span>
-              </div>
-            </div>
-
-            {/* Payment confirmation */}
-            <div
-              className="absolute bottom-2 right-0 sm:right-2 w-[72%] rounded-2xl border border-white/10 bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-xl shadow-2xl shadow-purple/20 p-5 animate-float-slow animate-hero-fade-up"
-              style={{ animationDelay: "0.7s", transform: "rotate(2deg)" }}
-            >
-              <div className="absolute inset-0 rounded-2xl pointer-events-none animate-hero-card-glow" style={{ animationDelay: "-3s" }} />
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
-                    <HandCoins className="w-4 h-4 text-accent-foreground" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-foreground">Payment received</p>
-                    <p className="text-[10px] text-muted-foreground">Paddle · secure</p>
-                  </div>
-                </div>
-                <CheckCircle className="w-4 h-4 text-accent" />
-              </div>
-              <div className="flex items-end justify-between">
-                <div>
-                  <p className="text-[10px] text-muted-foreground">Amount</p>
-                  <p className="text-2xl font-bold text-gradient-sync">£4,800</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[10px] text-muted-foreground">Status</p>
-                  <span className="inline-block text-[10px] font-semibold text-accent bg-accent/10 px-2 py-0.5 rounded-full">Paid</span>
-                </div>
-              </div>
             </div>
           </div>
+
+          {/* Terminal */}
+          <div className="lg:col-span-6 animate-hero-fade-up" style={{ animationDelay: "0.35s" }}>
+            <HeroTerminal />
+          </div>
+        </div>
+
+        {/* Scroll indicator */}
+        <div aria-hidden className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden md:flex flex-col items-center gap-2 text-muted-foreground/60">
+          <span className="font-mono text-[9px] uppercase tracking-[0.3em]">Scroll</span>
+          <span className="w-px h-8 bg-gradient-to-b from-muted-foreground/60 to-transparent" />
         </div>
       </section>
 
-      {/* Live 60-second product demo */}
+      {/* ============ Capability marquee ============ */}
+      <CapabilityMarquee />
+
+      {/* ============ Live demo (kept animated section) ============ */}
       <LiveDemo />
 
-      {/* Platform / Ecosystem */}
-      <section id="platform" className="py-20 px-4 scroll-mt-20">
+      {/* ============ Platform grid ============ */}
+      <section id="platform" className="py-24 px-4 scroll-mt-20">
         <div className="container max-w-6xl">
-          <AnimateIn className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/30 bg-accent/10 text-xs text-accent mb-4">
-              <Sparkles className="w-3 h-3" /> One platform · twelve workflows
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Everything you need to <span className="text-shimmer-gradient">run client work</span>
-            </h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Stop paying for — and switching between — Proposify, DocuSign, Stripe Invoicing, HubSpot, Calendly, Notion onboarding docs and a dozen Zapier hacks. CloseSync runs your entire client workflow from one place.
-            </p>
-          </AnimateIn>
-
-          {/* Workflow chain */}
-          <AnimateIn className="mb-10">
-            <div className="flex items-center justify-center flex-wrap gap-2 sm:gap-3 max-w-4xl mx-auto px-2">
-              {["Lead", "Proposal", "Contract", "Payment", "Onboarding", "Retainer"].map((stage, i, arr) => (
-                <div key={stage} className="flex items-center gap-2 sm:gap-3">
-                  <span className="px-3 py-1.5 rounded-full border border-accent/30 bg-accent/5 text-xs sm:text-sm font-medium text-foreground backdrop-blur-sm">
-                    {stage}
-                  </span>
-                  {i < arr.length - 1 && <ArrowRight className="w-3.5 h-3.5 text-accent/60 flex-shrink-0" />}
-                </div>
-              ))}
+          <AnimateIn className="mb-14">
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+              <div>
+                <MonoTag>Platform / 13 workflows</MonoTag>
+                <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight mt-4 text-balance">
+                  Everything you need to
+                  <br className="hidden md:block" /> run client work
+                </h2>
+              </div>
+              <p className="text-muted-foreground max-w-sm leading-relaxed md:text-right">
+                Stop switching between Proposify, DocuSign, Stripe, Calendly and a dozen Zapier hacks. One platform runs it all.
+              </p>
             </div>
           </AnimateIn>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-6xl mx-auto">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 border-t border-l border-border/60">
             {platform.map((p, i) => (
-              <AnimateIn key={p.title} delay={i * 60} direction="up">
-                <div className="group relative h-full p-5 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden hover:border-accent/40 hover:-translate-y-1 hover:shadow-[0_18px_50px_-15px_hsl(var(--accent)/0.45)] transition-all duration-300">
-                  {/* Hover glow */}
-                  <div
-                    aria-hidden
-                    className="absolute -inset-px rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                    style={{
-                      background:
-                        "radial-gradient(circle at top left, hsl(var(--accent) / 0.18), transparent 60%), radial-gradient(circle at bottom right, hsl(var(--purple) / 0.18), transparent 60%)",
-                    }}
-                  />
-                  <div className="relative">
-                    <div className="w-10 h-10 rounded-xl bg-accent/10 border border-accent/25 flex items-center justify-center mb-4 transition-colors duration-300">
-                      <p.icon className="w-5 h-5 text-accent" />
+              <AnimateIn key={p.title} delay={(i % 3) * 80}>
+                <div className="group relative h-full p-6 border-b border-r border-border/60 hover:bg-accent/[0.04] transition-colors duration-300">
+                  <div className="flex items-start justify-between mb-8">
+                    <div className="w-10 h-10 rounded-lg bg-secondary border border-border flex items-center justify-center group-hover:border-accent/40 group-hover:text-accent transition-colors duration-300 text-muted-foreground">
+                      <p.icon className="w-5 h-5" />
                     </div>
-                    <h3 className="text-sm font-semibold text-foreground mb-1.5">{p.title}</h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{p.desc}</p>
+                    <span className="font-mono text-[10px] text-muted-foreground/50 tracking-widest">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
                   </div>
+                  <h3 className="text-sm font-semibold text-foreground mb-1.5">{p.title}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{p.desc}</p>
                 </div>
               </AnimateIn>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Replace Multiple Tools */}
-      <section className="py-20 px-4 relative overflow-hidden">
-        <div aria-hidden className="absolute inset-0 -z-10 pointer-events-none">
-          <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-3xl opacity-40"
-            style={{ background: "radial-gradient(closest-side, hsl(var(--accent) / 0.25), transparent 70%)" }}
-          />
-        </div>
-        <div className="container max-w-6xl">
-          <AnimateIn className="text-center mb-14">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/30 bg-accent/10 text-xs text-accent mb-4">
-              <Sparkles className="w-3 h-3" /> One connected workflow
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Stop paying for 7 tools. <span className="text-shimmer-gradient">Use one.</span>
-            </h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Consolidate your patchwork stack into a single AI-powered platform. Less software. Less switching. More closed clients.
-            </p>
-          </AnimateIn>
-
-          <div className="grid lg:grid-cols-[1fr_auto_1fr] gap-8 lg:gap-4 items-center max-w-5xl mx-auto">
-            {/* Left: tool stack collapsing */}
-            <AnimateIn direction="left">
-              <div className="space-y-2.5">
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-3 text-center lg:text-left">
-                  Instead of paying for
-                </p>
-                {[
-                  { name: "Proposify", role: "Proposals" },
-                  { name: "DocuSign", role: "Contracts" },
-                  { name: "Stripe Invoicing", role: "Payments" },
-                  { name: "Calendly", role: "Bookings" },
-                  { name: "Notion / Forms", role: "Onboarding" },
-                  { name: "Chargebee", role: "Recurring billing" },
-                  { name: "Mailshake / Zapier", role: "Follow-ups" },
-                ].map((tool, i) => (
-                  <div
-                    key={tool.name}
-                    className="group relative flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-sm overflow-hidden hover:border-destructive/40 transition-all duration-500 animate-tool-drift"
-                    style={{
-                      animationDelay: `${i * 0.4}s`,
-                      transform: `translateX(${i % 2 === 0 ? "0" : "8px"})`,
-                    }}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-7 h-7 rounded-md bg-muted/40 border border-white/5 flex items-center justify-center flex-shrink-0">
-                        <span className="text-[10px] font-bold text-muted-foreground">
-                          {tool.name.charAt(0)}
-                        </span>
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-foreground/80 line-through decoration-destructive/60 decoration-1 truncate">
-                          {tool.name}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground truncate">{tool.role}</p>
-                      </div>
-                    </div>
-                    <XCircle className="w-3.5 h-3.5 text-destructive/60 flex-shrink-0" />
-                  </div>
-                ))}
-                <p className="text-center lg:text-left pt-3 text-xs text-muted-foreground">
-                  ≈ <span className="text-foreground font-semibold">$300+/mo</span> across 7 logins
-                </p>
-              </div>
-            </AnimateIn>
-
-            {/* Center: merging arrows */}
-            <div className="flex lg:flex-col items-center justify-center gap-2 py-4 lg:py-0 lg:px-2">
-              <div className="hidden lg:flex flex-col items-center gap-1.5">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <ArrowRight
-                    key={i}
-                    className="w-5 h-5 text-accent animate-pulse"
-                    style={{ animationDelay: `${i * 0.15}s`, opacity: 0.4 + i * 0.12 }}
-                  />
-                ))}
-              </div>
-              <div className="lg:hidden flex items-center gap-1.5 rotate-90">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <ArrowRight
-                    key={i}
-                    className="w-5 h-5 text-accent animate-pulse"
-                    style={{ animationDelay: `${i * 0.15}s`, opacity: 0.4 + i * 0.12 }}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Right: CloseSync orb */}
-            <AnimateIn direction="right">
-              <div className="relative">
-                <div className="absolute -inset-6 rounded-3xl bg-accent/15 blur-3xl opacity-60 pointer-events-none" />
-                <div className="relative rounded-3xl border-2 border-accent/40 bg-card/80 backdrop-blur-xl p-8 shadow-2xl shadow-accent/30 animate-border-glow">
-                  <p className="text-[10px] uppercase tracking-widest text-accent mb-4 text-center">
-                    One connected workflow
-                  </p>
-                  <div className="flex items-center justify-center mb-5">
-                    <div className="w-16 h-16 rounded-2xl bg-accent flex items-center justify-center">
-                      <Sparkles className="w-8 h-8 text-accent-foreground" />
-                    </div>
-                  </div>
-                  <p className="text-center text-xl font-bold text-foreground mb-1">
-                    Close<span className="text-gradient-sync">Sync</span> AI
-                  </p>
-                  <p className="text-center text-xs text-muted-foreground mb-6">
-                    Lead → Proposal → Contract → Payment → Onboarding → Retainer
-                  </p>
-                  <div className="space-y-2 pt-4 border-t border-white/10">
-                    {[
-                      "All 12 workflows in one place",
-                      "One login, one bill, one source of truth",
-                      "AI orchestrates every handoff",
-                    ].map((b) => (
-                      <div key={b} className="flex items-center gap-2">
-                        <CheckCircle className="w-3.5 h-3.5 text-accent flex-shrink-0" />
-                        <span className="text-xs text-foreground">{b}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-center pt-5 mt-5 border-t border-white/10 text-xs text-muted-foreground">
-                    From <span className="text-foreground font-semibold">£29/mo</span> · one login
-                  </p>
+            {/* Filler CTA cell */}
+            <AnimateIn delay={160}>
+              <Link
+                to="/signup"
+                onClick={() => track("cta_click", { location: "platform_grid" })}
+                className="group flex h-full flex-col justify-between p-6 border-b border-r border-border/60 bg-accent/[0.05] hover:bg-accent/[0.09] transition-colors duration-300"
+              >
+                <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-accent">Start now</span>
+                <div className="flex items-center justify-between mt-8">
+                  <span className="text-sm font-semibold text-foreground">Try every workflow free</span>
+                  <ArrowRight className="w-4 h-4 text-accent group-hover:translate-x-1 transition-transform" />
                 </div>
-              </div>
+              </Link>
             </AnimateIn>
           </div>
         </div>
       </section>
 
-      {/* Full Workflow Timeline */}
-      <section id="workflow" className="py-24 px-4 relative overflow-hidden scroll-mt-20">
-        <div aria-hidden className="absolute inset-0 -z-10 pointer-events-none">
-          <div
-            className="absolute top-1/3 -left-32 w-[500px] h-[500px] rounded-full blur-3xl opacity-30"
-            style={{ background: "radial-gradient(closest-side, hsl(var(--accent) / 0.45), transparent 70%)" }}
-          />
-          <div
-            className="absolute bottom-0 -right-32 w-[500px] h-[500px] rounded-full blur-3xl opacity-30"
-            style={{ background: "radial-gradient(closest-side, hsl(var(--purple) / 0.45), transparent 70%)" }}
-          />
-        </div>
-
+      {/* ============ Consolidation ============ */}
+      <section className="py-24 px-4 relative overflow-hidden">
         <div className="container max-w-5xl">
-          <AnimateIn className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/30 bg-accent/10 text-xs text-accent mb-4">
-              <Sparkles className="w-3 h-3" /> The full client journey
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              From first hello to <span className="text-shimmer-gradient">lifetime client</span>
+          <AnimateIn className="text-center mb-14">
+            <MonoTag>Consolidate the stack</MonoTag>
+            <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight mt-4 text-balance">
+              Stop paying for 7 tools. <span className="text-gradient-sync">Use one.</span>
             </h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              One AI workflow carries every client through seven stages — no manual handoffs, no dropped balls, no extra tools.
-            </p>
           </AnimateIn>
 
-          <div className="relative max-w-3xl mx-auto">
-            {/* Center spine */}
-            <div
-              aria-hidden
-              className="absolute left-6 md:left-1/2 top-2 bottom-2 w-px md:-translate-x-1/2 bg-gradient-to-b from-accent/10 via-accent/40 to-purple/10 overflow-hidden"
-            >
-              <div
-                className="absolute inset-x-0 h-32 bg-gradient-to-b from-transparent via-accent to-transparent animate-spine-flow"
-                style={{ filter: "blur(1px)" }}
-              />
-            </div>
-
-            <div className="space-y-8 md:space-y-12">
-              {journey.map((stage, i) => {
-                const isActive = activeJourney === i;
-                const isLeft = i % 2 === 0;
-                const Icon = stage.icon;
-                return (
-                  <AnimateIn key={stage.title} delay={i * 80} direction={isLeft ? "left" : "right"}>
-                    <div
-                      className={`relative grid grid-cols-[3rem_1fr] md:grid-cols-2 items-center gap-6 ${
-                        isLeft ? "md:[&>*:first-child]:order-1 md:[&>*:last-child]:order-2" : "md:[&>*:first-child]:order-2 md:[&>*:last-child]:order-1"
-                      }`}
-                    >
-                      {/* Node dot (mobile + desktop center) */}
-                      <div className="relative flex items-center justify-center md:absolute md:left-1/2 md:-translate-x-1/2 md:z-10 md:col-span-2">
-                        <div
-                          className={`relative w-12 h-12 rounded-2xl border-2 flex items-center justify-center transition-all duration-700 ${
-                            isActive
-                              ? "border-accent bg-accent/15 scale-105"
-                              : "border-accent/30 bg-card/80 backdrop-blur-sm"
-                          }`}
-                        >
-                          <Icon className={`w-5 h-5 transition-colors duration-500 ${isActive ? "text-accent" : "text-accent/70"}`} />
-                          {isActive && (
-                            <span className="absolute inset-0 rounded-2xl border-2 border-accent/60 animate-ping" />
-                          )}
+          <div className="grid md:grid-cols-2 gap-6 items-stretch">
+            {/* Before */}
+            <AnimateIn direction="left">
+              <div className="h-full rounded-xl border border-border bg-card/50 p-6">
+                <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground mb-5">
+                  Before — 7 logins · ≈ $300+/mo
+                </p>
+                <div className="space-y-2">
+                  {replacedTools.map((tool) => (
+                    <div key={tool.name} className="flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-lg border border-border/60 bg-secondary/30">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="font-mono text-[10px] text-muted-foreground/60 w-4">×</span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-foreground/70 line-through decoration-destructive/50 decoration-1 truncate">{tool.name}</p>
+                          <p className="font-mono text-[10px] text-muted-foreground truncate uppercase tracking-wider">{tool.role}</p>
                         </div>
                       </div>
-
-                      {/* Card */}
-                      <div className={`md:px-8 ${isLeft ? "md:text-right" : "md:text-left"}`}>
-                        <div
-                          className={`group relative inline-block w-full p-5 rounded-2xl border bg-card/60 backdrop-blur-xl transition-all duration-500 ${
-                            isActive
-                              ? "border-accent/50 shadow-[0_18px_60px_-15px_hsl(var(--accent)/0.55)] -translate-y-0.5"
-                              : "border-white/10 hover:border-accent/30 hover:-translate-y-0.5"
-                          }`}
-                        >
-                          <div className={`flex items-center gap-2 mb-2 ${isLeft ? "md:justify-end" : "md:justify-start"}`}>
-                            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                              Stage {String(i + 1).padStart(2, "0")}
-                            </span>
-                            <span
-                              className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full transition-colors duration-500 ${
-                                isActive ? "bg-accent/20 text-accent" : "bg-muted/30 text-muted-foreground"
-                              }`}
-                            >
-                              <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-accent animate-pulse" : "bg-muted-foreground/50"}`} />
-                              {isActive ? "Live" : "Ready"}
-                            </span>
-                          </div>
-                          <h3 className="text-base font-bold text-foreground mb-1">{stage.title}</h3>
-                          <p className="text-xs text-accent font-medium mb-2">{stage.sub}</p>
-                          <p className="text-sm text-muted-foreground leading-relaxed">{stage.desc}</p>
-                        </div>
-                      </div>
-
-                      {/* Spacer for alternating layout (desktop) */}
-                      <div className="hidden md:block" />
+                      <XCircle className="w-3.5 h-3.5 text-destructive/50 shrink-0" />
                     </div>
-                  </AnimateIn>
-                );
-              })}
-            </div>
-          </div>
-
-          <AnimateIn className="text-center mt-14">
-            <Link to="/signup" onClick={() => track("cta_click", { location: "workflow" })}>
-              <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 px-10 h-14 text-base gap-2 transition-colors">
-                Run your first client through it
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
-          </AnimateIn>
-        </div>
-      </section>
-
-      {/* AI Assistant */}
-      <AIAssistant />
-
-      {/* Retainers / Recurring Revenue */}
-      <RetainersSection />
-
-      {/* Client Portal Showcase */}
-      <ClientPortalShowcase />
-
-      {/* Pain Section */}
-      <section className="py-16 px-4">
-        <AnimateIn className="container max-w-3xl text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Tired of stitching together 8 tools to run client work?</h2>
-          <p className="text-muted-foreground text-lg mb-12 max-w-xl mx-auto">
-            The gap between "interested lead" and "happy retainer client" is where most agencies leak revenue.
-          </p>
-          <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
-            {painPoints.map((p, i) => (
-              <AnimateIn key={p.text} delay={i * 100} direction="up">
-                <div className="flex items-center gap-3 p-4 rounded-lg bg-card border border-border text-left hover:border-destructive/40 hover:bg-card/80 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-12px_hsl(var(--destructive)/0.35)] transition-all duration-300 group">
-                  <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center flex-shrink-0 group-hover:bg-destructive/20 transition-colors">
-                    <p.icon className="w-4 h-4 text-destructive" />
-                  </div>
-                  <span className="text-sm font-medium text-foreground">{p.text}</span>
-                </div>
-              </AnimateIn>
-            ))}
-          </div>
-        </AnimateIn>
-      </section>
-
-      {/* Money Moment Section */}
-      <section className="py-16 px-4">
-        <div className="container max-w-4xl">
-          <AnimateIn className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Turn proposals into <span className="text-shimmer-gradient">paid, onboarded, retained clients</span></h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto leading-relaxed">
-              One AI workflow takes every client from <span className="text-foreground font-semibold">lead → proposal → contract → payment → onboarding → retainer</span> — without you stitching tools together.
-            </p>
-          </AnimateIn>
-
-          <AnimateIn direction="scale">
-            <div className="relative">
-              <div className="absolute -inset-4 bg-purple/20 rounded-3xl blur-2xl pointer-events-none" />
-              <div className="relative rounded-2xl border-2 border-accent/30 bg-card shadow-2xl shadow-accent/10 p-8 md:p-12">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-4">
-                  {[
-                    { icon: MessageSquare, label: "Capture", sub: "AI replies & qualifies", color: "accent" },
-                    { icon: FileCheck, label: "Close", sub: "Sign & pay in one link", color: "accent" },
-                    { icon: Repeat, label: "Operate", sub: "Retain & grow", color: "accent" },
-                  ].map((item, i, arr) => {
-                    const isActive = activeStep === i;
-                    return (
-                    <div key={item.label} className="flex flex-col md:flex-row items-center gap-6 md:gap-4 flex-1">
-                      <div className="flex flex-col items-center text-center flex-1">
-                        <div
-                          className={`w-16 h-16 rounded-2xl bg-accent/10 border flex items-center justify-center mb-3 transition-all duration-700 ease-out ${
-                            isActive
-                              ? "border-accent scale-105"
-                              : "border-accent/30 shadow-lg shadow-accent/10"
-                          }`}
-                        >
-                          <item.icon className={`w-7 h-7 transition-colors duration-500 ${isActive ? "text-accent" : "text-accent/70"}`} />
-                        </div>
-                        <p className={`font-semibold transition-colors duration-500 ${isActive ? "text-foreground" : "text-foreground/80"}`}>{item.label}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{item.sub}</p>
-                      </div>
-                      {i < arr.length - 1 && (
-                        <ArrowRight
-                          className={`w-6 h-6 rotate-90 md:rotate-0 flex-shrink-0 transition-all duration-500 ${
-                            activeStep > i || (activeStep === 0 && i === arr.length - 1)
-                              ? "text-accent"
-                              : isActive
-                              ? "text-accent animate-arrow-slide"
-                              : "text-accent/40"
-                          }`}
-                        />
-                      )}
-                    </div>
-                    );
-                  })}
+                  ))}
                 </div>
               </div>
-            </div>
-          </AnimateIn>
-        </div>
-      </section>
+            </AnimateIn>
 
-      {/* How it works */}
-      <section id="how-it-works" className="py-16 px-4">
-        <div className="container max-w-4xl">
-          <AnimateIn className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">How it works</h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Three stages. One platform. Every client, end-to-end.
-            </p>
-          </AnimateIn>
-
-          <div className="max-w-3xl mx-auto space-y-6 mb-16">
-            {steps.map((s, i) => (
-              <AnimateIn key={s.number} delay={i * 150} direction="left">
-                <div className="flex gap-5 items-start group">
-                  <div className="w-10 h-10 rounded-full bg-accent text-accent-foreground flex items-center justify-center text-lg font-bold flex-shrink-0 transition-colors duration-300">
-                    {s.number}
+            {/* After */}
+            <AnimateIn direction="right">
+              <div className="relative h-full rounded-xl border border-accent/30 bg-accent/[0.05] p-6 flex flex-col">
+                <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-accent mb-5">
+                  After — one login · from £29/mo
+                </p>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-14 h-14 rounded-xl bg-accent flex items-center justify-center shrink-0">
+                    <Zap className="w-6 h-6 text-accent-foreground" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-foreground mb-1">{s.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{s.description}</p>
+                    <p className="text-xl font-bold text-foreground">
+                      Close<span className="text-gradient-sync">Sync</span> AI
+                    </p>
+                    <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">
+                      Lead → Proposal → Contract → Payment → Retainer
+                    </p>
                   </div>
                 </div>
-              </AnimateIn>
-            ))}
+                <div className="space-y-3 pt-5 border-t border-accent/15 flex-1">
+                  {[
+                    "All 12 workflows in one place",
+                    "One login, one bill, one source of truth",
+                    "AI orchestrates every handoff",
+                    "No Zapier duct tape required",
+                  ].map((b) => (
+                    <div key={b} className="flex items-center gap-2.5">
+                      <CheckCircle className="w-4 h-4 text-accent shrink-0" />
+                      <span className="text-sm text-foreground">{b}</span>
+                    </div>
+                  ))}
+                </div>
+                <Link to="/signup" className="mt-6" onClick={() => track("cta_click", { location: "consolidation" })}>
+                  <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90 h-11 gap-2 transition-colors">
+                    Replace your stack <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+              </div>
+            </AnimateIn>
           </div>
-
-          {/* What you get */}
-          <AnimateIn className="max-w-3xl mx-auto text-center">
-            <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-8">What you walk away with</h3>
-            <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
-              {deliverables.map((item, i) => (
-                <AnimateIn key={item} delay={i * 100} direction="up">
-                  <div className="flex items-center gap-3 p-4 rounded-lg bg-card border border-border text-left hover:border-accent/40 hover:bg-card/80 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-12px_hsl(var(--accent)/0.35)] transition-all duration-300 group">
-                    <CheckCircle className="w-5 h-5 text-accent flex-shrink-0 group-hover:scale-110 transition-transform" />
-                    <span className="text-sm font-medium text-foreground">{item}</span>
-                  </div>
-                </AnimateIn>
-              ))}
-            </div>
-          </AnimateIn>
         </div>
       </section>
 
-      {/* Credibility */}
-      <section className="py-16 px-4">
-        <AnimateIn className="container max-w-2xl text-center">
-          <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-6">
-            <Briefcase className="w-6 h-6 text-accent" />
-          </div>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Built for agencies and consultants who want to grow without the busywork</h2>
-          <p className="text-muted-foreground text-lg leading-relaxed max-w-xl mx-auto">
-            Stop juggling docs, e-sign apps, invoice tools and spreadsheets. Run every client — from inbound lead to renewed retainer — in one place.
-          </p>
-        </AnimateIn>
-      </section>
+      {/* ============ Scroll-pinned journey ============ */}
+      <ScrollJourney />
 
-      {/* Social Proof */}
-      <section className="py-16 px-4">
+      {/* ============ AI Assistant (kept animated section) ============ */}
+      <AIAssistant />
+
+      {/* ============ Retainers (kept animated section) ============ */}
+      <RetainersSection />
+
+      {/* ============ Client Portal (kept animated section) ============ */}
+      <ClientPortalShowcase />
+
+      {/* ============ Social proof ============ */}
+      <section className="py-24 px-4">
         <div className="container max-w-3xl">
-          <AnimateIn className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">Trusted by agencies and consultants</h2>
-            <p className="text-muted-foreground text-sm">Real outcomes from operators who replaced their stack with CloseSync.</p>
-          </AnimateIn>
           <AnimateIn direction="scale">
-            <div className="rounded-2xl border border-border bg-card/60 backdrop-blur-sm p-8 md:p-10 text-center max-w-2xl mx-auto shadow-lg shadow-accent/5">
-              <div className="flex items-center justify-center gap-1 mb-5">
+            <figure className="relative rounded-xl border border-border bg-card/50 p-8 md:p-12 text-center">
+              <span aria-hidden className="absolute top-6 left-8 font-mono text-6xl text-accent/15 leading-none select-none">"</span>
+              <div className="flex items-center justify-center gap-1 mb-6">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star key={i} className="w-4 h-4 fill-accent text-accent" />
                 ))}
               </div>
-              <blockquote className="text-lg md:text-xl text-foreground font-medium leading-relaxed mb-5">
-                “We retired three tools. Proposals, contracts, payments, retainers — it’s all in here, and the AI actually moves deals forward.”
+              <blockquote className="text-xl md:text-2xl text-foreground font-medium leading-relaxed text-balance mb-6">
+                We retired three tools. Proposals, contracts, payments, retainers — it&apos;s all in here, and the AI actually moves deals forward.
               </blockquote>
-              <p className="text-sm text-muted-foreground">— Agency Founder</p>
-            </div>
+              <figcaption className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                — Agency Founder
+              </figcaption>
+            </figure>
           </AnimateIn>
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="py-20 pb-24 px-4">
+      {/* ============ Pricing ============ */}
+      <section id="pricing" className="py-24 px-4 scroll-mt-20">
         <div className="container max-w-4xl">
           <AnimateIn className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Simple, transparent pricing</h2>
-            <p className="text-muted-foreground text-lg">No hidden fees. Cancel anytime.</p>
+            <MonoTag>Pricing</MonoTag>
+            <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight mt-4">Simple, transparent pricing</h2>
+            <p className="text-muted-foreground text-lg mt-3">No hidden fees. Cancel anytime.</p>
           </AnimateIn>
-          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto items-stretch">
+          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto items-stretch">
             {plans.map((plan, i) => (
-              <AnimateIn key={plan.name} delay={i * 150} direction="up">
-                <Card className={`border relative transition-all duration-500 flex flex-col h-full hover:-translate-y-1.5 ${plan.popular ? "border-accent border-2 shadow-2xl shadow-accent/30 ring-2 ring-accent/40 z-10 hover:shadow-[0_20px_60px_-15px_hsl(var(--accent)/0.55)] animate-border-glow" : "border-border shadow-none hover:border-accent/40 hover:shadow-[0_12px_40px_-15px_hsl(var(--accent)/0.25)]"}`}>
+              <AnimateIn key={plan.name} delay={i * 120} direction="up">
+                <div
+                  className={`relative flex flex-col h-full rounded-xl border p-8 transition-colors duration-300 ${
+                    plan.popular ? "border-accent bg-accent/[0.05]" : "border-border bg-card/50 hover:border-accent/30"
+                  }`}
+                >
                   {plan.popular && (
-                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-accent text-accent-foreground text-xs font-semibold tracking-wide shadow-lg shadow-accent/30 animate-soft-pulse">
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-accent text-accent-foreground font-mono text-[10px] font-semibold uppercase tracking-[0.15em]">
                       Most popular
                     </div>
                   )}
-                  <CardContent className="p-8 flex flex-col flex-1">
-                    <h3 className="text-lg font-semibold text-foreground mb-1">{plan.name}</h3>
-                    <p className="text-sm text-muted-foreground mb-6">{plan.description}</p>
-                    <div className="mb-2">
-                      <span className="text-4xl font-bold text-foreground">{plan.price}</span>
-                      <span className="text-muted-foreground">{plan.period}</span>
-                    </div>
-                    {plan.valueLine ? (
-                      <p className="text-xs text-accent mb-6 font-medium">{plan.valueLine}</p>
-                    ) : (
-                      <div className="mb-6" />
-                    )}
-                    <ul className="space-y-3 mb-8 flex-1">
-                      {plan.features.map((f) => (
-                        <li key={f} className="flex items-center gap-2 text-sm text-foreground">
-                          <CheckCircle className="w-4 h-4 text-accent flex-shrink-0" />
-                          {f}
+                  <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground mb-2">{plan.name}</p>
+                  <p className="text-sm text-muted-foreground mb-6">{plan.description}</p>
+                  <div className="mb-2">
+                    <span className="text-5xl font-bold text-foreground tracking-tight">{plan.price}</span>
+                    <span className="text-muted-foreground font-mono text-sm">{plan.period}</span>
+                  </div>
+                  {plan.valueLine ? (
+                    <p className="text-xs text-accent mb-6 font-medium">{plan.valueLine}</p>
+                  ) : (
+                    <div className="mb-6" />
+                  )}
+                  <ul className="space-y-3 mb-8 flex-1">
+                    {plan.features.map((f) => (
+                      <li key={f} className="flex items-start gap-2.5 text-sm text-foreground">
+                        <CheckCircle className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link to="/signup" className="mt-auto" onClick={() => track("cta_click", { location: plan.popular ? "pricing_pro" : "pricing_free" })}>
+                    <Button
+                      className={`w-full h-12 text-base transition-colors ${plan.popular ? "bg-accent text-accent-foreground hover:bg-accent/90 font-semibold" : ""}`}
+                      variant={plan.popular ? "default" : "outline"}
+                    >
+                      {plan.cta}
+                    </Button>
+                  </Link>
+                  {plan.trustItems && (
+                    <ul className="mt-5 space-y-2">
+                      {plan.trustItems.map((t) => (
+                        <li key={t} className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                          <Lock className="w-3 h-3 text-accent" />
+                          {t}
                         </li>
                       ))}
                     </ul>
-                    <Link to="/signup" className="mt-auto" onClick={() => track("cta_click", { location: plan.popular ? "pricing_pro" : "pricing_free" })}>
-                      <Button className={`w-full h-12 text-base transition-all ${plan.popular ? "bg-accent text-accent-foreground hover:bg-accent/90 font-semibold" : "hover:brightness-110"}`} variant={plan.popular ? "default" : "outline"}>
-                        {plan.cta}
-                      </Button>
-                    </Link>
-                    {plan.trustItems && (
-                      <ul className="mt-5 space-y-2">
-                        {plan.trustItems.map((t) => (
-                          <li key={t} className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                            <Lock className="w-3 h-3 text-accent" />
-                            {t}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </CardContent>
-                </Card>
+                  )}
+                </div>
               </AnimateIn>
             ))}
           </div>
           <AnimateIn>
-            <p className="text-center text-sm text-muted-foreground mt-12">
-              One closed deal more than covers the year. Everything else is upside.
+            <p className="text-center font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground mt-12">
+              One closed deal covers the year — everything else is upside
             </p>
           </AnimateIn>
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="py-20 px-4">
+      {/* ============ Final CTA ============ */}
+      <section className="py-28 px-4 relative overflow-hidden">
+        <div aria-hidden className="absolute inset-0 -z-10">
+          <div className="absolute inset-0 lp-dot-grid opacity-25" style={{ maskImage: "radial-gradient(ellipse at center, black 20%, transparent 70%)", WebkitMaskImage: "radial-gradient(ellipse at center, black 20%, transparent 70%)" }} />
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[560px] h-[420px] rounded-full blur-3xl opacity-40"
+            style={{ background: "radial-gradient(closest-side, hsl(var(--accent) / 0.25), transparent 70%)" }}
+          />
+        </div>
         <AnimateIn className="container max-w-3xl text-center">
-          <div className="rounded-3xl border border-accent/25 bg-accent/[0.05] p-10 md:p-16">
-            <div className="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center mx-auto mb-6">
-              <CreditCard className="w-7 h-7 text-accent-foreground" />
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Stop running your business in 8 tabs — <span className="text-shimmer-gradient">run it in CloseSync</span>
-            </h2>
-            <p className="text-muted-foreground text-lg mb-8 max-w-xl mx-auto">
-              Join the agencies and consultants closing more, churning less, and shipping client work without the busywork.
-            </p>
-            <Link to="/signup" onClick={() => track("cta_click", { location: "final" })}>
-              <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 px-10 h-14 text-base gap-2 transition-colors">
-                Start free
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
+          <MonoTag>Ready when you are</MonoTag>
+          <h2 className="text-4xl md:text-6xl font-bold text-foreground tracking-tighter mt-6 mb-6 text-balance">
+            Stop running your business in 8 tabs.
+          </h2>
+          <p className="text-muted-foreground text-lg mb-10 max-w-xl mx-auto leading-relaxed">
+            Join the agencies and consultants closing more, churning less, and shipping client work without the busywork.
+          </p>
+          <Link to="/signup" onClick={() => track("cta_click", { location: "final" })}>
+            <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 px-12 h-14 text-base gap-2 transition-colors">
+              Start free
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </Link>
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 mt-12 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+            <span className="flex items-center gap-2"><ShieldCheck className="w-3.5 h-3.5 text-accent" /> Secure payments via Paddle</span>
+            <span className="flex items-center gap-2"><Brain className="w-3.5 h-3.5 text-accent" /> AI-powered closing &amp; ops</span>
+            <span className="flex items-center gap-2"><Zap className="w-3.5 h-3.5 text-accent" /> Built for agencies</span>
           </div>
         </AnimateIn>
       </section>
 
-      {/* Trust badges */}
-      <section className="px-4 pb-10">
-        <AnimateIn className="container max-w-4xl">
-          <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-10 py-6 px-6 rounded-xl border border-border/60 bg-card/40 text-sm text-muted-foreground transition-all duration-500 hover:border-accent/30 hover:shadow-[0_10px_40px_-20px_hsl(var(--accent)/0.4)]">
-            <span className="group flex items-center gap-2 transition-all duration-300 hover:text-foreground hover:-translate-y-0.5"><ShieldCheck className="w-4 h-4 text-accent transition-all duration-300" /> Secure payments via Paddle</span>
-            <span className="hidden md:inline-block w-px h-4 bg-border" />
-            <span className="group flex items-center gap-2 transition-all duration-300 hover:text-foreground hover:-translate-y-0.5"><Brain className="w-4 h-4 text-accent transition-all duration-300" /> AI-powered closing &amp; ops</span>
-            <span className="hidden md:inline-block w-px h-4 bg-border" />
-            <span className="group flex items-center gap-2 transition-all duration-300 hover:text-foreground hover:-translate-y-0.5"><Zap className="w-4 h-4 text-accent transition-all duration-300" /> Built for agencies &amp; consultants</span>
-          </div>
-        </AnimateIn>
-      </section>
-
-      {/* Footer */}
+      {/* ============ Footer ============ */}
       <footer className="border-t border-border py-12 px-4">
         <div className="container flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <span className="font-medium text-foreground">
-            Close<span className="text-gradient-sync">Sync</span> <span className="text-foreground">AI</span>
+            Close<span className="text-gradient-sync">Sync</span> AI
           </span>
-          <p>© 2026 CloseSync. All rights reserved.</p>
+          <p className="font-mono text-[11px] uppercase tracking-[0.15em]">© 2026 CloseSync · All rights reserved</p>
         </div>
       </footer>
 
-      {/* Sticky bottom CTA */}
+      {/* ============ Sticky CTA ============ */}
       <div
         className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 w-full max-w-2xl transition-all duration-500 ease-out ${
-          showStickyCta
-            ? "opacity-100 translate-y-0 pointer-events-auto"
-            : "opacity-0 translate-y-6 pointer-events-none"
+          showStickyCta ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-6 pointer-events-none"
         }`}
         style={{ willChange: "opacity, transform" }}
       >
-        <div className="flex items-center justify-between gap-4 px-5 py-3 rounded-full border border-accent/30 bg-card/90 backdrop-blur-md shadow-2xl shadow-accent/20">
+        <div className="flex items-center justify-between gap-4 px-5 py-3 rounded-full border border-border bg-card/90 backdrop-blur-md shadow-2xl shadow-black/40">
           <p className="text-sm text-foreground font-medium hidden sm:block">Ready to close more &amp; operate less?</p>
           <p className="text-sm text-foreground font-medium sm:hidden">Close &amp; operate</p>
           <Link to="/signup" onClick={() => track("cta_click", { location: "sticky" })}>

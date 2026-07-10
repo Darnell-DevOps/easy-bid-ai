@@ -239,6 +239,88 @@
   }
 }
 
+/* ============ Landing page (scroll-driven) primitives ============ */
+
+/* Infinite horizontal marquee */
+@keyframes lp-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.lp-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: lp-marquee 40s linear infinite;
+}
+
+.lp-marquee:hover .lp-marquee-track {
+  animation-play-state: paused;
+}
+
+/* Vertical scanning beam inside hero grid */
+@keyframes lp-beam {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh);
+    opacity: 0;
+  }
+}
+
+.lp-beam {
+  animation: lp-beam 7s ease-in-out infinite;
+}
+
+/* Terminal caret blink */
+@keyframes lp-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.lp-caret {
+  animation: lp-blink 1.1s step-end infinite;
+}
+
+/* Terminal log line reveal */
+@keyframes lp-log-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lp-log-in {
+  animation: lp-log-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Dot-grid background for tech sections */
+.lp-dot-grid {
+  background-image: radial-gradient(hsl(var(--foreground) / 0.14) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
