@@ -508,9 +508,9 @@ export default function Index() {
 
 
       {/* ============ Platform grid ============ */}
-      <section id="platform" className="py-24 px-4 scroll-mt-20">
+      <section id="platform" className="py-16 px-4 scroll-mt-20">
         <div className="container max-w-6xl">
-          <AnimateIn className="mb-14">
+          <AnimateIn className="mb-8">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
               <div>
                 <MonoTag>Platform / 13 workflows</MonoTag>
@@ -525,37 +525,20 @@ export default function Index() {
             </div>
           </AnimateIn>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 border-t border-l border-border/60">
-            {platform.map((p, i) => (
-              <AnimateIn key={p.title} delay={(i % 3) * 80}>
-                <div className="group relative h-full p-6 border-b border-r border-border/60 hover:bg-accent/[0.04] transition-colors duration-300">
-                  <div className="flex items-start justify-between mb-8">
-                    <div className="w-10 h-10 rounded-lg bg-secondary border border-border flex items-center justify-center group-hover:border-accent/40 group-hover:text-accent transition-colors duration-300 text-muted-foreground">
-                      <p.icon className="w-5 h-5" />
-                    </div>
-                    <span className="font-mono text-[10px] text-muted-foreground/50 tracking-widest">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                  </div>
-                  <h3 className="text-sm font-semibold text-foreground mb-1.5">{p.title}</h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{p.desc}</p>
-                </div>
-              </AnimateIn>
-            ))}
-            {/* Filler CTA cell */}
-            <AnimateIn delay={160}>
-              <Link
-                to="/signup"
-                onClick={() => track("cta_click", { location: "platform_grid" })}
-                className="group flex h-full flex-col justify-between p-6 border-b border-r border-border/60 bg-accent/[0.05] hover:bg-accent/[0.09] transition-colors duration-300"
-              >
-                <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-accent">Start now</span>
-                <div className="flex items-center justify-between mt-8">
-                  <span className="text-sm font-semibold text-foreground">Try every workflow free</span>
-                  <ArrowRight className="w-4 h-4 text-accent group-hover:translate-x-1 transition-transform" />
-                </div>
-              </Link>
-            </AnimateIn>
+          <AnimateIn>
+            <PlatformReel items={platform} />
+          </AnimateIn>
+
+          <div className="mt-8 flex justify-center">
+            <Link
+              to="/signup"
+              onClick={() => track("cta_click", { location: "platform_grid" })}
+            >
+              <Button className="h-12 px-6 bg-accent text-accent-foreground hover:bg-accent/90 font-semibold">
+                Try every workflow free
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
