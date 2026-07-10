@@ -485,11 +485,8 @@ export default function Index() {
       {/* ============ Scroll-pinned journey ============ */}
       <ScrollJourney />
 
-      {/* ============ AI Assistant (kept animated section) ============ */}
-      <AIAssistant />
-
-      {/* ============ Retainers (kept animated section) ============ */}
-      <RetainersSection />
+      {/* ============ AI Assistant + Retainers (pinned horizontal scroll) ============ */}
+      <AiRetainersScroller />
 
       {/* ============ Client Portal (kept animated section) ============ */}
       <ClientPortalShowcase />

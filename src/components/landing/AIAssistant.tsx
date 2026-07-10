@@ -62,7 +62,7 @@ function useTypewriter(text: string, key: number, speed = 22) {
   return out;
 }
 
-export default function AIAssistant() {
+export default function AIAssistant({ embedded = false }: { embedded?: boolean } = {}) {
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
@@ -79,7 +79,7 @@ export default function AIAssistant() {
   const typed = useTypewriter(latest.text, tick, 22);
 
   return (
-    <section id="ai" className="py-24 px-4 relative overflow-hidden scroll-mt-20">
+    <section id="ai" className={`${embedded ? "py-10 md:py-14" : "py-24"} px-4 relative overflow-hidden scroll-mt-20 w-full`}>
       <div aria-hidden className="absolute inset-0 -z-10 pointer-events-none">
         <div
           className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full blur-3xl opacity-30"
