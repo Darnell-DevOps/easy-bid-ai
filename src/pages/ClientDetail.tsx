@@ -714,8 +714,39 @@ export default function ClientDetail() {
           </Card>
         )}
 
+        {/* Lead insight — identity, fit, missing info, original enquiry, AI reply, activity */}
+        {(client.original_lead_message ||
+          client.lead_quality ||
+          client.ai_recommendation ||
+          client.lead_source ||
+          client.lead_score ||
+          client.lead_draft_reply) && (
+          <LeadInsightPanel
+            client={client}
+            draftSubject={draftSubject}
+            draftBody={draftBody}
+            setDraftSubject={setDraftSubject}
+            setDraftBody={setDraftBody}
+            draftEditing={draftEditing}
+            setDraftEditing={setDraftEditing}
+            draftSending={draftSending}
+            draftCopied={draftCopied}
+            markingNotLead={markingNotLead}
+            onSaveDraftLocal={(s, b) => void saveDraftLocal(s, b)}
+            onSendReply={handleSendReply}
+            onCopyReply={handleCopyReply}
+            onSendIntakeForm={handleSendIntakeForm}
+            onGenerateProposal={generateProposal}
+            onMarkNotALead={handleMarkNotALead}
+            onOpenDraftDialog={() => setReplyOpen(true)}
+            onEditIntake={startEdit}
+          />
+        )}
+
         {/* AI Client Brief */}
         <ClientBriefCard clientId={client.id} />
+
+
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
