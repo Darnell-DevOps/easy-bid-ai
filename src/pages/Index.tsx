@@ -10,7 +10,6 @@ import {
   HandCoins,
   Star,
   Lock,
-  
   MessageSquare,
   Repeat,
   Calendar,
@@ -23,7 +22,6 @@ import {
   BarChart3,
   Send,
   LayoutDashboard,
-  
   Terminal,
 } from "lucide-react";
 import { AnimateIn } from "@/hooks/use-scroll-animation";
@@ -507,7 +505,6 @@ export default function Index() {
       {/* ============ Capability marquee ============ */}
       <CapabilityMarquee />
 
-      {/* ============ Live demo (kept animated section) ============ */}
       
 
       {/* ============ Platform grid ============ */}
@@ -562,8 +559,6 @@ export default function Index() {
           </div>
         </div>
       </section>
-
-
       {/* ============ Scroll-pinned journey ============ */}
       <ScrollJourney />
 
