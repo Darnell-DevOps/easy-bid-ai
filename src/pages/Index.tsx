@@ -33,21 +33,6 @@ import { track } from "@/lib/landing-analytics";
 /* Data                                                                */
 /* ------------------------------------------------------------------ */
 
-const platform = [
-  { icon: FileText, title: "AI Proposals", desc: "Polished, on-brand proposals generated in seconds." },
-  { icon: PenLine, title: "Contracts & E-signatures", desc: "Send, track and legally bind agreements with one link." },
-  { icon: HandCoins, title: "Payment Collection", desc: "One-click Accept & Pay — money lands without invoicing." },
-  { icon: Repeat, title: "Retainers & Subscriptions", desc: "Lock in recurring revenue with automated renewals." },
-  { icon: Inbox, title: "AI Lead Replies", desc: "Auto-respond to inbound emails and qualify leads instantly." },
-  { icon: Users, title: "Client Portal", desc: "A branded space where clients review, sign and pay." },
-  { icon: Calendar, title: "Booking & Calendar", desc: "Public booking pages, reminders and host notifications." },
-  { icon: LayoutDashboard, title: "Client Onboarding", desc: "Smart intake forms that handle the back-and-forth for you." },
-  { icon: Send, title: "Automated Follow-Ups", desc: "AI nudges deals forward when clients go quiet." },
-  { icon: Upload, title: "File Uploads", desc: "Collect deliverables and assets without third-party tools." },
-  { icon: RefreshCw, title: "Recurring Billing", desc: "Subscriptions, dunning recovery and renewal automation." },
-  { icon: BarChart3, title: "Progress Tracking", desc: "Live dashboards for deals, revenue and time saved." },
-  { icon: Star, title: "Review Collection", desc: "Auto-request reviews after kickoff and turn happy clients into social proof." },
-];
 
 const journey = [
   { icon: MessageSquare, title: "Lead", sub: "Inbound enquiry", desc: "AI replies, qualifies and scores the lead the moment it lands." },
@@ -392,7 +377,6 @@ export default function Index() {
             </span>
           </div>
           <div className="hidden md:flex items-center gap-7 text-sm text-muted-foreground">
-            <a href="#platform" className="hover:text-foreground transition-colors">Platform</a>
             <a href="#ai" className="hover:text-foreground transition-colors">AI</a>
             
             <a href="#workflow" className="hover:text-foreground transition-colors">Workflow</a>
@@ -469,11 +453,6 @@ export default function Index() {
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
-              <a href="#platform" className="w-full sm:w-auto" onClick={() => track("cta_click", { location: "hero_platform" })}>
-                <Button size="lg" variant="outline" className="w-full sm:w-auto px-9 h-14 text-base bg-secondary/40 border-border hover:bg-secondary hover:border-accent/40 transition-colors gap-2">
-                  <ArrowRight className="w-4 h-4" /> Explore the platform
-                </Button>
-              </a>
             </div>
             <div
               className="flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-2 mt-8 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground animate-hero-fade-up"
@@ -503,42 +482,6 @@ export default function Index() {
       {/* ============ Capability marquee ============ */}
       <CapabilityMarquee />
 
-
-      {/* ============ Platform grid ============ */}
-      <section id="platform" className="py-16 px-4 scroll-mt-20">
-        <div className="container max-w-6xl">
-          <AnimateIn className="mb-8">
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-              <div>
-                <MonoTag>Platform / 13 workflows</MonoTag>
-                <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight mt-4 text-balance">
-                  Everything you need to
-                  <br className="hidden md:block" /> run client work
-                </h2>
-              </div>
-              <p className="text-muted-foreground max-w-sm leading-relaxed md:text-right">
-                Stop switching between Proposify, DocuSign, Stripe, Calendly and a dozen Zapier hacks. One platform runs it all.
-              </p>
-            </div>
-          </AnimateIn>
-
-          <AnimateIn>
-            <PlatformReel items={platform} />
-          </AnimateIn>
-
-          <div className="mt-8 flex justify-center">
-            <Link
-              to="/signup"
-              onClick={() => track("cta_click", { location: "platform_grid" })}
-            >
-              <Button className="h-12 px-6 bg-accent text-accent-foreground hover:bg-accent/90 font-semibold">
-                Try every workflow free
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
       {/* ============ Scroll-pinned journey ============ */}
       <ScrollJourney />
 
