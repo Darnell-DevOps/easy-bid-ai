@@ -17,9 +17,7 @@ import {
   Brain,
   PenLine,
   Inbox,
-  Upload,
   RefreshCw,
-  BarChart3,
   Send,
   LayoutDashboard,
   Terminal,
@@ -29,7 +27,6 @@ import { AnimateIn } from "@/hooks/use-scroll-animation";
 import AIAssistant from "@/components/landing/AIAssistant";
 import RetainersSection from "@/components/landing/RetainersSection";
 import ClientPortalShowcase from "@/components/landing/ClientPortalShowcase";
-import PlatformReel from "@/components/landing/PlatformReel";
 import { track } from "@/lib/landing-analytics";
 
 /* ------------------------------------------------------------------ */
