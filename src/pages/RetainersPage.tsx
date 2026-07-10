@@ -103,7 +103,7 @@ export default function RetainersPage() {
           </div>
           <Button
             onClick={() => navigate("/dashboard/retainers/new")}
-            className="bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 gap-2"
+            className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2"
           >
             <Plus className="w-4 h-4" /> New Retainer
           </Button>

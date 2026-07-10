@@ -114,7 +114,7 @@ export default {
         },
         "flow-pulse": {
           "0%, 100%": { transform: "scale(1)", boxShadow: "0 0 0 0 hsl(var(--accent) / 0)" },
-          "50%": { transform: "scale(1.06)", boxShadow: "0 0 28px 4px hsl(var(--accent) / 0.45)" },
+          "50%": { transform: "scale(1.03)", boxShadow: "0 0 16px 2px hsl(var(--accent) / 0.22)" },
         },
         "sticky-cta-in": {
           "0%": { opacity: "0", transform: "translateY(120%)" },
@@ -138,14 +138,14 @@ export default {
         },
         "hero-card-glow": {
           "0%, 22%, 100%": {
-            boxShadow: "0 10px 30px -10px hsl(var(--accent) / 0.10)",
+            boxShadow: "0 10px 30px -10px hsl(var(--accent) / 0.08)",
             borderColor: "hsl(var(--border) / 0.6)",
             filter: "brightness(1)",
           },
           "8%, 14%": {
-            boxShadow: "0 0 0 1px hsl(var(--accent) / 0.45), 0 18px 60px -10px hsl(var(--accent) / 0.55), 0 0 80px -10px hsl(var(--purple) / 0.45)",
-            borderColor: "hsl(var(--accent) / 0.55)",
-            filter: "brightness(1.06)",
+            boxShadow: "0 0 0 1px hsl(var(--accent) / 0.25), 0 18px 50px -12px hsl(var(--accent) / 0.3)",
+            borderColor: "hsl(var(--accent) / 0.35)",
+            filter: "brightness(1.02)",
           },
         },
         "flow-hint": {
@@ -165,12 +165,12 @@ export default {
           "100%": { backgroundPosition: "200% 50%" },
         },
         "soft-pulse": {
-          "0%, 100%": { transform: "scale(1)", opacity: "1", boxShadow: "0 0 0 0 hsl(var(--accent) / 0.5)" },
-          "50%": { transform: "scale(1.04)", opacity: "0.95", boxShadow: "0 0 24px 4px hsl(var(--accent) / 0.45)" },
+          "0%, 100%": { transform: "scale(1)", opacity: "1", boxShadow: "0 0 0 0 hsl(var(--accent) / 0.25)" },
+          "50%": { transform: "scale(1.02)", opacity: "0.97", boxShadow: "0 0 14px 2px hsl(var(--accent) / 0.2)" },
         },
         "border-glow": {
-          "0%, 100%": { boxShadow: "0 0 0 1px hsl(var(--accent) / 0.35), 0 12px 40px -16px hsl(var(--accent) / 0.35)" },
-          "50%": { boxShadow: "0 0 0 1px hsl(var(--accent) / 0.55), 0 22px 70px -16px hsl(var(--accent) / 0.55)" },
+          "0%, 100%": { boxShadow: "0 0 0 1px hsl(var(--accent) / 0.2), 0 12px 32px -16px hsl(var(--accent) / 0.2)" },
+          "50%": { boxShadow: "0 0 0 1px hsl(var(--accent) / 0.3), 0 16px 44px -16px hsl(var(--accent) / 0.28)" },
         },
         "arrow-slide": {
           "0%, 100%": { transform: "translateX(0)", opacity: "0.85" },

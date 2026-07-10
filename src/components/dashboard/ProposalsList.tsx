@@ -143,7 +143,7 @@ export default function ProposalsList({ proposals, loading, onRefresh }: Proposa
             <h3 className="text-lg font-semibold text-foreground mb-2">No proposals yet</h3>
             <p className="text-sm text-muted-foreground mb-8 max-w-sm">Create your first proposal in under 2 minutes.</p>
             <Link to="/dashboard/new">
-              <Button className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 gap-2 px-8 h-12 text-base">
+              <Button className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2 px-8 h-12 text-base">
                 <Plus className="w-4 h-4" /> Create Your First Proposal
               </Button>
             </Link>

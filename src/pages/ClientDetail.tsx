@@ -683,8 +683,8 @@ export default function ClientDetail() {
           <Card
             className={`relative overflow-hidden ${
               heroAction.variant === "success"
-                ? "border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-card to-emerald-500/5"
-                : "border-accent/30 bg-gradient-to-br from-accent/15 via-card to-purple/15"
+                ? "border-emerald-500/30 bg-emerald-500/[0.06]"
+                : "border-accent/30 bg-accent/[0.08]"
             }`}
           >
             <CardContent className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -704,8 +704,8 @@ export default function ClientDetail() {
                 size="lg"
                 className={`gap-2 h-13 px-6 text-base font-semibold flex-shrink-0 transition-all duration-300 hover:scale-[1.03] ${
                   heroAction.variant === "success"
-                    ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:brightness-110 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50"
-                    : "bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 shadow-lg shadow-accent/30 hover:shadow-accent/60"
+                    ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                    : "bg-accent text-accent-foreground hover:bg-accent/90"
                 }`}
               >
                 <heroAction.Icon className="w-5 h-5" /> {heroAction.label}
@@ -771,7 +771,7 @@ export default function ClientDetail() {
                 <Button
                   onClick={generateProposal}
                   size="sm"
-                  className="gap-2 bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 shadow-sm shadow-accent/20"
+                  className="gap-2 bg-accent text-accent-foreground hover:bg-accent/90 shadow-sm shadow-accent/20"
                 >
                   <Sparkles className="w-3.5 h-3.5" /> Generate Proposal
                 </Button>

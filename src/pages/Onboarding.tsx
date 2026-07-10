@@ -176,7 +176,7 @@ export default function Onboarding() {
           {step === "welcome" && (
             <Card className="border-border">
               <CardContent className="p-8 md:p-10 text-center space-y-6">
-                <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-accent to-purple flex items-center justify-center">
+                <div className="w-14 h-14 mx-auto rounded-2xl bg-accent flex items-center justify-center">
                   <Rocket className="w-7 h-7 text-white" />
                 </div>
                 <div className="space-y-2">

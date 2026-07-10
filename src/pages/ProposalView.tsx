@@ -853,7 +853,7 @@ export default function ProposalView() {
                         <div
                           className={`flex h-9 w-9 items-center justify-center rounded-full border-2 transition-all ${
                             isComplete
-                              ? "border-purple bg-gradient-to-br from-purple to-accent text-accent-foreground shadow-md shadow-purple/20"
+                              ? "border-accent bg-accent text-accent-foreground"
                               : isActive
                                 ? "border-purple bg-purple/15 text-purple ring-4 ring-purple/10"
                                 : "border-border bg-background/40 text-muted-foreground"
@@ -869,7 +869,7 @@ export default function ProposalView() {
                       </button>
                       {idx < stageOrder.length - 1 && (
                         <div className={`h-0.5 flex-1 min-w-[12px] -mt-5 transition-colors ${
-                          idx < currentStageIndex ? "bg-gradient-to-r from-purple to-accent" : "bg-border"
+                          idx < currentStageIndex ? "bg-accent" : "bg-border"
                         }`} />
                       )}
                     </div>
@@ -924,7 +924,7 @@ export default function ProposalView() {
               </div>
 
               {!paymentsUnlocked ? (
-                <div className="rounded-lg border border-purple/30 bg-gradient-to-br from-purple/10 via-accent/5 to-transparent p-4">
+                <div className="rounded-lg border border-accent/25 bg-accent/[0.05] p-4">
                   <div className="flex items-start gap-3">
                     <div className="w-9 h-9 rounded-lg bg-purple/15 flex items-center justify-center shrink-0">
                       <Lock className="w-4 h-4 text-purple" />
@@ -939,7 +939,7 @@ export default function ProposalView() {
                       <Button
                         size="sm"
                         onClick={() => setPaymentsUpgradeOpen(true)}
-                        className="gap-1.5 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold hover:brightness-110"
+                        className="gap-1.5 bg-accent text-accent-foreground font-semibold hover:bg-accent/90"
                       >
                         <Crown className="w-3.5 h-3.5" />
                         Unlock Payments with Pro
@@ -1023,7 +1023,7 @@ export default function ProposalView() {
                 <DropdownMenuTrigger asChild>
                   <Button
                     size="lg"
-                    className="w-full sm:w-auto gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg shadow-purple/20 hover:brightness-110 hover:shadow-purple/30 transition-all h-11 px-6"
+                    className="w-full sm:w-auto gap-2 bg-accent text-accent-foreground font-semibold hover:bg-accent/90 transition-colors h-11 px-6"
                   >
                     <Send className="w-4 h-4 shrink-0" />
                     Send to Client

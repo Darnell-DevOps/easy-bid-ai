@@ -115,7 +115,7 @@ export default function AIAssistant() {
                     }}
                   />
                   <div className="relative flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/25 to-purple/25 border border-accent/30 flex items-center justify-center flex-shrink-0 group-hover:shadow-[0_0_22px_hsl(var(--accent)/0.55)] group-hover:scale-110 transition-all">
+                    <div className="w-10 h-10 rounded-xl bg-accent/10 border border-accent/30 flex items-center justify-center flex-shrink-0 group-hover:border-accent/50 transition-colors">
                       <c.icon className="w-5 h-5 text-accent" />
                     </div>
                     <div className="min-w-0">
@@ -131,12 +131,12 @@ export default function AIAssistant() {
           {/* Right — live AI activity feed */}
           <AnimateIn direction="right">
             <div className="relative">
-              <div className="absolute -inset-6 rounded-3xl bg-gradient-to-br from-accent/25 to-purple/25 blur-3xl opacity-60 pointer-events-none animate-soft-pulse" />
+              <div className="absolute -inset-6 rounded-3xl bg-accent/10 blur-3xl opacity-60 pointer-events-none animate-soft-pulse" />
               <div className="relative rounded-3xl border border-white/10 bg-card/70 backdrop-blur-xl shadow-2xl shadow-accent/20 overflow-hidden">
                 {/* Window chrome */}
                 <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-purple flex items-center justify-center">
+                    <div className="w-7 h-7 rounded-lg bg-accent flex items-center justify-center">
                       <Brain className="w-3.5 h-3.5 text-accent-foreground" />
                     </div>
                     <div>

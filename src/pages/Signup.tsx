@@ -220,7 +220,7 @@ export default function Signup() {
 
       {/* Right: dark preview panel */}
       <div className="hidden lg:flex relative bg-[#0b0d12] items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--accent)/0.12),transparent_60%),radial-gradient(ellipse_at_bottom_left,hsl(var(--purple)/0.12),transparent_55%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--accent)/0.08),transparent_60%)]" />
 
         <div className="relative w-full max-w-md px-8">
           <div className="rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-sm p-6 shadow-2xl">

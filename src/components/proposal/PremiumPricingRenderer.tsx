@@ -256,7 +256,7 @@ export default function PremiumPricingRenderer({ content, onPayClick, showPayCta
             <button
               type="button"
               onClick={onPayClick}
-              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple to-accent px-8 py-3.5 text-sm font-semibold text-accent-foreground shadow-lg shadow-purple/20 hover:brightness-110 hover:shadow-purple/30 transition-all"
+              className="inline-flex items-center gap-2 rounded-lg bg-accent px-8 py-3.5 text-sm font-semibold text-accent-foreground hover:bg-accent/90 transition-colors"
             >
               <CreditCard className="h-4 w-4" />
               Pay Now

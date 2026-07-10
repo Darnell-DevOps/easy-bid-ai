@@ -102,7 +102,7 @@ function QuickStatus({ collapsed }: { collapsed: boolean }) {
   if (collapsed) {
     return (
       <div className="px-2 py-3 flex justify-center">
-        <div className="w-9 h-9 rounded-md bg-gradient-to-br from-accent/20 to-purple/20 border border-sidebar-border/60 flex items-center justify-center">
+        <div className="w-9 h-9 rounded-lg bg-sidebar-accent border border-sidebar-border flex items-center justify-center">
           <Sparkles className="w-4 h-4 text-accent" />
         </div>
       </div>
@@ -110,7 +110,7 @@ function QuickStatus({ collapsed }: { collapsed: boolean }) {
   }
 
   return (
-    <div className="mx-3 mb-2 p-3 rounded-lg bg-gradient-to-br from-sidebar-accent/40 to-transparent border border-sidebar-border/60">
+    <div className="mx-3 mb-2 p-3 rounded-lg bg-sidebar-accent/60 border border-sidebar-border">
       <div className="flex items-center justify-between mb-2">
         <span className="text-[10px] uppercase tracking-wider text-sidebar-foreground/50 font-semibold">Current Plan</span>
         <CreditCard className="w-3 h-3 text-sidebar-foreground/40" />
@@ -177,12 +177,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           showCompact ? "justify-center px-0 py-2.5 mx-2" : "px-3 py-2"
         } ${
           active
-            ? "bg-gradient-to-r from-accent/15 via-accent/5 to-transparent text-sidebar-foreground font-medium shadow-[inset_0_0_0_1px_hsl(var(--accent)/0.15)]"
-            : "text-sidebar-foreground/65 hover:text-sidebar-foreground hover:bg-sidebar-accent/40"
+            ? "bg-sidebar-accent text-sidebar-foreground font-medium"
+            : "text-sidebar-foreground/65 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
         }`}
       >
         {active && (
-          <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-gradient-to-b from-accent to-purple shadow-[0_0_8px_hsl(var(--accent)/0.6)]" />
+          <span className="absolute left-0 top-2 bottom-2 w-[2px] rounded-r-full bg-accent" />
         )}
         <item.icon
           className={`w-4 h-4 flex-shrink-0 transition-colors ${
@@ -196,7 +196,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </span>
         )}
         {showCompact && badge > 0 && (
-          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-accent shadow-[0_0_6px_hsl(var(--accent)/0.8)]" />
+          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-accent" />
         )}
       </Link>
     );
@@ -227,7 +227,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className={`${showCompact ? "px-2 pt-5 pb-4" : "px-5 pt-5 pb-4"}`}>
           <Link to="/dashboard" className="block">
             {showCompact ? (
-              <div className="w-9 h-9 mx-auto rounded-md bg-gradient-to-br from-accent to-purple flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-accent/20">
+              <div className="w-9 h-9 mx-auto rounded-lg bg-accent flex items-center justify-center text-accent-foreground font-bold text-sm">
                 C
               </div>
             ) : (
@@ -250,7 +250,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <Link
                     to="/dashboard/new"
                     onClick={() => setMobileOpen(false)}
-                    className="flex items-center justify-center w-9 h-9 mx-auto rounded-md bg-gradient-to-r from-accent to-purple text-white shadow-md shadow-accent/25 hover:brightness-110 transition"
+                    className="flex items-center justify-center w-9 h-9 mx-auto rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
                   >
                     <Plus className="w-4 h-4" />
                   </Link>
@@ -261,7 +261,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Link
                 to="/dashboard/new"
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center justify-center gap-2 w-full h-9 rounded-md bg-gradient-to-r from-accent to-purple text-white text-sm font-medium shadow-md shadow-accent/25 hover:brightness-110 transition"
+                className="flex items-center justify-center gap-2 w-full h-9 rounded-lg bg-accent text-accent-foreground text-sm font-medium hover:bg-accent/90 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 New Proposal
@@ -349,7 +349,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             type="button"
             onClick={() => setCollapsed((c) => !c)}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className="absolute -right-3 top-7 w-6 h-6 rounded-full bg-sidebar border border-sidebar-border flex items-center justify-center text-sidebar-foreground/60 hover:text-sidebar-foreground hover:border-accent/50 hover:shadow-[0_0_10px_hsl(var(--accent)/0.3)] transition z-10"
+            className="absolute -right-3 top-7 w-6 h-6 rounded-full bg-sidebar border border-sidebar-border flex items-center justify-center text-sidebar-foreground/60 hover:text-sidebar-foreground hover:border-accent/50 transition-colors z-10"
           >
             {collapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
           </button>
@@ -368,7 +368,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Mobile drawer */}
         {mobileOpen && (
           <div className="md:hidden fixed inset-0 z-40">
-            <div className="absolute inset-0 bg-foreground/20" onClick={() => setMobileOpen(false)} />
+            <div className="absolute inset-0 bg-background/70 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
             <aside className="absolute top-14 left-0 bottom-0 w-64 bg-sidebar flex flex-col border-r border-sidebar-border">
               <NavContent isMobile />
             </aside>

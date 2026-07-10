@@ -78,7 +78,7 @@ export default function RetainersSection() {
           {/* MRR chart card */}
           <AnimateIn direction="left" className="lg:col-span-3">
             <div className="relative h-full">
-              <div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-accent/20 to-purple/20 blur-3xl opacity-60 pointer-events-none" />
+              <div className="absolute -inset-4 rounded-3xl bg-accent/10 blur-3xl opacity-60 pointer-events-none" />
               <div className="relative rounded-3xl border border-white/10 bg-card/70 backdrop-blur-xl p-6 md:p-8 shadow-2xl shadow-accent/15 h-full">
                 <div className="flex items-start justify-between mb-6">
                   <div>
@@ -92,7 +92,7 @@ export default function RetainersSection() {
                       <ArrowUpRight className="w-3.5 h-3.5" /> +38% this quarter
                     </p>
                   </div>
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/25 to-purple/25 border border-accent/30 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-accent/10 border border-accent/30 flex items-center justify-center">
                     <TrendingUp className="w-5 h-5 text-accent" />
                   </div>
                 </div>

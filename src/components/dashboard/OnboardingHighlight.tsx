@@ -26,7 +26,7 @@ export default function OnboardingHighlight() {
   if (!visible) return null;
 
   return (
-    <div className="relative rounded-xl border border-accent/30 bg-gradient-to-r from-accent/10 via-purple/10 to-transparent p-4 sm:p-5">
+    <div className="relative rounded-xl border border-accent/25 bg-accent/[0.05] p-4 sm:p-5">
       <button
         onClick={dismiss}
         aria-label="Dismiss"

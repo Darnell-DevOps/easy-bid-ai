@@ -70,9 +70,9 @@ export default function SalesMetrics({
         return (
           <Card
             key={s.label}
-            className={`group hover:shadow-lg transition-all duration-300 cursor-pointer ${
+            className={`group transition-colors duration-200 cursor-pointer ${
               isFeatured
-                ? "border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 via-card to-card hover:border-emerald-500/40"
+                ? "border-emerald-500/25 bg-emerald-500/[0.04] hover:border-emerald-500/40"
                 : "hover:border-accent/20"
             }`}
             onClick={() => navigate(s.link)}

@@ -354,10 +354,10 @@ export default function Templates() {
             </Button>
           </div>
 
-          <Card className="mb-6 border-accent/30 bg-gradient-to-br from-accent/5 via-purple/5 to-transparent overflow-hidden relative">
+          <Card className="mb-6 border-accent/30 bg-accent/[0.04] overflow-hidden relative">
             <CardContent className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4">
               <div className="flex items-start gap-3 flex-1 min-w-0">
-                <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-accent to-purple flex items-center justify-center flex-shrink-0 shadow-md">
+                <div className="w-11 h-11 rounded-lg bg-accent flex items-center justify-center flex-shrink-0">
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
                 <div className="min-w-0">
@@ -371,7 +371,7 @@ export default function Templates() {
               </div>
               <Button
                 onClick={handleAIGenerate}
-                className="w-full sm:w-auto gap-2 bg-gradient-to-r from-accent to-purple text-white hover:brightness-110"
+                className="w-full sm:w-auto gap-2 bg-accent text-accent-foreground hover:bg-accent/90"
               >
                 <Sparkles className="w-4 h-4" />
                 Generate with AI
@@ -614,7 +614,7 @@ function TemplateGrid({
                     e.stopPropagation();
                     onUse(t);
                   }}
-                  className="w-full gap-2 bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 group-hover:shadow-md transition-shadow"
+                  className="w-full gap-2 bg-accent text-accent-foreground hover:bg-accent/90 group-hover:shadow-md transition-shadow"
                 >
                   Start Proposal
                   <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />

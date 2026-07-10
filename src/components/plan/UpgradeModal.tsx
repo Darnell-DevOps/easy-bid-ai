@@ -72,7 +72,7 @@ export default function UpgradeModal({
               onOpenChange(false);
               navigate("/dashboard/billing");
             }}
-            className="bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold hover:brightness-110 sm:flex-1"
+            className="bg-accent text-accent-foreground font-semibold hover:bg-accent/90 sm:flex-1"
           >
             Upgrade to {target.name} — {target.currencySymbol}{target.priceMonthly}/mo
           </Button>

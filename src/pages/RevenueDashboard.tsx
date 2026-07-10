@@ -893,7 +893,7 @@ export default function RevenueDashboard() {
               return (
                 <Card
                   key={insight.id}
-                  className={`border ${style.border} ${style.bg} hover:brightness-110 transition-all`}
+                  className={`border ${style.border} ${style.bg} hover:bg-muted/40 transition-colors`}
                 >
                   <CardContent className="p-3 flex items-start gap-3">
                     <div className={`w-8 h-8 rounded-lg ${style.iconBg} flex items-center justify-center shrink-0 mt-0.5`}>
@@ -1182,7 +1182,7 @@ export default function RevenueDashboard() {
                     return (
                       <div
                         key={r.id}
-                        className={`flex items-center gap-3 p-2.5 rounded-lg border ${urgency.border} ${urgency.bg} hover:brightness-110 transition-all cursor-pointer group`}
+                        className={`flex items-center gap-3 p-2.5 rounded-lg border ${urgency.border} ${urgency.bg} hover:bg-muted/40 transition-colors cursor-pointer group`}
                         onClick={() => navigate(`/dashboard/retainers/${r.id}`)}
                       >
                         <div className={`w-8 h-8 rounded-lg bg-background/50 flex items-center justify-center shrink-0`}>

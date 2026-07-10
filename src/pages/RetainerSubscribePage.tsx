@@ -249,7 +249,7 @@ export default function RetainerSubscribePage() {
               <Button
                 onClick={subscribe}
                 disabled={working}
-                className="w-full gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold hover:brightness-110 transition-all"
+                className="w-full gap-2 bg-accent text-accent-foreground font-semibold hover:bg-accent/90 transition-all"
               >
                 {working ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

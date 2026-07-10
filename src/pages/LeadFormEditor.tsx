@@ -234,7 +234,7 @@ export default function LeadFormEditor() {
                     <Button
                       disabled
                       size="lg"
-                      className="w-full gap-2 bg-gradient-to-r from-accent via-purple to-accent text-accent-foreground font-semibold shadow-lg shadow-accent/20 h-12"
+                      className="w-full gap-2 bg-accent text-accent-foreground font-semibold h-12"
                     >
                       <Send className="w-4 h-4" />
                       {form.submit_label || "Send Project Details"}

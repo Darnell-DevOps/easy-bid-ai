@@ -38,13 +38,12 @@ export default function CoachFeedWidget() {
   }, [insight]);
 
   return (
-    <Card className="border-primary/20 bg-gradient-to-br from-primary/5 via-card to-card overflow-hidden relative">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,hsl(var(--primary)/0.08),transparent_60%)] pointer-events-none" />
+    <Card className="border-primary/20 bg-card overflow-hidden relative">
       <CardContent className="p-4 sm:p-5 space-y-4 relative">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+              <Sparkles className="w-4 h-4 text-primary" />
             </div>
             <div>
               <h2 className="text-base font-semibold flex items-center gap-2">

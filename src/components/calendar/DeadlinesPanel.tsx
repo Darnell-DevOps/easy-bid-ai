@@ -326,7 +326,7 @@ export default function DeadlinesPanel() {
           <Button variant="outline" size="sm" onClick={runSync} disabled={syncing} className="gap-1.5">
             <RefreshCw className={`w-3.5 h-3.5 ${syncing ? "animate-spin" : ""}`} /> Sync
           </Button>
-          <Button size="sm" onClick={openNew} className="gap-1.5 bg-gradient-to-r from-accent to-purple text-white">
+          <Button size="sm" onClick={openNew} className="gap-1.5 bg-accent text-accent-foreground">
             <Plus className="w-3.5 h-3.5" /> Add deadline
           </Button>
         </div>
@@ -555,7 +555,7 @@ export default function DeadlinesPanel() {
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={save} className="gap-2 bg-gradient-to-r from-accent to-purple text-white">
+            <Button onClick={save} className="gap-2 bg-accent text-accent-foreground">
               <CheckCircle2 className="w-4 h-4" /> {editing ? "Save" : "Add"}
             </Button>
           </DialogFooter>
