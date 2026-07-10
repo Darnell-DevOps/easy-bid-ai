@@ -248,7 +248,7 @@ export default function ReschedulePage() {
         <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-xl">
           <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] lg:grid-cols-[300px_1fr_320px]">
             {/* Left brand panel */}
-            <div className="p-6 lg:p-8 border-b md:border-b-0 md:border-r border-border bg-gradient-to-b from-card to-background/30">
+            <div className="p-6 lg:p-8 border-b md:border-b-0 md:border-r border-border bg-card">
               <div className="space-y-5">
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-accent/15 border border-accent/25">
                   <CalendarIcon className="w-5 h-5 text-purple" />

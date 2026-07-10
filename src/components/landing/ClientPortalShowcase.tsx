@@ -70,7 +70,7 @@ export default function ClientPortalShowcase() {
             <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">Client Portal</span>
           </div>
           <h2 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
-            A portal your clients <span className="bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent">actually trust</span>
+            A portal your clients <span className="text-gradient-sync">actually trust</span>
           </h2>
           <p className="text-lg text-muted-foreground">
             One branded workspace where every proposal, signature, payment and milestone updates in real time — no more chasing email threads.
@@ -114,7 +114,7 @@ export default function ClientPortalShowcase() {
               <div className="px-6 pt-4">
                 <div className="h-1.5 w-full rounded-full bg-muted/40 overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-accent via-purple to-accent rounded-full transition-all duration-700 ease-out shadow-[0_0_20px_hsl(var(--accent)/0.6)]"
+                    className="h-full bg-accent rounded-full transition-all duration-700 ease-out"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
@@ -130,7 +130,7 @@ export default function ClientPortalShowcase() {
                       key={stage.title}
                       className={`group relative flex items-start gap-4 p-4 rounded-xl border transition-all duration-500 ${
                         state === "active"
-                          ? "border-accent/60 bg-accent/5 shadow-[0_0_40px_-10px_hsl(var(--accent)/0.5)]"
+                          ? "border-accent/60 bg-accent/5"
                           : state === "done"
                           ? "border-border/50 bg-background/30"
                           : "border-border/30 bg-background/10 opacity-60"
@@ -151,7 +151,7 @@ export default function ClientPortalShowcase() {
                           state === "done"
                             ? "bg-gradient-to-br from-emerald-500/20 to-accent/20 border-emerald-400/40"
                             : state === "active"
-                            ? "bg-gradient-to-br from-accent/30 to-purple/30 border-accent/60 shadow-[0_0_24px_hsl(var(--accent)/0.6)]"
+                            ? "bg-accent/15 border-accent/60"
                             : "bg-muted/20 border-border/40"
                         }`}
                       >
@@ -253,7 +253,7 @@ export default function ClientPortalShowcase() {
                   { label: "On-time pay", value: "98%" },
                 ].map((s) => (
                   <div key={s.label} className="rounded-xl border border-border/60 bg-card/60 backdrop-blur-xl p-4 text-center">
-                    <div className="text-xl font-bold bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent">{s.value}</div>
+                    <div className="text-xl font-bold text-gradient-sync">{s.value}</div>
                     <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">{s.label}</div>
                   </div>
                 ))}

@@ -120,7 +120,7 @@ export default function Index() {
         />
       </div>
       {/* Sticky premium nav */}
-      <nav className="fixed top-0 inset-x-0 z-50 border-b border-white/5 bg-background/40 backdrop-blur-xl supports-[backdrop-filter]:bg-background/30">
+      <nav className="fixed top-0 inset-x-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
         <div className="container flex items-center justify-between h-16 px-4 md:px-8">
           <div className="flex items-baseline gap-2">
             <span className="text-xl font-semibold text-foreground tracking-tight">

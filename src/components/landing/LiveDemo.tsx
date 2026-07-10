@@ -135,7 +135,7 @@ export default function LiveDemo() {
                     <div
                       className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 border ${
                         active
-                          ? "border-accent bg-accent/15 text-accent shadow-[0_0_18px_hsl(var(--accent)/0.45)]"
+                          ? "border-accent bg-accent/15 text-accent"
                           : done
                             ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-500"
                             : "border-border bg-muted/30 text-muted-foreground"
@@ -238,7 +238,7 @@ export default function LiveDemo() {
                   <button
                     type="button"
                     disabled
-                    className={`w-full h-12 rounded-xl bg-gradient-to-r from-accent to-purple text-accent-foreground text-sm font-semibold flex items-center justify-center gap-2 shadow-lg shadow-accent/30 ${
+                    className={`w-full h-12 rounded-xl bg-accent text-accent-foreground text-sm font-semibold flex items-center justify-center gap-2 ${
                       stage === 1 && stageProgress > 0.4 ? "ring-2 ring-accent/60 ring-offset-2 ring-offset-card" : ""
                     }`}
                     style={{
@@ -260,7 +260,7 @@ export default function LiveDemo() {
               className={`absolute inset-0 transition-opacity duration-500 ${stage === 2 ? "opacity-100" : "opacity-0 pointer-events-none"}`}
             >
               <div className="max-w-md mx-auto">
-                <div className="relative rounded-2xl border border-accent/40 bg-gradient-to-br from-accent/10 to-purple/10 p-6 text-center overflow-hidden">
+                <div className="relative rounded-2xl border border-accent/30 bg-accent/[0.06] p-6 text-center overflow-hidden">
                   <div
                     className="absolute inset-0 pointer-events-none"
                     style={{
@@ -272,7 +272,7 @@ export default function LiveDemo() {
                       <HandCoins className="w-7 h-7 text-accent-foreground" />
                     </div>
                     <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Payment received</p>
-                    <p className="text-5xl font-bold bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent tabular-nums">
+                    <p className="text-5xl font-bold text-gradient-sync tabular-nums">
                       £{amount.toLocaleString()}
                     </p>
                     <p className="text-xs text-muted-foreground mt-2">From Acme Co. · via Paddle</p>

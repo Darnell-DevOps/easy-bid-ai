@@ -150,9 +150,9 @@ export default function PublicLeadFormPage() {
     return (
       <div className={`${embed ? "" : "min-h-screen"} bg-background flex items-center justify-center px-4 py-12`}>
         <div className="relative max-w-lg w-full text-center rounded-2xl border border-border/60 bg-card/80 backdrop-blur p-10 overflow-hidden">
-          <div className="absolute inset-x-0 -top-24 h-48 bg-gradient-to-b from-accent/20 via-purple/10 to-transparent blur-2xl pointer-events-none" />
+          <div className="absolute inset-x-0 -top-24 h-48 bg-accent/10 blur-2xl pointer-events-none" />
           <div className="relative">
-            <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500/30 to-emerald-500/10 ring-1 ring-emerald-500/40 mb-5">
+            <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/15 ring-1 ring-emerald-500/40 mb-5">
               <CheckCircle2 className="w-7 h-7 text-emerald-400" />
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2 tracking-tight">
@@ -178,7 +178,7 @@ export default function PublicLeadFormPage() {
       <main className="max-w-2xl mx-auto px-4 sm:px-6">
         <div className="relative rounded-2xl border border-border/60 bg-card/70 backdrop-blur p-6 sm:p-10 overflow-hidden">
           {/* premium top gradient */}
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
           <div className="absolute -top-24 -right-24 w-72 h-72 bg-purple/10 blur-3xl rounded-full pointer-events-none" />
 
           <header className="relative mb-8">

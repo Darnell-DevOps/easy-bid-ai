@@ -115,7 +115,7 @@ export default function AIAssistant() {
                     }}
                   />
                   <div className="relative flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-accent/10 border border-accent/30 flex items-center justify-center flex-shrink-0 group-hover:shadow-[0_0_22px_hsl(var(--accent)/0.55)] group-hover:scale-110 transition-all">
+                    <div className="w-10 h-10 rounded-xl bg-accent/10 border border-accent/30 flex items-center justify-center flex-shrink-0 group-hover:border-accent/50 transition-colors">
                       <c.icon className="w-5 h-5 text-accent" />
                     </div>
                     <div className="min-w-0">
