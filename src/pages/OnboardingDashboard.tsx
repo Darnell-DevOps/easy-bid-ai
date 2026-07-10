@@ -121,7 +121,7 @@ export default function OnboardingDashboard() {
                       </p>
                       <div className="mt-2 h-1 w-full max-w-sm rounded-full bg-muted/40 overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-r from-purple to-accent"
+                          className="h-full bg-accent"
                           style={{ width: `${progress}%` }}
                         />
                       </div>

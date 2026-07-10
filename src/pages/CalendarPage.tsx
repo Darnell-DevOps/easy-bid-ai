@@ -476,7 +476,7 @@ export default function CalendarPage() {
             <Button variant="outline" onClick={() => setCreateOpen(true)} className="gap-2">
               <LinkIcon className="w-4 h-4" /> New booking link
             </Button>
-            <Button onClick={() => setScheduleOpen(true)} className="gap-2 bg-gradient-to-r from-accent to-purple text-white">
+            <Button onClick={() => setScheduleOpen(true)} className="gap-2 bg-accent text-accent-foreground">
               <CalendarPlus className="w-4 h-4" /> Schedule meeting
             </Button>
           </div>
@@ -850,7 +850,7 @@ export default function CalendarPage() {
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setScheduleOpen(false)}>Cancel</Button>
-            <Button onClick={scheduleMeeting} className="gap-2 bg-gradient-to-r from-accent to-purple text-white">
+            <Button onClick={scheduleMeeting} className="gap-2 bg-accent text-accent-foreground">
               <CheckCircle2 className="w-4 h-4" /> Schedule
             </Button>
           </DialogFooter>

@@ -167,7 +167,7 @@ export default function ProjectOverview({
                 {nextAction.href ? (
                   <Button
                     asChild
-                    className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold hover:brightness-110 shadow-lg shadow-purple/20"
+                    className="gap-2 bg-accent text-accent-foreground font-semibold hover:bg-accent/90 shadow-lg shadow-purple/20"
                   >
                     <RouterLink to={nextAction.href}>
                       {nextAction.ctaLabel}
@@ -178,7 +178,7 @@ export default function ProjectOverview({
                   <Button
                     onClick={nextAction.onClick}
                     disabled={nextAction.disabled}
-                    className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold hover:brightness-110 shadow-lg shadow-purple/20"
+                    className="gap-2 bg-accent text-accent-foreground font-semibold hover:bg-accent/90 shadow-lg shadow-purple/20"
                   >
                     {nextAction.ctaLabel}
                     <ArrowRight className="w-4 h-4" />

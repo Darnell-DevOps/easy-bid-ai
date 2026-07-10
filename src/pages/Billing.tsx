@@ -124,7 +124,7 @@ export default function Billing() {
               >
                 {isHighlight && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                    <Badge className="bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold border-0 shadow">
+                    <Badge className="bg-accent text-accent-foreground font-semibold border-0 shadow">
                       Most Popular
                     </Badge>
                   </div>
@@ -162,7 +162,7 @@ export default function Billing() {
                     disabled={isCurrent}
                     className={`w-full ${
                       isHighlight && !isCurrent
-                        ? "bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold hover:brightness-110"
+                        ? "bg-accent text-accent-foreground font-semibold hover:bg-accent/90"
                         : ""
                     }`}
                     variant={isCurrent ? "outline" : isHighlight ? "default" : "secondary"}

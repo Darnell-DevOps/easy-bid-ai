@@ -497,10 +497,10 @@ export default function NewProposal() {
       )}
 
       {savedClients.length > 0 && !prefilledClientId && (
-        <Card className="mb-6 border-accent/30 bg-gradient-to-br from-accent/10 via-accent/5 to-transparent shadow-lg shadow-accent/5">
+        <Card className="mb-6 border-accent/25 bg-accent/[0.05]">
           <CardContent className="p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent to-purple flex items-center justify-center flex-shrink-0 shadow-md shadow-accent/30">
+              <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center flex-shrink-0">
                 <Wand2 className="w-5 h-5 text-accent-foreground" />
               </div>
               <div>
@@ -951,7 +951,7 @@ export default function NewProposal() {
                           <Button
                             type="submit"
                             disabled={!isValid}
-                            className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-95 gap-2 w-full sm:w-auto sm:min-w-[300px] h-12 text-base font-semibold shadow-xl shadow-accent/30 hover:shadow-2xl hover:shadow-accent/50 hover:-translate-y-0.5 hover:scale-[1.02] active:scale-[0.99] transition-all duration-200 group"
+                            className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2 w-full sm:w-auto sm:min-w-[300px] h-12 text-base font-semibold transition-colors group"
                             size="lg"
                           >
                             <Sparkles className="w-5 h-5 transition-transform group-hover:rotate-12" />

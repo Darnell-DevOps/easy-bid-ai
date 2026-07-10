@@ -313,7 +313,7 @@ export default function ContractsPage() {
               Generate, send and e-sign professional client agreements.
             </p>
           </div>
-          <Button onClick={() => setOpenCreate(true)} className="gap-2 bg-gradient-to-r from-accent to-purple text-white">
+          <Button onClick={() => setOpenCreate(true)} className="gap-2 bg-accent text-accent-foreground">
             <Plus className="w-4 h-4" /> New Contract
           </Button>
         </div>
@@ -488,7 +488,7 @@ export default function ContractsPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenCreate(false)}>Cancel</Button>
-            <Button onClick={handleCreate} disabled={creating} className="gap-2 bg-gradient-to-r from-accent to-purple text-white">
+            <Button onClick={handleCreate} disabled={creating} className="gap-2 bg-accent text-accent-foreground">
               {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
               Generate Contract
             </Button>

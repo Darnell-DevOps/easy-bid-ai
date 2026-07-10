@@ -282,7 +282,7 @@ export default function NewClient() {
             <Button
               type="submit"
               disabled={saving}
-              className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:opacity-90 gap-2"
+              className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2"
             >
               {saving ? (
                 <>

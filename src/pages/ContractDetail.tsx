@@ -209,13 +209,13 @@ export default function ContractDetail() {
                   {isExecuted ? "Download Executed PDF" : "Download PDF"}
                 </Button>
                 {contract.status === "draft" && (
-                  <Button className="gap-2 bg-gradient-to-r from-accent to-purple text-white" onClick={sendForSignature}>
+                  <Button className="gap-2 bg-accent text-accent-foreground" onClick={sendForSignature}>
                     <Send className="w-4 h-4" /> Send for signature
                   </Button>
                 )}
                 {isAwaitingCountersign && (
                   <Button
-                    className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold"
+                    className="gap-2 bg-accent text-accent-foreground font-semibold"
                     onClick={() => setCountersignOpen(true)}
                   >
                     <FileSignature className="w-4 h-4" /> Countersign contract
@@ -246,7 +246,7 @@ export default function ContractDetail() {
                 </div>
               </div>
               <Button
-                className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold"
+                className="gap-2 bg-accent text-accent-foreground font-semibold"
                 onClick={() => setCountersignOpen(true)}
               >
                 <FileSignature className="w-4 h-4" /> Countersign now

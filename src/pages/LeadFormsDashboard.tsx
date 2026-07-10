@@ -227,7 +227,7 @@ export default function LeadFormsDashboard() {
             <Button asChild variant="outline">
               <Link to="/dashboard/lead-inbox">View Lead Inbox</Link>
             </Button>
-            <Button onClick={create} disabled={creating} className="gap-2 bg-gradient-to-r from-purple to-accent">
+            <Button onClick={create} disabled={creating} className="gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
               {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
               New form
             </Button>

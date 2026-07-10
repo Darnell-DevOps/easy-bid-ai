@@ -182,7 +182,7 @@ export default function OnboardingResponseDetail() {
                 <span>{progress}%</span>
               </div>
               <div className="h-1.5 w-full rounded-full bg-muted/40 overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-purple to-accent" style={{ width: `${progress}%` }} />
+                <div className="h-full bg-accent" style={{ width: `${progress}%` }} />
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-muted-foreground">

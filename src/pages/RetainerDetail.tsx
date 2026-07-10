@@ -306,7 +306,7 @@ export default function RetainerDetail() {
               <Button
                 size="sm"
                 onClick={activate}
-                className="gap-1.5 bg-gradient-to-r from-accent to-purple text-white hover:brightness-110"
+                className="gap-1.5 bg-accent text-accent-foreground hover:bg-accent/90"
               >
                 <Play className="w-3.5 h-3.5" /> {isCancelled ? "Reactivate" : "Activate"}
               </Button>

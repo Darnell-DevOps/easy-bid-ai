@@ -17,7 +17,7 @@ export default function WeeklyBriefingCard() {
   const d = (insight.details ?? {}) as any;
 
   return (
-    <Card className="border-border/60 bg-gradient-to-br from-card to-muted/30 overflow-hidden">
+    <Card className="border-border/60 bg-card overflow-hidden">
       <CardContent className="p-5 space-y-3">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-primary" />

@@ -200,7 +200,7 @@ export default function Policies() {
             <Button
               size="lg"
               onClick={handleGenerateClick}
-              className="shrink-0 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold hover:brightness-110"
+              className="shrink-0 bg-accent text-accent-foreground font-semibold hover:bg-accent/90"
             >
               <Crown className="w-4 h-4 mr-2" />
               Unlock with Pro

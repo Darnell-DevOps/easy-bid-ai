@@ -271,7 +271,7 @@ export default function OnboardingFormPage() {
           </div>
           <div className="mt-4 h-1.5 w-full rounded-full bg-muted/40 overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-purple to-accent transition-all"
+              className="h-full bg-accent transition-all"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -323,7 +323,7 @@ export default function OnboardingFormPage() {
             size="lg"
             onClick={() => handleSubmit(true)}
             disabled={submitting || !confirmedAccurate}
-            className="flex-1 gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 h-12 disabled:opacity-50"
+            className="flex-1 gap-2 bg-accent text-accent-foreground font-semibold hover:bg-accent/90 h-12 disabled:opacity-50"
           >
             {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
             Submit onboarding

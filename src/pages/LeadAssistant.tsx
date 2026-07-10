@@ -490,7 +490,7 @@ export default function LeadAssistant() {
                 className={
                   aiLeadUnlocked
                     ? "w-full sm:w-auto"
-                    : "w-full sm:w-auto bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold hover:brightness-110"
+                    : "w-full sm:w-auto bg-accent text-accent-foreground font-semibold hover:bg-accent/90"
                 }
               >
                 {generating ? (
@@ -654,7 +654,7 @@ export default function LeadAssistant() {
 
             {/* Section 4.5: Smart Template Match */}
             {smartPick && (
-              <Card className="border-accent/30 bg-gradient-to-br from-accent/5 via-purple/5 to-transparent">
+              <Card className="border-accent/30 bg-accent/[0.04]">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Wand2 className="w-4 h-4 text-accent" />

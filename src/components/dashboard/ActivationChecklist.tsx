@@ -129,7 +129,7 @@ export default function ActivationChecklist() {
   const pct = Math.round((completed / total) * 100);
 
   return (
-    <div className="relative rounded-xl border border-accent/30 bg-gradient-to-br from-accent/10 via-purple/5 to-transparent p-4 sm:p-5">
+    <div className="relative rounded-xl border border-accent/25 bg-accent/[0.05] p-4 sm:p-5">
       <button
         onClick={dismiss}
         aria-label="Dismiss activation checklist"
@@ -154,7 +154,7 @@ export default function ActivationChecklist() {
 
           <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-accent to-purple transition-all"
+              className="h-full bg-accent transition-all"
               style={{ width: `${pct}%` }}
             />
           </div>

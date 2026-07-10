@@ -112,19 +112,11 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background relative overflow-x-hidden">
-      {/* Page-wide ambient background glow (very subtle, slow) */}
+      {/* Single subtle hero glow */}
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
         <div
-          className="absolute top-[20%] -left-[10%] w-[60vw] h-[60vw] max-w-[820px] max-h-[820px] rounded-full blur-3xl animate-ambient-drift"
-          style={{ background: "radial-gradient(closest-side, hsl(var(--accent) / 0.18), transparent 70%)" }}
-        />
-        <div
-          className="absolute top-[55%] -right-[10%] w-[55vw] h-[55vw] max-w-[760px] max-h-[760px] rounded-full blur-3xl animate-ambient-drift-alt"
-          style={{ background: "radial-gradient(closest-side, hsl(var(--purple) / 0.20), transparent 70%)", animationDelay: "-8s" }}
-        />
-        <div
-          className="absolute bottom-[5%] left-[30%] w-[40vw] h-[40vw] max-w-[560px] max-h-[560px] rounded-full blur-3xl animate-ambient-drift"
-          style={{ background: "radial-gradient(closest-side, hsl(var(--accent) / 0.12), transparent 70%)", animationDelay: "-14s" }}
+          className="absolute -top-[20%] left-1/2 -translate-x-1/2 w-[80vw] h-[60vw] max-w-[1000px] max-h-[700px] rounded-full blur-3xl"
+          style={{ background: "radial-gradient(closest-side, hsl(var(--accent) / 0.08), transparent 70%)" }}
         />
       </div>
       {/* Sticky premium nav */}
@@ -149,7 +141,7 @@ export default function Index() {
               <Button variant="ghost" size="sm">Log in</Button>
             </Link>
             <Link to="/signup" onClick={() => track("cta_click", { location: "nav" })}>
-              <Button size="sm" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_20px_hsl(var(--accent)/0.45)] transition-all h-9">Start free</Button>
+              <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90 transition-colors h-9">Start free</Button>
             </Link>
           </div>
         </div>
@@ -160,23 +152,11 @@ export default function Index() {
         {/* Layered animated background */}
         <div aria-hidden className="absolute inset-0 -z-10">
           <div
-            className="absolute inset-0 opacity-80 animate-gradient-shift"
-            style={{
-              background:
-                "linear-gradient(120deg, hsl(var(--background)) 0%, hsl(var(--accent) / 0.18) 35%, hsl(var(--purple) / 0.22) 65%, hsl(var(--background)) 100%)",
-              backgroundSize: "200% 200%",
-            }}
+            className="absolute -top-32 left-1/2 -translate-x-1/2 w-[640px] h-[520px] rounded-full blur-3xl opacity-50"
+            style={{ background: "radial-gradient(closest-side, hsl(var(--accent) / 0.25), transparent 70%)" }}
           />
           <div
-            className="absolute -top-32 -left-24 w-[520px] h-[520px] rounded-full blur-3xl opacity-60 animate-hero-glow"
-            style={{ background: "radial-gradient(closest-side, hsl(var(--accent) / 0.55), transparent 70%)" }}
-          />
-          <div
-            className="absolute bottom-[-160px] right-[-120px] w-[620px] h-[620px] rounded-full blur-3xl opacity-50 animate-hero-glow"
-            style={{ background: "radial-gradient(closest-side, hsl(var(--purple) / 0.55), transparent 70%)", animationDelay: "2.5s" }}
-          />
-          <div
-            className="absolute inset-0 opacity-[0.07]"
+            className="absolute inset-0 opacity-[0.05]"
             style={{
               backgroundImage:
                 "linear-gradient(hsl(var(--foreground) / 0.5) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground) / 0.5) 1px, transparent 1px)",
@@ -185,7 +165,6 @@ export default function Index() {
               WebkitMaskImage: "radial-gradient(ellipse at center, black 40%, transparent 80%)",
             }}
           />
-          <div className="absolute inset-0 bg-background/55" />
         </div>
 
         <div className="relative container grid lg:grid-cols-12 gap-10 lg:gap-6 items-center">
@@ -201,7 +180,7 @@ export default function Index() {
             >
               Run your entire client business.
               <br />
-              <span className="bg-gradient-to-r from-accent via-purple to-accent bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-shift">
+              <span className="text-gradient-sync">
                 From lead to retainer. On autopilot.
               </span>
             </h1>
@@ -216,7 +195,7 @@ export default function Index() {
               style={{ animationDelay: "0.3s" }}
             >
               <Link to="/signup" className="w-full sm:w-auto" onClick={() => track("cta_click", { location: "hero" })}>
-                <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-accent to-purple text-accent-foreground bg-[length:200%_100%] hover:bg-[position:100%_0] transition-[background-position,transform,box-shadow] duration-500 hover:shadow-[0_0_36px_hsl(var(--accent)/0.55)] px-10 h-14 text-base gap-2 hover:scale-[1.03] hover:-translate-y-0.5">
+                <Button size="lg" className="w-full sm:w-auto bg-accent text-accent-foreground hover:bg-accent/90 transition-colors px-10 h-14 text-base gap-2">
                   Start free
                   <ArrowRight className="w-4 h-4" />
                 </Button>
@@ -240,7 +219,7 @@ export default function Index() {
 
           {/* Right: layered glassmorphism mockups */}
           <div className="lg:col-span-5 relative h-[420px] sm:h-[480px] lg:h-[540px] hidden md:block">
-            <div className="absolute inset-8 rounded-[2rem] bg-gradient-to-br from-accent/20 to-purple/20 blur-2xl" />
+            <div className="absolute inset-8 rounded-[2rem] bg-accent/10 blur-2xl" />
 
             {/* Subtle directional flow hint */}
             <div
@@ -255,7 +234,7 @@ export default function Index() {
             >
               <div className="absolute inset-0 rounded-2xl pointer-events-none animate-hero-card-glow" style={{ animationDelay: "0s" }} />
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-purple flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
                   <FileText className="w-4 h-4 text-accent-foreground" />
                 </div>
                 <div>
@@ -298,7 +277,7 @@ export default function Index() {
               <div className="absolute inset-0 rounded-2xl pointer-events-none animate-hero-card-glow" style={{ animationDelay: "-3s" }} />
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-purple flex items-center justify-center shadow-lg shadow-accent/30">
+                  <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
                     <HandCoins className="w-4 h-4 text-accent-foreground" />
                   </div>
                   <div>
@@ -311,7 +290,7 @@ export default function Index() {
               <div className="flex items-end justify-between">
                 <div>
                   <p className="text-[10px] text-muted-foreground">Amount</p>
-                  <p className="text-2xl font-bold bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent">£4,800</p>
+                  <p className="text-2xl font-bold text-gradient-sync">£4,800</p>
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] text-muted-foreground">Status</p>
@@ -369,7 +348,7 @@ export default function Index() {
                     }}
                   />
                   <div className="relative">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/25 to-purple/25 border border-accent/30 flex items-center justify-center mb-4 group-hover:shadow-[0_0_22px_hsl(var(--accent)/0.55)] group-hover:scale-110 transition-all duration-300">
+                    <div className="w-10 h-10 rounded-xl bg-accent/10 border border-accent/25 flex items-center justify-center mb-4 transition-colors duration-300">
                       <p.icon className="w-5 h-5 text-accent" />
                     </div>
                     <h3 className="text-sm font-semibold text-foreground mb-1.5">{p.title}</h3>
@@ -474,13 +453,13 @@ export default function Index() {
             {/* Right: CloseSync orb */}
             <AnimateIn direction="right">
               <div className="relative">
-                <div className="absolute -inset-6 rounded-3xl bg-gradient-to-br from-accent/30 to-purple/30 blur-3xl opacity-70 animate-soft-pulse pointer-events-none" />
+                <div className="absolute -inset-6 rounded-3xl bg-accent/15 blur-3xl opacity-60 pointer-events-none" />
                 <div className="relative rounded-3xl border-2 border-accent/40 bg-card/80 backdrop-blur-xl p-8 shadow-2xl shadow-accent/30 animate-border-glow">
                   <p className="text-[10px] uppercase tracking-widest text-accent mb-4 text-center">
                     One connected workflow
                   </p>
                   <div className="flex items-center justify-center mb-5">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent to-purple flex items-center justify-center shadow-[0_0_40px_hsl(var(--accent)/0.55)]">
+                    <div className="w-16 h-16 rounded-2xl bg-accent flex items-center justify-center">
                       <Sparkles className="w-8 h-8 text-accent-foreground" />
                     </div>
                   </div>
@@ -567,7 +546,7 @@ export default function Index() {
                         <div
                           className={`relative w-12 h-12 rounded-2xl border-2 flex items-center justify-center transition-all duration-700 ${
                             isActive
-                              ? "border-accent bg-gradient-to-br from-accent/30 to-purple/30 scale-110 shadow-[0_0_32px_hsl(var(--accent)/0.7)]"
+                              ? "border-accent bg-accent/15 scale-105"
                               : "border-accent/30 bg-card/80 backdrop-blur-sm"
                           }`}
                         >
@@ -617,7 +596,7 @@ export default function Index() {
 
           <AnimateIn className="text-center mt-14">
             <Link to="/signup" onClick={() => track("cta_click", { location: "workflow" })}>
-              <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_28px_hsl(var(--accent)/0.55)] px-10 h-14 text-base gap-2 transition-all hover:scale-[1.03]">
+              <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 px-10 h-14 text-base gap-2 transition-colors">
                 Run your first client through it
                 <ArrowRight className="w-4 h-4" />
               </Button>
@@ -682,9 +661,9 @@ export default function Index() {
                     <div key={item.label} className="flex flex-col md:flex-row items-center gap-6 md:gap-4 flex-1">
                       <div className="flex flex-col items-center text-center flex-1">
                         <div
-                          className={`w-16 h-16 rounded-2xl bg-gradient-to-br from-accent/20 to-purple/20 border flex items-center justify-center mb-3 transition-all duration-700 ease-out ${
+                          className={`w-16 h-16 rounded-2xl bg-accent/10 border flex items-center justify-center mb-3 transition-all duration-700 ease-out ${
                             isActive
-                              ? "border-accent scale-110 shadow-[0_0_28px_hsl(var(--accent)/0.5)]"
+                              ? "border-accent scale-105"
                               : "border-accent/30 shadow-lg shadow-accent/10"
                           }`}
                         >
@@ -728,7 +707,7 @@ export default function Index() {
             {steps.map((s, i) => (
               <AnimateIn key={s.number} delay={i * 150} direction="left">
                 <div className="flex gap-5 items-start group">
-                  <div className="w-10 h-10 rounded-full bg-accent text-accent-foreground flex items-center justify-center text-lg font-bold flex-shrink-0 group-hover:scale-110 group-hover:shadow-[0_0_16px_hsl(var(--accent)/0.4)] transition-all duration-300">
+                  <div className="w-10 h-10 rounded-full bg-accent text-accent-foreground flex items-center justify-center text-lg font-bold flex-shrink-0 transition-colors duration-300">
                     {s.number}
                   </div>
                   <div>
@@ -830,7 +809,7 @@ export default function Index() {
                       ))}
                     </ul>
                     <Link to="/signup" className="mt-auto" onClick={() => track("cta_click", { location: plan.popular ? "pricing_pro" : "pricing_free" })}>
-                      <Button className={`w-full h-12 text-base transition-all ${plan.popular ? "bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_24px_hsl(var(--accent)/0.5)] font-semibold" : "hover:brightness-110"}`} variant={plan.popular ? "default" : "outline"}>
+                      <Button className={`w-full h-12 text-base transition-all ${plan.popular ? "bg-accent text-accent-foreground hover:bg-accent/90 font-semibold" : "hover:brightness-110"}`} variant={plan.popular ? "default" : "outline"}>
                         {plan.cta}
                       </Button>
                     </Link>
@@ -860,8 +839,8 @@ export default function Index() {
       {/* Final CTA */}
       <section className="py-20 px-4">
         <AnimateIn className="container max-w-3xl text-center">
-          <div className="rounded-3xl border-2 border-accent/30 bg-gradient-to-br from-accent/5 to-purple/5 p-10 md:p-16">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent to-purple flex items-center justify-center mx-auto mb-6 shadow-lg shadow-accent/30">
+          <div className="rounded-3xl border border-accent/25 bg-accent/[0.05] p-10 md:p-16">
+            <div className="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center mx-auto mb-6">
               <CreditCard className="w-7 h-7 text-accent-foreground" />
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -871,7 +850,7 @@ export default function Index() {
               Join the agencies and consultants closing more, churning less, and shipping client work without the busywork.
             </p>
             <Link to="/signup" onClick={() => track("cta_click", { location: "final" })}>
-              <Button size="lg" className="bg-gradient-to-r from-accent to-purple text-accent-foreground hover:brightness-110 hover:shadow-[0_0_24px_hsl(var(--accent)/0.5)] px-10 h-14 text-base gap-2 transition-all hover:scale-105">
+              <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 px-10 h-14 text-base gap-2 transition-colors">
                 Start free
                 <ArrowRight className="w-4 h-4" />
               </Button>
@@ -884,11 +863,11 @@ export default function Index() {
       <section className="px-4 pb-10">
         <AnimateIn className="container max-w-4xl">
           <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-10 py-6 px-6 rounded-xl border border-border/60 bg-card/40 text-sm text-muted-foreground transition-all duration-500 hover:border-accent/30 hover:shadow-[0_10px_40px_-20px_hsl(var(--accent)/0.4)]">
-            <span className="group flex items-center gap-2 transition-all duration-300 hover:text-foreground hover:-translate-y-0.5"><ShieldCheck className="w-4 h-4 text-accent transition-all duration-300 group-hover:drop-shadow-[0_0_6px_hsl(var(--accent)/0.7)]" /> Secure payments via Paddle</span>
+            <span className="group flex items-center gap-2 transition-all duration-300 hover:text-foreground hover:-translate-y-0.5"><ShieldCheck className="w-4 h-4 text-accent transition-all duration-300" /> Secure payments via Paddle</span>
             <span className="hidden md:inline-block w-px h-4 bg-border" />
-            <span className="group flex items-center gap-2 transition-all duration-300 hover:text-foreground hover:-translate-y-0.5"><Brain className="w-4 h-4 text-accent transition-all duration-300 group-hover:drop-shadow-[0_0_6px_hsl(var(--accent)/0.7)]" /> AI-powered closing &amp; ops</span>
+            <span className="group flex items-center gap-2 transition-all duration-300 hover:text-foreground hover:-translate-y-0.5"><Brain className="w-4 h-4 text-accent transition-all duration-300" /> AI-powered closing &amp; ops</span>
             <span className="hidden md:inline-block w-px h-4 bg-border" />
-            <span className="group flex items-center gap-2 transition-all duration-300 hover:text-foreground hover:-translate-y-0.5"><Zap className="w-4 h-4 text-accent transition-all duration-300 group-hover:drop-shadow-[0_0_6px_hsl(var(--accent)/0.7)]" /> Built for agencies &amp; consultants</span>
+            <span className="group flex items-center gap-2 transition-all duration-300 hover:text-foreground hover:-translate-y-0.5"><Zap className="w-4 h-4 text-accent transition-all duration-300" /> Built for agencies &amp; consultants</span>
           </div>
         </AnimateIn>
       </section>
@@ -916,7 +895,7 @@ export default function Index() {
           <p className="text-sm text-foreground font-medium hidden sm:block">Ready to close more &amp; operate less?</p>
           <p className="text-sm text-foreground font-medium sm:hidden">Close &amp; operate</p>
           <Link to="/signup" onClick={() => track("cta_click", { location: "sticky" })}>
-            <Button size="sm" className="bg-gradient-to-r from-accent to-purple text-accent-foreground bg-[length:200%_100%] hover:bg-[position:100%_0] transition-[background-position,transform,box-shadow] duration-500 hover:shadow-[0_0_20px_hsl(var(--accent)/0.5)] h-9 px-5 gap-2 hover:-translate-y-0.5">
+            <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90 transition-colors h-9 px-5 gap-2">
               Start free
               <ArrowRight className="w-3.5 h-3.5" />
             </Button>

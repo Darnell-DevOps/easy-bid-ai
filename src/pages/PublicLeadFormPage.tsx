@@ -246,7 +246,7 @@ export default function PublicLeadFormPage() {
               size="lg"
               onClick={handleSubmit}
               disabled={submitting}
-              className="w-full gap-2 bg-gradient-to-r from-accent via-purple to-accent text-accent-foreground font-semibold shadow-lg shadow-accent/20 hover:brightness-110 h-12"
+              className="w-full gap-2 bg-accent text-accent-foreground font-semibold hover:bg-accent/90 h-12"
             >
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               {submitLabel}

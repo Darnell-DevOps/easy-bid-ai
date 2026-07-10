@@ -601,7 +601,7 @@ export default function ClientPortal() {
         )}
 
         {/* Proposal — collapsible (click to view, like the contract card) */}
-        <details id="proposal-section" className="group rounded-xl border border-purple/30 bg-gradient-to-br from-purple/5 via-card to-accent/5 p-6 lg:p-8 scroll-mt-24 [&_summary::-webkit-details-marker]:hidden">
+        <details id="proposal-section" className="group rounded-xl border border-border bg-card p-6 lg:p-8 scroll-mt-24 [&_summary::-webkit-details-marker]:hidden">
           <summary className="flex items-start gap-4 cursor-pointer list-none">
             <div className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 bg-purple/15 text-purple">
               <FileText className="w-5 h-5" />
@@ -733,7 +733,7 @@ export default function ClientPortal() {
 
         {/* Contract section — appears once a contract has been sent */}
         {contract && contract.status !== "draft" && (
-          <section className="rounded-xl border border-purple/30 bg-gradient-to-br from-purple/5 via-card to-accent/5 p-6 lg:p-8">
+          <section className="rounded-xl border border-border bg-card p-6 lg:p-8">
             <div className="flex items-start gap-4">
               <div className={`w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 ${
                 contract.status === "signed" ? "bg-emerald-500/15 text-emerald-500" : "bg-purple/15 text-purple"
@@ -752,7 +752,7 @@ export default function ClientPortal() {
                   asChild
                   className={`gap-2 ${contract.status === "signed"
                     ? ""
-                    : "bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110"}`}
+                    : "bg-accent text-accent-foreground font-semibold hover:bg-accent/90"}`}
                   variant={contract.status === "signed" ? "outline" : "default"}
                 >
                   <RouterLink to={`/sign/${contract.signing_token}`}>
@@ -767,7 +767,7 @@ export default function ClientPortal() {
 
         {/* Onboarding step — appears once payment is complete */}
         {isPaid && onboarding && !onboardingComplete && (
-          <section className="rounded-xl border border-purple/40 bg-gradient-to-br from-purple/15 via-accent/5 to-transparent p-6 lg:p-8">
+          <section className="rounded-xl border border-accent/25 bg-accent/[0.05] p-6 lg:p-8">
             <div className="flex items-start gap-4">
               <div className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 bg-purple/20 text-purple">
                 <ClipboardList className="w-5 h-5" />
@@ -783,7 +783,7 @@ export default function ClientPortal() {
                 <Button
                   asChild
                   size="lg"
-                  className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110"
+                  className="gap-2 bg-accent text-accent-foreground font-semibold hover:bg-accent/90"
                 >
                   <RouterLink to={`/onboard/${onboarding.access_token}`}>
                     <ClipboardList className="w-4 h-4" />
@@ -830,7 +830,7 @@ export default function ClientPortal() {
               <Button
                 size="lg"
                 asChild
-                className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110"
+                className="gap-2 bg-accent text-accent-foreground font-semibold hover:bg-accent/90"
               >
                 {ownerKickoffUrl ? (
                   <a href={ownerKickoffUrl} target="_blank" rel="noopener noreferrer">
@@ -847,7 +847,7 @@ export default function ClientPortal() {
             )}
           </section>
         ) : isAccepted && isContractSigned && !hasPrice && !upcomingBooking && (ownerKickoffUrl || bookingLink) ? (
-          <section className="rounded-xl border border-purple/30 bg-gradient-to-br from-purple/10 via-accent/5 to-transparent p-6 lg:p-10 text-center">
+          <section className="rounded-xl border border-accent/25 bg-accent/[0.05] p-6 lg:p-10 text-center">
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-purple/15 mb-4">
               <CalendarPlus className="w-6 h-6 text-purple" />
             </div>
@@ -860,7 +860,7 @@ export default function ClientPortal() {
             <Button
               size="lg"
               asChild
-              className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110"
+              className="gap-2 bg-accent text-accent-foreground font-semibold hover:bg-accent/90"
             >
               {ownerKickoffUrl ? (
                 <a href={ownerKickoffUrl} target="_blank" rel="noopener noreferrer">
@@ -936,7 +936,7 @@ export default function ClientPortal() {
                 size="lg"
                 onClick={handleAccept}
                 disabled={!!submitting || !agreedToTerms}
-                className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110 hover:shadow-purple/30 transition-all h-12 disabled:opacity-50"
+                className="gap-2 bg-accent text-accent-foreground font-semibold hover:bg-accent/90 transition-colors h-12 disabled:opacity-50"
               >
                 {submitting === "accept" ? (
                   <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
@@ -992,7 +992,7 @@ export default function ClientPortal() {
             size="lg"
             onClick={handlePayAgain}
             disabled={payLoading}
-            className="w-full gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold h-12"
+            className="w-full gap-2 bg-accent text-accent-foreground font-semibold h-12"
           >
             {payLoading ? (
               <Loader2 className="w-4 h-4 animate-spin" />

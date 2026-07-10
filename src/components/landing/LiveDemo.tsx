@@ -166,7 +166,7 @@ export default function LiveDemo() {
           {/* Progress bar */}
           <div className="h-1 rounded-full bg-muted overflow-hidden mb-6">
             <div
-              className="h-full bg-gradient-to-r from-accent to-purple"
+              className="h-full bg-accent"
               style={{ width: `${Math.min(100, cycleProgress * 100)}%` }}
             />
           </div>
@@ -179,7 +179,7 @@ export default function LiveDemo() {
             >
               <div className="rounded-xl border border-border bg-background/60 p-5 max-w-xl mx-auto">
                 <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border/60">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-purple flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
                     <FileText className="w-4 h-4 text-accent-foreground" />
                   </div>
                   <div>
@@ -268,7 +268,7 @@ export default function LiveDemo() {
                     }}
                   />
                   <div className="relative">
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-accent to-purple flex items-center justify-center mx-auto mb-4 shadow-lg shadow-accent/40">
+                    <div className="w-14 h-14 rounded-full bg-accent flex items-center justify-center mx-auto mb-4 shadow-lg shadow-accent/40">
                       <HandCoins className="w-7 h-7 text-accent-foreground" />
                     </div>
                     <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Payment received</p>

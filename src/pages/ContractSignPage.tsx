@@ -425,13 +425,13 @@ export default function ContractSignPage() {
                 </Button>
               )}
               {retainerToken ? (
-                <Button size="lg" asChild className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold">
+                <Button size="lg" asChild className="gap-2 bg-accent text-accent-foreground font-semibold">
                   <Link to={`/retainer/${retainerToken}`}>
                     <CreditCard className="w-4 h-4" /> Start subscription
                   </Link>
                 </Button>
               ) : contract.proposal_id && !proposalPaid ? (
-                <Button size="lg" asChild className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold">
+                <Button size="lg" asChild className="gap-2 bg-accent text-accent-foreground font-semibold">
                   <Link to={`/proposal/view/${contract.proposal_id}`}>
                     <CreditCard className="w-4 h-4" /> Complete payment
                   </Link>
@@ -447,7 +447,7 @@ export default function ContractSignPage() {
             </div>
           </section>
         ) : (
-          <section className="rounded-xl border border-purple/30 bg-gradient-to-br from-purple/5 via-card to-accent/5 p-6 lg:p-8">
+          <section className="rounded-xl border border-border bg-card p-6 lg:p-8">
             <div className="flex items-center gap-2 mb-4">
               <Sparkles className="w-5 h-5 text-purple" />
               <h2 className="text-lg font-semibold text-foreground">Sign this agreement</h2>
@@ -518,7 +518,7 @@ export default function ContractSignPage() {
               size="lg"
               onClick={handleSign}
               disabled={submitting}
-              className="w-full sm:w-auto gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold shadow-lg hover:brightness-110"
+              className="w-full sm:w-auto gap-2 bg-accent text-accent-foreground font-semibold hover:bg-accent/90"
             >
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
               Sign Contract

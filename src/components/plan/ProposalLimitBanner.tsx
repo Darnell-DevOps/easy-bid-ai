@@ -53,7 +53,7 @@ export default function ProposalLimitBanner() {
       <Button
         asChild
         size="sm"
-        className="shrink-0 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold hover:brightness-110"
+        className="shrink-0 bg-accent text-accent-foreground font-semibold hover:bg-accent/90"
       >
         <Link to="/dashboard/billing" className="gap-1.5">
           <Crown className="w-3.5 h-3.5" />

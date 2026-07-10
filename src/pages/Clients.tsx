@@ -190,7 +190,7 @@ export default function Clients() {
           <Button
             onClick={() => navigate("/dashboard/clients/new")}
             size="lg"
-            className="gap-2 h-12 px-6 text-base bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 shadow-lg shadow-accent/25"
+            className="gap-2 h-12 px-6 text-base bg-accent text-accent-foreground hover:bg-accent/90"
           >
             <Plus className="w-5 h-5" />
             Add New Client
@@ -199,7 +199,7 @@ export default function Clients() {
 
         {/* Guidance / insight banner */}
         {!loading && insight && (
-          <div className="flex items-center justify-between gap-3 rounded-xl border border-accent/20 bg-gradient-to-r from-accent/10 to-purple/5 px-4 py-2.5">
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-accent/20 bg-accent/[0.06] px-4 py-2.5">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center flex-shrink-0">
                 <Lightbulb className="w-4 h-4 text-accent" />
@@ -210,7 +210,7 @@ export default function Clients() {
               <Button
                 size="sm"
                 onClick={() => goGenerate(topCandidate)}
-                className="gap-1.5 bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 shadow-sm shadow-accent/20 flex-shrink-0"
+                className="gap-1.5 bg-accent text-accent-foreground hover:bg-accent/90 shadow-sm shadow-accent/20 flex-shrink-0"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 Create Proposal
@@ -269,7 +269,7 @@ export default function Clients() {
               <Button
                 onClick={() => navigate("/dashboard/clients/new")}
                 size="lg"
-                className="bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 gap-2 shadow-lg shadow-accent/20"
+                className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2"
               >
                 <Plus className="w-4 h-4" /> Add Client
               </Button>
@@ -374,7 +374,7 @@ export default function Clients() {
                               onClick={onAction}
                               className={
                                 isPrimary
-                                  ? "gap-1.5 bg-gradient-to-r from-accent to-purple text-white hover:brightness-110 shadow-sm shadow-accent/20"
+                                  ? "gap-1.5 bg-accent text-accent-foreground hover:bg-accent/90 shadow-sm shadow-accent/20"
                                   : "gap-1.5"
                               }
                             >

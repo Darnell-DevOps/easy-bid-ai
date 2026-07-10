@@ -470,7 +470,7 @@ export default function NewRetainerPage() {
           <Button
             disabled={submitting}
             onClick={() => handleSubmit("active")}
-            className="flex-1 bg-gradient-to-r from-accent to-purple text-white hover:brightness-110"
+            className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90"
           >
             Activate retainer
           </Button>

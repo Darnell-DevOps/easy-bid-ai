@@ -108,7 +108,7 @@ export default function ProposalPayNow({
           size="sm"
           onClick={handlePay}
           disabled={loading}
-          className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold hover:brightness-110 transition-all h-9 px-4"
+          className="gap-2 bg-accent text-accent-foreground font-semibold hover:bg-accent/90 transition-all h-9 px-4"
         >
           {loading ? (
             <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" />

@@ -215,7 +215,7 @@ export default function CountersignDialog({
           <Button
             onClick={submit}
             disabled={submitting}
-            className="gap-2 bg-gradient-to-r from-purple to-accent text-accent-foreground font-semibold"
+            className="gap-2 bg-accent text-accent-foreground font-semibold"
           >
             {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
             Countersign &amp; execute

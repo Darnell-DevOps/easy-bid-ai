@@ -250,7 +250,7 @@ export default function ReschedulePage() {
             {/* Left brand panel */}
             <div className="p-6 lg:p-8 border-b md:border-b-0 md:border-r border-border bg-gradient-to-b from-card to-background/30">
               <div className="space-y-5">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-accent/30 to-purple/30 border border-purple/20">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-accent/15 border border-accent/25">
                   <CalendarIcon className="w-5 h-5 text-purple" />
                 </div>
                 <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
