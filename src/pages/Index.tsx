@@ -24,8 +24,7 @@ import {
 } from "lucide-react";
 import { AnimateIn } from "@/hooks/use-scroll-animation";
 
-import AIAssistant from "@/components/landing/AIAssistant";
-import RetainersSection from "@/components/landing/RetainersSection";
+import AiRetainersScroller from "@/components/landing/AiRetainersScroller";
 import ClientPortalShowcase from "@/components/landing/ClientPortalShowcase";
 import { track } from "@/lib/landing-analytics";
 
