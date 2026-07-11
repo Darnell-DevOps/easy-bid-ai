@@ -437,6 +437,7 @@ function Field({
   placeholder,
   max,
   multiline,
+  helper,
 }: {
   label: string;
   value: string;
@@ -444,6 +445,7 @@ function Field({
   placeholder?: string;
   max?: number;
   multiline?: boolean;
+  helper?: string;
 }) {
   return (
     <div>
@@ -463,6 +465,7 @@ function Field({
           className="h-9"
         />
       )}
+      {helper && <p className="text-[11px] text-muted-foreground mt-1">{helper}</p>}
     </div>
   );
 }
