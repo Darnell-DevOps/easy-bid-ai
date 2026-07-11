@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Inbox, Loader2, UserPlus, Archive, FileDown, Sparkles, Copy, Check } from "lucide-react";
 import type { SmartField } from "@/lib/form-fields";
 import LeadScoreBadge from "@/components/ai/LeadScoreBadge";
+import { scoreTone, scoreLabel } from "@/lib/leadScore";
 
 function parseFileValue(v: string): { path: string; name: string; size?: number; type?: string } | null {
   if (!v || typeof v !== "string") return null;
@@ -231,15 +232,39 @@ export default function LeadInbox() {
                   </div>
                 )}
 
-                {(selected.service_requested || selected.budget || selected.timeline || selected.goals || selected.ai_recommendation) && (
+                {(selected.service_requested || selected.budget || selected.timeline || selected.goals || selected.ai_recommendation || selected.lead_score || (selected.missing_info && selected.missing_info.length > 0)) && (
                   <div className="rounded-lg border border-purple/20 bg-purple/5 p-3 text-sm space-y-1.5">
-                    <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-purple font-semibold">
-                      <Sparkles className="w-3 h-3" /> AI Qualification
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-purple font-semibold">
+                        <Sparkles className="w-3 h-3" /> AI Qualification
+                      </div>
+                      {selected.lead_score && (
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] uppercase font-semibold border ${scoreTone(selected.lead_score)}`}>
+                          {scoreLabel(selected.lead_score)}
+                        </span>
+                      )}
                     </div>
+                    {selected.lead_score_reason && (
+                      <p className="text-xs text-muted-foreground italic leading-relaxed">
+                        {selected.lead_score_reason}
+                      </p>
+                    )}
                     {selected.service_requested && <div><span className="text-muted-foreground">Service:</span> <span className="text-foreground">{selected.service_requested}</span></div>}
                     {selected.budget && <div><span className="text-muted-foreground">Budget:</span> <span className="text-foreground">{selected.budget}</span></div>}
                     {selected.timeline && <div><span className="text-muted-foreground">Timeline:</span> <span className="text-foreground">{selected.timeline}</span></div>}
                     {selected.goals && <div><span className="text-muted-foreground">Goals:</span> <span className="text-foreground">{selected.goals}</span></div>}
+                    {selected.missing_info && selected.missing_info.length > 0 && (
+                      <div className="pt-1.5 border-t border-purple/15 mt-1.5">
+                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Needs clarification</div>
+                        <div className="flex flex-wrap gap-1">
+                          {selected.missing_info.map((m, i) => (
+                            <span key={i} className="inline-flex px-1.5 py-0.5 rounded text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                              {m}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     {selected.ai_recommendation && (
                       <div className="pt-1 border-t border-purple/15 mt-1.5">
                         <span className="text-muted-foreground">Recommendation:</span> <span className="text-foreground">{selected.ai_recommendation}</span>
