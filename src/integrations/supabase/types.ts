@@ -1439,6 +1439,9 @@ export type Database = {
           goals: string | null
           id: string
           lead_quality: string | null
+          lead_score: string | null
+          lead_score_reason: string | null
+          missing_info: string[] | null
           name: string | null
           notes: string | null
           phone: string | null
@@ -1465,6 +1468,9 @@ export type Database = {
           goals?: string | null
           id?: string
           lead_quality?: string | null
+          lead_score?: string | null
+          lead_score_reason?: string | null
+          missing_info?: string[] | null
           name?: string | null
           notes?: string | null
           phone?: string | null
@@ -1491,6 +1497,9 @@ export type Database = {
           goals?: string | null
           id?: string
           lead_quality?: string | null
+          lead_score?: string | null
+          lead_score_reason?: string | null
+          missing_info?: string[] | null
           name?: string | null
           notes?: string | null
           phone?: string | null

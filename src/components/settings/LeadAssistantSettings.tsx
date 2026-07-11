@@ -24,6 +24,8 @@ import {
 type Prefs = {
   business_name: string;
   business_services: string;
+  business_ideal_client: string;
+  business_target_audience: string;
   booking_link: string;
   lead_reply_tone: string;
   lead_reply_style: string;
@@ -43,6 +45,8 @@ const DEFAULT_BLOCK_KEYWORDS = [
 const DEFAULTS: Prefs = {
   business_name: "",
   business_services: "",
+  business_ideal_client: "",
+  business_target_audience: "",
   booking_link: "",
   lead_reply_tone: "friendly",
   lead_reply_style: "consultative",
@@ -190,6 +194,24 @@ export default function LeadAssistantSettings() {
             onChange={(v) => set("business_services", v)}
             max={500}
             multiline
+          />
+          <Field
+            label="Ideal client"
+            placeholder="e.g. Series A SaaS founders needing a rebrand; established coaches launching a course."
+            value={prefs.business_ideal_client}
+            onChange={(v) => set("business_ideal_client", v)}
+            max={400}
+            multiline
+            helper="Who you do your best work for — used by AI to score how well an inbound lead fits."
+          />
+          <Field
+            label="Who this isn't for / target audience"
+            placeholder="e.g. Not a fit for pre-launch bootstrappers under $5k or one-off logo tweaks."
+            value={prefs.business_target_audience}
+            onChange={(v) => set("business_target_audience", v)}
+            max={400}
+            multiline
+            helper="Helps AI mark leads as Cold when they clearly don't match."
           />
           <Field
             label="Booking link"
@@ -415,6 +437,7 @@ function Field({
   placeholder,
   max,
   multiline,
+  helper,
 }: {
   label: string;
   value: string;
@@ -422,6 +445,7 @@ function Field({
   placeholder?: string;
   max?: number;
   multiline?: boolean;
+  helper?: string;
 }) {
   return (
     <div>
@@ -441,6 +465,7 @@ function Field({
           className="h-9"
         />
       )}
+      {helper && <p className="text-[11px] text-muted-foreground mt-1">{helper}</p>}
     </div>
   );
 }
