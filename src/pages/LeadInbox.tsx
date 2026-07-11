@@ -51,6 +51,9 @@ interface Lead {
   timeline: string | null;
   goals: string | null;
   lead_quality: "High" | "Medium" | "Low" | null;
+  lead_score: "Hot" | "Warm" | "Cold" | "Unclear" | null;
+  lead_score_reason: string | null;
+  missing_info: string[] | null;
   ai_recommendation: string | null;
   draft_reply: string | null;
   draft_subject: string | null;
