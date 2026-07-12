@@ -224,7 +224,14 @@ export default function LeadInbox() {
                       {selected.lead_quality} quality
                     </span>
                   )}
-                  <LeadScoreBadge leadId={selected.id} size="md" enabled={selected.status !== "archived" && selected.status !== "converted"} />
+                  <LeadScoreBadge
+                    fitScore={selected.fit_score}
+                    factors={selected.fit_factors}
+                    reason={selected.lead_score_reason}
+                    recommendedAction={selected.ai_recommendation}
+                    size="md"
+                    pending={!selected.qualified_at && selected.status !== "archived" && selected.status !== "converted"}
+                  />
                 </SheetTitle>
                 <SheetDescription>
                   {selected.form_id ? `via ${forms[selected.form_id]?.name || "form"}` : "Manual entry"} · {new Date(selected.created_at).toLocaleString()}
