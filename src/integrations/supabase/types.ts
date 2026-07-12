@@ -1435,6 +1435,8 @@ export type Database = {
           draft_reply: string | null
           draft_subject: string | null
           email: string | null
+          fit_factors: Json | null
+          fit_score: number | null
           form_id: string | null
           goals: string | null
           id: string
@@ -1464,6 +1466,8 @@ export type Database = {
           draft_reply?: string | null
           draft_subject?: string | null
           email?: string | null
+          fit_factors?: Json | null
+          fit_score?: number | null
           form_id?: string | null
           goals?: string | null
           id?: string
@@ -1493,6 +1497,8 @@ export type Database = {
           draft_reply?: string | null
           draft_subject?: string | null
           email?: string | null
+          fit_factors?: Json | null
+          fit_score?: number | null
           form_id?: string | null
           goals?: string | null
           id?: string
