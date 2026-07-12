@@ -36,7 +36,7 @@ import { supabase } from "@/integrations/supabase/client";
 import LeadScoreBadge from "@/components/ai/LeadScoreBadge";
 import { toast } from "@/hooks/use-toast";
 import { scoreLabel, scoreTone } from "@/lib/leadScore";
-import { computeLeadNextAction } from "@/lib/lead-next-action";
+import { computeLeadNextAction, type LeadProposalSummary } from "@/lib/lead-next-action";
 import type { LeadActivityType } from "@/lib/lead-activity";
 
 export interface LeadInsightClient {
@@ -67,7 +67,15 @@ export interface LeadInsightClient {
 
 interface LeadInsightPanelProps {
   client: LeadInsightClient;
-  hasProposal: boolean;
+  /** Proposal summary + IDs to route the "open/view/request/finish" actions. */
+  proposalSummary: LeadProposalSummary & {
+    paidProposalId?: string | null;
+    acceptedUnpaidProposalId?: string | null;
+    draftProposalId?: string | null;
+    anyProposalId?: string | null;
+  };
+  /** Fallback for legacy handlers — used when no specific proposal targets a state. */
+  onOpenProposal: (proposalId: string) => void;
   draftSubject: string;
   draftBody: string;
   setDraftSubject: (v: string) => void;
@@ -119,7 +127,8 @@ interface ActivityRow {
 export default function LeadInsightPanel(props: LeadInsightPanelProps) {
   const {
     client,
-    hasProposal,
+    proposalSummary,
+    onOpenProposal,
     draftSubject,
     draftBody,
     setDraftSubject,
@@ -307,12 +316,30 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
       lead_reply_sent_at: client.lead_reply_sent_at,
       not_a_lead: client.not_a_lead,
     },
-    hasProposal,
+    {
+      hasAny: proposalSummary.hasAny,
+      hasAcceptedUnpaid: proposalSummary.hasAcceptedUnpaid,
+      hasPaid: proposalSummary.hasPaid,
+      hasDraftUnsent: proposalSummary.hasDraftUnsent,
+    },
   );
   const runNextAction = () => {
     switch (nextAction.kind) {
+      case "view_invoice":
+        if (proposalSummary.paidProposalId) onOpenProposal(proposalSummary.paidProposalId);
+        else if (proposalSummary.anyProposalId) onOpenProposal(proposalSummary.anyProposalId);
+        return;
+      case "request_payment":
+        if (proposalSummary.acceptedUnpaidProposalId) onOpenProposal(proposalSummary.acceptedUnpaidProposalId);
+        else if (proposalSummary.anyProposalId) onOpenProposal(proposalSummary.anyProposalId);
+        return;
+      case "finish_send_proposal":
+        if (proposalSummary.draftProposalId) onOpenProposal(proposalSummary.draftProposalId);
+        else if (proposalSummary.anyProposalId) onOpenProposal(proposalSummary.anyProposalId);
+        return;
       case "open_proposal":
-        scrollTo("proposals-section");
+        if (proposalSummary.anyProposalId) onOpenProposal(proposalSummary.anyProposalId);
+        else scrollTo("proposals-section");
         return;
       case "review_reply":
       case "reply_now":
