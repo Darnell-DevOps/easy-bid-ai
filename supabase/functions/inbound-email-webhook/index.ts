@@ -84,6 +84,8 @@ function stripHtml(html: string): string {
 type LeadPrefs = {
   business_name?: string | null;
   business_services?: string | null;
+  business_ideal_client?: string | null;
+  business_target_audience?: string | null;
   booking_link?: string | null;
   lead_reply_tone?: string | null;
   lead_reply_style?: string | null;
