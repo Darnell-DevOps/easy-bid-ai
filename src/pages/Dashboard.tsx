@@ -13,6 +13,7 @@ import { getOnboardingKey } from "@/pages/Onboarding";
 
 interface FullProposal {
   id: string;
+  client_id: string | null;
   client_name: string;
   company_name: string;
   service_type: string;
@@ -41,6 +42,13 @@ interface ClientLite {
   goals?: string | null;
   project_description?: string | null;
   lead_score?: string | null;
+  fit_score?: number | null;
+  fit_factors?: Array<{ label: string; impact: "positive" | "negative" }> | null;
+  missing_info?: string[] | null;
+  lead_quality?: string | null;
+  lead_reply_sent_at?: string | null;
+  lead_thread?: unknown;
+  not_a_lead?: boolean | null;
 }
 
 function greeting(): string {
@@ -62,13 +70,13 @@ export default function Dashboard() {
       supabase
         .from("proposals")
         .select(
-          "id, client_name, company_name, service_type, created_at, proposal_content, invoice_content, budget, client_paid, status, sent_at, viewed_at, accepted_at, rejected_at, paid_at",
+          "id, client_id, client_name, company_name, service_type, created_at, proposal_content, invoice_content, budget, client_paid, status, sent_at, viewed_at, accepted_at, rejected_at, paid_at",
         )
         .is("deleted_at", null)
         .order("created_at", { ascending: false }),
       supabase
         .from("clients")
-        .select("id, name, status, created_at, company, service_requested, budget, timeline, goals, project_description, lead_score")
+        .select("id, name, status, created_at, company, service_requested, budget, timeline, goals, project_description, lead_score, fit_score, fit_factors, missing_info, lead_quality, lead_reply_sent_at, lead_thread, not_a_lead")
         .is("deleted_at", null)
         .order("created_at", { ascending: false }),
       supabase.auth.getUser(),
@@ -112,6 +120,13 @@ export default function Dashboard() {
 
   const proposalClientNames = useMemo(
     () => new Set(proposals.map((p) => p.client_name.toLowerCase().trim())),
+    [proposals],
+  );
+
+  // client_id-based set — used by AttentionCenter's next-action logic so we
+  // don't match proposals to leads by (potentially duplicated) name string.
+  const proposalClientIds = useMemo(
+    () => new Set(proposals.map((p) => p.client_id).filter((v): v is string => !!v)),
     [proposals],
   );
 
@@ -176,7 +191,7 @@ export default function Dashboard() {
             <AttentionCenter
               proposals={proposals}
               clients={clients}
-              proposalClientNames={proposalClientNames}
+              proposalClientIds={proposalClientIds}
             />
           </div>
           <div className="lg:col-span-4">
