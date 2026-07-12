@@ -96,6 +96,8 @@ interface ClientInfo {
   lead_score: string | null;
   lead_score_reason: string | null;
   missing_info: string[] | null;
+  fit_score: number | null;
+  fit_factors: Array<{ label: string; impact: "positive" | "negative" }> | null;
   lead_draft_reply: string | null;
   lead_draft_subject: string | null;
   lead_reply_sent_at: string | null;
