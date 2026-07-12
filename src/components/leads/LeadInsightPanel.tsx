@@ -144,6 +144,8 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
     quality: client.lead_quality,
     missing: client.missing_info,
     recommendation: client.ai_recommendation,
+    fitScore: client.fit_score,
+    fitFactors: client.fit_factors,
   });
 
   useEffect(() => {
@@ -153,6 +155,8 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
       quality: client.lead_quality,
       missing: client.missing_info,
       recommendation: client.ai_recommendation,
+      fitScore: client.fit_score,
+      fitFactors: client.fit_factors,
     });
   }, [
     client.lead_score,
@@ -160,6 +164,8 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
     client.lead_quality,
     client.missing_info,
     client.ai_recommendation,
+    client.fit_score,
+    client.fit_factors,
   ]);
 
   useEffect(() => {
