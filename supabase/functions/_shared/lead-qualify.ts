@@ -272,6 +272,15 @@ export async function qualifyLeadById(
       ? ai.missing_info.filter((s: unknown) => typeof s === "string" && s.trim().length > 0).slice(0, 6)
       : null;
 
+    const fitScoreRaw = typeof ai.fit_score === "number" ? Math.round(ai.fit_score) : null;
+    const fitScore = fitScoreRaw == null ? null : Math.max(0, Math.min(100, fitScoreRaw));
+    const fitFactors = Array.isArray(ai.factors)
+      ? ai.factors
+          .filter((f: any) => f && typeof f.label === "string" && (f.impact === "positive" || f.impact === "negative"))
+          .slice(0, 5)
+          .map((f: any) => ({ label: String(f.label).slice(0, 60), impact: f.impact }))
+      : null;
+
     const { error: updErr } = await svc
       .from("leads")
       .update({
@@ -286,6 +295,9 @@ export async function qualifyLeadById(
         lead_score: ai.lead_score || null,
         lead_score_reason: ai.lead_score_reason ? String(ai.lead_score_reason).slice(0, 200) : null,
         missing_info: missingInfo,
+        fit_score: fitScore,
+        fit_factors: fitFactors && fitFactors.length ? fitFactors : null,
+
         qualified_at: new Date().toISOString(),
         qualification_error: null,
         status: finalStatus,
