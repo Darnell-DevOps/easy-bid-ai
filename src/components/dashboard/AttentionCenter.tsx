@@ -309,54 +309,61 @@ export default function AttentionCenter({ proposals, clients, proposalClientIds 
       });
     }
 
-    // 5. Hot / Warm leads not yet in a proposal
+    // 5. Leads that need attention — single source of truth (lead-next-action.ts).
+    // The dashboard and the Lead Insight panel must agree, so both call
+    // computeLeadNextAction. We surface anything that isn't "open_proposal"
+    // (that's a Won-adjacent state, not attention-worthy) and isn't fully
+    // passive (Awaiting response).
+    const LEAD_KIND_META: Record<
+      Exclude<LeadNextActionKind, "open_proposal" | "awaiting_response">,
+      { tone: Tone; icon: typeof Bell; priority: number; ctaFallback: string }
+    > = {
+      review_reply: { tone: "critical", icon: MessageSquare, priority: 96, ctaFallback: "Review response" },
+      reply_now: { tone: "critical", icon: Flame, priority: 92, ctaFallback: "Reply now" },
+      ask_qualifying_questions: { tone: "warning", icon: Lightbulb, priority: 60, ctaFallback: "Ask questions" },
+      review_qualification: { tone: "info", icon: Gauge, priority: 45, ctaFallback: "Run qualification" },
+    };
     for (const c of clients) {
-      const status = (c.status || "").toLowerCase();
-      if (status !== "new") continue;
-      if (proposalClientNames.has(c.name.toLowerCase().trim())) continue;
-      const rank = scoreRank(c.lead_score);
-      if (rank >= 3) {
-        out.push({
-          key: `lead-hot-${c.id}`,
-          tone: "critical",
-          icon: Flame,
-          title: `Hot lead needs a response — ${c.name}`,
-          subtitle: `${c.company || c.service_requested || "New enquiry"} · Received ${relTime(c.created_at)}`,
-          cta: "Review & reply",
-          onClick: () => navigate(`/dashboard/clients/${c.id}`),
-          priority: 95,
-          waitedFor: c.created_at,
-        });
-      } else if (rank === 2) {
-        out.push({
-          key: `lead-warm-${c.id}`,
-          tone: "warning",
-          icon: Sparkles,
-          title: `Warm lead waiting — ${c.name}`,
-          subtitle: `${c.company || c.service_requested || "New enquiry"} · ${relTime(c.created_at)}`,
-          cta: "Review",
-          onClick: () => navigate(`/dashboard/clients/${c.id}`),
-          priority: 55,
-          waitedFor: c.created_at,
-        });
-      } else {
-        // fresh unqualified lead
-        const hoursOld = (Date.now() - new Date(c.created_at).getTime()) / 3600000;
-        if (hoursOld <= 72) {
-          out.push({
-            key: `lead-new-${c.id}`,
-            tone: "info",
-            icon: UserPlus,
-            title: `New lead — ${c.name}`,
-            subtitle: `${c.company || c.service_requested || "Added"} ${relTime(c.created_at)}`,
-            cta: "Qualify & respond",
-            onClick: () => navigate(`/dashboard/clients/${c.id}`),
-            priority: 40,
-            waitedFor: c.created_at,
-          });
-        }
-      }
+      if (c.not_a_lead) continue;
+      // Skip closed states
+      const s = (c.status || "").toLowerCase();
+      if (s === "won" || s === "lost") continue;
+
+      const hasProposal = proposalClientIds.has(c.id);
+      const na = computeLeadNextAction(
+        {
+          id: c.id,
+          name: c.name,
+          lead_score: c.lead_score ?? null,
+          fit_score: c.fit_score ?? null,
+          lead_quality: c.lead_quality ?? null,
+          missing_info: c.missing_info ?? null,
+          lead_thread: c.lead_thread,
+          lead_reply_sent_at: c.lead_reply_sent_at ?? null,
+          not_a_lead: c.not_a_lead ?? null,
+        },
+        hasProposal,
+      );
+
+      // "Open proposal" belongs in the pipeline, not the attention list.
+      // "Awaiting response" is passive and shouldn't clutter attention.
+      if (na.kind === "open_proposal" || na.kind === "awaiting_response") continue;
+
+      const meta = LEAD_KIND_META[na.kind];
+      out.push({
+        key: `lead-${na.kind}-${c.id}`,
+        tone: meta.tone,
+        icon: meta.icon,
+        title: `${na.title} — ${c.name}`,
+        subtitle: `${c.company || c.service_requested || "New enquiry"} · ${relTime(c.created_at)}`,
+        cta: na.label || meta.ctaFallback,
+        onClick: () => navigate(`/dashboard/clients/${c.id}`),
+        priority: meta.priority,
+        waitedFor: c.created_at,
+        hint: na.hint,
+      });
     }
+
 
     // 6. Upcoming bookings within 48h
     for (const b of bookings) {
