@@ -55,6 +55,8 @@ export interface LeadInsightClient {
   missing_info: string[] | null;
   fit_score: number | null;
   fit_factors: Array<{ label: string; impact: "positive" | "negative" }> | null;
+  goals: string | null;
+  project_description: string | null;
   original_lead_message: string | null;
   lead_draft_reply: string | null;
   lead_draft_subject: string | null;
