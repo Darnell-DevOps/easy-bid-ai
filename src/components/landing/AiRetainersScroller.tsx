@@ -69,7 +69,7 @@ export default function AiRetainersScroller() {
 
   // Ease the progress a touch for a smoother feel.
   const eased = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
-  const translate = -eased * 50; // 0% → -50% of a 200vw track
+  const translate = -eased * 100; // 0% → -100% of a 200vw track
 
   return (
     <div ref={wrapperRef} className="relative" style={{ height: "220vh" }}>
