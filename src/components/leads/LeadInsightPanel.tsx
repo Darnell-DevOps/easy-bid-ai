@@ -49,6 +49,8 @@ export interface LeadInsightClient {
   lead_score_reason: string | null;
   ai_recommendation: string | null;
   missing_info: string[] | null;
+  fit_score: number | null;
+  fit_factors: Array<{ label: string; impact: "positive" | "negative" }> | null;
   original_lead_message: string | null;
   lead_draft_reply: string | null;
   lead_draft_subject: string | null;
