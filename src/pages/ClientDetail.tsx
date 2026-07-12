@@ -238,7 +238,7 @@ export default function ClientDetail() {
   useEffect(() => {
     const fetchAll = async () => {
       const { data: c } = await supabase.from("clients").select("*").eq("id", id!).is("deleted_at", null).maybeSingle();
-      const client = c as ClientInfo | null;
+      const client = c as unknown as ClientInfo | null;
       const email = client?.email?.toLowerCase() || null;
       const name = client?.name || null;
 
