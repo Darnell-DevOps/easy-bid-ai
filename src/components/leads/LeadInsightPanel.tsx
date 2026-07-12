@@ -116,6 +116,7 @@ interface ActivityRow {
 export default function LeadInsightPanel(props: LeadInsightPanelProps) {
   const {
     client,
+    hasProposal,
     draftSubject,
     draftBody,
     setDraftSubject,
@@ -131,7 +132,6 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
     onSendIntakeForm,
     onGenerateProposal,
     onMarkNotALead,
-    onOpenDraftDialog,
     onEditIntake,
   } = props;
 
