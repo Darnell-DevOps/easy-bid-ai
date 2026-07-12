@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { AnimateIn } from "@/hooks/use-scroll-animation";
 import { Sparkles, FileText, Inbox, PenLine, LayoutDashboard, Send, Brain, CheckCircle, Loader2 } from "lucide-react";
 
@@ -62,7 +62,7 @@ function useTypewriter(text: string, key: number, speed = 22) {
   return out;
 }
 
-export default function AIAssistant({ embedded = false }: { embedded?: boolean } = {}) {
+function AIAssistant({ embedded = false }: { embedded?: boolean } = {}) {
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
@@ -221,3 +221,5 @@ export default function AIAssistant({ embedded = false }: { embedded?: boolean }
     </section>
   );
 }
+
+export default memo(AIAssistant);

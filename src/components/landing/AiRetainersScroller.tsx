@@ -79,7 +79,6 @@ export default function AiRetainersScroller() {
           style={{
             width: "200vw",
             transform: `translate3d(${translate}vw, 0, 0)`,
-            transition: "transform 80ms linear",
           }}
         >
           <div className="w-screen h-full flex items-center overflow-y-auto">
