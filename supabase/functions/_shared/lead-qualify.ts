@@ -142,6 +142,21 @@ ${opts.message}
               lead_score: { type: "string", enum: ["Hot", "Warm", "Cold", "Unclear"] },
               lead_score_reason: { type: "string" },
               missing_info: { type: "array", items: { type: "string" } },
+              fit_score: { type: "integer", minimum: 0, maximum: 100, description: "0–100 fit rating consistent with lead_score bands (Hot 75–100, Warm 45–74, Cold 15–44, Unclear 0–25)." },
+              factors: {
+                type: "array",
+                description: "Top 3–5 concrete signals that drove fit_score, most impactful first.",
+                minItems: 3,
+                maxItems: 5,
+                items: {
+                  type: "object",
+                  properties: {
+                    label: { type: "string", description: "Short factor name, max 60 chars (e.g. 'Named budget $10k', 'Missing phone number')." },
+                    impact: { type: "string", enum: ["positive", "negative"] },
+                  },
+                  required: ["label", "impact"],
+                },
+              },
             },
             required: [
               "reply",
@@ -157,9 +172,12 @@ ${opts.message}
               "lead_score",
               "lead_score_reason",
               "missing_info",
+              "fit_score",
+              "factors",
             ],
             additionalProperties: false,
           },
+
         },
       }],
       tool_choice: { type: "function", function: { name: "qualify_lead" } },
