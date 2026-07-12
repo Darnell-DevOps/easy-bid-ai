@@ -60,6 +60,9 @@ interface Lead {
   draft_subject: string | null;
   qualified_at: string | null;
   qualification_error: string | null;
+  fit_score: number | null;
+  fit_factors: Array<{ label: string; impact: "positive" | "negative" }> | null;
+
 }
 
 interface FormLite { id: string; name: string; fields: SmartField[] }
