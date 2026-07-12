@@ -96,6 +96,8 @@ interface ClientInfo {
   lead_score: string | null;
   lead_score_reason: string | null;
   missing_info: string[] | null;
+  fit_score: number | null;
+  fit_factors: Array<{ label: string; impact: "positive" | "negative" }> | null;
   lead_draft_reply: string | null;
   lead_draft_subject: string | null;
   lead_reply_sent_at: string | null;
@@ -236,7 +238,7 @@ export default function ClientDetail() {
   useEffect(() => {
     const fetchAll = async () => {
       const { data: c } = await supabase.from("clients").select("*").eq("id", id!).is("deleted_at", null).maybeSingle();
-      const client = c as ClientInfo | null;
+      const client = c as unknown as ClientInfo | null;
       const email = client?.email?.toLowerCase() || null;
       const name = client?.name || null;
 

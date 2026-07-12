@@ -31,6 +31,7 @@ import {
   Clock,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import LeadScoreBadge from "@/components/ai/LeadScoreBadge";
 import { toast } from "@/hooks/use-toast";
 import { scoreLabel, scoreTone } from "@/lib/leadScore";
 import type { LeadActivityType } from "@/lib/lead-activity";
@@ -49,6 +50,8 @@ export interface LeadInsightClient {
   lead_score_reason: string | null;
   ai_recommendation: string | null;
   missing_info: string[] | null;
+  fit_score: number | null;
+  fit_factors: Array<{ label: string; impact: "positive" | "negative" }> | null;
   original_lead_message: string | null;
   lead_draft_reply: string | null;
   lead_draft_subject: string | null;
@@ -142,6 +145,8 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
     quality: client.lead_quality,
     missing: client.missing_info,
     recommendation: client.ai_recommendation,
+    fitScore: client.fit_score,
+    fitFactors: client.fit_factors,
   });
 
   useEffect(() => {
@@ -151,6 +156,8 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
       quality: client.lead_quality,
       missing: client.missing_info,
       recommendation: client.ai_recommendation,
+      fitScore: client.fit_score,
+      fitFactors: client.fit_factors,
     });
   }, [
     client.lead_score,
@@ -158,6 +165,8 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
     client.lead_quality,
     client.missing_info,
     client.ai_recommendation,
+    client.fit_score,
+    client.fit_factors,
   ]);
 
   useEffect(() => {
@@ -194,7 +203,7 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
       }
       const { data: fresh } = await supabase
         .from("clients")
-        .select("lead_score, lead_score_reason, lead_quality, missing_info, ai_recommendation")
+        .select("lead_score, lead_score_reason, lead_quality, missing_info, ai_recommendation, fit_score, fit_factors")
         .eq("id", client.id)
         .maybeSingle();
       if (fresh) {
@@ -204,6 +213,8 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
           quality: (fresh as any).lead_quality,
           missing: (fresh as any).missing_info,
           recommendation: (fresh as any).ai_recommendation,
+          fitScore: (fresh as any).fit_score,
+          fitFactors: (fresh as any).fit_factors,
         });
         toast({ title: "Re-qualification requested" });
       }
@@ -304,9 +315,34 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
                 <Badge variant="outline" className={`gap-1 ${fitBadgeTone}`}>
                   {fitLabel}
                 </Badge>
+                {typeof scoreState.fitScore === "number" && (
+                  <LeadScoreBadge
+                    fitScore={scoreState.fitScore}
+                    factors={scoreState.fitFactors as any}
+                    reason={scoreState.reason}
+                    recommendedAction={scoreState.recommendation}
+                  />
+                )}
               </div>
               {fitReason && (
                 <p className="text-sm text-foreground/90 leading-relaxed">{fitReason}</p>
+              )}
+              {Array.isArray(scoreState.fitFactors) && scoreState.fitFactors.length > 0 && (
+                <ul className="flex flex-wrap gap-1.5 pt-0.5">
+                  {scoreState.fitFactors.slice(0, 5).map((f, i) => (
+                    <li
+                      key={i}
+                      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] ${
+                        f.impact === "positive"
+                          ? "bg-emerald-500/[0.08] border-emerald-500/25 text-emerald-600"
+                          : "bg-rose-500/[0.08] border-rose-500/25 text-rose-600"
+                      }`}
+                    >
+                      <span aria-hidden>{f.impact === "positive" ? "▲" : "▼"}</span>
+                      <span className="leading-none">{f.label}</span>
+                    </li>
+                  ))}
+                </ul>
               )}
               {scoreState.recommendation && (
                 <p className="text-xs text-muted-foreground flex items-start gap-1.5">
