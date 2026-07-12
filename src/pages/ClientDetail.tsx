@@ -70,7 +70,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
 import ClientBriefCard from "@/components/ai/ClientBriefCard";
-import ReplyDrafterDialog from "@/components/ai/ReplyDrafterDialog";
+// ReplyDrafterDialog retired — inline Regenerate/Shorter/Warmer/More-professional
+// controls now live in LeadInsightPanel and call `lead-reply-regenerate`.
 import { WhatsAppButton } from "@/components/whatsapp/WhatsAppButton";
 import { scoreLabel, scoreTone } from "@/lib/leadScore";
 import { logLeadActivity } from "@/lib/lead-activity";
@@ -103,6 +104,7 @@ interface ClientInfo {
   lead_reply_sent_at: string | null;
   lead_reply_edited: boolean | null;
   not_a_lead: boolean | null;
+  lead_thread?: unknown;
   created_at: string;
 }
 
@@ -225,7 +227,7 @@ export default function ClientDetail() {
   const [deleting, setDeleting] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [edit, setEdit] = useState<Partial<ClientInfo>>({});
-  const [replyOpen, setReplyOpen] = useState(false);
+  // replyOpen state removed alongside ReplyDrafterDialog retirement.
 
   // AI Suggested Reply panel state
   const [draftSubject, setDraftSubject] = useState("");
@@ -725,6 +727,7 @@ export default function ClientDetail() {
           client.lead_draft_reply) && (
           <LeadInsightPanel
             client={client}
+            hasProposal={proposals.length > 0}
             draftSubject={draftSubject}
             draftBody={draftBody}
             setDraftSubject={setDraftSubject}
@@ -740,7 +743,6 @@ export default function ClientDetail() {
             onSendIntakeForm={handleSendIntakeForm}
             onGenerateProposal={generateProposal}
             onMarkNotALead={handleMarkNotALead}
-            onOpenDraftDialog={() => setReplyOpen(true)}
             onEditIntake={startEdit}
           />
         )}
@@ -1199,17 +1201,7 @@ export default function ClientDetail() {
           </AlertDialogContent>
         </AlertDialog>
 
-        {client.original_lead_message && (
-          <ReplyDrafterDialog
-            open={replyOpen}
-            onOpenChange={setReplyOpen}
-            message={client.original_lead_message}
-            clientName={client.name}
-            clientEmail={client.email}
-            scenario="incoming lead message"
-            defaultTone="warm"
-          />
-        )}
+        {/* ReplyDrafterDialog removed — replaced by inline Regenerate/Shorter/Warmer/More-professional controls in LeadInsightPanel. */}
       </div>
     </DashboardLayout>
   );
