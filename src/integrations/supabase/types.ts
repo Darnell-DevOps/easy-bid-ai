@@ -544,6 +544,8 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           email: string | null
+          fit_factors: Json | null
+          fit_score: number | null
           goals: string | null
           id: string
           intake_form_id: string | null
@@ -581,6 +583,8 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           email?: string | null
+          fit_factors?: Json | null
+          fit_score?: number | null
           goals?: string | null
           id?: string
           intake_form_id?: string | null
@@ -618,6 +622,8 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           email?: string | null
+          fit_factors?: Json | null
+          fit_score?: number | null
           goals?: string | null
           id?: string
           intake_form_id?: string | null
