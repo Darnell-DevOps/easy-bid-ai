@@ -31,6 +31,7 @@ import {
   Clock,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import LeadScoreBadge from "@/components/ai/LeadScoreBadge";
 import { toast } from "@/hooks/use-toast";
 import { scoreLabel, scoreTone } from "@/lib/leadScore";
 import type { LeadActivityType } from "@/lib/lead-activity";
