@@ -193,7 +193,13 @@ export default function LeadInbox() {
                       </span>
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell" onClick={(e) => e.stopPropagation()}>
-                      <LeadScoreBadge leadId={l.id} enabled={l.status !== "archived" && l.status !== "converted"} />
+                      <LeadScoreBadge
+                        fitScore={l.fit_score}
+                        factors={l.fit_factors}
+                        reason={l.lead_score_reason}
+                        recommendedAction={l.ai_recommendation}
+                        pending={!l.qualified_at && l.status !== "archived" && l.status !== "converted"}
+                      />
                     </td>
                     <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell text-xs">
                       {new Date(l.created_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
