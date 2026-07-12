@@ -29,11 +29,14 @@ import {
   Calendar,
   DollarSign,
   Clock,
+  ArrowRight,
+  Wand2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import LeadScoreBadge from "@/components/ai/LeadScoreBadge";
 import { toast } from "@/hooks/use-toast";
 import { scoreLabel, scoreTone } from "@/lib/leadScore";
+import { computeLeadNextAction } from "@/lib/lead-next-action";
 import type { LeadActivityType } from "@/lib/lead-activity";
 
 export interface LeadInsightClient {
@@ -260,6 +263,77 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
 
   const activityToShow = showAllActivity ? activity : activity.slice(0, 5);
   const hasReplyPanel = !!client.lead_draft_reply && !client.not_a_lead;
+
+  const [regenBusy, setRegenBusy] = useState<null | "regenerate" | "shorter" | "warmer" | "more_professional">(null);
+  const scrollTo = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  const runAdjustment = async (mode: "regenerate" | "shorter" | "warmer" | "more_professional") => {
+    setRegenBusy(mode);
+    try {
+      const { data, error } = await supabase.functions.invoke("lead-reply-regenerate", {
+        body: { client_id: client.id, mode },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const nextSubject = (data as any)?.subject || draftSubject;
+      const nextBody = (data as any)?.body || draftBody;
+      setDraftSubject(nextSubject);
+      setDraftBody(nextBody);
+      onSaveDraftLocal(nextSubject, nextBody);
+      toast({ title: mode === "regenerate" ? "Reply regenerated" : `Reply made ${mode.replace("_", " ")}` });
+    } catch (e: any) {
+      toast({
+        title: "Couldn't regenerate reply",
+        description: e?.message === "credits_exhausted" ? "AI credits exhausted." : (e?.message || "Try again in a moment."),
+        variant: "destructive",
+      });
+    } finally {
+      setRegenBusy(null);
+    }
+  };
+
+  // Single recommended next action — pure derived logic, shared with dashboard.
+  const nextAction = computeLeadNextAction(
+    {
+      id: client.id,
+      name: client.name,
+      lead_score: scoreState.score,
+      fit_score: scoreState.fitScore,
+      lead_quality: scoreState.quality,
+      missing_info: scoreState.missing,
+      lead_thread: (client as any).lead_thread,
+      lead_reply_sent_at: client.lead_reply_sent_at,
+      not_a_lead: client.not_a_lead,
+    },
+    hasProposal,
+  );
+  const runNextAction = () => {
+    switch (nextAction.kind) {
+      case "open_proposal":
+        scrollTo("proposals-section");
+        return;
+      case "review_reply":
+      case "reply_now":
+      case "ask_qualifying_questions":
+        scrollTo("ai-reply");
+        return;
+      case "review_qualification":
+        void handleRequalify();
+        return;
+      case "awaiting_response":
+        return;
+    }
+  };
+  const nextActionToneClass =
+    nextAction.tone === "critical"
+      ? "border-accent/40 bg-accent/[0.08]"
+      : nextAction.tone === "warning"
+        ? "border-amber-500/40 bg-amber-500/[0.08]"
+        : nextAction.tone === "passive"
+          ? "border-border bg-muted/30"
+          : "border-border/60 bg-background/40";
 
   return (
     <Card className="glass-card border-accent/20 overflow-hidden">
