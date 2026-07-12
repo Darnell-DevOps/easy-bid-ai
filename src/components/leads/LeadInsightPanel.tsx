@@ -29,11 +29,14 @@ import {
   Calendar,
   DollarSign,
   Clock,
+  ArrowRight,
+  Wand2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import LeadScoreBadge from "@/components/ai/LeadScoreBadge";
 import { toast } from "@/hooks/use-toast";
 import { scoreLabel, scoreTone } from "@/lib/leadScore";
+import { computeLeadNextAction } from "@/lib/lead-next-action";
 import type { LeadActivityType } from "@/lib/lead-activity";
 
 export interface LeadInsightClient {
@@ -58,11 +61,13 @@ export interface LeadInsightClient {
   lead_reply_sent_at: string | null;
   lead_reply_edited: boolean | null;
   not_a_lead: boolean | null;
+  lead_thread?: unknown;
   created_at: string;
 }
 
 interface LeadInsightPanelProps {
   client: LeadInsightClient;
+  hasProposal: boolean;
   draftSubject: string;
   draftBody: string;
   setDraftSubject: (v: string) => void;
@@ -78,7 +83,6 @@ interface LeadInsightPanelProps {
   onSendIntakeForm: () => void;
   onGenerateProposal: () => void;
   onMarkNotALead: () => void;
-  onOpenDraftDialog: () => void;
   onEditIntake: () => void;
 }
 
@@ -115,6 +119,7 @@ interface ActivityRow {
 export default function LeadInsightPanel(props: LeadInsightPanelProps) {
   const {
     client,
+    hasProposal,
     draftSubject,
     draftBody,
     setDraftSubject,
@@ -130,7 +135,6 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
     onSendIntakeForm,
     onGenerateProposal,
     onMarkNotALead,
-    onOpenDraftDialog,
     onEditIntake,
   } = props;
 
@@ -260,6 +264,77 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
   const activityToShow = showAllActivity ? activity : activity.slice(0, 5);
   const hasReplyPanel = !!client.lead_draft_reply && !client.not_a_lead;
 
+  const [regenBusy, setRegenBusy] = useState<null | "regenerate" | "shorter" | "warmer" | "more_professional">(null);
+  const scrollTo = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  const runAdjustment = async (mode: "regenerate" | "shorter" | "warmer" | "more_professional") => {
+    setRegenBusy(mode);
+    try {
+      const { data, error } = await supabase.functions.invoke("lead-reply-regenerate", {
+        body: { client_id: client.id, mode },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const nextSubject = (data as any)?.subject || draftSubject;
+      const nextBody = (data as any)?.body || draftBody;
+      setDraftSubject(nextSubject);
+      setDraftBody(nextBody);
+      onSaveDraftLocal(nextSubject, nextBody);
+      toast({ title: mode === "regenerate" ? "Reply regenerated" : `Reply made ${mode.replace("_", " ")}` });
+    } catch (e: any) {
+      toast({
+        title: "Couldn't regenerate reply",
+        description: e?.message === "credits_exhausted" ? "AI credits exhausted." : (e?.message || "Try again in a moment."),
+        variant: "destructive",
+      });
+    } finally {
+      setRegenBusy(null);
+    }
+  };
+
+  // Single recommended next action — pure derived logic, shared with dashboard.
+  const nextAction = computeLeadNextAction(
+    {
+      id: client.id,
+      name: client.name,
+      lead_score: scoreState.score,
+      fit_score: scoreState.fitScore,
+      lead_quality: scoreState.quality,
+      missing_info: scoreState.missing,
+      lead_thread: (client as any).lead_thread,
+      lead_reply_sent_at: client.lead_reply_sent_at,
+      not_a_lead: client.not_a_lead,
+    },
+    hasProposal,
+  );
+  const runNextAction = () => {
+    switch (nextAction.kind) {
+      case "open_proposal":
+        scrollTo("proposals-section");
+        return;
+      case "review_reply":
+      case "reply_now":
+      case "ask_qualifying_questions":
+        scrollTo("ai-reply");
+        return;
+      case "review_qualification":
+        void handleRequalify();
+        return;
+      case "awaiting_response":
+        return;
+    }
+  };
+  const nextActionToneClass =
+    nextAction.tone === "critical"
+      ? "border-accent/40 bg-accent/[0.08]"
+      : nextAction.tone === "warning"
+        ? "border-amber-500/40 bg-amber-500/[0.08]"
+        : nextAction.tone === "passive"
+          ? "border-border bg-muted/30"
+          : "border-border/60 bg-background/40";
+
   return (
     <Card className="glass-card border-accent/20 overflow-hidden">
       <CardContent className="p-0">
@@ -373,6 +448,35 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
           </div>
         </div>
 
+        {/* Recommended next action — single source of truth (see lead-next-action.ts) */}
+        <div className="px-5 sm:px-6 py-4 border-b border-border/60">
+          <div className={`rounded-lg border p-3 flex items-start gap-3 ${nextActionToneClass}`}>
+            <div className="w-8 h-8 rounded-lg bg-background/60 border border-border/60 flex items-center justify-center flex-shrink-0">
+              <Lightbulb className="w-4 h-4 text-accent" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Recommended next action</span>
+                {nextAction.passive && (
+                  <Badge variant="outline" className="text-[10px]">Passive</Badge>
+                )}
+              </div>
+              <p className="text-sm font-semibold text-foreground mt-0.5">{nextAction.title}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{nextAction.hint}</p>
+            </div>
+            {!nextAction.passive && (
+              <Button
+                size="sm"
+                onClick={runNextAction}
+                className="gap-1.5 flex-shrink-0"
+              >
+                {nextAction.label} <ArrowRight className="w-3.5 h-3.5" />
+              </Button>
+            )}
+          </div>
+        </div>
+
+
         {/* Missing info / risks */}
         {Array.isArray(scoreState.missing) && scoreState.missing.length > 0 && (
           <div className="px-5 sm:px-6 py-4 border-b border-border/60">
@@ -411,16 +515,6 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
               <span className="text-[11px] uppercase tracking-wider text-muted-foreground flex items-center gap-1">
                 <MessageSquare className="w-3 h-3" /> Original enquiry
               </span>
-              {!hasReplyPanel && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={onOpenDraftDialog}
-                  className="h-7 px-2.5 text-xs gap-1.5 border-accent/30 text-accent hover:bg-accent/10 hover:text-accent"
-                >
-                  <Sparkles className="w-3 h-3" /> Draft AI reply
-                </Button>
-              )}
             </div>
             <div className="rounded-lg bg-muted/40 border border-border/50 p-3 text-sm text-foreground whitespace-pre-wrap leading-relaxed">
               {displayedMessage}
@@ -517,7 +611,36 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
               />
             </div>
 
+            {/* AI adjustment controls — refill the editable draft only; never send. */}
+            {!client.lead_reply_sent_at && (
+              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                <span className="text-[11px] uppercase tracking-wider text-muted-foreground mr-1 inline-flex items-center gap-1">
+                  <Wand2 className="w-3 h-3" /> Adjust
+                </span>
+                {(["regenerate", "shorter", "warmer", "more_professional"] as const).map((m) => (
+                  <Button
+                    key={m}
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void runAdjustment(m)}
+                    disabled={regenBusy !== null || draftSending}
+                    className="h-7 px-2.5 text-xs gap-1.5"
+                  >
+                    {regenBusy === m ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : m === "regenerate" ? (
+                      <RefreshCw className="w-3 h-3" />
+                    ) : (
+                      <Sparkles className="w-3 h-3" />
+                    )}
+                    {m === "regenerate" ? "Regenerate" : m === "shorter" ? "Shorter" : m === "warmer" ? "Warmer" : "More professional"}
+                  </Button>
+                ))}
+              </div>
+            )}
+
             <div className="flex flex-wrap items-center gap-2 pt-1">
+
               <Button
                 size="sm"
                 onClick={onSendReply}

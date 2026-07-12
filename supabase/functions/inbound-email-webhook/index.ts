@@ -81,52 +81,14 @@ function stripHtml(html: string): string {
     .trim();
 }
 
-type LeadPrefs = {
-  business_name?: string | null;
-  business_services?: string | null;
-  business_ideal_client?: string | null;
-  business_target_audience?: string | null;
-  booking_link?: string | null;
-  lead_reply_tone?: string | null;
-  lead_reply_style?: string | null;
-  lead_reply_length?: string | null;
-  email_signature?: string | null;
-  lead_auto_send_enabled?: boolean | null;
-  lead_auto_send_min_confidence?: string | null;
-  lead_auto_send_only_new_leads?: boolean | null;
-  lead_auto_send_block_keywords?: string[] | null;
-  custom_instructions?: string | null;
-};
-
-const LENGTH_LIMIT: Record<string, string> = {
-  short: "≤80 words",
-  standard: "≤180 words",
-  detailed: "≤300 words",
-};
+import { buildBizContext, type LeadPrefs } from "../_shared/lead-reply-context.ts";
 
 async function callLeadAI(opts: { name: string; email: string | null; message: string; prefs: LeadPrefs | null }) {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
 
-  const p = opts.prefs || {};
-  const tone = p.lead_reply_tone || "friendly";
-  const style = p.lead_reply_style || "consultative";
-  const length = LENGTH_LIMIT[p.lead_reply_length || "standard"] || "≤180 words";
-  const bizName = (p.business_name || "").trim();
-  const services = (p.business_services || "").trim();
-  const idealClient = (p.business_ideal_client || "").trim();
-  const targetAudience = (p.business_target_audience || "").trim();
-  const booking = (p.booking_link || "").trim();
-  const customRules = (p.custom_instructions || "").trim();
-
-  const bizBlock = [
-    bizName ? `Business name: ${bizName}` : "",
-    services ? `Services offered: ${services}` : "",
-    idealClient ? `Ideal client (who this business wants more of): ${idealClient}` : "",
-    targetAudience ? `Target audience / who this ISN'T for: ${targetAudience}` : "",
-    booking ? `Booking link (use as call-to-action when suggesting a call): ${booking}` : "",
-    customRules ? `Additional rules from the user: ${customRules}` : "",
-  ].filter(Boolean).join("\n");
+  const { tone, style, length, bizName, idealClient, targetAudience, booking, bizBlock } =
+    buildBizContext(opts.prefs);
 
   const system = `You are an elite sales assistant${bizName ? ` writing on behalf of ${bizName}` : ""}. Draft a reply to an inbound lead and extract qualification info.
 ${bizBlock ? "\nContext about the business:\n" + bizBlock + "\n" : ""}
