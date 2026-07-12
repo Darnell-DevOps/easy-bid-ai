@@ -17,10 +17,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   MessageSquare,
-  FileText,
   Lightbulb,
   Gauge,
-  Hourglass,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getFollowUpScenario, FOLLOW_UP_META, type FollowUpScenario } from "@/lib/follow-up";
