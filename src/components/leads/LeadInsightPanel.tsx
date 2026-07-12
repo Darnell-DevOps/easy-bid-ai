@@ -202,7 +202,7 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
       }
       const { data: fresh } = await supabase
         .from("clients")
-        .select("lead_score, lead_score_reason, lead_quality, missing_info, ai_recommendation")
+        .select("lead_score, lead_score_reason, lead_quality, missing_info, ai_recommendation, fit_score, fit_factors")
         .eq("id", client.id)
         .maybeSingle();
       if (fresh) {
@@ -212,6 +212,8 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
           quality: (fresh as any).lead_quality,
           missing: (fresh as any).missing_info,
           recommendation: (fresh as any).ai_recommendation,
+          fitScore: (fresh as any).fit_score,
+          fitFactors: (fresh as any).fit_factors,
         });
         toast({ title: "Re-qualification requested" });
       }
