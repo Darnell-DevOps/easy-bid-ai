@@ -448,6 +448,35 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
           </div>
         </div>
 
+        {/* Recommended next action — single source of truth (see lead-next-action.ts) */}
+        <div className="px-5 sm:px-6 py-4 border-b border-border/60">
+          <div className={`rounded-lg border p-3 flex items-start gap-3 ${nextActionToneClass}`}>
+            <div className="w-8 h-8 rounded-lg bg-background/60 border border-border/60 flex items-center justify-center flex-shrink-0">
+              <Lightbulb className="w-4 h-4 text-accent" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Recommended next action</span>
+                {nextAction.passive && (
+                  <Badge variant="outline" className="text-[10px]">Passive</Badge>
+                )}
+              </div>
+              <p className="text-sm font-semibold text-foreground mt-0.5">{nextAction.title}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{nextAction.hint}</p>
+            </div>
+            {!nextAction.passive && (
+              <Button
+                size="sm"
+                onClick={runNextAction}
+                className="gap-1.5 flex-shrink-0"
+              >
+                {nextAction.label} <ArrowRight className="w-3.5 h-3.5" />
+              </Button>
+            )}
+          </div>
+        </div>
+
+
         {/* Missing info / risks */}
         {Array.isArray(scoreState.missing) && scoreState.missing.length > 0 && (
           <div className="px-5 sm:px-6 py-4 border-b border-border/60">
@@ -486,16 +515,6 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
               <span className="text-[11px] uppercase tracking-wider text-muted-foreground flex items-center gap-1">
                 <MessageSquare className="w-3 h-3" /> Original enquiry
               </span>
-              {!hasReplyPanel && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={onOpenDraftDialog}
-                  className="h-7 px-2.5 text-xs gap-1.5 border-accent/30 text-accent hover:bg-accent/10 hover:text-accent"
-                >
-                  <Sparkles className="w-3 h-3" /> Draft AI reply
-                </Button>
-              )}
             </div>
             <div className="rounded-lg bg-muted/40 border border-border/50 p-3 text-sm text-foreground whitespace-pre-wrap leading-relaxed">
               {displayedMessage}
