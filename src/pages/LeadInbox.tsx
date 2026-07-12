@@ -60,6 +60,9 @@ interface Lead {
   draft_subject: string | null;
   qualified_at: string | null;
   qualification_error: string | null;
+  fit_score: number | null;
+  fit_factors: Array<{ label: string; impact: "positive" | "negative" }> | null;
+
 }
 
 interface FormLite { id: string; name: string; fields: SmartField[] }
@@ -190,7 +193,13 @@ export default function LeadInbox() {
                       </span>
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell" onClick={(e) => e.stopPropagation()}>
-                      <LeadScoreBadge leadId={l.id} enabled={l.status !== "archived" && l.status !== "converted"} />
+                      <LeadScoreBadge
+                        fitScore={l.fit_score}
+                        factors={l.fit_factors}
+                        reason={l.lead_score_reason}
+                        recommendedAction={l.ai_recommendation}
+                        pending={!l.qualified_at && l.status !== "archived" && l.status !== "converted"}
+                      />
                     </td>
                     <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell text-xs">
                       {new Date(l.created_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
@@ -215,7 +224,14 @@ export default function LeadInbox() {
                       {selected.lead_quality} quality
                     </span>
                   )}
-                  <LeadScoreBadge leadId={selected.id} size="md" enabled={selected.status !== "archived" && selected.status !== "converted"} />
+                  <LeadScoreBadge
+                    fitScore={selected.fit_score}
+                    factors={selected.fit_factors}
+                    reason={selected.lead_score_reason}
+                    recommendedAction={selected.ai_recommendation}
+                    size="md"
+                    pending={!selected.qualified_at && selected.status !== "archived" && selected.status !== "converted"}
+                  />
                 </SheetTitle>
                 <SheetDescription>
                   {selected.form_id ? `via ${forms[selected.form_id]?.name || "form"}` : "Manual entry"} · {new Date(selected.created_at).toLocaleString()}

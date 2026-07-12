@@ -89,8 +89,17 @@ Rules:
   • Cold = vague intent, no qualification signals.
   • Unclear = you can't reasonably tell, or the message lacks enough context.
 - lead_score_reason: ≤ 200 chars, justify the score using the actual words/signals in the lead's message.
-- missing_info: 0–6 short strings naming the qualification gaps that would raise the score. Empty array if nothing meaningful is missing.
+- missing_info: 0–6 short strings naming the qualification gaps that would raise the score (e.g. "No budget stated", "No timeline given", "Scope unclear"). Empty array if nothing meaningful is missing.
+- fit_score: integer 0–100 that MUST tell the same story as lead_score. Use these anchor bands:
+  • Hot -> 75–100 (75 baseline, 85+ if budget AND timeline AND clear scope AND strong fit vs. the business's ideal client/target audience)
+  • Warm -> 45–74
+  • Cold -> 15–44
+  • Unclear -> 0–25
+  Weigh: contact completeness, response depth and seriousness, explicit budget/timeline/intent signals, fit against the business's ideal client / target audience / services above (when provided), decision-maker language. Reward: clear scope, named budget, near-term timeline. Penalize: spammy/one-word answers, unrealistic asks, clear misfit vs. target audience.
+- factors: 3–5 short concrete signals (max 60 chars each) that actually drove fit_score, most impactful first, each tagged "positive" (boosted the score) or "negative" (hurt it). Ground every factor in the actual words/signals in the lead's message or missing contact data — do NOT invent facts.
+- Missing-data handling: when budget, timeline, or scope is simply ABSENT (never mentioned by the lead), surface it via missing_info and do NOT count it as a negative factor — unless the business's rules above explicitly require budget/timeline upfront. Present-but-poor signals (e.g. stated budget is far below the business's typical range, or stated scope clearly doesn't match the services offered) MAY be a negative factor.
 Return ONLY by calling the tool.`;
+
 
   const user = `Lead name: ${opts.name || "(not provided)"}
 Lead email: ${opts.email || "(not provided)"}
@@ -133,6 +142,21 @@ ${opts.message}
               lead_score: { type: "string", enum: ["Hot", "Warm", "Cold", "Unclear"] },
               lead_score_reason: { type: "string" },
               missing_info: { type: "array", items: { type: "string" } },
+              fit_score: { type: "integer", minimum: 0, maximum: 100, description: "0–100 fit rating consistent with lead_score bands (Hot 75–100, Warm 45–74, Cold 15–44, Unclear 0–25)." },
+              factors: {
+                type: "array",
+                description: "Top 3–5 concrete signals that drove fit_score, most impactful first.",
+                minItems: 3,
+                maxItems: 5,
+                items: {
+                  type: "object",
+                  properties: {
+                    label: { type: "string", description: "Short factor name, max 60 chars (e.g. 'Named budget $10k', 'Missing phone number')." },
+                    impact: { type: "string", enum: ["positive", "negative"] },
+                  },
+                  required: ["label", "impact"],
+                },
+              },
             },
             required: [
               "reply",
@@ -148,9 +172,12 @@ ${opts.message}
               "lead_score",
               "lead_score_reason",
               "missing_info",
+              "fit_score",
+              "factors",
             ],
             additionalProperties: false,
           },
+
         },
       }],
       tool_choice: { type: "function", function: { name: "qualify_lead" } },
@@ -245,6 +272,15 @@ export async function qualifyLeadById(
       ? ai.missing_info.filter((s: unknown) => typeof s === "string" && s.trim().length > 0).slice(0, 6)
       : null;
 
+    const fitScoreRaw = typeof ai.fit_score === "number" ? Math.round(ai.fit_score) : null;
+    const fitScore = fitScoreRaw == null ? null : Math.max(0, Math.min(100, fitScoreRaw));
+    const fitFactors = Array.isArray(ai.factors)
+      ? ai.factors
+          .filter((f: any) => f && typeof f.label === "string" && (f.impact === "positive" || f.impact === "negative"))
+          .slice(0, 5)
+          .map((f: any) => ({ label: String(f.label).slice(0, 60), impact: f.impact }))
+      : null;
+
     const { error: updErr } = await svc
       .from("leads")
       .update({
@@ -259,6 +295,9 @@ export async function qualifyLeadById(
         lead_score: ai.lead_score || null,
         lead_score_reason: ai.lead_score_reason ? String(ai.lead_score_reason).slice(0, 200) : null,
         missing_info: missingInfo,
+        fit_score: fitScore,
+        fit_factors: fitFactors && fitFactors.length ? fitFactors : null,
+
         qualified_at: new Date().toISOString(),
         qualification_error: null,
         status: finalStatus,
