@@ -456,10 +456,20 @@ Deno.serve(async (req) => {
         unread_at: new Date().toISOString(),
       };
       // Only bump score upward (Hot > Warm > Cold > Unclear); never demote.
+      // fit_score and fit_factors move together with lead_score so the two never contradict each other.
       if (ai?.lead_score && scoreRank(ai.lead_score) > scoreRank((existing as any).lead_score)) {
         updatePayload.lead_score = ai.lead_score;
         updatePayload.lead_score_reason = ai.lead_score_reason || null;
         if (Array.isArray(ai.missing_info)) updatePayload.missing_info = ai.missing_info.slice(0, 6);
+        if (typeof ai.fit_score === "number") {
+          updatePayload.fit_score = Math.max(0, Math.min(100, Math.round(ai.fit_score)));
+        }
+        if (Array.isArray(ai.factors)) {
+          updatePayload.fit_factors = ai.factors
+            .filter((f: any) => f && typeof f.label === "string" && (f.impact === "positive" || f.impact === "negative"))
+            .slice(0, 5)
+            .map((f: any) => ({ label: String(f.label).slice(0, 60), impact: f.impact }));
+        }
       }
 
       await svc.from("clients").update(updatePayload).eq("id", existing.id);
