@@ -89,8 +89,17 @@ Rules:
   • Cold = vague intent, no qualification signals.
   • Unclear = you can't reasonably tell, or the message lacks enough context.
 - lead_score_reason: ≤ 200 chars, justify the score using the actual words/signals in the lead's message.
-- missing_info: 0–6 short strings naming the qualification gaps that would raise the score. Empty array if nothing meaningful is missing.
+- missing_info: 0–6 short strings naming the qualification gaps that would raise the score (e.g. "No budget stated", "No timeline given", "Scope unclear"). Empty array if nothing meaningful is missing.
+- fit_score: integer 0–100 that MUST tell the same story as lead_score. Use these anchor bands:
+  • Hot -> 75–100 (75 baseline, 85+ if budget AND timeline AND clear scope AND strong fit vs. the business's ideal client/target audience)
+  • Warm -> 45–74
+  • Cold -> 15–44
+  • Unclear -> 0–25
+  Weigh: contact completeness, response depth and seriousness, explicit budget/timeline/intent signals, fit against the business's ideal client / target audience / services above (when provided), decision-maker language. Reward: clear scope, named budget, near-term timeline. Penalize: spammy/one-word answers, unrealistic asks, clear misfit vs. target audience.
+- factors: 3–5 short concrete signals (max 60 chars each) that actually drove fit_score, most impactful first, each tagged "positive" (boosted the score) or "negative" (hurt it). Ground every factor in the actual words/signals in the lead's message or missing contact data — do NOT invent facts.
+- Missing-data handling: when budget, timeline, or scope is simply ABSENT (never mentioned by the lead), surface it via missing_info and do NOT count it as a negative factor — unless the business's rules above explicitly require budget/timeline upfront. Present-but-poor signals (e.g. stated budget is far below the business's typical range, or stated scope clearly doesn't match the services offered) MAY be a negative factor.
 Return ONLY by calling the tool.`;
+
 
   const user = `Lead name: ${opts.name || "(not provided)"}
 Lead email: ${opts.email || "(not provided)"}
