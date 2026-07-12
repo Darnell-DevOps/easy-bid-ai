@@ -58,11 +58,13 @@ export interface LeadInsightClient {
   lead_reply_sent_at: string | null;
   lead_reply_edited: boolean | null;
   not_a_lead: boolean | null;
+  lead_thread?: unknown;
   created_at: string;
 }
 
 interface LeadInsightPanelProps {
   client: LeadInsightClient;
+  hasProposal: boolean;
   draftSubject: string;
   draftBody: string;
   setDraftSubject: (v: string) => void;
@@ -78,7 +80,6 @@ interface LeadInsightPanelProps {
   onSendIntakeForm: () => void;
   onGenerateProposal: () => void;
   onMarkNotALead: () => void;
-  onOpenDraftDialog: () => void;
   onEditIntake: () => void;
 }
 
