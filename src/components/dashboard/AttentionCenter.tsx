@@ -16,10 +16,15 @@ import {
   ArrowRight,
   CheckCircle2,
   AlertTriangle,
+  MessageSquare,
+  FileText,
+  Lightbulb,
+  Gauge,
+  Hourglass,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getFollowUpScenario, FOLLOW_UP_META, type FollowUpScenario } from "@/lib/follow-up";
-import { scoreRank } from "@/lib/leadScore";
+import { computeLeadNextAction, type LeadNextActionKind } from "@/lib/lead-next-action";
 import FollowUpDialog from "@/components/proposal/FollowUpDialog";
 import { deriveStatus, type DeadlineRow } from "@/lib/deadlines";
 

@@ -81,8 +81,8 @@ export default function Dashboard() {
         .order("created_at", { ascending: false }),
       supabase.auth.getUser(),
     ]);
-    setProposals(propRes.data || []);
-    setClients(clientRes.data || []);
+    setProposals((propRes.data as any) || []);
+    setClients((clientRes.data as any) || []);
 
     const user = userRes.data.user;
     if (user) {
