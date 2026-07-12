@@ -451,7 +451,7 @@ export default function AttentionCenter({ proposals, clients, proposalClientIds 
 
     out.sort((a, b) => b.priority - a.priority);
     return out;
-  }, [proposals, clients, proposalClientNames, contracts, onboarding, bookings, deadlines, navigate]);
+  }, [proposals, clients, proposalClientIds, contracts, onboarding, bookings, deadlines, navigate]);
 
   const followUpProposal = followUpTarget?.proposal;
   const clientUrl = followUpProposal
