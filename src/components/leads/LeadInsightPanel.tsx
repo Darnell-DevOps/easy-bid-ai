@@ -314,9 +314,34 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
                 <Badge variant="outline" className={`gap-1 ${fitBadgeTone}`}>
                   {fitLabel}
                 </Badge>
+                {typeof scoreState.fitScore === "number" && (
+                  <LeadScoreBadge
+                    fitScore={scoreState.fitScore}
+                    factors={scoreState.fitFactors as any}
+                    reason={scoreState.reason}
+                    recommendedAction={scoreState.recommendation}
+                  />
+                )}
               </div>
               {fitReason && (
                 <p className="text-sm text-foreground/90 leading-relaxed">{fitReason}</p>
+              )}
+              {Array.isArray(scoreState.fitFactors) && scoreState.fitFactors.length > 0 && (
+                <ul className="flex flex-wrap gap-1.5 pt-0.5">
+                  {scoreState.fitFactors.slice(0, 5).map((f, i) => (
+                    <li
+                      key={i}
+                      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] ${
+                        f.impact === "positive"
+                          ? "bg-emerald-500/[0.08] border-emerald-500/25 text-emerald-600"
+                          : "bg-rose-500/[0.08] border-rose-500/25 text-rose-600"
+                      }`}
+                    >
+                      <span aria-hidden>{f.impact === "positive" ? "▲" : "▼"}</span>
+                      <span className="leading-none">{f.label}</span>
+                    </li>
+                  ))}
+                </ul>
               )}
               {scoreState.recommendation && (
                 <p className="text-xs text-muted-foreground flex items-start gap-1.5">
