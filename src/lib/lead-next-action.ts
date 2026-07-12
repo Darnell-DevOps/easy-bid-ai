@@ -4,6 +4,9 @@
 // they can't disagree.
 
 export type LeadNextActionKind =
+  | "view_invoice"
+  | "request_payment"
+  | "finish_send_proposal"
   | "open_proposal"
   | "review_reply"
   | "awaiting_response"
@@ -32,6 +35,17 @@ export interface LeadRowForNextAction {
   not_a_lead?: boolean | null;
 }
 
+/**
+ * Summary of proposal state for a single client. Callers must derive this from
+ * their proposals list — the next-action function itself does not query.
+ */
+export interface LeadProposalSummary {
+  hasAny: boolean;
+  hasAcceptedUnpaid: boolean;
+  hasPaid: boolean;
+  hasDraftUnsent: boolean;
+}
+
 function threadEntries(t: unknown): Array<{ received_at?: string; direction?: string }> {
   if (!Array.isArray(t)) return [];
   return t as Array<{ received_at?: string; direction?: string }>;
@@ -51,25 +65,36 @@ function lastInboundAfter(iso: string | null | undefined, thread: unknown): bool
 
 /**
  * Compute the single recommended next action for a client row.
- * The caller supplies whether a proposal already exists for this client_id
- * (mandatory — we do not name-match).
+ * The caller supplies a proposal summary derived from proposals joined by
+ * client_id (never by name).
  */
 export function computeLeadNextAction(
   client: LeadRowForNextAction,
-  hasProposal: boolean,
+  proposals: LeadProposalSummary,
 ): LeadNextAction {
-  // (a) Proposal exists -> Open proposal
-  if (hasProposal) {
+  // (a) Paid — surface the invoice (still one useful action, but success tone).
+  if (proposals.hasPaid) {
     return {
-      kind: "open_proposal",
-      label: "Open proposal",
-      title: "Open proposal",
-      hint: "This lead already has a proposal — continue the deal there.",
-      tone: "info",
+      kind: "view_invoice",
+      label: "View invoice",
+      title: "Deal closed — payment received",
+      hint: "Open the invoice for your records or to share with the client.",
+      tone: "success",
     };
   }
 
-  // (b) Lead replied after we sent (or thread has multiple entries and nothing sent)
+  // (b) Accepted & unpaid — collect the money.
+  if (proposals.hasAcceptedUnpaid) {
+    return {
+      kind: "request_payment",
+      label: "Request payment",
+      title: "Proposal accepted — request payment",
+      hint: "Send the invoice and collect payment now.",
+      tone: "critical",
+    };
+  }
+
+  // (c) Lead replied after we sent (or thread has multiple entries and nothing sent)
   if (lastInboundAfter(client.lead_reply_sent_at, client.lead_thread)) {
     return {
       kind: "review_reply",
@@ -80,7 +105,31 @@ export function computeLeadNextAction(
     };
   }
 
-  // (c) Reply already sent, no reply back yet, no proposal -> passive
+  // (d) Draft sitting unsent — finish and send it.
+  if (proposals.hasDraftUnsent) {
+    return {
+      kind: "finish_send_proposal",
+      label: "Finish & send proposal",
+      title: "Draft ready to send",
+      hint: "You have a proposal draft — finish it and send to close the deal.",
+      tone: "warning",
+    };
+  }
+
+  // (e) Any other proposal state (sent/viewed/rejected) — open it.
+  //     This fixes the old Hero bug where sent proposals fell through to
+  //     "Generate proposal" as if none existed.
+  if (proposals.hasAny) {
+    return {
+      kind: "open_proposal",
+      label: "Open proposal",
+      title: "Open proposal",
+      hint: "This lead already has a proposal — continue the deal there.",
+      tone: "info",
+    };
+  }
+
+  // (f) Reply already sent, no reply back yet, no proposal -> passive
   if (client.lead_reply_sent_at) {
     return {
       kind: "awaiting_response",
@@ -92,7 +141,7 @@ export function computeLeadNextAction(
     };
   }
 
-  // (d) Never qualified — no signals at all
+  // (g) Never qualified — no signals at all
   const neverQualified =
     !client.lead_score && !client.fit_score && !client.lead_quality;
   if (neverQualified) {
@@ -105,7 +154,7 @@ export function computeLeadNextAction(
     };
   }
 
-  // (e) Missing info present -> clarification comes before a proposal
+  // (h) Missing info present -> clarification comes before a proposal
   const missing = Array.isArray(client.missing_info)
     ? client.missing_info.filter(Boolean)
     : [];
@@ -119,7 +168,7 @@ export function computeLeadNextAction(
     };
   }
 
-  // (f) Qualified, no gaps, no reply sent, no proposal
+  // (i) Qualified, no gaps, no reply sent, no proposal
   return {
     kind: "reply_now",
     label: "Reply now",

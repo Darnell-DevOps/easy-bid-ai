@@ -36,7 +36,7 @@ import { supabase } from "@/integrations/supabase/client";
 import LeadScoreBadge from "@/components/ai/LeadScoreBadge";
 import { toast } from "@/hooks/use-toast";
 import { scoreLabel, scoreTone } from "@/lib/leadScore";
-import { computeLeadNextAction } from "@/lib/lead-next-action";
+import { computeLeadNextAction, type LeadProposalSummary } from "@/lib/lead-next-action";
 import type { LeadActivityType } from "@/lib/lead-activity";
 
 export interface LeadInsightClient {
@@ -55,6 +55,8 @@ export interface LeadInsightClient {
   missing_info: string[] | null;
   fit_score: number | null;
   fit_factors: Array<{ label: string; impact: "positive" | "negative" }> | null;
+  goals: string | null;
+  project_description: string | null;
   original_lead_message: string | null;
   lead_draft_reply: string | null;
   lead_draft_subject: string | null;
@@ -67,7 +69,15 @@ export interface LeadInsightClient {
 
 interface LeadInsightPanelProps {
   client: LeadInsightClient;
-  hasProposal: boolean;
+  /** Proposal summary + IDs to route the "open/view/request/finish" actions. */
+  proposalSummary: LeadProposalSummary & {
+    paidProposalId?: string | null;
+    acceptedUnpaidProposalId?: string | null;
+    draftProposalId?: string | null;
+    anyProposalId?: string | null;
+  };
+  /** Fallback for legacy handlers — used when no specific proposal targets a state. */
+  onOpenProposal: (proposalId: string) => void;
   draftSubject: string;
   draftBody: string;
   setDraftSubject: (v: string) => void;
@@ -119,7 +129,8 @@ interface ActivityRow {
 export default function LeadInsightPanel(props: LeadInsightPanelProps) {
   const {
     client,
-    hasProposal,
+    proposalSummary,
+    onOpenProposal,
     draftSubject,
     draftBody,
     setDraftSubject,
@@ -307,12 +318,30 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
       lead_reply_sent_at: client.lead_reply_sent_at,
       not_a_lead: client.not_a_lead,
     },
-    hasProposal,
+    {
+      hasAny: proposalSummary.hasAny,
+      hasAcceptedUnpaid: proposalSummary.hasAcceptedUnpaid,
+      hasPaid: proposalSummary.hasPaid,
+      hasDraftUnsent: proposalSummary.hasDraftUnsent,
+    },
   );
   const runNextAction = () => {
     switch (nextAction.kind) {
+      case "view_invoice":
+        if (proposalSummary.paidProposalId) onOpenProposal(proposalSummary.paidProposalId);
+        else if (proposalSummary.anyProposalId) onOpenProposal(proposalSummary.anyProposalId);
+        return;
+      case "request_payment":
+        if (proposalSummary.acceptedUnpaidProposalId) onOpenProposal(proposalSummary.acceptedUnpaidProposalId);
+        else if (proposalSummary.anyProposalId) onOpenProposal(proposalSummary.anyProposalId);
+        return;
+      case "finish_send_proposal":
+        if (proposalSummary.draftProposalId) onOpenProposal(proposalSummary.draftProposalId);
+        else if (proposalSummary.anyProposalId) onOpenProposal(proposalSummary.anyProposalId);
+        return;
       case "open_proposal":
-        scrollTo("proposals-section");
+        if (proposalSummary.anyProposalId) onOpenProposal(proposalSummary.anyProposalId);
+        else scrollTo("proposals-section");
         return;
       case "review_reply":
       case "reply_now":
@@ -507,6 +536,33 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
             </div>
           </div>
         )}
+
+        {/* Goals / Project description — read-only display; edit lives in the bottom Intake form */}
+        {(client.goals?.trim() || client.project_description?.trim()) && (
+          <div className="px-5 sm:px-6 py-4 border-b border-border/60 space-y-3">
+            {client.goals?.trim() && (
+              <div>
+                <span className="text-[11px] uppercase tracking-wider text-muted-foreground flex items-center gap-1 mb-2">
+                  <Sparkles className="w-3 h-3" /> Goals
+                </span>
+                <div className="rounded-lg bg-muted/40 border border-border/50 p-3 text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                  {client.goals}
+                </div>
+              </div>
+            )}
+            {client.project_description?.trim() && (
+              <div>
+                <span className="text-[11px] uppercase tracking-wider text-muted-foreground flex items-center gap-1 mb-2">
+                  <FileText className="w-3 h-3" /> Project description
+                </span>
+                <div className="rounded-lg bg-muted/40 border border-border/50 p-3 text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                  {client.project_description}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
 
         {/* Original enquiry */}
         {message && (

@@ -309,13 +309,14 @@ export default function AttentionCenter({ proposals, clients, proposalClientIds 
 
     // 5. Leads that need attention — single source of truth (lead-next-action.ts).
     // The dashboard and the Lead Insight panel must agree, so both call
-    // computeLeadNextAction. We surface anything that isn't "open_proposal"
-    // (that's a Won-adjacent state, not attention-worthy) and isn't fully
-    // passive (Awaiting response).
-    const LEAD_KIND_META: Record<
-      Exclude<LeadNextActionKind, "open_proposal" | "awaiting_response">,
+    // computeLeadNextAction. We surface only the lead-side actions here
+    // (reply/qualify). Proposal-lifecycle kinds (view_invoice, request_payment,
+    // finish_send_proposal, open_proposal) are already covered by the dedicated
+    // sections above (Payment pending, Follow up, Send draft) — don't duplicate.
+    const LEAD_KIND_META: Partial<Record<
+      LeadNextActionKind,
       { tone: Tone; icon: typeof Bell; priority: number; ctaFallback: string }
-    > = {
+    >> = {
       review_reply: { tone: "critical", icon: MessageSquare, priority: 96, ctaFallback: "Review response" },
       reply_now: { tone: "critical", icon: Flame, priority: 92, ctaFallback: "Reply now" },
       ask_qualifying_questions: { tone: "warning", icon: Lightbulb, priority: 60, ctaFallback: "Ask questions" },
@@ -327,7 +328,7 @@ export default function AttentionCenter({ proposals, clients, proposalClientIds 
       const s = (c.status || "").toLowerCase();
       if (s === "won" || s === "lost") continue;
 
-      const hasProposal = proposalClientIds.has(c.id);
+      const hasAny = proposalClientIds.has(c.id);
       const na = computeLeadNextAction(
         {
           id: c.id,
@@ -340,14 +341,17 @@ export default function AttentionCenter({ proposals, clients, proposalClientIds 
           lead_reply_sent_at: c.lead_reply_sent_at ?? null,
           not_a_lead: c.not_a_lead ?? null,
         },
-        hasProposal,
+        // Per-client proposal-lifecycle state isn't readily available here and
+        // is already surfaced in dedicated sections (Payment pending / Follow up
+        // / Send draft). Passing only hasAny is intentional — the meta lookup
+        // below filters out proposal-lifecycle kinds so we don't duplicate them.
+        { hasAny, hasAcceptedUnpaid: false, hasPaid: false, hasDraftUnsent: false },
       );
 
-      // "Open proposal" belongs in the pipeline, not the attention list.
-      // "Awaiting response" is passive and shouldn't clutter attention.
-      if (na.kind === "open_proposal" || na.kind === "awaiting_response") continue;
-
       const meta = LEAD_KIND_META[na.kind];
+      // Skip proposal-lifecycle kinds and passive "awaiting_response".
+      if (!meta) continue;
+
       out.push({
         key: `lead-${na.kind}-${c.id}`,
         tone: meta.tone,

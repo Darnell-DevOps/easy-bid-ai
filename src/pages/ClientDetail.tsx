@@ -516,54 +516,25 @@ export default function ClientDetail() {
   ).length;
   const hasAcceptedUnpaid = acceptedUnpaidCount > 0;
 
-  // Dynamic CTA based on proposal state
-  const heroAction = useMemo(() => {
-    if (!client) return null;
-    const draft = proposals.find((p) => p.status?.toLowerCase() === "draft");
+  // Proposal summary passed to LeadInsightPanel — shared with dashboard's
+  // computeLeadNextAction so the CTA precedence is identical everywhere.
+  const proposalSummary = useMemo(() => {
+    const paid = proposals.find((p) => p.client_paid);
     const acceptedUnpaid = proposals.find(
       (p) => p.status?.toLowerCase() === "accepted" && !p.client_paid,
     );
-    const paid = proposals.find((p) => p.client_paid && p.invoice_content);
-
-    if (paid) {
-      return {
-        label: "View Invoice",
-        Icon: Receipt,
-        onClick: () => navigate(`/dashboard/proposal/${paid.id}`),
-        title: "Deal closed — payment received",
-        subtitle: "View the invoice or download a copy for your records",
-        variant: "success" as const,
-      };
-    }
-    if (acceptedUnpaid) {
-      return {
-        label: "Request Payment",
-        Icon: CreditCard,
-        onClick: () => navigate(`/dashboard/proposal/${acceptedUnpaid.id}`),
-        title: "Proposal accepted — get paid now",
-        subtitle: "Send the invoice and collect payment in minutes",
-        variant: "primary" as const,
-      };
-    }
-    if (draft) {
-      return {
-        label: "Finish & Send Proposal",
-        Icon: Send,
-        onClick: () => navigate(`/dashboard/proposal/${draft.id}`),
-        title: "You have a draft ready to send",
-        subtitle: "Finish and send it to close the deal",
-        variant: "primary" as const,
-      };
-    }
+    const draft = proposals.find((p) => (p.status?.toLowerCase() || "draft") === "draft");
     return {
-      label: "Generate Proposal → Close Deal",
-      Icon: Sparkles,
-      onClick: generateProposal,
-      title: "Ready to close this client?",
-      subtitle: "Generate and send a proposal in minutes to secure the deal",
-      variant: "primary" as const,
+      hasAny: proposals.length > 0,
+      hasAcceptedUnpaid: !!acceptedUnpaid,
+      hasPaid: !!paid,
+      hasDraftUnsent: !!draft,
+      paidProposalId: paid?.id ?? null,
+      acceptedUnpaidProposalId: acceptedUnpaid?.id ?? null,
+      draftProposalId: draft?.id ?? null,
+      anyProposalId: proposals[0]?.id ?? null,
     };
-  }, [client, proposals]);
+  }, [proposals]);
 
   // Detect missing intake details
   const intakeMissing = useMemo(() => {
@@ -682,52 +653,22 @@ export default function ClientDetail() {
           </div>
         </div>
 
-        {/* HERO — Primary CTA */}
-        {heroAction && (
-          <Card
-            className={`relative overflow-hidden ${
-              heroAction.variant === "success"
-                ? "border-emerald-500/30 bg-emerald-500/[0.06]"
-                : "border-accent/30 bg-accent/[0.08]"
-            }`}
-          >
-            <CardContent className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="space-y-1 max-w-xl">
-                {client.lead_quality === "High" && heroAction.variant === "primary" && !hasAcceptedUnpaid && (
-                  <p className="text-xs font-semibold uppercase tracking-wider text-emerald-500 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5" /> High-quality lead — act now
-                  </p>
-                )}
-                <h2 className="text-xl sm:text-2xl font-bold text-foreground">
-                  {heroAction.title}
-                </h2>
-                <p className="text-sm text-muted-foreground">{heroAction.subtitle}</p>
-              </div>
-              <Button
-                onClick={heroAction.onClick}
-                size="lg"
-                className={`gap-2 h-13 px-6 text-base font-semibold flex-shrink-0 transition-all duration-300 hover:scale-[1.03] ${
-                  heroAction.variant === "success"
-                    ? "bg-emerald-500 text-white hover:bg-emerald-600"
-                    : "bg-accent text-accent-foreground hover:bg-accent/90"
-                }`}
-              >
-                <heroAction.Icon className="w-5 h-5" /> {heroAction.label}
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Lead insight — identity, fit, missing info, original enquiry, AI reply, activity */}
+        {/* Lead insight — identity, fit, missing info, original enquiry, AI reply, activity.
+            The single primary CTA now lives inside this panel via computeLeadNextAction —
+            the old separate Hero banner has been retired to avoid competing CTAs. */}
         {(client.original_lead_message ||
           client.lead_quality ||
           client.ai_recommendation ||
           client.lead_source ||
           client.lead_score ||
-          client.lead_draft_reply) && (
+          client.lead_draft_reply ||
+          client.goals ||
+          client.project_description ||
+          proposals.length > 0) && (
           <LeadInsightPanel
             client={client}
-            hasProposal={proposals.length > 0}
+            proposalSummary={proposalSummary}
+            onOpenProposal={(pid) => navigate(`/dashboard/proposal/${pid}`)}
             draftSubject={draftSubject}
             draftBody={draftBody}
             setDraftSubject={setDraftSubject}
