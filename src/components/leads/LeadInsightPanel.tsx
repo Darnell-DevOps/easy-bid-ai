@@ -362,7 +362,9 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
         ? "border-amber-500/40 bg-amber-500/[0.08]"
         : nextAction.tone === "passive"
           ? "border-border bg-muted/30"
-          : "border-border/60 bg-background/40";
+          : nextAction.tone === "success"
+            ? "border-emerald-500/40 bg-emerald-500/[0.08]"
+            : "border-border/60 bg-background/40";
 
   return (
     <Card className="glass-card border-accent/20 overflow-hidden">

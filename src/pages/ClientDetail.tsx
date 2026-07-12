@@ -519,7 +519,7 @@ export default function ClientDetail() {
   // Proposal summary passed to LeadInsightPanel — shared with dashboard's
   // computeLeadNextAction so the CTA precedence is identical everywhere.
   const proposalSummary = useMemo(() => {
-    const paid = proposals.find((p) => p.client_paid);
+    const paid = proposals.find((p) => p.client_paid && p.invoice_content);
     const acceptedUnpaid = proposals.find(
       (p) => p.status?.toLowerCase() === "accepted" && !p.client_paid,
     );
