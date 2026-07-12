@@ -537,6 +537,33 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
           </div>
         )}
 
+        {/* Goals / Project description — read-only display; edit lives in the bottom Intake form */}
+        {(client.goals?.trim() || client.project_description?.trim()) && (
+          <div className="px-5 sm:px-6 py-4 border-b border-border/60 space-y-3">
+            {client.goals?.trim() && (
+              <div>
+                <span className="text-[11px] uppercase tracking-wider text-muted-foreground flex items-center gap-1 mb-2">
+                  <Sparkles className="w-3 h-3" /> Goals
+                </span>
+                <div className="rounded-lg bg-muted/40 border border-border/50 p-3 text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                  {client.goals}
+                </div>
+              </div>
+            )}
+            {client.project_description?.trim() && (
+              <div>
+                <span className="text-[11px] uppercase tracking-wider text-muted-foreground flex items-center gap-1 mb-2">
+                  <FileText className="w-3 h-3" /> Project description
+                </span>
+                <div className="rounded-lg bg-muted/40 border border-border/50 p-3 text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                  {client.project_description}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+
         {/* Original enquiry */}
         {message && (
           <div className="px-5 sm:px-6 py-4 border-b border-border/60">
