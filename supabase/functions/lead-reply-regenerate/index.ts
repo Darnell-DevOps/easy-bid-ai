@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
     .slice(-6)
     .map((e: any) => {
       const dir = (e?.direction || "in") === "out" ? "You wrote" : "Lead wrote";
-      const at = e?.at ? new Date(e.at).toISOString().slice(0, 16).replace("T", " ") : "";
+      const at = e?.received_at ? new Date(e.received_at).toISOString().slice(0, 16).replace("T", " ") : "";
       const text = (e?.body || e?.text || e?.message || "").toString().slice(0, 1200);
       return `[${at}] ${dir}:\n${text}`;
     })
