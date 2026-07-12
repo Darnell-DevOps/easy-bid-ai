@@ -611,7 +611,36 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
               />
             </div>
 
+            {/* AI adjustment controls — refill the editable draft only; never send. */}
+            {!client.lead_reply_sent_at && (
+              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                <span className="text-[11px] uppercase tracking-wider text-muted-foreground mr-1 inline-flex items-center gap-1">
+                  <Wand2 className="w-3 h-3" /> Adjust
+                </span>
+                {(["regenerate", "shorter", "warmer", "more_professional"] as const).map((m) => (
+                  <Button
+                    key={m}
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void runAdjustment(m)}
+                    disabled={regenBusy !== null || draftSending}
+                    className="h-7 px-2.5 text-xs gap-1.5"
+                  >
+                    {regenBusy === m ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : m === "regenerate" ? (
+                      <RefreshCw className="w-3 h-3" />
+                    ) : (
+                      <Sparkles className="w-3 h-3" />
+                    )}
+                    {m === "regenerate" ? "Regenerate" : m === "shorter" ? "Shorter" : m === "warmer" ? "Warmer" : "More professional"}
+                  </Button>
+                ))}
+              </div>
+            )}
+
             <div className="flex flex-wrap items-center gap-2 pt-1">
+
               <Button
                 size="sm"
                 onClick={onSendReply}
