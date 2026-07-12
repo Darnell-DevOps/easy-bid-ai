@@ -30,6 +30,7 @@ import { deriveStatus, type DeadlineRow } from "@/lib/deadlines";
 
 interface ProposalLite {
   id: string;
+  client_id?: string | null;
   client_name: string;
   company_name: string;
   service_type: string;
@@ -55,6 +56,13 @@ interface ClientLite {
   goals?: string | null;
   project_description?: string | null;
   lead_score?: string | null;
+  fit_score?: number | null;
+  fit_factors?: Array<{ label: string; impact: "positive" | "negative" }> | null;
+  missing_info?: string[] | null;
+  lead_quality?: string | null;
+  lead_reply_sent_at?: string | null;
+  lead_thread?: unknown;
+  not_a_lead?: boolean | null;
 }
 
 interface ContractLite {
@@ -83,7 +91,9 @@ interface BookingLite {
 interface AttentionCenterProps {
   proposals: ProposalLite[];
   clients: ClientLite[];
-  proposalClientNames: Set<string>;
+  /** Set of client_id values that already have a proposal. Replaces the old
+   *  name-string match (two same-named clients would collide). */
+  proposalClientIds: Set<string>;
 }
 
 type Tone = "critical" | "warning" | "info" | "success";
@@ -164,7 +174,7 @@ function formatMoney(n: number): string {
   return `£${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 }
 
-export default function AttentionCenter({ proposals, clients, proposalClientNames }: AttentionCenterProps) {
+export default function AttentionCenter({ proposals, clients, proposalClientIds }: AttentionCenterProps) {
   const navigate = useNavigate();
   const [contracts, setContracts] = useState<ContractLite[]>([]);
   const [onboarding, setOnboarding] = useState<OnboardingLite[]>([]);
