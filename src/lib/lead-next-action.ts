@@ -32,9 +32,9 @@ export interface LeadRowForNextAction {
   not_a_lead?: boolean | null;
 }
 
-function threadEntries(t: unknown): Array<{ at?: string; direction?: string }> {
+function threadEntries(t: unknown): Array<{ received_at?: string; direction?: string }> {
   if (!Array.isArray(t)) return [];
-  return t as Array<{ at?: string; direction?: string }>;
+  return t as Array<{ received_at?: string; direction?: string }>;
 }
 
 function lastInboundAfter(iso: string | null | undefined, thread: unknown): boolean {
@@ -44,7 +44,7 @@ function lastInboundAfter(iso: string | null | undefined, thread: unknown): bool
   if (!iso) return entries.length > 1;
   const cutoff = new Date(iso).getTime();
   return entries.some((e) => {
-    const at = e?.at ? new Date(e.at).getTime() : 0;
+    const at = e?.received_at ? new Date(e.received_at).getTime() : 0;
     return at > cutoff;
   });
 }
