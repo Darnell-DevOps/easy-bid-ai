@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { AnimateIn } from "@/hooks/use-scroll-animation";
 import { Repeat, TrendingUp, Sparkles, RefreshCw, CreditCard, AlertCircle, CheckCircle2, ArrowUpRight, Wallet } from "lucide-react";
 
@@ -22,7 +22,7 @@ const features = [
   { icon: Repeat, label: "Renewal automation" },
 ];
 
-export default function RetainersSection({ embedded = false }: { embedded?: boolean } = {}) {
+function RetainersSection({ embedded = false }: { embedded?: boolean } = {}) {
   const [animateBars, setAnimateBars] = useState(false);
   const [mrr, setMrr] = useState(0);
 
@@ -232,3 +232,5 @@ export default function RetainersSection({ embedded = false }: { embedded?: bool
     </section>
   );
 }
+
+export default memo(RetainersSection);
