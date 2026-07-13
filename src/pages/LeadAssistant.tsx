@@ -135,6 +135,7 @@ export default function LeadAssistant() {
     setLeadEmail(emptyState.leadEmail);
     setMessage(emptyState.message);
     setReply(emptyState.reply);
+    setReplySubject("");
     setService(emptyState.service);
     setPhone(emptyState.phone);
     setBudget(emptyState.budget);
