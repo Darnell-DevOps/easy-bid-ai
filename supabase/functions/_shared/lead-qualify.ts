@@ -89,10 +89,10 @@ export async function qualifyLeadById(
 
   const { data: prefsRow } = await svc
     .from("ai_preferences")
-    .select("business_name, business_services, business_ideal_client, business_target_audience, custom_instructions")
+    .select("business_name, business_services, business_ideal_client, business_target_audience, booking_link, lead_reply_tone, lead_reply_style, lead_reply_length, email_signature, custom_instructions")
     .eq("user_id", lead.user_id)
     .maybeSingle();
-  const prefs: BizPrefs | null = (prefsRow as BizPrefs) || null;
+  const prefs: LeadPrefs | null = (prefsRow as LeadPrefs) || null;
 
   const respText = formatResponses(lead.responses, labels);
   const message = [
