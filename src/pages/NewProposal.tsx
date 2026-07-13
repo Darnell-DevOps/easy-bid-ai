@@ -202,6 +202,24 @@ export default function NewProposal() {
   const originalLeadMessage: string | undefined = clientPrefill?.original_lead_message;
   const leadQuality: string | undefined = clientPrefill?.lead_quality;
   const aiRecommendation: string | undefined = clientPrefill?.ai_recommendation;
+  const prefilledClientEmail: string | undefined = clientPrefill?.email;
+  const leadThread: Array<{ subject?: string; body?: string; received_at?: string }> =
+    Array.isArray(clientPrefill?.lead_thread) ? clientPrefill.lead_thread : [];
+
+  // Summarize the 3 most recent thread entries' bodies (500 chars each) — capped, not raw.
+  const recentThreadSummary: string = useMemo(() => {
+    if (!leadThread.length) return "";
+    const sorted = [...leadThread].sort((a, b) => {
+      const ta = a?.received_at ? new Date(a.received_at).getTime() : 0;
+      const tb = b?.received_at ? new Date(b.received_at).getTime() : 0;
+      return tb - ta;
+    });
+    return sorted
+      .slice(0, 3)
+      .map((e) => (e?.body || "").toString().trim().slice(0, 500))
+      .filter(Boolean)
+      .join("\n---\n");
+  }, [leadThread]);
 
   const update = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
 
@@ -293,7 +311,11 @@ export default function NewProposal() {
 
     try {
       const { data: aiData, error: aiError } = await supabase.functions.invoke("generate-proposal", {
-        body: { ...payload, original_lead_message: originalLeadMessage },
+        body: {
+          ...payload,
+          original_lead_message: originalLeadMessage,
+          recent_thread: recentThreadSummary || undefined,
+        },
       });
 
       if (aiError) throw aiError;
@@ -302,21 +324,41 @@ export default function NewProposal() {
       if (!user) throw new Error("Not authenticated");
 
       let clientId: string | null = prefilledClientId || null;
-      const clientNameNorm = form.client_name.trim().toLowerCase();
+      const clientNameNorm = form.client_name.trim();
+      const companyNorm = form.company_name.trim();
+      const emailNorm = (prefilledClientEmail || "").trim().toLowerCase();
       if (!clientId && clientNameNorm) {
-        const { data: existing } = await supabase
-          .from("clients")
-          .select("id")
-          .eq("user_id", user.id)
-          .ilike("name", clientNameNorm)
-          .maybeSingle();
+        // Prefer email match when we have one; otherwise require name AND company to both match
+        // to avoid collisions between different people who happen to share a name.
+        let existing: { id: string } | null = null;
+        if (emailNorm) {
+          const { data } = await supabase
+            .from("clients")
+            .select("id")
+            .eq("user_id", user.id)
+            .ilike("email", emailNorm)
+            .maybeSingle();
+          existing = data ?? null;
+        }
+        if (!existing) {
+          let query = supabase
+            .from("clients")
+            .select("id")
+            .eq("user_id", user.id)
+            .ilike("name", clientNameNorm);
+          query = companyNorm
+            ? query.ilike("company", companyNorm)
+            : query.is("company", null);
+          const { data } = await query.maybeSingle();
+          existing = data ?? null;
+        }
 
         if (existing) {
           clientId = existing.id;
         } else {
           const { data: newClient } = await supabase
             .from("clients")
-            .insert({ user_id: user.id, name: form.client_name.trim(), company: form.company_name.trim() || null })
+            .insert({ user_id: user.id, name: clientNameNorm, company: companyNorm || null })
             .select("id")
             .single();
           clientId = newClient?.id || null;
