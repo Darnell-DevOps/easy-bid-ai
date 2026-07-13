@@ -189,6 +189,7 @@ export default function LeadAssistant() {
       if (data?.error) throw new Error(data.error);
 
       setReply(data.reply || "");
+      setReplySubject(data.reply_subject || "");
       setService(data.service_requested || "");
       setPhone(data.phone || "");
       setBudget(data.budget || "");
