@@ -80,10 +80,11 @@ Deno.serve(async (req) => {
     const missingInfo = normalizeMissingInfo(ai.missing_info);
     const fitScore = normalizeFitScore(ai.fit_score);
     const fitFactors = normalizeFitFactors(ai.factors);
+    const reply = ai.reply ? appendSignature(ai.reply, prefs?.email_signature) : "";
 
     return json({
       // Legacy fields the frontend already reads
-      reply: ai.reply || "",
+      reply,
       service_requested: ai.service_requested || "",
       // The shared core doesn't extract a phone; keep empty for backwards compat.
       phone: "",
