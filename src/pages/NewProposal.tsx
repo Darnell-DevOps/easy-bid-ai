@@ -93,7 +93,7 @@ export function analyzeBudgetString(raw: string): BudgetAnalysis {
   const recurringRe = /(\/\s*(month|mo|pm|pcm|wk|week|yr|year)\b|\bper\s+(month|week|year|annum)\b|\bmonthly\b|\bweekly\b|\byearly\b|\bannual(ly)?\b|\bp\/m\b)/i;
   if (recurringRe.test(lower)) return { kind: "recurring", currency };
   // Range: dash/en-dash/em-dash or "to" between number-like tokens
-  const rangeRe = /(\d[\d,]*\s*[kK]?)\s*(?:[-–—]|to)\s*(\d[\d,]*\s*[kK]?)/;
+  const rangeRe = /(\d[\d,]*\s*[kK]?)\s*(?:[-–—]|\bto\b)\s*[£$€]?\s*(\d[\d,]*\s*[kK]?)/;
   if (rangeRe.test(s)) return { kind: "range", currency };
   // Try single-number parse: strip currency symbols/whitespace, allow trailing k
   const cleaned = s.replace(/[£$€,\s]/g, "");
