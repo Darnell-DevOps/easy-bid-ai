@@ -150,6 +150,20 @@ ${opts.message}
   return JSON.parse(raw);
 }
 
+// Append the user's saved email signature to an AI-drafted reply. Mirrors the
+// helper in inbound-email-webhook so all qualification paths handle signatures
+// identically. The reply is drafted WITHOUT a sign-off (per system prompt); we
+// then append the signature verbatim if one is configured and not already
+// present.
+export function appendSignature(reply: string, signature: string | null | undefined): string {
+  const sig = (signature || "").trim();
+  if (!sig) return reply;
+  if (reply.includes(sig)) return reply;
+  return reply.trimEnd() + "\n\n" + sig;
+}
+
+
+
 // Shared normalizers used by both qualify paths so leads/clients apply identical shaping.
 export function normalizeMissingInfo(v: unknown): string[] | null {
   return Array.isArray(v)
