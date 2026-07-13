@@ -278,7 +278,7 @@ export default function LeadAssistant() {
       if (existing) {
         // Update path — only fill fields that are currently empty. Never
         // clobber richer existing data with the new manual entry.
-        const update: Record<string, unknown> = {
+        const update = {
           phone: pick(existing.phone, phone.trim() || null),
           service_requested: pick(existing.service_requested, service || null),
           project_description: pick(existing.project_description, notes || message),
@@ -295,8 +295,8 @@ export default function LeadAssistant() {
             : existing.missing_info,
           fit_score: existing.fit_score == null ? fitScore : existing.fit_score,
           fit_factors: isEmptyArr(existing.fit_factors as unknown)
-            ? (fitFactors.length ? fitFactors : null)
-            : existing.fit_factors,
+            ? (fitFactors.length ? (fitFactors as unknown as any) : null)
+            : (existing.fit_factors as any),
         };
 
         const { error: updErr } = await supabase
