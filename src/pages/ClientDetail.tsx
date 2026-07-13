@@ -161,12 +161,14 @@ interface BookingItem {
   duration_minutes: number;
 }
 
-const STATUS_OPTIONS = ["New", "Qualified", "Proposal Sent", "Won", "Lost"];
+const STATUS_OPTIONS = ["New", "Contacted", "Qualified", "Proposal Sent", "Won", "Lost"];
 
 const statusStyle = (s: string) => {
   switch (s) {
     case "New":
       return "bg-accent/10 text-accent border-accent/20";
+    case "Contacted":
+      return "bg-cyan-500/10 text-cyan-400 border-cyan-500/20";
     case "Qualified":
       return "bg-blue-500/10 text-blue-400 border-blue-500/20";
     case "Proposal Sent":
