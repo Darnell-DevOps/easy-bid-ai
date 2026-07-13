@@ -12,6 +12,7 @@ interface ProposalLite {
 }
 
 interface ClientLite {
+  id: string;
   status: string;
   lead_score?: string | null;
 }
@@ -19,7 +20,7 @@ interface ClientLite {
 interface Props {
   proposals: ProposalLite[];
   clients: ClientLite[];
-  proposalClientNames: Set<string>;
+  proposalClientIds: Set<string>;
 }
 
 const STAGES = [
@@ -33,7 +34,7 @@ const STAGES = [
 
 type StageKey = (typeof STAGES)[number]["key"];
 
-export default function ConversionPipeline({ proposals, clients, proposalClientNames }: Props) {
+export default function ConversionPipeline({ proposals, clients, proposalClientIds }: Props) {
   const navigate = useNavigate();
   const [signedCount, setSignedCount] = useState(0);
 
@@ -52,14 +53,14 @@ export default function ConversionPipeline({ proposals, clients, proposalClientN
   const counts = useMemo<Record<StageKey, number>>(() => {
     const newLead = clients.filter(
       (c) =>
-        (c.status || "").toLowerCase() === "new" &&
+        ["new", "contacted"].includes((c.status || "").toLowerCase()) &&
         scoreRank(c.lead_score) < 2 &&
-        !proposalClientNames.has(((c as any).name || "").toString().toLowerCase().trim()),
+        !proposalClientIds.has(c.id),
     ).length;
     const qualified = clients.filter(
       (c) =>
         ((c.status || "").toLowerCase() === "qualified" || scoreRank(c.lead_score) >= 2) &&
-        !proposalClientNames.has(((c as any).name || "").toString().toLowerCase().trim()),
+        !proposalClientIds.has(c.id),
     ).length;
     const proposal = proposals.filter((p) => {
       const s = (p.status || "").toLowerCase();
@@ -77,7 +78,7 @@ export default function ConversionPipeline({ proposals, clients, proposalClientN
       signed: signedCount,
       paid,
     };
-  }, [proposals, clients, proposalClientNames, signedCount]);
+  }, [proposals, clients, proposalClientIds, signedCount]);
 
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
 

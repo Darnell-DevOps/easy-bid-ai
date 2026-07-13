@@ -203,7 +203,7 @@ export default function Dashboard() {
         <ConversionPipeline
           proposals={proposals}
           clients={clients}
-          proposalClientNames={proposalClientNames}
+          proposalClientIds={proposalClientIds}
         />
 
         {/* SECONDARY: Upcoming & Recent (auto-hides if empty) */}
