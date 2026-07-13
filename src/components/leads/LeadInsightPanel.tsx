@@ -206,15 +206,16 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
     setRequalifying(true);
     try {
       const { data, error } = await supabase.functions.invoke("lead-requalify", {
-        body: { leadId: client.id },
+        body: { clientId: client.id },
       });
-      // The lead-requalify function targets the `leads` table specifically.
-      // For `clients`-based leads we fall back to re-reading fresh values from the DB
-      // (the qualification pipeline populates lead_score / lead_score_reason /
-      // ai_recommendation / missing_info directly on the clients row via the
-      // existing analysis path).
-      if (error || (data as any)?.error) {
-        // Silent fallback: re-fetch client fields in case a background job has updated them.
+      const errMsg = (error as any)?.message || (data as any)?.error;
+      if (error || errMsg) {
+        toast({
+          title: "Couldn't re-qualify",
+          description: errMsg || "Try again in a moment.",
+          variant: "destructive",
+        });
+        return;
       }
       const { data: fresh } = await supabase
         .from("clients")
@@ -231,8 +232,8 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
           fitScore: (fresh as any).fit_score,
           fitFactors: (fresh as any).fit_factors,
         });
-        toast({ title: "Re-qualification requested" });
       }
+      toast({ title: "Re-qualification complete" });
     } catch (e: any) {
       toast({
         title: "Couldn't re-qualify",
@@ -243,6 +244,7 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
       setRequalifying(false);
     }
   };
+
 
   const receivedAt = client.created_at;
   const message = client.original_lead_message || "";
