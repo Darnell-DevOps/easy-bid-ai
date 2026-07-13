@@ -702,6 +702,11 @@ export default function NewProposal() {
                 </div>
                 <div>
                   <Label htmlFor="budget">Budget</Label>
+                  {budgetPrefillNotice && (
+                    <div className="mt-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+                      Lead mentioned: <span className="font-medium">"{budgetPrefillNotice}"</span> — enter the exact proposal value below.
+                    </div>
+                  )}
                   <div className="relative mt-2 flex">
                     {/* Currency selector */}
                     <Select
