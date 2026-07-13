@@ -130,7 +130,7 @@ export async function qualifyLeadById(
         goals: ai.goals || null,
         lead_quality: ai.lead_quality || null,
         ai_recommendation: ai.ai_recommendation || null,
-        draft_reply: ai.reply || null,
+        draft_reply: draftReply,
         draft_subject: ai.reply_subject || null,
         lead_score: ai.lead_score || null,
         lead_score_reason: ai.lead_score_reason ? String(ai.lead_score_reason).slice(0, 200) : null,
