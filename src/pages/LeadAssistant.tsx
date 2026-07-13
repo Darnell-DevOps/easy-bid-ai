@@ -42,6 +42,8 @@ import InboundAddressCard from "@/components/leads/InboundAddressCard";
 import InboundReviewQueue from "@/components/leads/InboundReviewQueue";
 import LeadActivityFeed from "@/components/dashboard/LeadActivityFeed";
 
+type FitFactor = { label: string; impact: "positive" | "negative" };
+
 const emptyState = {
   leadName: "",
   leadEmail: "",
@@ -56,6 +58,11 @@ const emptyState = {
   leadQuality: "" as "High" | "Medium" | "Low" | "",
   qualityReason: "",
   aiRecommendation: "",
+  leadScore: "" as "Hot" | "Warm" | "Cold" | "Unclear" | "",
+  leadScoreReason: "",
+  missingInfo: [] as string[],
+  fitScore: null as number | null,
+  fitFactors: [] as FitFactor[],
 };
 
 const EXAMPLE_MESSAGES = [
