@@ -202,6 +202,24 @@ export default function NewProposal() {
   const originalLeadMessage: string | undefined = clientPrefill?.original_lead_message;
   const leadQuality: string | undefined = clientPrefill?.lead_quality;
   const aiRecommendation: string | undefined = clientPrefill?.ai_recommendation;
+  const prefilledClientEmail: string | undefined = clientPrefill?.email;
+  const leadThread: Array<{ subject?: string; body?: string; received_at?: string }> =
+    Array.isArray(clientPrefill?.lead_thread) ? clientPrefill.lead_thread : [];
+
+  // Summarize the 3 most recent thread entries' bodies (500 chars each) — capped, not raw.
+  const recentThreadSummary: string = useMemo(() => {
+    if (!leadThread.length) return "";
+    const sorted = [...leadThread].sort((a, b) => {
+      const ta = a?.received_at ? new Date(a.received_at).getTime() : 0;
+      const tb = b?.received_at ? new Date(b.received_at).getTime() : 0;
+      return tb - ta;
+    });
+    return sorted
+      .slice(0, 3)
+      .map((e) => (e?.body || "").toString().trim().slice(0, 500))
+      .filter(Boolean)
+      .join("\n---\n");
+  }, [leadThread]);
 
   const update = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
 
