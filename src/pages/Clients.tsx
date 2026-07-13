@@ -51,12 +51,14 @@ const qualityBadgeStyle = (q: string | null) => {
   return "";
 };
 
-const STATUS_OPTIONS = ["All", "New", "Qualified", "Proposal Sent", "Won", "Lost"];
+const STATUS_OPTIONS = ["All", "New", "Contacted", "Qualified", "Proposal Sent", "Won", "Lost"];
 
 const statusStyle = (status: string) => {
   switch (status) {
     case "New":
       return "bg-accent/10 text-accent border-accent/20";
+    case "Contacted":
+      return "bg-cyan-500/10 text-cyan-400 border-cyan-500/20";
     case "Qualified":
       return "bg-blue-500/10 text-blue-400 border-blue-500/20";
     case "Proposal Sent":
