@@ -757,7 +757,7 @@ export default function NewProposal() {
                         <button
                           key={p}
                           type="button"
-                          onClick={() => { update("budget", String(p)); markTouched("budget"); }}
+                          onClick={() => { update("budget", String(p)); markTouched("budget"); setBudgetPrefillNotice(""); }}
                           className={`text-xs px-3 py-1.5 rounded-md border transition-all ${
                             selected
                               ? "border-accent bg-accent/15 text-accent shadow-sm shadow-accent/20 ring-1 ring-accent/30"
