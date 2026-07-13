@@ -85,6 +85,7 @@ Deno.serve(async (req) => {
     return json({
       // Legacy fields the frontend already reads
       reply,
+      reply_subject: ai.reply_subject || "",
       service_requested: ai.service_requested || "",
       // The shared core doesn't extract a phone; keep empty for backwards compat.
       phone: "",
