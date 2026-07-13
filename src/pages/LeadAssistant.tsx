@@ -232,31 +232,116 @@ export default function LeadAssistant() {
       if (!user) throw new Error("Not authenticated");
 
       const status = leadQuality === "High" ? "Qualified" : "New";
+      const trimmedEmail = leadEmail.trim();
 
-      const { data, error } = await supabase
-        .from("clients")
-        .insert({
-          user_id: user.id,
-          name: leadName.trim(),
-          email: leadEmail.trim() || null,
-          phone: phone.trim() || null,
-          service_requested: service || null,
-          project_description: notes || message,
-          budget: budget || null,
-          timeline: timeline || null,
-          goals: goals || null,
-          status,
-          lead_quality: leadQuality || null,
-          ai_recommendation: aiRecommendation || null,
-          lead_source: "AI Lead Assistant",
-          original_lead_message: message,
-        })
-        .select()
-        .single();
+      // Try to find an existing client with the same email for this user.
+      let existing:
+        | {
+            id: string;
+            phone: string | null;
+            service_requested: string | null;
+            project_description: string | null;
+            budget: string | null;
+            timeline: string | null;
+            goals: string | null;
+            lead_quality: string | null;
+            ai_recommendation: string | null;
+            original_lead_message: string | null;
+            lead_score: string | null;
+            lead_score_reason: string | null;
+            missing_info: string[] | null;
+            fit_score: number | null;
+            fit_factors: unknown | null;
+          }
+        | null = null;
 
-      if (error) throw error;
-      setSavedClientId(data.id);
-      toast({ title: "Saved as client", description: `${leadName} added to your clients.` });
+      if (trimmedEmail) {
+        const { data: match } = await supabase
+          .from("clients")
+          .select(
+            "id, phone, service_requested, project_description, budget, timeline, goals, lead_quality, ai_recommendation, original_lead_message, lead_score, lead_score_reason, missing_info, fit_score, fit_factors",
+          )
+          .eq("user_id", user.id)
+          .ilike("email", trimmedEmail)
+          .is("deleted_at", null)
+          .limit(1)
+          .maybeSingle();
+        existing = (match as any) || null;
+      }
+
+      const isEmpty = (v: unknown) =>
+        v == null || (typeof v === "string" && v.trim().length === 0);
+      const isEmptyArr = (v: unknown) => !Array.isArray(v) || v.length === 0;
+      const pick = <T,>(current: T, incoming: T): T =>
+        isEmpty(current as unknown) ? incoming : current;
+
+      if (existing) {
+        // Update path — only fill fields that are currently empty. Never
+        // clobber richer existing data with the new manual entry.
+        const update: Record<string, unknown> = {
+          phone: pick(existing.phone, phone.trim() || null),
+          service_requested: pick(existing.service_requested, service || null),
+          project_description: pick(existing.project_description, notes || message),
+          budget: pick(existing.budget, budget || null),
+          timeline: pick(existing.timeline, timeline || null),
+          goals: pick(existing.goals, goals || null),
+          lead_quality: pick(existing.lead_quality, leadQuality || null),
+          ai_recommendation: pick(existing.ai_recommendation, aiRecommendation || null),
+          original_lead_message: pick(existing.original_lead_message, message),
+          lead_score: pick(existing.lead_score, leadScore || null),
+          lead_score_reason: pick(existing.lead_score_reason, leadScoreReason || null),
+          missing_info: isEmptyArr(existing.missing_info)
+            ? (missingInfo.length ? missingInfo : null)
+            : existing.missing_info,
+          fit_score: existing.fit_score == null ? fitScore : existing.fit_score,
+          fit_factors: isEmptyArr(existing.fit_factors as unknown)
+            ? (fitFactors.length ? fitFactors : null)
+            : existing.fit_factors,
+        };
+
+        const { error: updErr } = await supabase
+          .from("clients")
+          .update(update)
+          .eq("id", existing.id)
+          .eq("user_id", user.id);
+        if (updErr) throw updErr;
+
+        setSavedClientId(existing.id);
+        toast({
+          title: "Client updated",
+          description: `${leadName} already existed — enriched with new details.`,
+        });
+      } else {
+        const { data, error } = await supabase
+          .from("clients")
+          .insert({
+            user_id: user.id,
+            name: leadName.trim(),
+            email: trimmedEmail || null,
+            phone: phone.trim() || null,
+            service_requested: service || null,
+            project_description: notes || message,
+            budget: budget || null,
+            timeline: timeline || null,
+            goals: goals || null,
+            status,
+            lead_quality: leadQuality || null,
+            ai_recommendation: aiRecommendation || null,
+            lead_source: "AI Lead Assistant",
+            original_lead_message: message,
+            lead_score: leadScore || null,
+            lead_score_reason: leadScoreReason || null,
+            missing_info: missingInfo.length ? missingInfo : null,
+            fit_score: fitScore,
+            fit_factors: fitFactors.length ? fitFactors : null,
+          })
+          .select("id")
+          .single();
+
+        if (error) throw error;
+        setSavedClientId(data.id);
+        toast({ title: "Saved as client", description: `${leadName} added to your clients.` });
+      }
     } catch (e: any) {
       toast({ title: "Failed to save", description: e.message, variant: "destructive" });
     } finally {
