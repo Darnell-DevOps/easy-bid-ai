@@ -170,8 +170,14 @@ export default function NewProposal() {
 
   // Initial budget normalisation: parse digits from prefill so we store digits and display formatted
   const initialBudgetRaw = clientPrefill?.budget || templateData?.prefill?.budget || "";
-  const initialBudgetDigits = parseBudgetDigits(initialBudgetRaw);
-  const initialCurrency: CurrencyCode = detectCurrency(initialBudgetRaw);
+  const initialBudgetAnalysis = analyzeBudgetString(initialBudgetRaw);
+  const initialBudgetDigits =
+    initialBudgetAnalysis.kind === "exact" ? String(initialBudgetAnalysis.exactValue) : "";
+  const initialCurrency: CurrencyCode = initialBudgetAnalysis.currency;
+  const initialBudgetNotice =
+    initialBudgetRaw && initialBudgetAnalysis.kind !== "exact" && initialBudgetAnalysis.kind !== "empty"
+      ? initialBudgetRaw
+      : "";
   const initialTimelineRaw = clientPrefill?.timeline || templateData?.prefill?.timeline || "";
   const initialTimeline = parseTimeline(initialTimelineRaw);
 
