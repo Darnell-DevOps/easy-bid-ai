@@ -737,7 +737,11 @@ export default function NewProposal() {
                         type="text"
                         inputMode="numeric"
                         value={form.budget ? formatBudget(form.budget, currency) : ""}
-                        onChange={(e) => update("budget", parseBudgetDigits(e.target.value))}
+                        onChange={(e) => {
+                          const digits = parseBudgetDigits(e.target.value);
+                          update("budget", digits);
+                          if (digits && budgetPrefillNotice) setBudgetPrefillNotice("");
+                        }}
                         onBlur={() => markTouched("budget")}
                         placeholder={`e.g. ${getCurrency(currency).symbol}5,000`}
                         required
