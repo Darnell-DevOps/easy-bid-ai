@@ -467,17 +467,26 @@ export default function NewProposal() {
     const c = savedClients.find((x) => x.id === clientId);
     if (!c) return;
     const tParsed = parseTimeline(c.timeline || "");
+    const budgetAnalysis = analyzeBudgetString(c.budget || "");
+    const safeBudgetDigits =
+      budgetAnalysis.kind === "exact" ? String(budgetAnalysis.exactValue) : "";
     setForm({
       client_name: c.name,
       company_name: c.company || "",
       service_type: c.service_requested || "",
       project_scope: c.project_description || "",
-      budget: parseBudgetDigits(c.budget || ""),
+      budget: safeBudgetDigits,
       timeline: c.timeline || "",
       notes: "",
       goals: c.goals || "",
       deliverables: "",
     });
+    setCurrency(budgetAnalysis.currency);
+    setBudgetPrefillNotice(
+      c.budget && budgetAnalysis.kind !== "exact" && budgetAnalysis.kind !== "empty"
+        ? c.budget
+        : "",
+    );
     setTimelineQty(tParsed.qty);
     setTimelineUnit(tParsed.unit);
     setTimelineCustom(tParsed.custom);
