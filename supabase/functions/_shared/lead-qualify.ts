@@ -261,7 +261,7 @@ export async function qualifyClientById(
 
     // Never clobber a reply that's already been sent to the client.
     if (!client.lead_reply_sent_at && ai.reply) {
-      update.lead_draft_reply = ai.reply;
+      update.lead_draft_reply = appendSignature(ai.reply, prefs?.email_signature);
       update.lead_draft_subject = ai.reply_subject || null;
     }
 
