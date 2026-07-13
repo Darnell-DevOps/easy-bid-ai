@@ -119,6 +119,7 @@ function buildClientContext(p: any) {
   if (p.original_lead_message) lines.push(`- Original lead enquiry: ${p.original_lead_message}`);
   if (p.recent_thread) lines.push(`- Later clarification from client: ${p.recent_thread}`);
   if (p.notes) lines.push(`- Additional context: ${p.notes}`);
+  return lines.join("\n");
 }
 
 function buildFullPrompt(p: any) {
