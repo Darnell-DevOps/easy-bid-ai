@@ -117,6 +117,11 @@ export default function LeadAssistant() {
   const [leadQuality, setLeadQuality] = useState<"High" | "Medium" | "Low" | "">("");
   const [qualityReason, setQualityReason] = useState("");
   const [aiRecommendation, setAiRecommendation] = useState("");
+  const [leadScore, setLeadScore] = useState<"Hot" | "Warm" | "Cold" | "Unclear" | "">("");
+  const [leadScoreReason, setLeadScoreReason] = useState("");
+  const [missingInfo, setMissingInfo] = useState<string[]>([]);
+  const [fitScore, setFitScore] = useState<number | null>(null);
+  const [fitFactors, setFitFactors] = useState<FitFactor[]>([]);
 
   const [saving, setSaving] = useState(false);
   const [savedClientId, setSavedClientId] = useState<string | null>(null);
@@ -138,6 +143,11 @@ export default function LeadAssistant() {
     setLeadQuality(emptyState.leadQuality);
     setQualityReason(emptyState.qualityReason);
     setAiRecommendation(emptyState.aiRecommendation);
+    setLeadScore(emptyState.leadScore);
+    setLeadScoreReason(emptyState.leadScoreReason);
+    setMissingInfo(emptyState.missingInfo);
+    setFitScore(emptyState.fitScore);
+    setFitFactors(emptyState.fitFactors);
     setHasResponse(false);
     setSavedClientId(null);
     setErrors({});
