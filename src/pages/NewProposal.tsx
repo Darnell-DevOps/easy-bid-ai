@@ -201,6 +201,10 @@ export default function NewProposal() {
   // Currency state
   const [currency, setCurrency] = useState<CurrencyCode>(initialCurrency);
   const budgetInputRef = useRef<HTMLInputElement>(null);
+  // If a prefilled budget was not a clean exact number (range / recurring /
+  // ambiguous), surface the raw string as a callout instead of silently
+  // guessing a value.
+  const [budgetPrefillNotice, setBudgetPrefillNotice] = useState<string>(initialBudgetNotice);
 
   // Structured timeline state
   const [timelineQty, setTimelineQty] = useState<string>(initialTimeline.qty);
