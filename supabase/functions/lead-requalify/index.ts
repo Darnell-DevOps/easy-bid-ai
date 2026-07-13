@@ -1,17 +1,21 @@
-// Authenticated endpoint for the LeadInbox "Re-qualify" button.
-// Verifies the caller's JWT and that they own the lead before re-running qualification.
+// Authenticated endpoint for the "Re-qualify" button.
+// Accepts either { leadId } (leads table) or { clientId } (clients table).
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { qualifyCorsHeaders, qualifyLeadById } from "../_shared/lead-qualify.ts";
+import { qualifyClientById, qualifyCorsHeaders, qualifyLeadById } from "../_shared/lead-qualify.ts";
+
+function jsonResponse(body: unknown, status: number) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...qualifyCorsHeaders, "Content-Type": "application/json" },
+  });
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: qualifyCorsHeaders });
 
   const authHeader = req.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { ...qualifyCorsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ error: "Unauthorized" }, 401);
   }
 
   const supabase = createClient(
@@ -23,44 +27,44 @@ Deno.serve(async (req) => {
   const token = authHeader.replace("Bearer ", "");
   const { data: claims, error: claimsErr } = await supabase.auth.getClaims(token);
   if (claimsErr || !claims?.claims?.sub) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { ...qualifyCorsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ error: "Unauthorized" }, 401);
   }
   const userId = claims.claims.sub;
 
   let body: any;
   try { body = await req.json(); } catch {
-    return new Response(JSON.stringify({ error: "Invalid JSON" }), {
-      status: 400,
-      headers: { ...qualifyCorsHeaders, "Content-Type": "application/json" },
-    });
-  }
-  const leadId = body?.leadId;
-  if (!leadId || typeof leadId !== "string") {
-    return new Response(JSON.stringify({ error: "leadId required" }), {
-      status: 400,
-      headers: { ...qualifyCorsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ error: "Invalid JSON" }, 400);
   }
 
-  // Ownership check (RLS-scoped client)
-  const { data: lead, error: leadErr } = await supabase
-    .from("leads")
+  const leadId = typeof body?.leadId === "string" ? body.leadId : null;
+  const clientId = typeof body?.clientId === "string" ? body.clientId : null;
+
+  if ((!leadId && !clientId) || (leadId && clientId)) {
+    return jsonResponse({ error: "Provide exactly one of leadId or clientId" }, 400);
+  }
+
+  if (leadId) {
+    const { data: lead, error: leadErr } = await supabase
+      .from("leads")
+      .select("id, user_id")
+      .eq("id", leadId)
+      .maybeSingle();
+    if (leadErr || !lead || lead.user_id !== userId) {
+      return jsonResponse({ error: "Lead not found" }, 404);
+    }
+    const result = await qualifyLeadById(leadId, { force: true });
+    return jsonResponse(result, result.ok ? 200 : 500);
+  }
+
+  // clientId path
+  const { data: client, error: clientErr } = await supabase
+    .from("clients")
     .select("id, user_id")
-    .eq("id", leadId)
+    .eq("id", clientId!)
     .maybeSingle();
-  if (leadErr || !lead || lead.user_id !== userId) {
-    return new Response(JSON.stringify({ error: "Lead not found" }), {
-      status: 404,
-      headers: { ...qualifyCorsHeaders, "Content-Type": "application/json" },
-    });
+  if (clientErr || !client || client.user_id !== userId) {
+    return jsonResponse({ error: "Client not found" }, 404);
   }
-
-  const result = await qualifyLeadById(leadId, { force: true });
-  return new Response(JSON.stringify(result), {
-    status: result.ok ? 200 : 500,
-    headers: { ...qualifyCorsHeaders, "Content-Type": "application/json" },
-  });
+  const result = await qualifyClientById(clientId!);
+  return jsonResponse(result, result.ok ? 200 : 500);
 });
