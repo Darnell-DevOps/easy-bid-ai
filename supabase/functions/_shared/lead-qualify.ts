@@ -199,9 +199,11 @@ ${opts.message}
 
 function routeStatus(quality: string): string {
   if (quality === "High") return "qualified";
-  if (quality === "Low") return "archived";
+  // Low-quality leads stay visible as "new" — the Low badge flags them.
+  // Archiving is a manual user action only (see LeadInbox archive button).
   return "new";
 }
+
 
 export async function qualifyLeadById(
   leadId: string,
