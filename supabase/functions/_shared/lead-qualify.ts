@@ -3,7 +3,8 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { logLeadActivity } from "./lead-activity.ts";
 import {
-  type BizPrefs,
+  appendSignature,
+  type LeadPrefs,
   normalizeFitFactors,
   normalizeFitScore,
   normalizeMissingInfo,
