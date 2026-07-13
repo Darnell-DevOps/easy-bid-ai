@@ -311,7 +311,11 @@ export default function NewProposal() {
 
     try {
       const { data: aiData, error: aiError } = await supabase.functions.invoke("generate-proposal", {
-        body: { ...payload, original_lead_message: originalLeadMessage },
+        body: {
+          ...payload,
+          original_lead_message: originalLeadMessage,
+          recent_thread: recentThreadSummary || undefined,
+        },
       });
 
       if (aiError) throw aiError;
@@ -320,21 +324,41 @@ export default function NewProposal() {
       if (!user) throw new Error("Not authenticated");
 
       let clientId: string | null = prefilledClientId || null;
-      const clientNameNorm = form.client_name.trim().toLowerCase();
+      const clientNameNorm = form.client_name.trim();
+      const companyNorm = form.company_name.trim();
+      const emailNorm = (prefilledClientEmail || "").trim().toLowerCase();
       if (!clientId && clientNameNorm) {
-        const { data: existing } = await supabase
-          .from("clients")
-          .select("id")
-          .eq("user_id", user.id)
-          .ilike("name", clientNameNorm)
-          .maybeSingle();
+        // Prefer email match when we have one; otherwise require name AND company to both match
+        // to avoid collisions between different people who happen to share a name.
+        let existing: { id: string } | null = null;
+        if (emailNorm) {
+          const { data } = await supabase
+            .from("clients")
+            .select("id")
+            .eq("user_id", user.id)
+            .ilike("email", emailNorm)
+            .maybeSingle();
+          existing = data ?? null;
+        }
+        if (!existing) {
+          let query = supabase
+            .from("clients")
+            .select("id")
+            .eq("user_id", user.id)
+            .ilike("name", clientNameNorm);
+          query = companyNorm
+            ? query.ilike("company", companyNorm)
+            : query.is("company", null);
+          const { data } = await query.maybeSingle();
+          existing = data ?? null;
+        }
 
         if (existing) {
           clientId = existing.id;
         } else {
           const { data: newClient } = await supabase
             .from("clients")
-            .insert({ user_id: user.id, name: form.client_name.trim(), company: form.company_name.trim() || null })
+            .insert({ user_id: user.id, name: clientNameNorm, company: companyNorm || null })
             .select("id")
             .single();
           clientId = newClient?.id || null;
