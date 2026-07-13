@@ -3,7 +3,8 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { logLeadActivity } from "./lead-activity.ts";
 import {
-  type BizPrefs,
+  appendSignature,
+  type LeadPrefs,
   normalizeFitFactors,
   normalizeFitScore,
   normalizeMissingInfo,
@@ -88,10 +89,10 @@ export async function qualifyLeadById(
 
   const { data: prefsRow } = await svc
     .from("ai_preferences")
-    .select("business_name, business_services, business_ideal_client, business_target_audience, custom_instructions")
+    .select("business_name, business_services, business_ideal_client, business_target_audience, booking_link, lead_reply_tone, lead_reply_style, lead_reply_length, email_signature, custom_instructions")
     .eq("user_id", lead.user_id)
     .maybeSingle();
-  const prefs: BizPrefs | null = (prefsRow as BizPrefs) || null;
+  const prefs: LeadPrefs | null = (prefsRow as LeadPrefs) || null;
 
   const respText = formatResponses(lead.responses, labels);
   const message = [
@@ -118,6 +119,7 @@ export async function qualifyLeadById(
     const missingInfo = normalizeMissingInfo(ai.missing_info);
     const fitScore = normalizeFitScore(ai.fit_score);
     const fitFactors = normalizeFitFactors(ai.factors);
+    const draftReply = ai.reply ? appendSignature(ai.reply, prefs?.email_signature) : null;
 
     const { error: updErr } = await svc
       .from("leads")
@@ -128,7 +130,7 @@ export async function qualifyLeadById(
         goals: ai.goals || null,
         lead_quality: ai.lead_quality || null,
         ai_recommendation: ai.ai_recommendation || null,
-        draft_reply: ai.reply || null,
+        draft_reply: draftReply,
         draft_subject: ai.reply_subject || null,
         lead_score: ai.lead_score || null,
         lead_score_reason: ai.lead_score_reason ? String(ai.lead_score_reason).slice(0, 200) : null,
@@ -203,10 +205,10 @@ export async function qualifyClientById(
 
   const { data: prefsRow } = await svc
     .from("ai_preferences")
-    .select("business_name, business_services, business_ideal_client, business_target_audience, custom_instructions")
+    .select("business_name, business_services, business_ideal_client, business_target_audience, booking_link, lead_reply_tone, lead_reply_style, lead_reply_length, email_signature, custom_instructions")
     .eq("user_id", client.user_id)
     .maybeSingle();
-  const prefs: BizPrefs | null = (prefsRow as BizPrefs) || null;
+  const prefs: LeadPrefs | null = (prefsRow as LeadPrefs) || null;
 
   // Build the message: prefer original enquiry + later thread replies; fall back
   // to the structured project fields if the client was manually entered.
@@ -259,7 +261,7 @@ export async function qualifyClientById(
 
     // Never clobber a reply that's already been sent to the client.
     if (!client.lead_reply_sent_at && ai.reply) {
-      update.lead_draft_reply = ai.reply;
+      update.lead_draft_reply = appendSignature(ai.reply, prefs?.email_signature);
       update.lead_draft_subject = ai.reply_subject || null;
     }
 

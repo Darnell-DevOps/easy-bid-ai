@@ -3,6 +3,7 @@
 // so manually-entered leads get identical intelligence.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import {
+  appendSignature,
   normalizeFitFactors,
   normalizeFitScore,
   normalizeMissingInfo,
@@ -53,7 +54,7 @@ Deno.serve(async (req) => {
     // the automatic pipeline.
     const { data: prefs } = await supabase
       .from("ai_preferences")
-      .select("business_name, business_services, business_ideal_client, business_target_audience, custom_instructions")
+      .select("business_name, business_services, business_ideal_client, business_target_audience, booking_link, lead_reply_tone, lead_reply_style, lead_reply_length, email_signature, custom_instructions")
       .eq("user_id", userId)
       .maybeSingle();
 
@@ -79,10 +80,11 @@ Deno.serve(async (req) => {
     const missingInfo = normalizeMissingInfo(ai.missing_info);
     const fitScore = normalizeFitScore(ai.fit_score);
     const fitFactors = normalizeFitFactors(ai.factors);
+    const reply = ai.reply ? appendSignature(ai.reply, prefs?.email_signature) : "";
 
     return json({
       // Legacy fields the frontend already reads
-      reply: ai.reply || "",
+      reply,
       service_requested: ai.service_requested || "",
       // The shared core doesn't extract a phone; keep empty for backwards compat.
       phone: "",
