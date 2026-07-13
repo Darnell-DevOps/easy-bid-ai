@@ -42,6 +42,8 @@ import InboundAddressCard from "@/components/leads/InboundAddressCard";
 import InboundReviewQueue from "@/components/leads/InboundReviewQueue";
 import LeadActivityFeed from "@/components/dashboard/LeadActivityFeed";
 
+type FitFactor = { label: string; impact: "positive" | "negative" };
+
 const emptyState = {
   leadName: "",
   leadEmail: "",
@@ -56,6 +58,11 @@ const emptyState = {
   leadQuality: "" as "High" | "Medium" | "Low" | "",
   qualityReason: "",
   aiRecommendation: "",
+  leadScore: "" as "Hot" | "Warm" | "Cold" | "Unclear" | "",
+  leadScoreReason: "",
+  missingInfo: [] as string[],
+  fitScore: null as number | null,
+  fitFactors: [] as FitFactor[],
 };
 
 const EXAMPLE_MESSAGES = [
@@ -110,6 +117,11 @@ export default function LeadAssistant() {
   const [leadQuality, setLeadQuality] = useState<"High" | "Medium" | "Low" | "">("");
   const [qualityReason, setQualityReason] = useState("");
   const [aiRecommendation, setAiRecommendation] = useState("");
+  const [leadScore, setLeadScore] = useState<"Hot" | "Warm" | "Cold" | "Unclear" | "">("");
+  const [leadScoreReason, setLeadScoreReason] = useState("");
+  const [missingInfo, setMissingInfo] = useState<string[]>([]);
+  const [fitScore, setFitScore] = useState<number | null>(null);
+  const [fitFactors, setFitFactors] = useState<FitFactor[]>([]);
 
   const [saving, setSaving] = useState(false);
   const [savedClientId, setSavedClientId] = useState<string | null>(null);
@@ -131,6 +143,11 @@ export default function LeadAssistant() {
     setLeadQuality(emptyState.leadQuality);
     setQualityReason(emptyState.qualityReason);
     setAiRecommendation(emptyState.aiRecommendation);
+    setLeadScore(emptyState.leadScore);
+    setLeadScoreReason(emptyState.leadScoreReason);
+    setMissingInfo(emptyState.missingInfo);
+    setFitScore(emptyState.fitScore);
+    setFitFactors(emptyState.fitFactors);
     setHasResponse(false);
     setSavedClientId(null);
     setErrors({});
@@ -180,6 +197,11 @@ export default function LeadAssistant() {
       setLeadQuality((data.lead_quality as "High" | "Medium" | "Low") || "");
       setQualityReason(data.quality_reason || "");
       setAiRecommendation(data.ai_recommendation || "");
+      setLeadScore((data.lead_score as "Hot" | "Warm" | "Cold" | "Unclear") || "");
+      setLeadScoreReason(data.lead_score_reason || "");
+      setMissingInfo(Array.isArray(data.missing_info) ? data.missing_info : []);
+      setFitScore(typeof data.fit_score === "number" ? data.fit_score : null);
+      setFitFactors(Array.isArray(data.factors) ? data.factors : []);
       setHasResponse(true);
       setSavedClientId(null);
     } catch (e: any) {
@@ -210,31 +232,116 @@ export default function LeadAssistant() {
       if (!user) throw new Error("Not authenticated");
 
       const status = leadQuality === "High" ? "Qualified" : "New";
+      const trimmedEmail = leadEmail.trim();
 
-      const { data, error } = await supabase
-        .from("clients")
-        .insert({
-          user_id: user.id,
-          name: leadName.trim(),
-          email: leadEmail.trim() || null,
-          phone: phone.trim() || null,
-          service_requested: service || null,
-          project_description: notes || message,
-          budget: budget || null,
-          timeline: timeline || null,
-          goals: goals || null,
-          status,
-          lead_quality: leadQuality || null,
-          ai_recommendation: aiRecommendation || null,
-          lead_source: "AI Lead Assistant",
-          original_lead_message: message,
-        })
-        .select()
-        .single();
+      // Try to find an existing client with the same email for this user.
+      let existing:
+        | {
+            id: string;
+            phone: string | null;
+            service_requested: string | null;
+            project_description: string | null;
+            budget: string | null;
+            timeline: string | null;
+            goals: string | null;
+            lead_quality: string | null;
+            ai_recommendation: string | null;
+            original_lead_message: string | null;
+            lead_score: string | null;
+            lead_score_reason: string | null;
+            missing_info: string[] | null;
+            fit_score: number | null;
+            fit_factors: unknown | null;
+          }
+        | null = null;
 
-      if (error) throw error;
-      setSavedClientId(data.id);
-      toast({ title: "Saved as client", description: `${leadName} added to your clients.` });
+      if (trimmedEmail) {
+        const { data: match } = await supabase
+          .from("clients")
+          .select(
+            "id, phone, service_requested, project_description, budget, timeline, goals, lead_quality, ai_recommendation, original_lead_message, lead_score, lead_score_reason, missing_info, fit_score, fit_factors",
+          )
+          .eq("user_id", user.id)
+          .ilike("email", trimmedEmail)
+          .is("deleted_at", null)
+          .limit(1)
+          .maybeSingle();
+        existing = (match as any) || null;
+      }
+
+      const isEmpty = (v: unknown) =>
+        v == null || (typeof v === "string" && v.trim().length === 0);
+      const isEmptyArr = (v: unknown) => !Array.isArray(v) || v.length === 0;
+      const pick = <T,>(current: T, incoming: T): T =>
+        isEmpty(current as unknown) ? incoming : current;
+
+      if (existing) {
+        // Update path — only fill fields that are currently empty. Never
+        // clobber richer existing data with the new manual entry.
+        const update = {
+          phone: pick(existing.phone, phone.trim() || null),
+          service_requested: pick(existing.service_requested, service || null),
+          project_description: pick(existing.project_description, notes || message),
+          budget: pick(existing.budget, budget || null),
+          timeline: pick(existing.timeline, timeline || null),
+          goals: pick(existing.goals, goals || null),
+          lead_quality: pick(existing.lead_quality, leadQuality || null),
+          ai_recommendation: pick(existing.ai_recommendation, aiRecommendation || null),
+          original_lead_message: pick(existing.original_lead_message, message),
+          lead_score: pick(existing.lead_score, leadScore || null),
+          lead_score_reason: pick(existing.lead_score_reason, leadScoreReason || null),
+          missing_info: isEmptyArr(existing.missing_info)
+            ? (missingInfo.length ? missingInfo : null)
+            : existing.missing_info,
+          fit_score: existing.fit_score == null ? fitScore : existing.fit_score,
+          fit_factors: isEmptyArr(existing.fit_factors as unknown)
+            ? (fitFactors.length ? (fitFactors as unknown as any) : null)
+            : (existing.fit_factors as any),
+        };
+
+        const { error: updErr } = await supabase
+          .from("clients")
+          .update(update)
+          .eq("id", existing.id)
+          .eq("user_id", user.id);
+        if (updErr) throw updErr;
+
+        setSavedClientId(existing.id);
+        toast({
+          title: "Client updated",
+          description: `${leadName} already existed — enriched with new details.`,
+        });
+      } else {
+        const { data, error } = await supabase
+          .from("clients")
+          .insert({
+            user_id: user.id,
+            name: leadName.trim(),
+            email: trimmedEmail || null,
+            phone: phone.trim() || null,
+            service_requested: service || null,
+            project_description: notes || message,
+            budget: budget || null,
+            timeline: timeline || null,
+            goals: goals || null,
+            status,
+            lead_quality: leadQuality || null,
+            ai_recommendation: aiRecommendation || null,
+            lead_source: "AI Lead Assistant",
+            original_lead_message: message,
+            lead_score: leadScore || null,
+            lead_score_reason: leadScoreReason || null,
+            missing_info: missingInfo.length ? missingInfo : null,
+            fit_score: fitScore,
+            fit_factors: fitFactors.length ? fitFactors : null,
+          })
+          .select("id")
+          .single();
+
+        if (error) throw error;
+        setSavedClientId(data.id);
+        toast({ title: "Saved as client", description: `${leadName} added to your clients.` });
+      }
     } catch (e: any) {
       toast({ title: "Failed to save", description: e.message, variant: "destructive" });
     } finally {
@@ -648,6 +755,61 @@ export default function LeadAssistant() {
                       <p className="text-sm font-medium">{aiRecommendation}</p>
                     </div>
                   </div>
+
+                  {(leadScore || fitScore != null || fitFactors.length > 0 || missingInfo.length > 0) && (
+                    <div className="rounded-lg border border-border/60 bg-muted/30 p-4 space-y-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {leadScore && (
+                          <Badge
+                            variant="outline"
+                            className={
+                              leadScore === "Hot"
+                                ? "bg-emerald-500/15 text-emerald-600 border-emerald-500/30"
+                                : leadScore === "Warm"
+                                ? "bg-amber-500/15 text-amber-600 border-amber-500/30"
+                                : leadScore === "Cold"
+                                ? "bg-sky-500/15 text-sky-600 border-sky-500/30"
+                                : "bg-muted text-muted-foreground border-border"
+                            }
+                          >
+                            {leadScore}
+                          </Badge>
+                        )}
+                        {fitScore != null && (
+                          <Badge variant="outline" className="text-muted-foreground">
+                            Fit {fitScore}/100
+                          </Badge>
+                        )}
+                      </div>
+                      {leadScoreReason && (
+                        <p className="text-xs text-muted-foreground leading-relaxed">{leadScoreReason}</p>
+                      )}
+                      {fitFactors.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {fitFactors.map((f, i) => (
+                            <Badge
+                              key={i}
+                              variant="outline"
+                              className={
+                                f.impact === "positive"
+                                  ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-[11px]"
+                                  : "bg-rose-500/10 text-rose-600 border-rose-500/30 text-[11px]"
+                              }
+                            >
+                              {f.impact === "positive" ? "+ " : "− "}
+                              {f.label}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                      {missingInfo.length > 0 && (
+                        <div className="text-[11px] text-muted-foreground">
+                          <span className="uppercase tracking-wide mr-1">Missing:</span>
+                          {missingInfo.join(" · ")}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}

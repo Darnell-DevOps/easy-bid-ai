@@ -1,166 +1,112 @@
+// Authenticated endpoint for the manual AI Sales Assistant (LeadAssistant.tsx).
+// Uses the same shared qualification core as the automatic form/email pipelines
+// so manually-entered leads get identical intelligence.
+import { createClient } from "npm:@supabase/supabase-js@2";
+import {
+  normalizeFitFactors,
+  normalizeFitScore,
+  normalizeMissingInfo,
+  runQualification,
+} from "../_shared/qualify-core.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return json({ error: "Unauthorized" }, 401);
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } },
+    );
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claims, error: claimsErr } = await supabase.auth.getClaims(token);
+    if (claimsErr || !claims?.claims?.sub) {
+      return json({ error: "Unauthorized" }, 401);
+    }
+    const userId = claims.claims.sub;
+
     const { leadName, leadEmail, message } = await req.json();
-
     if (!message || typeof message !== "string" || message.trim().length < 5) {
-      return new Response(JSON.stringify({ error: "Message is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return json({ error: "Message is required" }, 400);
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
+    // Load the caller's business context so manual qualification matches
+    // the automatic pipeline.
+    const { data: prefs } = await supabase
+      .from("ai_preferences")
+      .select("business_name, business_services, business_ideal_client, business_target_audience, custom_instructions")
+      .eq("user_id", userId)
+      .maybeSingle();
 
-    const systemPrompt = `You are an elite sales assistant for a freelance/agency professional. Your job is to draft a reply to an incoming lead that:
-- Sounds professional, warm, friendly, and conversion-focused
-- Acknowledges the lead's request specifically (reference what they said)
-- Asks 1-2 smart qualification questions (about budget, timeline, scope, or goals — pick the most relevant ones missing)
-- Ends with a clear next step (e.g. quick call, sending a proposal)
-- Stays concise (under 180 words)
-- Uses the lead's name if provided
-- Does NOT use placeholders like [Your Name] — sign off as "Best,\\nThe Team" or omit signature
-
-Also extract any qualification info already mentioned in the lead's message.
-
-Then assess lead quality based on:
-- Message clarity (is the request specific?)
-- Budget (mentioned and realistic?)
-- Urgency / timeline
-- Service fit (sounds like a fit for a freelancer/agency?)
-
-Pick exactly one quality: "High", "Medium", or "Low".
-Pick exactly one recommendation:
-- "High" -> "Recommend generating proposal"
-- "Medium" -> "Recommend asking more questions"
-- "Low" -> "May not be worth pursuing"
-
-Respond ONLY by calling the provided tool.`;
-
-    const userPrompt = `Lead name: ${leadName || "(not provided)"}
-Lead email: ${leadEmail || "(not provided)"}
-
-Their message:
-"""
-${message}
-"""`;
-
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "draft_lead_reply",
-              description: "Draft a reply to the lead and extract qualification details",
-              parameters: {
-                type: "object",
-                properties: {
-                  reply: {
-                    type: "string",
-                    description: "The full email/message reply to the lead",
-                  },
-                  service_requested: {
-                    type: "string",
-                    description: "Service the lead is asking about, or empty string if unclear",
-                  },
-                  phone: {
-                    type: "string",
-                    description: "Phone number mentioned in the message, or empty string",
-                  },
-                  goals: {
-                    type: "string",
-                    description: "What the lead seems to want to achieve / their desired outcome, or empty string",
-                  },
-                  budget: {
-                    type: "string",
-                    description: "Mentioned budget, or empty string",
-                  },
-                  timeline: {
-                    type: "string",
-                    description: "Mentioned timeline/deadline, or empty string",
-                  },
-                  notes: {
-                    type: "string",
-                    description: "Short summary of key context, goals, or anything notable",
-                  },
-                  lead_quality: {
-                    type: "string",
-                    enum: ["High", "Medium", "Low"],
-                    description: "Overall lead quality rating",
-                  },
-                  quality_reason: {
-                    type: "string",
-                    description: "One short sentence explaining the quality rating",
-                  },
-                  ai_recommendation: {
-                    type: "string",
-                    description: "Recommended next action based on lead quality",
-                  },
-                },
-                required: ["reply", "service_requested", "phone", "goals", "budget", "timeline", "notes", "lead_quality", "quality_reason", "ai_recommendation"],
-                additionalProperties: false,
-              },
-            },
-          },
-        ],
-        tool_choice: { type: "function", function: { name: "draft_lead_reply" } },
-      }),
-    });
-
-    if (response.status === 429) {
-      return new Response(JSON.stringify({ error: "Rate limit reached. Please try again in a moment." }), {
-        status: 429,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    let ai: any;
+    try {
+      ai = await runQualification({
+        name: leadName || "",
+        email: leadEmail || null,
+        phone: null,
+        company: null,
+        source: "manual",
+        message,
+        prefs: prefs || null,
       });
-    }
-    if (response.status === 402) {
-      return new Response(JSON.stringify({ error: "AI credits exhausted. Add credits in workspace settings." }), {
-        status: 402,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    if (!response.ok) {
-      const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
-      return new Response(JSON.stringify({ error: "AI generation failed" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    } catch (e: any) {
+      const msg = String(e?.message || "");
+      if (msg.includes("Rate limit")) return json({ error: msg }, 429);
+      if (msg.includes("credits")) return json({ error: msg }, 402);
+      console.error("lead-response qualification failed", e);
+      return json({ error: "AI generation failed" }, 500);
     }
 
-    const data = await response.json();
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall) throw new Error("No tool call returned");
+    const missingInfo = normalizeMissingInfo(ai.missing_info);
+    const fitScore = normalizeFitScore(ai.fit_score);
+    const fitFactors = normalizeFitFactors(ai.factors);
 
-    const args = JSON.parse(toolCall.function.arguments);
-
-    return new Response(JSON.stringify(args), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    return json({
+      // Legacy fields the frontend already reads
+      reply: ai.reply || "",
+      service_requested: ai.service_requested || "",
+      // The shared core doesn't extract a phone; keep empty for backwards compat.
+      phone: "",
+      budget: ai.budget || "",
+      timeline: ai.timeline || "",
+      goals: ai.goals || "",
+      notes: ai.notes || "",
+      lead_quality: ai.lead_quality || "",
+      quality_reason: ai.quality_reason || "",
+      ai_recommendation: ai.ai_recommendation || "",
+      // New fields at parity with lead-requalify / inbound pipelines
+      lead_score: ai.lead_score || null,
+      lead_score_reason: ai.lead_score_reason
+        ? String(ai.lead_score_reason).slice(0, 200)
+        : null,
+      missing_info: missingInfo,
+      fit_score: fitScore,
+      factors: fitFactors,
     });
   } catch (e) {
     console.error("lead-response error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return json(
+      { error: e instanceof Error ? e.message : "Unknown error" },
+      500,
+    );
   }
 });
