@@ -755,7 +755,61 @@ export default function LeadAssistant() {
                       <p className="text-sm font-medium">{aiRecommendation}</p>
                     </div>
                   </div>
-                </CardContent>
+
+                  {(leadScore || fitScore != null || fitFactors.length > 0 || missingInfo.length > 0) && (
+                    <div className="rounded-lg border border-border/60 bg-muted/30 p-4 space-y-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {leadScore && (
+                          <Badge
+                            variant="outline"
+                            className={
+                              leadScore === "Hot"
+                                ? "bg-emerald-500/15 text-emerald-600 border-emerald-500/30"
+                                : leadScore === "Warm"
+                                ? "bg-amber-500/15 text-amber-600 border-amber-500/30"
+                                : leadScore === "Cold"
+                                ? "bg-sky-500/15 text-sky-600 border-sky-500/30"
+                                : "bg-muted text-muted-foreground border-border"
+                            }
+                          >
+                            {leadScore}
+                          </Badge>
+                        )}
+                        {fitScore != null && (
+                          <Badge variant="outline" className="text-muted-foreground">
+                            Fit {fitScore}/100
+                          </Badge>
+                        )}
+                      </div>
+                      {leadScoreReason && (
+                        <p className="text-xs text-muted-foreground leading-relaxed">{leadScoreReason}</p>
+                      )}
+                      {fitFactors.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {fitFactors.map((f, i) => (
+                            <Badge
+                              key={i}
+                              variant="outline"
+                              className={
+                                f.impact === "positive"
+                                  ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-[11px]"
+                                  : "bg-rose-500/10 text-rose-600 border-rose-500/30 text-[11px]"
+                              }
+                            >
+                              {f.impact === "positive" ? "+ " : "− "}
+                              {f.label}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                      {missingInfo.length > 0 && (
+                        <div className="text-[11px] text-muted-foreground">
+                          <span className="uppercase tracking-wide mr-1">Missing:</span>
+                          {missingInfo.join(" · ")}
+                        </div>
+                      )}
+                    </div>
+                  )}
               </Card>
             )}
 
