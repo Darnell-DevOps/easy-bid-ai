@@ -105,6 +105,7 @@ export default function LeadAssistant() {
 
   const [generating, setGenerating] = useState(false);
   const [reply, setReply] = useState("");
+  const [replySubject, setReplySubject] = useState("");
   const [hasResponse, setHasResponse] = useState(false);
 
   const [service, setService] = useState("");
