@@ -119,6 +119,7 @@ export async function qualifyLeadById(
     const missingInfo = normalizeMissingInfo(ai.missing_info);
     const fitScore = normalizeFitScore(ai.fit_score);
     const fitFactors = normalizeFitFactors(ai.factors);
+    const draftReply = ai.reply ? appendSignature(ai.reply, prefs?.email_signature) : null;
 
     const { error: updErr } = await svc
       .from("leads")
