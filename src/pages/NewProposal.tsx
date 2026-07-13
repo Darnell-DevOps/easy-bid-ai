@@ -76,6 +76,36 @@ function detectCurrency(raw: string | undefined | null): CurrencyCode {
   return "GBP";
 }
 
+// Safely analyze a prefilled budget string so we never silently coerce ranges /
+// recurring / ambiguous strings into a bogus numeric amount.
+type BudgetAnalysis =
+  | { kind: "empty"; currency: CurrencyCode }
+  | { kind: "exact"; exactValue: number; currency: CurrencyCode }
+  | { kind: "range"; currency: CurrencyCode }
+  | { kind: "recurring"; currency: CurrencyCode }
+  | { kind: "ambiguous"; currency: CurrencyCode };
+
+export function analyzeBudgetString(raw: string): BudgetAnalysis {
+  const currency = detectCurrency(raw);
+  const s = (raw || "").trim();
+  if (!s) return { kind: "empty", currency };
+  const lower = s.toLowerCase();
+  const recurringRe = /(\/\s*(month|mo|pm|pcm|wk|week|yr|year)\b|\bper\s+(month|week|year|annum)\b|\bmonthly\b|\bweekly\b|\byearly\b|\bannual(ly)?\b|\bp\/m\b)/i;
+  if (recurringRe.test(lower)) return { kind: "recurring", currency };
+  // Range: dash/en-dash/em-dash or "to" between number-like tokens
+  const rangeRe = /(\d[\d,]*\s*[kK]?)\s*(?:[-–—]|\bto\b)\s*[£$€]?\s*(\d[\d,]*\s*[kK]?)/;
+  if (rangeRe.test(s)) return { kind: "range", currency };
+  // Try single-number parse: strip currency symbols/whitespace, allow trailing k
+  const cleaned = s.replace(/[£$€,\s]/g, "");
+  const m = cleaned.match(/^(\d+(?:\.\d+)?)([kK])?$/);
+  if (m) {
+    const n = parseFloat(m[1]) * (m[2] ? 1000 : 1);
+    if (isFinite(n) && n > 0) return { kind: "exact", exactValue: Math.round(n), currency };
+  }
+  return { kind: "ambiguous", currency };
+}
+
+
 const TIMELINE_UNITS = ["days", "weeks", "months"] as const;
 type TimelineUnit = typeof TIMELINE_UNITS[number];
 
@@ -140,8 +170,14 @@ export default function NewProposal() {
 
   // Initial budget normalisation: parse digits from prefill so we store digits and display formatted
   const initialBudgetRaw = clientPrefill?.budget || templateData?.prefill?.budget || "";
-  const initialBudgetDigits = parseBudgetDigits(initialBudgetRaw);
-  const initialCurrency: CurrencyCode = detectCurrency(initialBudgetRaw);
+  const initialBudgetAnalysis = analyzeBudgetString(initialBudgetRaw);
+  const initialBudgetDigits =
+    initialBudgetAnalysis.kind === "exact" ? String(initialBudgetAnalysis.exactValue) : "";
+  const initialCurrency: CurrencyCode = initialBudgetAnalysis.currency;
+  const initialBudgetNotice =
+    initialBudgetRaw && initialBudgetAnalysis.kind !== "exact" && initialBudgetAnalysis.kind !== "empty"
+      ? initialBudgetRaw
+      : "";
   const initialTimelineRaw = clientPrefill?.timeline || templateData?.prefill?.timeline || "";
   const initialTimeline = parseTimeline(initialTimelineRaw);
 
@@ -165,6 +201,10 @@ export default function NewProposal() {
   // Currency state
   const [currency, setCurrency] = useState<CurrencyCode>(initialCurrency);
   const budgetInputRef = useRef<HTMLInputElement>(null);
+  // If a prefilled budget was not a clean exact number (range / recurring /
+  // ambiguous), surface the raw string as a callout instead of silently
+  // guessing a value.
+  const [budgetPrefillNotice, setBudgetPrefillNotice] = useState<string>(initialBudgetNotice);
 
   // Structured timeline state
   const [timelineQty, setTimelineQty] = useState<string>(initialTimeline.qty);
@@ -427,17 +467,26 @@ export default function NewProposal() {
     const c = savedClients.find((x) => x.id === clientId);
     if (!c) return;
     const tParsed = parseTimeline(c.timeline || "");
+    const budgetAnalysis = analyzeBudgetString(c.budget || "");
+    const safeBudgetDigits =
+      budgetAnalysis.kind === "exact" ? String(budgetAnalysis.exactValue) : "";
     setForm({
       client_name: c.name,
       company_name: c.company || "",
       service_type: c.service_requested || "",
       project_scope: c.project_description || "",
-      budget: parseBudgetDigits(c.budget || ""),
+      budget: safeBudgetDigits,
       timeline: c.timeline || "",
       notes: "",
       goals: c.goals || "",
       deliverables: "",
     });
+    setCurrency(budgetAnalysis.currency);
+    setBudgetPrefillNotice(
+      c.budget && budgetAnalysis.kind !== "exact" && budgetAnalysis.kind !== "empty"
+        ? c.budget
+        : "",
+    );
     setTimelineQty(tParsed.qty);
     setTimelineUnit(tParsed.unit);
     setTimelineCustom(tParsed.custom);
@@ -653,6 +702,11 @@ export default function NewProposal() {
                 </div>
                 <div>
                   <Label htmlFor="budget">Budget</Label>
+                  {budgetPrefillNotice && (
+                    <div className="mt-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+                      Lead mentioned: <span className="font-medium">"{budgetPrefillNotice}"</span> — enter the exact proposal value below.
+                    </div>
+                  )}
                   <div className="relative mt-2 flex">
                     {/* Currency selector */}
                     <Select
@@ -683,7 +737,11 @@ export default function NewProposal() {
                         type="text"
                         inputMode="numeric"
                         value={form.budget ? formatBudget(form.budget, currency) : ""}
-                        onChange={(e) => update("budget", parseBudgetDigits(e.target.value))}
+                        onChange={(e) => {
+                          const digits = parseBudgetDigits(e.target.value);
+                          update("budget", digits);
+                          if (digits && budgetPrefillNotice) setBudgetPrefillNotice("");
+                        }}
                         onBlur={() => markTouched("budget")}
                         placeholder={`e.g. ${getCurrency(currency).symbol}5,000`}
                         required
@@ -699,7 +757,7 @@ export default function NewProposal() {
                         <button
                           key={p}
                           type="button"
-                          onClick={() => { update("budget", String(p)); markTouched("budget"); }}
+                          onClick={() => { update("budget", String(p)); markTouched("budget"); setBudgetPrefillNotice(""); }}
                           className={`text-xs px-3 py-1.5 rounded-md border transition-all ${
                             selected
                               ? "border-accent bg-accent/15 text-accent shadow-sm shadow-accent/20 ring-1 ring-accent/30"
