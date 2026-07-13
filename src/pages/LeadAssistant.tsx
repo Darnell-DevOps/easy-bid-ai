@@ -197,6 +197,11 @@ export default function LeadAssistant() {
       setLeadQuality((data.lead_quality as "High" | "Medium" | "Low") || "");
       setQualityReason(data.quality_reason || "");
       setAiRecommendation(data.ai_recommendation || "");
+      setLeadScore((data.lead_score as "Hot" | "Warm" | "Cold" | "Unclear") || "");
+      setLeadScoreReason(data.lead_score_reason || "");
+      setMissingInfo(Array.isArray(data.missing_info) ? data.missing_info : []);
+      setFitScore(typeof data.fit_score === "number" ? data.fit_score : null);
+      setFitFactors(Array.isArray(data.factors) ? data.factors : []);
       setHasResponse(true);
       setSavedClientId(null);
     } catch (e: any) {
