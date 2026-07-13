@@ -247,14 +247,10 @@ export default function LeadAssistant() {
             budget: string | null;
             timeline: string | null;
             goals: string | null;
-            lead_quality: string | null;
-            ai_recommendation: string | null;
+            company: string | null;
             original_lead_message: string | null;
-            lead_score: string | null;
-            lead_score_reason: string | null;
-            missing_info: string[] | null;
-            fit_score: number | null;
-            fit_factors: unknown | null;
+            lead_thread: unknown | null;
+            lead_reply_sent_at: string | null;
           }
         | null = null;
 
@@ -262,7 +258,7 @@ export default function LeadAssistant() {
         const { data: match } = await supabase
           .from("clients")
           .select(
-            "id, phone, service_requested, project_description, budget, timeline, goals, lead_quality, ai_recommendation, original_lead_message, lead_score, lead_score_reason, missing_info, fit_score, fit_factors",
+            "id, phone, service_requested, project_description, budget, timeline, goals, company, original_lead_message, lead_thread, lead_reply_sent_at",
           )
           .eq("user_id", user.id)
           .ilike("email", trimmedEmail)
@@ -274,33 +270,52 @@ export default function LeadAssistant() {
 
       const isEmpty = (v: unknown) =>
         v == null || (typeof v === "string" && v.trim().length === 0);
-      const isEmptyArr = (v: unknown) => !Array.isArray(v) || v.length === 0;
       const pick = <T,>(current: T, incoming: T): T =>
         isEmpty(current as unknown) ? incoming : current;
 
       if (existing) {
-        // Update path — only fill fields that are currently empty. Never
-        // clobber richer existing data with the new manual entry.
-        const update = {
+        // Append the new manual entry to lead_thread (never overwrite
+        // original_lead_message — that's the historical first-contact record).
+        const existingThread = Array.isArray(existing.lead_thread)
+          ? (existing.lead_thread as any[])
+          : [];
+        const newThread = [
+          ...existingThread,
+          {
+            subject: replySubject || null,
+            body: message,
+            received_at: new Date().toISOString(),
+          },
+        ];
+
+        // Group A — stable profile fields: only fill if currently empty.
+        // Group B — qualification intelligence: always take the fresh value.
+        // Group C — conversation/draft: thread append + sent-reply protection.
+        const canWriteDraft = !existing.lead_reply_sent_at;
+        const update: Record<string, unknown> = {
+          // A. Stable profile fields
           phone: pick(existing.phone, phone.trim() || null),
           service_requested: pick(existing.service_requested, service || null),
           project_description: pick(existing.project_description, notes || message),
           budget: pick(existing.budget, budget || null),
           timeline: pick(existing.timeline, timeline || null),
           goals: pick(existing.goals, goals || null),
-          lead_quality: pick(existing.lead_quality, leadQuality || null),
-          ai_recommendation: pick(existing.ai_recommendation, aiRecommendation || null),
-          original_lead_message: pick(existing.original_lead_message, message),
-          lead_score: pick(existing.lead_score, leadScore || null),
-          lead_score_reason: pick(existing.lead_score_reason, leadScoreReason || null),
-          missing_info: isEmptyArr(existing.missing_info)
-            ? (missingInfo.length ? missingInfo : null)
-            : existing.missing_info,
-          fit_score: existing.fit_score == null ? fitScore : existing.fit_score,
-          fit_factors: isEmptyArr(existing.fit_factors as unknown)
-            ? (fitFactors.length ? (fitFactors as unknown as any) : null)
-            : (existing.fit_factors as any),
+          company: pick(existing.company, null),
+          // B. Qualification intelligence — always fresh
+          lead_quality: leadQuality || null,
+          ai_recommendation: aiRecommendation || null,
+          lead_score: leadScore || null,
+          lead_score_reason: leadScoreReason || null,
+          missing_info: missingInfo.length ? missingInfo : null,
+          fit_score: fitScore,
+          fit_factors: fitFactors.length ? (fitFactors as unknown as any) : null,
+          // C. Conversation
+          lead_thread: newThread,
         };
+        if (canWriteDraft) {
+          update.lead_draft_reply = reply || null;
+          update.lead_draft_subject = replySubject || null;
+        }
 
         const { error: updErr } = await supabase
           .from("clients")
@@ -312,7 +327,7 @@ export default function LeadAssistant() {
         setSavedClientId(existing.id);
         toast({
           title: "Client updated",
-          description: `${leadName} already existed — enriched with new details.`,
+          description: `${leadName} already existed — enriched with new details and latest AI assessment.`,
         });
       } else {
         const { data, error } = await supabase
@@ -337,6 +352,8 @@ export default function LeadAssistant() {
             missing_info: missingInfo.length ? missingInfo : null,
             fit_score: fitScore,
             fit_factors: fitFactors.length ? fitFactors : null,
+            lead_draft_reply: reply || null,
+            lead_draft_subject: replySubject || null,
           })
           .select("id")
           .single();
