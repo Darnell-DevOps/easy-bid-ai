@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
     // the automatic pipeline.
     const { data: prefs } = await supabase
       .from("ai_preferences")
-      .select("business_name, business_services, business_ideal_client, business_target_audience, custom_instructions")
+      .select("business_name, business_services, business_ideal_client, business_target_audience, booking_link, lead_reply_tone, lead_reply_style, lead_reply_length, email_signature, custom_instructions")
       .eq("user_id", userId)
       .maybeSingle();
 
