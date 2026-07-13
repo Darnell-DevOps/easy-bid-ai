@@ -76,6 +76,36 @@ function detectCurrency(raw: string | undefined | null): CurrencyCode {
   return "GBP";
 }
 
+// Safely analyze a prefilled budget string so we never silently coerce ranges /
+// recurring / ambiguous strings into a bogus numeric amount.
+type BudgetAnalysis =
+  | { kind: "empty"; currency: CurrencyCode }
+  | { kind: "exact"; exactValue: number; currency: CurrencyCode }
+  | { kind: "range"; currency: CurrencyCode }
+  | { kind: "recurring"; currency: CurrencyCode }
+  | { kind: "ambiguous"; currency: CurrencyCode };
+
+export function analyzeBudgetString(raw: string): BudgetAnalysis {
+  const currency = detectCurrency(raw);
+  const s = (raw || "").trim();
+  if (!s) return { kind: "empty", currency };
+  const lower = s.toLowerCase();
+  const recurringRe = /(\/\s*(month|mo|pm|pcm|wk|week|yr|year)\b|\bper\s+(month|week|year|annum)\b|\bmonthly\b|\bweekly\b|\byearly\b|\bannual(ly)?\b|\bp\/m\b)/i;
+  if (recurringRe.test(lower)) return { kind: "recurring", currency };
+  // Range: dash/en-dash/em-dash or "to" between number-like tokens
+  const rangeRe = /(\d[\d,]*\s*[kK]?)\s*(?:[-–—]|to)\s*(\d[\d,]*\s*[kK]?)/;
+  if (rangeRe.test(s)) return { kind: "range", currency };
+  // Try single-number parse: strip currency symbols/whitespace, allow trailing k
+  const cleaned = s.replace(/[£$€,\s]/g, "");
+  const m = cleaned.match(/^(\d+(?:\.\d+)?)([kK])?$/);
+  if (m) {
+    const n = parseFloat(m[1]) * (m[2] ? 1000 : 1);
+    if (isFinite(n) && n > 0) return { kind: "exact", exactValue: Math.round(n), currency };
+  }
+  return { kind: "ambiguous", currency };
+}
+
+
 const TIMELINE_UNITS = ["days", "weeks", "months"] as const;
 type TimelineUnit = typeof TIMELINE_UNITS[number];
 
