@@ -292,7 +292,7 @@ export default function LeadAssistant() {
         // Group B — qualification intelligence: always take the fresh value.
         // Group C — conversation/draft: thread append + sent-reply protection.
         const canWriteDraft = !existing.lead_reply_sent_at;
-        const update: Record<string, unknown> = {
+        const update = {
           // A. Stable profile fields
           phone: pick(existing.phone, phone.trim() || null),
           service_requested: pick(existing.service_requested, service || null),
@@ -310,12 +310,11 @@ export default function LeadAssistant() {
           fit_score: fitScore,
           fit_factors: fitFactors.length ? (fitFactors as unknown as any) : null,
           // C. Conversation
-          lead_thread: newThread,
+          lead_thread: newThread as any,
+          ...(canWriteDraft
+            ? { lead_draft_reply: reply || null, lead_draft_subject: replySubject || null }
+            : {}),
         };
-        if (canWriteDraft) {
-          update.lead_draft_reply = reply || null;
-          update.lead_draft_subject = replySubject || null;
-        }
 
         const { error: updErr } = await supabase
           .from("clients")
