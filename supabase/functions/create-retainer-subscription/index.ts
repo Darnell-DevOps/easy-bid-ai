@@ -2,6 +2,7 @@
 // then returns a transactionId so the frontend can open Paddle Checkout.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getPaddleClient, gatewayFetch, type PaddleEnv } from "../_shared/paddle.ts";
+import { calculateCommercialTotals } from "../_shared/commercial-calc.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -73,7 +74,7 @@ Deno.serve(async (req) => {
     const { data: retainer, error: rErr } = await supabase
       .from("retainers")
       .select(
-        "id, user_id, client_name, client_email, company_name, title, description, amount_cents, currency, billing_interval, custom_interval_days, paddle_price_id, paddle_product_id, paddle_subscription_id, status",
+        "id, user_id, client_name, client_email, company_name, title, description, amount_cents, currency, tax_rate, tax_mode, billing_interval, custom_interval_days, paddle_price_id, paddle_product_id, paddle_subscription_id, status",
       )
       .eq("id", retainerId)
       .maybeSingle();
@@ -90,7 +91,16 @@ Deno.serve(async (req) => {
         { status: 400, headers: cors },
       );
     }
-    if (!retainer.amount_cents || retainer.amount_cents < 70) {
+
+    // Compute the true final payable total (tax-inclusive) so Paddle charges
+    // exactly what the app committed to. Null tax_rate/tax_mode → total = amount_cents.
+    const { totalCents } = calculateCommercialTotals(
+      retainer.amount_cents,
+      retainer.tax_rate,
+      retainer.tax_mode,
+    );
+
+    if (!totalCents || totalCents < 70) {
       return new Response(
         JSON.stringify({ error: "Invalid amount (min $0.70)" }),
         { status: 400, headers: cors },
@@ -109,10 +119,10 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         product_id: productId,
         description: priceDescription,
-        unit_price: { amount: String(retainer.amount_cents), currency_code: currency },
+        unit_price: { amount: String(totalCents), currency_code: currency },
         billing_cycle: cycle,
         quantity: { minimum: 1, maximum: 1 },
-        tax_mode: "account_setting",
+        tax_mode: "internal",
       }),
     });
     const priceJson = await priceRes.json();
