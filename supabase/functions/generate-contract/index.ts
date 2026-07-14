@@ -154,6 +154,7 @@ function buildPrompt(payload: any) {
 function templateFallback(payload: any): string {
   const type = CONTRACT_TYPES[payload.contract_type] || CONTRACT_TYPES.service_agreement;
   const today = payload.effective_date || new Date().toISOString().slice(0, 10);
+  const fees = buildFeesBlock(payload);
   return `# ${type.title}
 
 **Effective Date:** ${today}
@@ -175,9 +176,7 @@ The agreed deliverables form part of this agreement and will be delivered in acc
 ${payload.timeline || "To be agreed."}
 
 ## 5. Fees & Payment Terms
-- Total Fee: ${payload.budget || "[Total Fee]"}
-- Payment Terms: ${payload.payment_terms || "Payment terms as agreed"}
-- Invoices are payable within 7 days of issue unless agreed otherwise.
+${fees.templateLines.join("\n")}
 
 ## 6. Revisions & Acceptance
 The Client may request reasonable revisions within scope. Material changes outside the agreed scope will be quoted separately.
