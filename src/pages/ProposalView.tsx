@@ -1046,7 +1046,7 @@ export default function ProposalView() {
                       />
                     </div>
                     <select
-                      value={proposal.currency || "USD"}
+                      value={proposal.currency || defaultCurrency}
                       onChange={async (e) => {
                         const currency = e.target.value;
                         setProposal({ ...proposal, currency });
