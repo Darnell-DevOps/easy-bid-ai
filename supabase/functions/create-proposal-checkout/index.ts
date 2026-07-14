@@ -2,6 +2,7 @@
 // then returns the transaction ID. Frontend opens checkout with this ID.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getPaddleClient, gatewayFetch, type PaddleEnv } from "../_shared/paddle.ts";
+import { calculateCommercialTotals } from "../_shared/commercial-calc.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -33,7 +34,7 @@ Deno.serve(async (req) => {
     const { data: proposal, error: pErr } = await supabase
       .from("proposals")
       .select(
-        "id, client_name, company_name, service_type, amount_cents, currency, client_paid",
+        "id, client_name, company_name, service_type, amount_cents, currency, tax_rate, tax_mode, client_paid",
       )
       .eq("id", proposalId)
       .maybeSingle();
@@ -50,7 +51,20 @@ Deno.serve(async (req) => {
         headers: cors,
       });
     }
-    if (!proposal.amount_cents || proposal.amount_cents < 70) {
+    if (!proposal.amount_cents) {
+      return new Response(
+        JSON.stringify({ error: "Invalid amount (min $0.70)" }),
+        { status: 400, headers: cors },
+      );
+    }
+
+    const { totalCents } = calculateCommercialTotals(
+      proposal.amount_cents,
+      proposal.tax_rate,
+      proposal.tax_mode,
+    );
+
+    if (!totalCents || totalCents < 70) {
       return new Response(
         JSON.stringify({ error: "Invalid amount (min $0.70)" }),
         { status: 400, headers: cors },
@@ -83,11 +97,11 @@ Deno.serve(async (req) => {
             description,
             productId,
             unitPrice: {
-              amount: String(proposal.amount_cents),
+              amount: String(totalCents),
               currencyCode: currency as any,
             },
             quantity: { minimum: 1, maximum: 1 },
-            taxMode: "account_setting" as any,
+            taxMode: "internal" as any,
           } as any,
         },
       ],
