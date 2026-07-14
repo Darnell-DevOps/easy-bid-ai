@@ -42,6 +42,8 @@ interface Retainer {
   description: string | null;
   amount_cents: number;
   currency: string;
+  tax_rate: number | null;
+  tax_mode: string | null;
   billing_interval: string;
   custom_interval_days: number | null;
   status: string;
