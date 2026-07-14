@@ -97,11 +97,11 @@ Deno.serve(async (req) => {
             description,
             productId,
             unitPrice: {
-              amount: String(proposal.amount_cents),
+              amount: String(totalCents),
               currencyCode: currency as any,
             },
             quantity: { minimum: 1, maximum: 1 },
-            taxMode: "account_setting" as any,
+            taxMode: "internal" as any,
           } as any,
         },
       ],
