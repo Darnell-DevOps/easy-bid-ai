@@ -1,5 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  calculateCommercialTotals,
+  currencySymbolFor,
+  formatCents,
+  CURRENCY_SYMBOLS,
+  type TaxMode,
+} from "../_shared/commercial-calc.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -92,29 +99,52 @@ const toneInstruction = (tone?: string) => {
   }
 };
 
-const CURRENCY_SYMBOLS: Record<string, string> = {
-  GBP: "£",
-  USD: "$",
-  EUR: "€",
-  CAD: "C$",
-  AUD: "A$",
-  NZD: "NZ$",
-  CHF: "CHF ",
-  SEK: "kr ",
-  NOK: "kr ",
-  DKK: "kr ",
-  JPY: "¥",
-};
-
-function currencySymbolFor(code?: string | null): string {
-  const c = (code || "").toString().toUpperCase().trim();
-  if (c && CURRENCY_SYMBOLS[c]) return CURRENCY_SYMBOLS[c];
-  return CURRENCY_SYMBOLS.GBP; // backward-compat default
-}
+// currencySymbolFor / CURRENCY_SYMBOLS are imported from ../_shared/commercial-calc.ts —
+// single source of truth shared with the frontend (src/lib/commercial-calc.ts).
 
 function currencyCodeFor(code?: string | null): string {
   const c = (code || "").toString().toUpperCase().trim();
   return c && CURRENCY_SYMBOLS[c] ? c : "GBP";
+}
+
+// Build the actual CloseSync onboarding journey steps. Flag-driven so per-section
+// regeneration can call the same helper and produce identical bullets.
+function buildNextSteps(p: any): string[] {
+  const isRetainer = /retainer/i.test(p?.service_type || "");
+  if (isRetainer) {
+    return [
+      "Accept this proposal",
+      "Review and sign the retainer agreement",
+      "Start your subscription",
+      "Complete onboarding",
+      "Ongoing service begins",
+    ];
+  }
+  return [
+    "Accept this proposal",
+    "Review and sign your agreement",
+    "Complete payment",
+    "Complete onboarding",
+    "Project begins",
+  ];
+}
+
+// Derive exact commercial figures once, deterministically, from amount_cents +
+// tax_rate + tax_mode. Any subtotal_cents/tax_amount_cents/total_cents that the
+// caller happens to send are intentionally ignored — one calculation site only.
+function deriveExactCommercials(p: any):
+  | { subtotalCents: number; taxAmountCents: number; totalCents: number; taxRatePercent: number; taxMode: TaxMode; hasTax: boolean }
+  | null {
+  const amountCents = typeof p?.amount_cents === "number" ? p.amount_cents : NaN;
+  if (!Number.isFinite(amountCents) || amountCents <= 0) return null;
+  const taxRatePercent = typeof p?.tax_rate === "number" ? p.tax_rate : parseFloat(p?.tax_rate);
+  const taxMode: TaxMode = (p?.tax_mode ?? null) as TaxMode;
+  const totals = calculateCommercialTotals(amountCents, Number.isFinite(taxRatePercent) ? taxRatePercent : null, taxMode);
+  const hasTax =
+    (taxMode === "exclusive" || taxMode === "inclusive") &&
+    Number.isFinite(taxRatePercent) &&
+    (taxRatePercent as number) > 0;
+  return { ...totals, taxRatePercent: Number.isFinite(taxRatePercent) ? (taxRatePercent as number) : 0, taxMode, hasTax };
 }
 
 // Mirrors PAYMENT_TERMS in src/components/settings/BusinessInformationSettings.tsx
@@ -176,36 +206,81 @@ TRUTHFULNESS RULES (apply to the entire document — every section):
 function buildFullPrompt(p: any) {
   const tone = toneInstruction(p.tone);
   const currency = currencyCodeFor(p.currency);
-  const symbol = currencySymbolFor(p.currency);
-  const taxRate = typeof p.tax_rate === "number" ? p.tax_rate : parseFloat(p.tax_rate);
-  const hasTax = Number.isFinite(taxRate) && taxRate > 0;
+  const symbol = currencySymbolFor(currency);
   const paymentPhrase = paymentTermsPhrase(p.payment_terms, p.invoice_due_days);
 
-  const taxInvestmentInstruction = hasTax
-    ? `A tax row must be included in the pricing table and invoice, labeled "Tax (${taxRate}%)", applied to the subtotal. Do NOT call it "VAT" unless the client details explicitly reference VAT.`
-    : `Do NOT include any tax row anywhere. The subtotal equals the total. Do not invent a tax rate.`;
+  // Authoritative commercial figures — derived once from amount_cents/tax_rate/tax_mode.
+  // If amount_cents is missing (legacy regeneration path), we degrade to the older
+  // soft "align with the stated budget" wording.
+  const exact = deriveExactCommercials(p);
+  const hasTax = exact ? exact.hasTax : (Number.isFinite(parseFloat(p.tax_rate)) && parseFloat(p.tax_rate) > 0);
+  const taxRate = exact ? exact.taxRatePercent : parseFloat(p.tax_rate);
+
+  const commercialBlock = exact
+    ? `COMMERCIAL PARAMETERS (exact figures — display these precisely, do not recalculate or alter them):
+- Currency: ${currency} (use the symbol "${symbol}" for every price shown anywhere in the proposal, pricing table, and invoice — never mix symbols).
+- Subtotal: ${formatCents(exact.subtotalCents, currency)}
+- Tax mode: ${exact.taxMode ?? "none"}${exact.hasTax ? `
+- Tax rate: ${exact.taxRatePercent}%
+- Tax amount: ${formatCents(exact.taxAmountCents, currency)}` : ""}
+- Total payable: ${formatCents(exact.totalCents, currency)}
+- Payment terms phrasing: ${paymentPhrase ?? "not specified — use neutral 'Payment terms as agreed'"}.`
+    : `COMMERCIAL PARAMETERS (use these EXACTLY — do not substitute your own defaults):
+- Currency: ${currency} (use the symbol "${symbol}" for every price shown anywhere in the proposal, pricing table, and invoice — never mix symbols).
+- Tax: ${hasTax ? `${taxRate}% applied to subtotal` : "no tax applies"}.
+- Payment terms phrasing: ${paymentPhrase ?? "not specified — use neutral 'Payment terms as agreed'"}.`;
+
+  const taxInvestmentInstruction = exact
+    ? exact.hasTax
+      ? `In the pricing table and invoice, use EXACTLY ${formatCents(exact.subtotalCents, currency)} as the Subtotal row, ${formatCents(exact.taxAmountCents, currency)} as the Tax row (labeled "Tax (${exact.taxRatePercent}%)" — do NOT call it "VAT" unless the client details explicitly reference VAT), and ${formatCents(exact.totalCents, currency)} as the Total row. Do not compute your own split or alter these numbers.`
+      : `Do NOT include any tax row anywhere. Use EXACTLY ${formatCents(exact.totalCents, currency)} as both the Subtotal and Total. Do not invent a tax rate.`
+    : hasTax
+      ? `A tax row must be included in the pricing table and invoice, labeled "Tax (${taxRate}%)", applied to the subtotal. Do NOT call it "VAT" unless the client details explicitly reference VAT.`
+      : `Do NOT include any tax row anywhere. The subtotal equals the total. Do not invent a tax rate.`;
 
   const paymentTermsInstruction = paymentPhrase
     ? `**Payment terms:** ${paymentPhrase}`
     : `**Payment terms:** Payment terms as agreed.`;
 
+  const investmentPriceLine = exact
+    ? `**${formatCents(exact.totalCents, currency)}** (use this exact figure as the headline total)`
+    : `**[Total price using the "${symbol}" symbol and comma formatting]**`;
+
+  const investmentAlignLine = exact
+    ? `Use exactly ${formatCents(exact.totalCents, currency)} as the total shown here — do not alter or round it.`
+    : `The total must align with the stated budget.`;
+
+  const investmentTaxNote = exact
+    ? exact.hasTax
+      ? `Tax note: ${formatCents(exact.taxAmountCents, currency)} tax (${exact.taxRatePercent}%, ${exact.taxMode}) is already reflected in the pricing table and invoice.`
+      : ""
+    : hasTax
+      ? `Tax note: a ${taxRate}% tax applies on top of the subtotal (already reflected in the pricing table and invoice).`
+      : "";
+
+  const invoiceLineItemsInstruction = exact
+    ? `- Subtotal row showing EXACTLY ${formatCents(exact.subtotalCents, currency)}${exact.hasTax ? `, then a Tax (${exact.taxRatePercent}%) row showing EXACTLY ${formatCents(exact.taxAmountCents, currency)}` : ""}, then a Total row showing EXACTLY ${formatCents(exact.totalCents, currency)}`
+    : `- Subtotal${hasTax ? `, Tax (${taxRate}%)` : ""}, Total`;
+
+  const qualityChecklistTax = exact
+    ? exact.hasTax
+      ? `Tax row present at ${exact.taxRatePercent}% showing exactly ${formatCents(exact.taxAmountCents, currency)}`
+      : "No tax row anywhere (tax was not configured)"
+    : hasTax
+      ? `Tax row present at ${taxRate}%`
+      : "No tax row anywhere (tax was not configured)";
+
+  const nextSteps = buildNextSteps(p);
   const nextStepsInstruction = `## Next Steps
-Use exactly these five bullets in this order — this reflects the real client onboarding journey and must not be shortened or reworded to imply work begins immediately upon payment:
-- Accept this proposal
-- Sign the service agreement
-- Complete payment
-- Complete the onboarding form
-- Project work begins`;
+Use exactly these ${nextSteps.length} bullets in this order — this reflects the real client onboarding journey and must not be shortened or reworded to imply work begins immediately upon payment:
+${nextSteps.map((s) => `- ${s}`).join("\n")}`;
 
   return `Write a professional, client-ready proposal for this project. Make it specific, practical, and compelling.
 
 CLIENT DETAILS:
 ${buildClientContext(p)}
 
-COMMERCIAL PARAMETERS (use these EXACTLY — do not substitute your own defaults):
-- Currency: ${currency} (use the symbol "${symbol}" for every price shown anywhere in the proposal, pricing table, and invoice — never mix symbols).
-- Tax: ${hasTax ? `${taxRate}% applied to subtotal` : "no tax applies"}.
-- Payment terms phrasing: ${paymentPhrase ?? "not specified — use neutral 'Payment terms as agreed'"}.
+${commercialBlock}
 
 ${tone ? tone + "\n\n" : ""}Return valid JSON with exactly three keys: "proposal", "pricing", "invoice".
 
@@ -238,29 +313,29 @@ List 4-6 specific outcomes the engagement is aimed at achieving, as bullets, eac
 ## Investment
 Format EXACTLY as follows:
 
-**[Total price using the "${symbol}" symbol and comma formatting]**
+${investmentPriceLine}
 
 A 1-2 sentence description of what's included at this price, framed in terms of value the client gets — no fabricated ROI numbers.
 
 ${paymentTermsInstruction}
 
-${hasTax ? `Tax note: a ${taxRate}% tax applies on top of the subtotal (already reflected in the pricing table and invoice).` : ""}
+${investmentTaxNote}
 
-The total must align with the stated budget.
+${investmentAlignLine}
 
 ## Why Choose Us
 3-4 bullet points. Each one short sentence. Frame this section around genuine working principles the business commits to — for example: clear communication, defined deliverables, transparent milestones, collaborative process, and focused project management. Do NOT invent expertise, years in business, past client results, awards, or testimonials unless the client details explicitly provide verified business proof — in which case you may reference that specifically.
 
 ${nextStepsInstruction}
 
-"pricing" — A Markdown table with columns: Item | Description | Cost. All costs must use the "${symbol}" symbol. Include a Subtotal row. ${taxInvestmentInstruction} Then a Total row. Costs must align with the stated budget. No prose before or after the table.
+"pricing" — A Markdown table with columns: Item | Description | Cost. All costs must use the "${symbol}" symbol. ${taxInvestmentInstruction} No prose before or after the table.
 
 "invoice" — A professional Markdown invoice with:
 - Invoice number: Draft — to be assigned (this is a proposal preview only, not a live invoice; do NOT invent a specific invoice number like "INV-2026-001")
 - Date: today's date
 - Bill to: client name and company
 - Table of line items with costs using the "${symbol}" symbol (consistent with the pricing breakdown)
-- Subtotal${hasTax ? `, Tax (${taxRate}%)` : ""}, Total
+${invoiceLineItemsInstruction}
 - Payment terms: ${paymentPhrase ?? "As agreed"}
 
 QUALITY CHECKLIST:
@@ -269,7 +344,7 @@ QUALITY CHECKLIST:
 - Bullet points are concrete, scannable, and actionable
 - Numbers and timelines are realistic for the stated budget
 - Every price uses the "${symbol}" symbol consistently — no mixed currency symbols anywhere
-- ${hasTax ? `Tax row present at ${taxRate}%` : "No tax row anywhere (tax was not configured)"}
+- ${qualityChecklistTax}
 - No fabricated statistics, testimonials, case studies, or guarantees
 - Reads as ready to send — no placeholder text
 - DO NOT add a top-level title or "Project Proposal" heading
@@ -292,19 +367,42 @@ function buildSectionPrompt(p: any, section: string) {
     ? `PREVIOUS VERSION OF THIS SECTION (this is a regeneration request — produce a genuinely different take: new opening line, different structure or ordering of points, different specific phrasing and word choice — do not restate this almost verbatim, but keep it factually consistent with the client details):\n${currentSectionText}\n\n`
     : "";
   const currency = currencyCodeFor(p.currency);
-  const symbol = currencySymbolFor(p.currency);
-  const taxRate = typeof p.tax_rate === "number" ? p.tax_rate : parseFloat(p.tax_rate);
-  const hasTax = Number.isFinite(taxRate) && taxRate > 0;
+  const symbol = currencySymbolFor(currency);
+  const exact = deriveExactCommercials(p);
+  const hasTax = exact ? exact.hasTax : (Number.isFinite(parseFloat(p.tax_rate)) && parseFloat(p.tax_rate) > 0);
+  const taxRate = exact ? exact.taxRatePercent : parseFloat(p.tax_rate);
   const paymentPhrase = paymentTermsPhrase(p.payment_terms, p.invoice_due_days);
+
+  // Deterministic Next Steps — regenerating this section must produce the exact
+  // same journey bullets, not an improvised alternative.
+  if (section === "Next Steps") {
+    const steps = buildNextSteps(p);
+    return `Rewrite the "Next Steps" section of the proposal. You MUST output EXACTLY the following ${steps.length} bullets, in this order, with no additions, removals, rewording, or reordering — this reflects the real CloseSync client onboarding journey:
+${steps.map((s) => `- ${s}`).join("\n")}
+
+${tone ? tone + "\n\n" : ""}Return valid JSON with a single key "section" whose value is Markdown starting with "## Next Steps" as the heading, followed by exactly those bullets. No code fences. No commentary.`;
+  }
+
+  const commercialBlock = exact
+    ? `COMMERCIAL PARAMETERS (exact figures — must remain consistent with the rest of the proposal; display precisely, do not recalculate):
+- Currency: ${currency} — use the "${symbol}" symbol for any price shown.
+- Subtotal: ${formatCents(exact.subtotalCents, currency)}
+- Tax mode: ${exact.taxMode ?? "none"}${exact.hasTax ? `
+- Tax rate: ${exact.taxRatePercent}%
+- Tax amount: ${formatCents(exact.taxAmountCents, currency)}` : ""}
+- Total payable: ${formatCents(exact.totalCents, currency)}
+- Payment terms: ${paymentPhrase ?? "not specified — use neutral 'Payment terms as agreed'"}.`
+    : `COMMERCIAL PARAMETERS (must remain consistent with the rest of the proposal):
+- Currency: ${currency} — use the "${symbol}" symbol for any price shown.
+- Tax: ${hasTax ? `${taxRate}% applied to subtotal` : "no tax applies"}.
+- Payment terms: ${paymentPhrase ?? "not specified — use neutral 'Payment terms as agreed'"}.`;
+
   return `Rewrite ONLY the "${section}" section of a proposal for this project. Keep it consistent with the rest of the proposal.
 
 CLIENT DETAILS:
 ${buildClientContext(p)}
 
-COMMERCIAL PARAMETERS (must remain consistent with the rest of the proposal):
-- Currency: ${currency} — use the "${symbol}" symbol for any price shown.
-- Tax: ${hasTax ? `${taxRate}% applied to subtotal` : "no tax applies"}.
-- Payment terms: ${paymentPhrase ?? "not specified — use neutral 'Payment terms as agreed'"}.
+${commercialBlock}
 
 TRUTHFULNESS: Do not invent specific percentages, ROI figures, testimonials, awards, years of experience, or delivery guarantees not provided in the client details.
 
