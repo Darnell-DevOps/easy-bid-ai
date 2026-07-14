@@ -56,8 +56,11 @@ const CURRENCIES = [
   { code: "GBP", symbol: "£", locale: "en-GB" },
   { code: "USD", symbol: "$", locale: "en-US" },
   { code: "EUR", symbol: "€", locale: "en-IE" },
+  { code: "CAD", symbol: "C$", locale: "en-CA" },
+  { code: "AUD", symbol: "A$", locale: "en-AU" },
 ] as const;
 type CurrencyCode = typeof CURRENCIES[number]["code"];
+const CURRENCY_CODES = CURRENCIES.map((c) => c.code) as readonly CurrencyCode[];
 const getCurrency = (code: CurrencyCode) => CURRENCIES.find((c) => c.code === code) || CURRENCIES[0];
 
 const formatBudget = (digits: string, currency: CurrencyCode = "GBP") => {
@@ -68,12 +71,17 @@ const formatBudget = (digits: string, currency: CurrencyCode = "GBP") => {
   return `${c.symbol}${n.toLocaleString(c.locale)}`;
 };
 
-// Detect currency from a prefilled string like "$5,000" or "€2000"
-function detectCurrency(raw: string | undefined | null): CurrencyCode {
-  if (!raw) return "GBP";
-  if (raw.includes("$")) return "USD";
+// Detect currency from a prefilled string like "$5,000" or "€2000".
+// Returns null when nothing detectable is present so the caller can fall back
+// to the user's business_branding default instead of guessing GBP.
+function detectCurrency(raw: string | undefined | null): CurrencyCode | null {
+  if (!raw) return null;
+  if (raw.includes("£")) return "GBP";
   if (raw.includes("€")) return "EUR";
-  return "GBP";
+  if (/C\$/i.test(raw)) return "CAD";
+  if (/A\$/i.test(raw)) return "AUD";
+  if (raw.includes("$")) return "USD";
+  return null;
 }
 
 // Safely analyze a prefilled budget string so we never silently coerce ranges /
