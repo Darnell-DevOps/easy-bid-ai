@@ -50,16 +50,18 @@ function RetainersSection({ embedded = false }: { embedded?: boolean } = {}) {
 
   return (
     <section id="retainers" className={`${embedded ? "py-10 md:py-14" : "py-24"} px-4 relative overflow-hidden scroll-mt-20 w-full`}>
-      <div aria-hidden className="absolute inset-0 -z-10 pointer-events-none">
-        <div
-          className="absolute top-1/4 -right-24 w-[520px] h-[520px] rounded-full blur-3xl opacity-30"
-          style={{ background: "radial-gradient(closest-side, hsl(var(--accent) / 0.45), transparent 70%)" }}
-        />
-        <div
-          className="absolute bottom-0 -left-24 w-[460px] h-[460px] rounded-full blur-3xl opacity-25"
-          style={{ background: "radial-gradient(closest-side, hsl(var(--purple) / 0.45), transparent 70%)" }}
-        />
-      </div>
+      {!embedded && (
+        <div aria-hidden className="absolute inset-0 -z-10 pointer-events-none">
+          <div
+            className="absolute top-1/4 -right-24 w-[520px] h-[520px] rounded-full blur-3xl opacity-30"
+            style={{ background: "radial-gradient(closest-side, hsl(var(--accent) / 0.45), transparent 70%)" }}
+          />
+          <div
+            className="absolute bottom-0 -left-24 w-[460px] h-[460px] rounded-full blur-3xl opacity-25"
+            style={{ background: "radial-gradient(closest-side, hsl(var(--purple) / 0.45), transparent 70%)" }}
+          />
+        </div>
+      )}
 
       <div className="container max-w-6xl">
         <AnimateIn className="text-center mb-14">

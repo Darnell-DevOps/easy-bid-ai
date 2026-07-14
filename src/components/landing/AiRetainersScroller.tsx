@@ -74,8 +74,25 @@ export default function AiRetainersScroller() {
   return (
     <div ref={wrapperRef} className="relative" style={{ height: "220vh" }}>
       <div className="sticky top-0 h-screen w-full overflow-hidden">
+        {/* Shared ambient background — fixed to the viewport for the whole pinned duration,
+            so it doesn't slide with the horizontal track. This is what makes the two panels
+            read as one continuous scene instead of two separate sections swapping. */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+          <div
+            className="absolute top-[18%] left-1/2 -translate-x-1/2 w-[900px] h-[900px] rounded-full blur-3xl opacity-25"
+            style={{ background: "radial-gradient(closest-side, hsl(var(--accent) / 0.42), transparent 70%)" }}
+          />
+          <div
+            className="absolute -top-24 -left-32 w-[560px] h-[560px] rounded-full blur-3xl opacity-25"
+            style={{ background: "radial-gradient(closest-side, hsl(var(--purple) / 0.45), transparent 70%)" }}
+          />
+          <div
+            className="absolute -bottom-24 -right-32 w-[600px] h-[600px] rounded-full blur-3xl opacity-25"
+            style={{ background: "radial-gradient(closest-side, hsl(var(--purple) / 0.4), transparent 70%)" }}
+          />
+        </div>
         <div
-          className="flex h-full will-change-transform"
+          className="relative z-10 flex h-full will-change-transform"
           style={{
             width: "200vw",
             transform: `translate3d(${translate}vw, 0, 0)`,
