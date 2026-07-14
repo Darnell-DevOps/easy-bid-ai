@@ -481,6 +481,7 @@ export default function NewProposal() {
           goals: payload.goals || null,
           deliverables: payload.deliverables || null,
           tax_rate: branding?.default_tax_rate ?? null,
+          tax_mode: taxMode,
           payment_terms: branding?.default_payment_terms ?? null,
         })
         .select()
