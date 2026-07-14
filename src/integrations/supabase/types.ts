@@ -1878,6 +1878,7 @@ export type Database = {
       }
       proposals: {
         Row: {
+          acceptance_evidence: Json | null
           accepted_at: string | null
           accepted_source: string | null
           amount_cents: number | null
@@ -1916,6 +1917,7 @@ export type Database = {
           viewed_source: string | null
         }
         Insert: {
+          acceptance_evidence?: Json | null
           accepted_at?: string | null
           accepted_source?: string | null
           amount_cents?: number | null
@@ -1954,6 +1956,7 @@ export type Database = {
           viewed_source?: string | null
         }
         Update: {
+          acceptance_evidence?: Json | null
           accepted_at?: string | null
           accepted_source?: string | null
           amount_cents?: number | null
@@ -2921,7 +2924,12 @@ export type Database = {
       }
       booking_reschedule_get: { Args: { _token: string }; Returns: Json }
       client_portal_respond: {
-        Args: { _action: string; _message?: string; _proposal_id: string }
+        Args: {
+          _action: string
+          _evidence?: Json
+          _message?: string
+          _proposal_id: string
+        }
         Returns: Json
       }
       contract_countersign: {
@@ -3302,6 +3310,7 @@ export type Database = {
       public_get_proposal_by_id: {
         Args: { _id: string }
         Returns: {
+          acceptance_evidence: Json | null
           accepted_at: string | null
           accepted_source: string | null
           amount_cents: number | null
