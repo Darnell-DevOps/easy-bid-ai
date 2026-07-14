@@ -1879,6 +1879,7 @@ export type Database = {
       proposals: {
         Row: {
           accepted_at: string | null
+          accepted_source: string | null
           amount_cents: number | null
           budget: string
           client_id: string | null
@@ -1901,7 +1902,9 @@ export type Database = {
           project_scope: string
           proposal_content: string | null
           rejected_at: string | null
+          rejected_source: string | null
           sent_at: string | null
+          sent_source: string | null
           service_type: string
           status: string
           tax_mode: string | null
@@ -1910,9 +1913,11 @@ export type Database = {
           updated_at: string
           user_id: string
           viewed_at: string | null
+          viewed_source: string | null
         }
         Insert: {
           accepted_at?: string | null
+          accepted_source?: string | null
           amount_cents?: number | null
           budget?: string
           client_id?: string | null
@@ -1935,7 +1940,9 @@ export type Database = {
           project_scope?: string
           proposal_content?: string | null
           rejected_at?: string | null
+          rejected_source?: string | null
           sent_at?: string | null
+          sent_source?: string | null
           service_type: string
           status?: string
           tax_mode?: string | null
@@ -1944,9 +1951,11 @@ export type Database = {
           updated_at?: string
           user_id: string
           viewed_at?: string | null
+          viewed_source?: string | null
         }
         Update: {
           accepted_at?: string | null
+          accepted_source?: string | null
           amount_cents?: number | null
           budget?: string
           client_id?: string | null
@@ -1969,7 +1978,9 @@ export type Database = {
           project_scope?: string
           proposal_content?: string | null
           rejected_at?: string | null
+          rejected_source?: string | null
           sent_at?: string | null
+          sent_source?: string | null
           service_type?: string
           status?: string
           tax_mode?: string | null
@@ -1978,6 +1989,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           viewed_at?: string | null
+          viewed_source?: string | null
         }
         Relationships: [
           {
@@ -3267,6 +3279,7 @@ export type Database = {
         Args: { _id: string }
         Returns: {
           accepted_at: string | null
+          accepted_source: string | null
           amount_cents: number | null
           budget: string
           client_id: string | null
@@ -3289,7 +3302,9 @@ export type Database = {
           project_scope: string
           proposal_content: string | null
           rejected_at: string | null
+          rejected_source: string | null
           sent_at: string | null
+          sent_source: string | null
           service_type: string
           status: string
           tax_mode: string | null
@@ -3298,6 +3313,7 @@ export type Database = {
           updated_at: string
           user_id: string
           viewed_at: string | null
+          viewed_source: string | null
         }[]
         SetofOptions: {
           from: "*"
