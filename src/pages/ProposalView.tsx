@@ -52,6 +52,10 @@ interface ProposalData {
   amount_cents: number | null;
   currency: string | null;
   paid_at: string | null;
+  goals: string | null;
+  deliverables: string | null;
+  tax_rate: number | null;
+  payment_terms: string | null;
 }
 
 const SECTION_HEADINGS = [
