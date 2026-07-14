@@ -181,7 +181,8 @@ export default function NewProposal() {
   const initialBudgetAnalysis = analyzeBudgetString(initialBudgetRaw);
   const initialBudgetDigits =
     initialBudgetAnalysis.kind === "exact" ? String(initialBudgetAnalysis.exactValue) : "";
-  const initialCurrency: CurrencyCode = initialBudgetAnalysis.currency;
+  const detectedPrefillCurrency = detectCurrency(initialBudgetRaw);
+  const initialCurrency: CurrencyCode = detectedPrefillCurrency || "GBP";
   const initialBudgetNotice =
     initialBudgetRaw && initialBudgetAnalysis.kind !== "exact" && initialBudgetAnalysis.kind !== "empty"
       ? initialBudgetRaw
@@ -189,13 +190,13 @@ export default function NewProposal() {
   const initialTimelineRaw = clientPrefill?.timeline || templateData?.prefill?.timeline || "";
   const initialTimeline = parseTimeline(initialTimelineRaw);
 
-  // Smart fallbacks for auto-generation: never reference missing data; use professional placeholders
+  // Smart fallback for auto-generation client name only. Company is genuinely
+  // optional — do not invent a "Your Company" placeholder.
   const fallbackClientName = autoGenerateRequested ? "Prospective Client" : "";
-  const fallbackCompanyName = autoGenerateRequested ? "Your Company" : "";
 
   const [form, setForm] = useState({
     client_name: clientPrefill?.client_name || fallbackClientName,
-    company_name: clientPrefill?.company_name || fallbackCompanyName,
+    company_name: clientPrefill?.company_name || "",
     service_type: clientPrefill?.service_type || templateData?.serviceType || "",
     project_scope:
       clientPrefill?.project_scope || templateData?.prefill?.project_scope || "",
