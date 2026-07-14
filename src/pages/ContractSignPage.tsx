@@ -449,7 +449,7 @@ export default function ContractSignPage() {
                     <CreditCard className="w-4 h-4" /> Start subscription
                   </Link>
                 </Button>
-              ) : contract.proposal_id && !proposalPaid ? (
+              ) : contract.proposal_id && !proposalPaid && isExecuted ? (
                 <Button size="lg" asChild className="gap-2 bg-accent text-accent-foreground font-semibold">
                   <Link to={`/proposal/view/${contract.proposal_id}`}>
                     <CreditCard className="w-4 h-4" /> Complete payment
