@@ -1,4 +1,47 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { formatCents, paymentTermsPhrase } from "../_shared/commercial-calc.ts";
+
+function buildFeesBlock(payload: any): { promptLines: string[]; templateLines: string[] } {
+  const total = typeof payload.total_cents === "number" ? payload.total_cents : null;
+  const subtotal = typeof payload.subtotal_cents === "number" ? payload.subtotal_cents : null;
+  const taxAmount = typeof payload.tax_amount_cents === "number" ? payload.tax_amount_cents : 0;
+  const taxRate = typeof payload.tax_rate === "number" ? payload.tax_rate : null;
+  const currency = payload.currency || "USD";
+  const phrase = paymentTermsPhrase(payload.payment_terms, payload.invoice_due_days);
+
+  const promptLines: string[] = [];
+  const templateLines: string[] = [];
+
+  if (total && total > 0) {
+    const hasTax = taxAmount && taxAmount > 0 && subtotal !== null;
+    const subLine = hasTax ? `- Subtotal: ${formatCents(subtotal as number, currency)}` : null;
+    const taxLabel = hasTax
+      ? `- Tax${taxRate ? ` (${taxRate}%)` : ""}: ${formatCents(taxAmount, currency)}`
+      : null;
+    const totalLine = `- Total: ${formatCents(total, currency)}`;
+
+    if (subLine) { promptLines.push(subLine); templateLines.push(subLine); }
+    if (taxLabel) { promptLines.push(taxLabel); templateLines.push(taxLabel); }
+    promptLines.push(totalLine);
+    templateLines.push(totalLine);
+
+    promptLines.push(
+      `- Include the Subtotal (if listed), Tax (if listed) and Total lines above VERBATIM in the "## 5. Fees & Payment Terms" section. Do not recalculate, adjust, or add commentary that changes these numbers.`
+    );
+  } else {
+    // Backward-compatible fallback path — behave as before.
+    const legacy = `- Total Fee: ${payload.budget || ""}`;
+    promptLines.push(legacy);
+    templateLines.push(`- Total Fee: ${payload.budget || "[Total Fee]"}`);
+  }
+
+  const paymentLine = `- Payment Terms: ${phrase || "Payment terms are as agreed between the parties."}`;
+  promptLines.push(paymentLine);
+  templateLines.push(paymentLine);
+
+  return { promptLines, templateLines };
+}
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
