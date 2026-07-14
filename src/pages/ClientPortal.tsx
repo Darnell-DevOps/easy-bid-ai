@@ -312,11 +312,27 @@ export default function ClientPortal() {
       return;
     }
     setSubmitting("accept");
+    // Build acceptance evidence snapshot — captures exactly what the client saw
+    // and agreed to at the moment of acceptance, independent of later policy edits.
+    const policiesSnapshot = [termsPolicy, refundPolicy, privacyPolicy]
+      .filter((p): p is NonNullable<typeof p> => !!p)
+      .map((p) => ({
+        policy_type: p.policy_type,
+        content: p.content,
+        updated_at: (p as any).updated_at ?? null,
+      }));
+    const evidence = {
+      policies_snapshot: policiesSnapshot,
+      payment_terms_label: proposalPaymentTermsLabel || null,
+      user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+      accepted_via: "client_portal",
+    };
     const { data: rpcData, error } = await supabase.rpc("client_portal_respond", {
       _proposal_id: proposal.id,
       _action: "accept",
       _message: message.trim() || null,
-    });
+      _evidence: evidence,
+    } as never);
     if (error) {
       setSubmitting(null);
       toast({ title: "Couldn't accept proposal", description: error.message, variant: "destructive" });
