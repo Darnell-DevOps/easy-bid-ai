@@ -373,6 +373,10 @@ export default function ContractSignPage() {
             <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-purple bg-purple/10 px-2.5 py-1 rounded-full">
               <CheckCircle2 className="w-3.5 h-3.5" /> Signed — awaiting countersignature
             </span>
+          ) : isDraft ? (
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
+              <Lock className="w-3.5 h-3.5" /> Being prepared
+            </span>
           ) : (
             <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-purple bg-purple/10 px-2.5 py-1 rounded-full">
               <Lock className="w-3.5 h-3.5" /> Awaiting signature
