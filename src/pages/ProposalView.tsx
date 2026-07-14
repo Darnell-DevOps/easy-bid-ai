@@ -381,19 +381,36 @@ export default function ProposalView() {
           setLeadContext({ original_lead_message: originalLeadMessage, recent_thread: recentThread || undefined });
         }
 
-        // Fetch the owner's default currency once — used only as a fallback in the UI when a legacy proposal has no currency set.
+        // Fetch the owner's default currency + public-facing branding (used for the
+        // ProposalHeader identity block and the exported PDF cover/footer/accent color).
         try {
           const { data: udata } = await supabase.auth.getUser();
           if (udata?.user) {
             const { data: branding } = await supabase
               .from("business_branding")
-              .select("default_currency")
+              .select(
+                "default_currency, business_name, tagline, logo_url, brand_color, brand_secondary_color, show_logo_on_proposals, proposal_cover_show_name, proposal_cover_show_tagline, proposal_cover_show_date",
+              )
               .eq("user_id", udata.user.id)
               .maybeSingle();
             if ((branding as any)?.default_currency) setDefaultCurrency((branding as any).default_currency);
+            if (branding) {
+              const b = branding as any;
+              setOwnerBranding({
+                business_name: b.business_name ?? null,
+                tagline: b.tagline ?? null,
+                logo_url: b.logo_url ?? null,
+                brand_color: b.brand_color ?? null,
+                brand_secondary_color: b.brand_secondary_color ?? null,
+                show_logo_on_proposals: b.show_logo_on_proposals ?? null,
+                proposal_cover_show_name: b.proposal_cover_show_name ?? null,
+                proposal_cover_show_tagline: b.proposal_cover_show_tagline ?? null,
+                proposal_cover_show_date: b.proposal_cover_show_date ?? null,
+              });
+            }
           }
         } catch {
-          // Ignore — dropdown will fall back to USD.
+          // Ignore — dropdown will fall back to USD and header will render without branding.
         }
       }
       setLoading(false);
