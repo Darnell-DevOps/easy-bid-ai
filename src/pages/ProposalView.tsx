@@ -60,6 +60,10 @@ interface ProposalData {
   tax_rate: number | null;
   payment_terms: string | null;
   tax_mode: string | null;
+  previous_proposal_content: string | null;
+  previous_pricing_breakdown: string | null;
+  previous_invoice_content: string | null;
+  previous_content_saved_at: string | null;
 }
 
 const SECTION_HEADINGS = [
