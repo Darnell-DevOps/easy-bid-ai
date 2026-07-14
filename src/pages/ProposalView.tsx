@@ -293,7 +293,7 @@ export default function ProposalView() {
         if (data.client_id) {
           const { data: client } = await supabase
             .from("clients")
-            .select("email, phone, intake_responses")
+            .select("email, phone, intake_responses, original_lead_message, lead_thread")
             .eq("id", data.client_id)
             .single();
           if (client?.email) setClientEmail(client.email);
@@ -301,6 +301,40 @@ export default function ProposalView() {
           if (client && (client as any).intake_responses) {
             setMergeIntake((client as any).intake_responses as Record<string, string>);
           }
+
+          // Live-fetch original lead message + recent thread summary for regeneration context.
+          const originalLeadMessage = (client as any)?.original_lead_message || undefined;
+          const leadThread: Array<{ subject?: string; body?: string; received_at?: string }> =
+            Array.isArray((client as any)?.lead_thread) ? (client as any).lead_thread : [];
+          let recentThread = "";
+          if (leadThread.length) {
+            const sorted = [...leadThread].sort((a, b) => {
+              const ta = a?.received_at ? new Date(a.received_at).getTime() : 0;
+              const tb = b?.received_at ? new Date(b.received_at).getTime() : 0;
+              return tb - ta;
+            });
+            recentThread = sorted
+              .slice(0, 3)
+              .map((e) => (e?.body || "").toString().trim().slice(0, 500))
+              .filter(Boolean)
+              .join("\n---\n");
+          }
+          setLeadContext({ original_lead_message: originalLeadMessage, recent_thread: recentThread || undefined });
+        }
+
+        // Fetch the owner's default currency once — used only as a fallback in the UI when a legacy proposal has no currency set.
+        try {
+          const { data: udata } = await supabase.auth.getUser();
+          if (udata?.user) {
+            const { data: branding } = await supabase
+              .from("business_branding")
+              .select("default_currency")
+              .eq("user_id", udata.user.id)
+              .maybeSingle();
+            if ((branding as any)?.default_currency) setDefaultCurrency((branding as any).default_currency);
+          }
+        } catch {
+          // Ignore — dropdown will fall back to USD.
         }
       }
       setLoading(false);
