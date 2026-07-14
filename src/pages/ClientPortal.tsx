@@ -44,6 +44,7 @@ import { useProposalCheckout } from "@/hooks/use-proposal-checkout";
 import { cn } from "@/lib/utils";
 import { buildOnboardingFields, type OnboardingFormRow } from "@/lib/onboarding";
 import { calculateCommercialTotals, formatCents } from "@/lib/commercial-calc";
+import { resolveProviderName } from "@/lib/provider-identity";
 import { ClipboardList } from "lucide-react";
 
 interface PublicProposal {
