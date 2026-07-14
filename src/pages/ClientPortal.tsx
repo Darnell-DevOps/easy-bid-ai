@@ -1076,13 +1076,86 @@ export default function ClientPortal() {
                   className="mt-0.5"
                 />
                 <label htmlFor="agree-terms" className="text-sm text-foreground/90 leading-relaxed cursor-pointer select-none">
-                  I agree to the{" "}
-                  <span className="text-purple font-medium">Terms & Conditions</span>,{" "}
-                  <span className="text-purple font-medium">Refund Policy</span>, and{" "}
-                  <span className="text-purple font-medium">Payment Terms</span> outlined in this proposal.
+                  {hasAnyPolicy ? (
+                    <>
+                      I agree to{" "}
+                      {(() => {
+                        const parts: React.ReactNode[] = [];
+                        if (termsPolicy) {
+                          parts.push(
+                            <button
+                              key="terms"
+                              type="button"
+                              onClick={(e) => { e.preventDefault(); setOpenPolicy(termsPolicy); }}
+                              className="text-purple font-medium underline underline-offset-2 hover:text-purple/80"
+                            >
+                              {termsPolicy.policy_type}
+                            </button>
+                          );
+                        }
+                        if (refundPolicy) {
+                          parts.push(
+                            <button
+                              key="refund"
+                              type="button"
+                              onClick={(e) => { e.preventDefault(); setOpenPolicy(refundPolicy); }}
+                              className="text-purple font-medium underline underline-offset-2 hover:text-purple/80"
+                            >
+                              {refundPolicy.policy_type}
+                            </button>
+                          );
+                        }
+                        if (privacyPolicy) {
+                          parts.push(
+                            <button
+                              key="privacy"
+                              type="button"
+                              onClick={(e) => { e.preventDefault(); setOpenPolicy(privacyPolicy); }}
+                              className="text-purple font-medium underline underline-offset-2 hover:text-purple/80"
+                            >
+                              {privacyPolicy.policy_type}
+                            </button>
+                          );
+                        }
+                        if (proposalPaymentTermsLabel) {
+                          parts.push(
+                            <span key="pay" className="text-foreground/90">
+                              the payment terms in this proposal (<span className="font-medium">{proposalPaymentTermsLabel}</span>)
+                            </span>
+                          );
+                        }
+                        return parts.map((node, i) => (
+                          <span key={i}>
+                            {i > 0 && (i === parts.length - 1 ? ", and " : ", ")}
+                            {node}
+                          </span>
+                        ));
+                      })()}
+                      .
+                    </>
+                  ) : (
+                    <>I agree to proceed with this proposal.</>
+                  )}
                 </label>
               </div>
             </div>
+
+            <Dialog open={!!openPolicy} onOpenChange={(o) => { if (!o) setOpenPolicy(null); }}>
+              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>{openPolicy?.policy_type}</DialogTitle>
+                  {openPolicy?.updated_at && (
+                    <DialogDescription>
+                      Last updated {new Date(openPolicy.updated_at).toLocaleDateString()}
+                    </DialogDescription>
+                  )}
+                </DialogHeader>
+                <div className="text-sm whitespace-pre-wrap leading-relaxed text-foreground/90">
+                  {openPolicy?.content}
+                </div>
+              </DialogContent>
+            </Dialog>
+
 
             <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
               <Button
