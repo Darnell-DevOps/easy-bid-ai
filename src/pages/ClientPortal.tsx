@@ -6,6 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
   Loader2,
   CheckCircle2,
   XCircle,
@@ -145,6 +152,8 @@ export default function ClientPortal() {
   const { openCheckout, loading: payLoading, available: paymentsAvailable } = useProposalCheckout();
   const [paymentConfirmMsg, setPaymentConfirmMsg] = useState<string | null>(null);
   const [branding, setBranding] = useState<PortalBranding | null>(null);
+  const [policies, setPolicies] = useState<Array<{ policy_type: string; content: string; updated_at: string | null }>>([]);
+  const [openPolicy, setOpenPolicy] = useState<{ policy_type: string; content: string; updated_at: string | null } | null>(null);
 
   // Safety net: when Paddle hard-redirects back with ?paid=1, poll for the
   // webhook to flip client_paid before trusting the initial fetch.
