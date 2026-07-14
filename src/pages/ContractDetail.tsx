@@ -111,6 +111,8 @@ export default function ContractDetail() {
   const signingUrl = `${window.location.origin}/sign/${contract.signing_token}`;
 
   const copyLink = async () => {
+    const { blocked, missing } = hasCriticalPlaceholders();
+    if (blocked) { showPlaceholderBlockedToast(missing); return; }
     await navigator.clipboard.writeText(signingUrl);
     toast({ title: "Link copied" });
   };
