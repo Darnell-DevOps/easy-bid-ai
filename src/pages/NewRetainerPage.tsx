@@ -61,6 +61,8 @@ export default function NewRetainerPage() {
   const [endDate, setEndDate] = useState("");
   const [autoRenew, setAutoRenew] = useState(true);
   const [notes, setNotes] = useState("");
+  const [taxRate, setTaxRate] = useState<string>("");
+  const [taxMode, setTaxMode] = useState<TaxMode>("none");
 
   useEffect(() => {
     (async () => {
