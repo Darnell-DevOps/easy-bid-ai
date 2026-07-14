@@ -83,24 +83,6 @@ interface ContractLite {
   signed_at: string | null;
 }
 
-const CURRENCY_SYMBOL: Record<string, string> = {
-  GBP: "£",
-  USD: "$",
-  EUR: "€",
-  CAD: "C$",
-  AUD: "A$",
-};
-
-function formatAmount(cents: number | null, currency: string | null) {
-  if (!cents) return null;
-  const cur = (currency || "USD").toUpperCase();
-  const symbol = CURRENCY_SYMBOL[cur] || "";
-  const value = (cents / 100).toLocaleString(undefined, {
-    minimumFractionDigits: cents % 100 === 0 ? 0 : 2,
-    maximumFractionDigits: 2,
-  });
-  return `${symbol}${value}`;
-}
 
 function deriveProjectStage(
   p: PublicProposal,
