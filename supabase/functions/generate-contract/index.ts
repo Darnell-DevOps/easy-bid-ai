@@ -106,6 +106,7 @@ function buildSystemPrompt() {
 
 function buildPrompt(payload: any) {
   const type = CONTRACT_TYPES[payload.contract_type] || CONTRACT_TYPES.service_agreement;
+  const fees = buildFeesBlock(payload);
   const lines = [
     `Generate a complete ${type.title} as polished Markdown.`,
     "",
@@ -116,8 +117,7 @@ function buildPrompt(payload: any) {
     `- Project / Service: ${payload.service_type || ""}`,
     `- Scope: ${payload.project_scope || ""}`,
     `- Timeline: ${payload.timeline || ""}`,
-    `- Total Fee: ${payload.budget || ""}`,
-    `- Payment Terms: ${payload.payment_terms || "Payment terms as agreed"}`,
+    ...fees.promptLines,
     `- Effective Date: ${payload.effective_date || new Date().toISOString().slice(0, 10)}`,
   ];
   if (payload.extra_clauses) {
