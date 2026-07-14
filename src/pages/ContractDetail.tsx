@@ -104,6 +104,29 @@ export default function ContractDetail() {
   };
 
   const sendForSignature = async () => {
+    // Block sending if the contract body still contains critical unresolved
+    // identity placeholders — these indicate the provider identity or client
+    // identity couldn't be filled in at generation time. Sending anyway would
+    // ship a legally ambiguous agreement to the client.
+    const body = contract.body || "";
+    const missingProvider = body.includes("[Service Provider]");
+    const missingClient = body.includes("[Client]");
+    if (missingProvider || missingClient) {
+      const missingBits = [
+        missingProvider ? "your business name" : null,
+        missingClient ? "the client's name" : null,
+      ].filter(Boolean).join(" and ");
+      toast({
+        title: "Complete your business details before sending this agreement.",
+        description: `The contract still references ${missingBits}. Update your business settings and regenerate the contract before sending.`,
+        variant: "destructive",
+        action: (
+          <Button size="sm" variant="outline" onClick={() => navigate("/dashboard/settings")}>Open settings</Button>
+        ) as any,
+      });
+      return;
+    }
+
     const { error } = await supabase
       .from("contracts")
       .update({ status: "sent", sent_at: new Date().toISOString() })
