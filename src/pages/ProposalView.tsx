@@ -471,6 +471,24 @@ export default function ProposalView() {
   }, [id]);
 
 
+  const dirty = useMemo(
+    () =>
+      editedProposal !== initialProposal ||
+      editedPricing !== initialPricing ||
+      editedInvoice !== initialInvoice,
+    [editedProposal, initialProposal, editedPricing, initialPricing, editedInvoice, initialInvoice],
+  );
+
+  useEffect(() => {
+    if (!dirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [dirty]);
+
   const handleSave = async () => {
     setSaving(true);
     const { error } = await supabase
@@ -486,6 +504,9 @@ export default function ProposalView() {
     if (error) {
       toast({ title: "Save failed", description: error.message, variant: "destructive" });
     } else {
+      setInitialProposal(editedProposal);
+      setInitialPricing(editedPricing);
+      setInitialInvoice(editedInvoice);
       toast({ title: "Saved successfully" });
     }
   };
