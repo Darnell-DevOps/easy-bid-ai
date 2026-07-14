@@ -777,15 +777,27 @@ export default function ProposalView() {
         toast({ title: "Couldn't parse amount", variant: "destructive" });
         return;
       }
-      const currency = symbol === "£" ? "GBP" : symbol === "€" ? "EUR" : "USD";
       const cents = Math.round(num * 100);
+
+      // Never overwrite an already-set structured currency — this button is a legacy fallback
+      // for proposals that predate structured amount_cents/currency.
+      const currencyAlreadySet = !!proposal.currency;
+      const guessedCurrency = symbol === "£" ? "GBP" : symbol === "€" ? "EUR" : "USD";
+      const updates: { amount_cents: number; currency?: string } = { amount_cents: cents };
+      if (!currencyAlreadySet) updates.currency = guessedCurrency;
+
       const { error } = await supabase
         .from("proposals")
-        .update({ amount_cents: cents, currency })
+        .update(updates)
         .eq("id", proposal.id);
       if (error) throw error;
-      setProposal({ ...proposal, amount_cents: cents, currency });
-      toast({ title: "Price filled from proposal", description: `${symbol}${num.toLocaleString()} (${currency})` });
+      setProposal({
+        ...proposal,
+        amount_cents: cents,
+        currency: currencyAlreadySet ? proposal.currency : guessedCurrency,
+      });
+      const displayCurrency = currencyAlreadySet ? proposal.currency : guessedCurrency;
+      toast({ title: "Price filled from proposal", description: `${symbol}${num.toLocaleString()} (${displayCurrency})` });
     } catch (e: any) {
       toast({ title: "Couldn't auto-fill", description: e.message || "Try again.", variant: "destructive" });
     } finally {
