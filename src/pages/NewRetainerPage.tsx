@@ -422,6 +422,52 @@ export default function NewRetainerPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
+                <Label>Tax mode</Label>
+                <Select value={taxMode ?? "none"} onValueChange={(v) => setTaxMode(v as TaxMode)}>
+                  <SelectTrigger className="mt-1.5">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No tax</SelectItem>
+                    <SelectItem value="exclusive">Add tax on top of prices</SelectItem>
+                    <SelectItem value="inclusive">Prices already include tax</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {taxMode !== "none" && (
+                <div>
+                  <Label>Tax rate (%)</Label>
+                  <Input
+                    type="number"
+                    inputMode="decimal"
+                    value={taxRate}
+                    onChange={(e) => setTaxRate(e.target.value)}
+                    className="mt-1.5"
+                    placeholder="20"
+                    min={0}
+                  />
+                </div>
+              )}
+            </div>
+
+            {previewFinal && (
+              <div className="rounded-md border border-border/60 bg-secondary/40 p-3 text-xs text-muted-foreground">
+                <div className="flex items-center justify-between">
+                  <span>Client is charged per billing cycle</span>
+                  <span className="text-sm font-semibold text-foreground">{previewFinal}</span>
+                </div>
+                {hasTax && (
+                  <div className="mt-1 text-[11px]">
+                    {taxMode === "exclusive"
+                      ? `${formatMoney(amountCentsNum, currency)} + ${parsedTaxRate}% tax`
+                      : `Includes ${parsedTaxRate}% tax`}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
                 <Label>Billing frequency</Label>
                 <Select
                   value={billingInterval}
