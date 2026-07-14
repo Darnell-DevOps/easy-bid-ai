@@ -21,7 +21,7 @@ export default function ProposalHeader({ clientName, companyName, serviceType, c
         </div>
         <p className="text-xs text-muted-foreground">{dateStr}</p>
       </div>
-      <p className="text-xs font-medium uppercase tracking-[0.2em] text-purple mb-3">Prepared for {companyName}</p>
+      <p className="text-xs font-medium uppercase tracking-[0.2em] text-purple mb-3">Prepared for {companyName || clientName}</p>
       <h1 className="text-3xl lg:text-5xl font-bold text-foreground tracking-tight leading-[1.1]">
         Proposal for {clientName}
       </h1>
