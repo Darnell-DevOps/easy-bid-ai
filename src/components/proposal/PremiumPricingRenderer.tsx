@@ -54,6 +54,7 @@ function parsePricing(content: string): {
   let total: string | null = null;
   let subtotal: string | null = null;
   let vat: string | null = null;
+  let vatLabel = "Tax";
 
   for (const raw of tableLines) {
     const cells = raw.trim().split("|").slice(1, -1).map((c) => c.trim());
