@@ -3275,6 +3275,22 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      public_get_proposal_branding_for_user: {
+        Args: { _user_id: string }
+        Returns: {
+          brand_color: string
+          brand_secondary_color: string
+          business_name: string
+          logo_url: string
+          proposal_cover_show_date: boolean
+          proposal_cover_show_name: boolean
+          proposal_cover_show_tagline: boolean
+          show_logo_on_contracts: boolean
+          show_logo_on_portal: boolean
+          show_logo_on_proposals: boolean
+          tagline: string
+        }[]
+      }
       public_get_proposal_by_id: {
         Args: { _id: string }
         Returns: {
