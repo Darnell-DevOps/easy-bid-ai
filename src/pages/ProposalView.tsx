@@ -52,6 +52,10 @@ interface ProposalData {
   amount_cents: number | null;
   currency: string | null;
   paid_at: string | null;
+  goals: string | null;
+  deliverables: string | null;
+  tax_rate: number | null;
+  payment_terms: string | null;
 }
 
 const SECTION_HEADINGS = [
@@ -116,6 +120,9 @@ export default function ProposalView() {
   const [autoFillingPrice, setAutoFillingPrice] = useState(false);
   const [followUpOpen, setFollowUpOpen] = useState(false);
 
+  const [leadContext, setLeadContext] = useState<{ original_lead_message?: string; recent_thread?: string }>({});
+  const [defaultCurrency, setDefaultCurrency] = useState<string>("USD");
+
   const buildSourcePayload = () => {
     if (!proposal) return null;
     return {
@@ -126,6 +133,13 @@ export default function ProposalView() {
       budget: proposal.budget || "",
       timeline: proposal.timeline || "",
       notes: proposal.notes || "",
+      goals: proposal.goals || "",
+      deliverables: proposal.deliverables || "",
+      currency: proposal.currency || undefined,
+      tax_rate: proposal.tax_rate ?? undefined,
+      payment_terms: proposal.payment_terms ?? undefined,
+      original_lead_message: leadContext.original_lead_message || undefined,
+      recent_thread: leadContext.recent_thread || undefined,
     };
   };
 
@@ -279,7 +293,7 @@ export default function ProposalView() {
         if (data.client_id) {
           const { data: client } = await supabase
             .from("clients")
-            .select("email, phone, intake_responses")
+            .select("email, phone, intake_responses, original_lead_message, lead_thread")
             .eq("id", data.client_id)
             .single();
           if (client?.email) setClientEmail(client.email);
@@ -287,6 +301,40 @@ export default function ProposalView() {
           if (client && (client as any).intake_responses) {
             setMergeIntake((client as any).intake_responses as Record<string, string>);
           }
+
+          // Live-fetch original lead message + recent thread summary for regeneration context.
+          const originalLeadMessage = (client as any)?.original_lead_message || undefined;
+          const leadThread: Array<{ subject?: string; body?: string; received_at?: string }> =
+            Array.isArray((client as any)?.lead_thread) ? (client as any).lead_thread : [];
+          let recentThread = "";
+          if (leadThread.length) {
+            const sorted = [...leadThread].sort((a, b) => {
+              const ta = a?.received_at ? new Date(a.received_at).getTime() : 0;
+              const tb = b?.received_at ? new Date(b.received_at).getTime() : 0;
+              return tb - ta;
+            });
+            recentThread = sorted
+              .slice(0, 3)
+              .map((e) => (e?.body || "").toString().trim().slice(0, 500))
+              .filter(Boolean)
+              .join("\n---\n");
+          }
+          setLeadContext({ original_lead_message: originalLeadMessage, recent_thread: recentThread || undefined });
+        }
+
+        // Fetch the owner's default currency once — used only as a fallback in the UI when a legacy proposal has no currency set.
+        try {
+          const { data: udata } = await supabase.auth.getUser();
+          if (udata?.user) {
+            const { data: branding } = await supabase
+              .from("business_branding")
+              .select("default_currency")
+              .eq("user_id", udata.user.id)
+              .maybeSingle();
+            if ((branding as any)?.default_currency) setDefaultCurrency((branding as any).default_currency);
+          }
+        } catch {
+          // Ignore — dropdown will fall back to USD.
         }
       }
       setLoading(false);
@@ -729,15 +777,27 @@ export default function ProposalView() {
         toast({ title: "Couldn't parse amount", variant: "destructive" });
         return;
       }
-      const currency = symbol === "£" ? "GBP" : symbol === "€" ? "EUR" : "USD";
       const cents = Math.round(num * 100);
+
+      // Never overwrite an already-set structured currency — this button is a legacy fallback
+      // for proposals that predate structured amount_cents/currency.
+      const currencyAlreadySet = !!proposal.currency;
+      const guessedCurrency = symbol === "£" ? "GBP" : symbol === "€" ? "EUR" : "USD";
+      const updates: { amount_cents: number; currency?: string } = { amount_cents: cents };
+      if (!currencyAlreadySet) updates.currency = guessedCurrency;
+
       const { error } = await supabase
         .from("proposals")
-        .update({ amount_cents: cents, currency })
+        .update(updates)
         .eq("id", proposal.id);
       if (error) throw error;
-      setProposal({ ...proposal, amount_cents: cents, currency });
-      toast({ title: "Price filled from proposal", description: `${symbol}${num.toLocaleString()} (${currency})` });
+      setProposal({
+        ...proposal,
+        amount_cents: cents,
+        currency: currencyAlreadySet ? proposal.currency : guessedCurrency,
+      });
+      const displayCurrency = currencyAlreadySet ? proposal.currency : guessedCurrency;
+      toast({ title: "Price filled from proposal", description: `${symbol}${num.toLocaleString()} (${displayCurrency})` });
     } catch (e: any) {
       toast({ title: "Couldn't auto-fill", description: e.message || "Try again.", variant: "destructive" });
     } finally {
@@ -970,7 +1030,7 @@ export default function ProposalView() {
                           const cents = proposal.amount_cents;
                           const { error } = await supabase
                             .from("proposals")
-                            .update({ amount_cents: cents, currency: proposal.currency || "USD" })
+                            .update({ amount_cents: cents, currency: proposal.currency || defaultCurrency })
                             .eq("id", proposal.id);
                           if (error) {
                             toast({ title: "Couldn't save amount", description: error.message, variant: "destructive" });
@@ -986,7 +1046,7 @@ export default function ProposalView() {
                       />
                     </div>
                     <select
-                      value={proposal.currency || "USD"}
+                      value={proposal.currency || defaultCurrency}
                       onChange={async (e) => {
                         const currency = e.target.value;
                         setProposal({ ...proposal, currency });
