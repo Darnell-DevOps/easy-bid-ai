@@ -797,6 +797,7 @@ export type Database = {
           sent_at: string | null
           signed_at: string | null
           signing_token: string
+          source: string | null
           status: string
           title: string
           updated_at: string
@@ -821,6 +822,7 @@ export type Database = {
           sent_at?: string | null
           signed_at?: string | null
           signing_token?: string
+          source?: string | null
           status?: string
           title?: string
           updated_at?: string
@@ -845,6 +847,7 @@ export type Database = {
           sent_at?: string | null
           signed_at?: string | null
           signing_token?: string
+          source?: string | null
           status?: string
           title?: string
           updated_at?: string
@@ -2907,7 +2910,7 @@ export type Database = {
       booking_reschedule_get: { Args: { _token: string }; Returns: Json }
       client_portal_respond: {
         Args: { _action: string; _message?: string; _proposal_id: string }
-        Returns: undefined
+        Returns: Json
       }
       contract_countersign: {
         Args: {
@@ -3087,6 +3090,7 @@ export type Database = {
           sent_at: string | null
           signed_at: string | null
           signing_token: string
+          source: string | null
           status: string
           title: string
           updated_at: string
@@ -3120,6 +3124,7 @@ export type Database = {
           sent_at: string | null
           signed_at: string | null
           signing_token: string
+          source: string | null
           status: string
           title: string
           updated_at: string

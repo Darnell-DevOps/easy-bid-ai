@@ -266,7 +266,7 @@ export default function ClientPortal() {
       return;
     }
     setSubmitting("accept");
-    const { error } = await supabase.rpc("client_portal_respond", {
+    const { data: rpcData, error } = await supabase.rpc("client_portal_respond", {
       _proposal_id: proposal.id,
       _action: "accept",
       _message: message.trim() || null,
@@ -285,8 +285,12 @@ export default function ClientPortal() {
     };
     setProposal(updated);
 
-    // Auto-draft a contract and immediately make it available for signing
-    if (!contract) {
+    const rpcResult = (rpcData || {}) as { contract_id?: string | null; contract_is_new?: boolean };
+    const contractId = rpcResult.contract_id || null;
+    const contractIsNew = !!rpcResult.contract_is_new;
+
+    if (contractId && contractIsNew) {
+      // Placeholder contract was just claimed by the RPC — fill it with real content.
       try {
         const contractType = /retainer/i.test(proposal.service_type || "")
           ? "retainer_agreement"
@@ -315,29 +319,36 @@ export default function ClientPortal() {
           },
         });
         if (data?.body) {
-          const { data: inserted } = await supabase
+          const { data: updatedRow, error: updateErr } = await supabase
             .from("contracts")
-            .insert({
-              user_id: proposal.user_id,
-              proposal_id: proposal.id,
-              client_id: (proposal as any).client_id || null,
-              contract_type: contractType,
+            .update({
               title: data.title || (contractType === "retainer_agreement" ? "Retainer Agreement" : "Service Agreement"),
               body: data.body,
-              client_name: proposal.client_name,
-              company_name: proposal.company_name,
               amount_cents: proposal.amount_cents != null ? totals.totalCents : null,
               currency: proposal.currency,
-              status: "sent",
-              sent_at: new Date().toISOString(),
             })
+            .eq("id", contractId)
             .select("id, title, status, signing_token, signed_at")
             .single();
-          if (inserted) setContract(inserted as ContractLite);
+          if (updateErr) {
+            console.warn("auto-draft contract update failed", updateErr);
+          } else if (updatedRow) {
+            setContract(updatedRow as ContractLite);
+          }
+        } else {
+          console.warn("generate-contract returned no body; placeholder left as draft");
         }
       } catch (err) {
         console.warn("auto-draft contract failed", err);
       }
+    } else if (contractId && !contractIsNew) {
+      // A prior call already claimed the placeholder — just load it.
+      const { data: existing } = await supabase
+        .from("contracts")
+        .select("id, title, status, signing_token, signed_at")
+        .eq("id", contractId)
+        .maybeSingle();
+      if (existing) setContract(existing as ContractLite);
     }
 
     setSubmitting(null);
