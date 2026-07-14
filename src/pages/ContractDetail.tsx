@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { contractTypeLabel, type ContractRow, type ContractSignatureRow } from "@/lib/contracts";
 import { sendEmail } from "@/lib/email";
 import { renderMergeTags } from "@/lib/merge-tags";
+import { resolveProviderName, type ProviderIdentityFields } from "@/lib/provider-identity";
 import { WhatsAppButton } from "@/components/whatsapp/WhatsAppButton";
 import { downloadContractPdf } from "@/lib/contract-pdf";
 
