@@ -365,11 +365,13 @@ export default function ClientPortal() {
           proposal.tax_rate,
           proposal.tax_mode as any,
         );
+        const providerName = resolveProviderName(branding);
         const { data } = await supabase.functions.invoke("generate-contract", {
           body: {
             contract_type: contractType,
             client_name: proposal.client_name,
             company_name: proposal.company_name,
+            provider_name: providerName,
             service_type: proposal.service_type,
             project_scope: (proposal as any).project_scope || "",
             timeline: (proposal as any).timeline || "",
