@@ -401,7 +401,7 @@ export default function ProposalView() {
             const { data: branding } = await supabase
               .from("business_branding")
               .select(
-                "default_currency, business_name, tagline, logo_url, brand_color, brand_secondary_color, show_logo_on_proposals, proposal_cover_show_name, proposal_cover_show_tagline, proposal_cover_show_date",
+                "default_currency, business_name, legal_name, trading_name, tagline, logo_url, brand_color, brand_secondary_color, show_logo_on_proposals, proposal_cover_show_name, proposal_cover_show_tagline, proposal_cover_show_date",
               )
               .eq("user_id", udata.user.id)
               .maybeSingle();
@@ -410,6 +410,8 @@ export default function ProposalView() {
               const b = branding as any;
               setOwnerBranding({
                 business_name: b.business_name ?? null,
+                legal_name: b.legal_name ?? null,
+                trading_name: b.trading_name ?? null,
                 tagline: b.tagline ?? null,
                 logo_url: b.logo_url ?? null,
                 brand_color: b.brand_color ?? null,
