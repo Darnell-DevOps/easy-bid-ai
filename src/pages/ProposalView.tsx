@@ -123,6 +123,17 @@ export default function ProposalView() {
 
   const [leadContext, setLeadContext] = useState<{ original_lead_message?: string; recent_thread?: string }>({});
   const [defaultCurrency, setDefaultCurrency] = useState<string>("USD");
+  const [ownerBranding, setOwnerBranding] = useState<{
+    business_name: string | null;
+    tagline: string | null;
+    logo_url: string | null;
+    brand_color: string | null;
+    brand_secondary_color: string | null;
+    show_logo_on_proposals: boolean | null;
+    proposal_cover_show_name: boolean | null;
+    proposal_cover_show_tagline: boolean | null;
+    proposal_cover_show_date: boolean | null;
+  } | null>(null);
 
   const buildSourcePayload = () => {
     if (!proposal) return null;
@@ -370,19 +381,36 @@ export default function ProposalView() {
           setLeadContext({ original_lead_message: originalLeadMessage, recent_thread: recentThread || undefined });
         }
 
-        // Fetch the owner's default currency once — used only as a fallback in the UI when a legacy proposal has no currency set.
+        // Fetch the owner's default currency + public-facing branding (used for the
+        // ProposalHeader identity block and the exported PDF cover/footer/accent color).
         try {
           const { data: udata } = await supabase.auth.getUser();
           if (udata?.user) {
             const { data: branding } = await supabase
               .from("business_branding")
-              .select("default_currency")
+              .select(
+                "default_currency, business_name, tagline, logo_url, brand_color, brand_secondary_color, show_logo_on_proposals, proposal_cover_show_name, proposal_cover_show_tagline, proposal_cover_show_date",
+              )
               .eq("user_id", udata.user.id)
               .maybeSingle();
             if ((branding as any)?.default_currency) setDefaultCurrency((branding as any).default_currency);
+            if (branding) {
+              const b = branding as any;
+              setOwnerBranding({
+                business_name: b.business_name ?? null,
+                tagline: b.tagline ?? null,
+                logo_url: b.logo_url ?? null,
+                brand_color: b.brand_color ?? null,
+                brand_secondary_color: b.brand_secondary_color ?? null,
+                show_logo_on_proposals: b.show_logo_on_proposals ?? null,
+                proposal_cover_show_name: b.proposal_cover_show_name ?? null,
+                proposal_cover_show_tagline: b.proposal_cover_show_tagline ?? null,
+                proposal_cover_show_date: b.proposal_cover_show_date ?? null,
+              });
+            }
           }
         } catch {
-          // Ignore — dropdown will fall back to USD.
+          // Ignore — dropdown will fall back to USD and header will render without branding.
         }
       }
       setLoading(false);
@@ -413,7 +441,8 @@ export default function ProposalView() {
     setEditMode((prev) => ({ ...prev, [tab]: !prev[tab] }));
   };
 
-  const LOGO_BASE64 = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSI4MCIgdmlld0JveD0iMCAwIDgwIDgwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiM2YzVjZTciLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNhMjliZmUiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iODAiIHJ4PSIxNiIgZmlsbD0idXJsKCNnKSIvPjx0ZXh0IHg9IjQwIiB5PSI1MiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSI3MDAiIGZvbnQtc2l6ZT0iMzAiIGZpbGw9IndoaXRlIj5TUzwvdGV4dD48L3N2Zz4=";
+  // Note: no generic-brand logo fallback — if the owner hasn't configured a logo,
+  // we simply render no logo image in the exported PDF.
 
   const handleExportPDF = (type: "proposal" | "invoice") => {
     const rawContent = type === "proposal" ? editedProposal + "\n\n## Pricing\n\n" + editedPricing : editedInvoice;
@@ -424,6 +453,13 @@ export default function ProposalView() {
 
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
+
+    // Owner branding for the exported PDF. Fall back to a neutral slate accent
+    // and omit the brand mark entirely when the owner hasn't configured branding.
+    const brandName = (ownerBranding?.business_name || "").trim();
+    const brandLogoUrl = ownerBranding?.logo_url || "";
+    const accent = ownerBranding?.brand_color || "#334155"; // neutral slate fallback
+    const accentSoftBg = ownerBranding?.brand_color ? `${ownerBranding.brand_color}0f` : "#f8fafc";
 
     // Markdown → structured HTML, section-wrapped
     const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -541,7 +577,7 @@ export default function ProposalView() {
   /* COVER */
   .cover {
     border: 1px solid #e5e7eb;
-    border-top: 4px solid #6c5ce7;
+    border-top: 4px solid ${accent};
     border-radius: 6px;
     padding: 28px 32px 32px;
     margin-bottom: 32px;
@@ -551,7 +587,7 @@ export default function ProposalView() {
   .cover-brand img { width: 28px; height: 28px; border-radius: 6px; }
   .cover-brand-name { font-size: 11pt; font-weight: 700; color: #111827; letter-spacing: -0.2px; }
   .cover-brand-tag { font-size: 8.5pt; color: #6b7280; margin-left: auto; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
-  .cover-eyebrow { font-size: 9pt; color: #6c5ce7; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
+  .cover-eyebrow { font-size: 9pt; color: ${accent}; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
   .cover-title { font-family: 'Fraunces', 'Inter', serif; font-size: 28pt; font-weight: 700; color: #0f172a; letter-spacing: -0.8px; line-height: 1.1; margin-bottom: 22px; }
   .cover-meta { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px 32px; padding-top: 20px; border-top: 1px solid #f1f5f9; }
   .meta-label { font-size: 8pt; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 4px; }
@@ -575,7 +611,7 @@ export default function ProposalView() {
     position: absolute;
     left: 0; top: 8px; bottom: 8px;
     width: 3px;
-    background: #6c5ce7;
+    background: ${accent};
     border-radius: 2px;
   }
   .section-body h3 {
@@ -609,7 +645,7 @@ export default function ProposalView() {
     flex-shrink: 0;
     width: 6px; height: 6px;
     border-radius: 50%;
-    background: #6c5ce7;
+    background: ${accent};
     margin-top: 8px;
   }
 
@@ -641,8 +677,8 @@ export default function ProposalView() {
   tbody tr:last-child td { border-bottom: none; }
   td.num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; color: #0f172a; }
   tr.total-row td {
-    background: #faf9ff;
-    border-top: 2px solid #6c5ce7;
+    background: ${accentSoftBg};
+    border-top: 2px solid ${accent};
     font-weight: 700;
     color: #0f172a;
     font-size: 11.5pt;
@@ -660,7 +696,7 @@ export default function ProposalView() {
     font-size: 8.5pt;
     color: #94a3b8;
   }
-  .footer-brand { font-weight: 700; color: #6c5ce7; }
+  .footer-brand { font-weight: 700; color: ${accent}; }
 
   /* PRINT */
   @media print {
@@ -676,8 +712,8 @@ export default function ProposalView() {
   <div class="doc">
     <div class="cover">
       <div class="cover-brand">
-        <img src="${LOGO_BASE64}" alt="CloseSync" />
-        <div class="cover-brand-name">CloseSync</div>
+        ${brandLogoUrl ? `<img src="${escapeHtml(brandLogoUrl)}" alt="${escapeHtml(brandName || "Logo")}" />` : ""}
+        ${brandName ? `<div class="cover-brand-name">${escapeHtml(brandName)}</div>` : ""}
         <div class="cover-brand-tag">${type === "proposal" ? "Proposal" : "Invoice"}</div>
       </div>
       <div class="cover-eyebrow">Prepared for ${escapeHtml(proposal?.client_name || "")}</div>
@@ -693,7 +729,7 @@ export default function ProposalView() {
     ${sectionsHtml}
 
     <div class="doc-footer">
-      <div>Prepared by <span class="footer-brand">CloseSync</span></div>
+      <div>${brandName ? `Prepared by <span class="footer-brand">${escapeHtml(brandName)}</span>` : ""}</div>
       <div>Confidential · ${dateStr}</div>
     </div>
   </div>
@@ -1332,6 +1368,7 @@ export default function ProposalView() {
                         companyName={proposal.company_name}
                         serviceType={proposal.service_type}
                         createdAt={proposal.created_at}
+                        branding={ownerBranding}
                       />
                       <MarkdownPreview content={t.rendered} isPremium />
                       {watermark && <ProposalWatermark />}
