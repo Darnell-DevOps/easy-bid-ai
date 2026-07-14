@@ -120,7 +120,7 @@ function deriveProjectStage(
     return hasBooking ? "active" : "kickoff";
   }
   if (p.client_paid) return "onboarding";
-  if (contract?.status === "signed") return "payment";
+  if (contract?.status === "signed" || contract?.status === "executed") return "payment";
   if (p.status === "accepted" || p.accepted_at) return "contract";
   return "proposal";
 }
@@ -416,7 +416,7 @@ export default function ClientPortal() {
     setSubmitting(null);
     toast({
       title: "Proposal accepted",
-      description: "Next step: review and sign your contract.",
+      description: "Your agreement is being prepared and will be available for review once it's ready.",
     });
   };
 
@@ -602,14 +602,31 @@ export default function ClientPortal() {
           el?.scrollIntoView({ behavior: "smooth", block: "start" });
         },
       };
-    } else if (stage === "contract" && contract) {
-      nextAction = {
-        title: "Sign your contract",
-        description: "Review the agreement and add your signature to unlock payment.",
-        icon: FileSignature,
-        ctaLabel: "Review & sign",
-        href: `/sign/${contract.signing_token}`,
-      };
+    } else if (stage === "contract") {
+      if (contract?.status === "sent" || contract?.status === "viewed") {
+        nextAction = {
+          title: "Review and sign your agreement",
+          description: "Read through the contract and add your signature to move forward.",
+          icon: FileSignature,
+          ctaLabel: "Review & sign",
+          href: `/sign/${contract.signing_token}`,
+        };
+      } else if (contract?.status === "signed") {
+        nextAction = {
+          title: "Awaiting provider countersignature",
+          description: "You've signed — we'll countersign shortly and you'll be notified.",
+          icon: FileSignature,
+          ctaLabel: "",
+        };
+      } else {
+        // No contract row yet, or still in draft — no signing link exposed.
+        nextAction = {
+          title: "Your agreement is being prepared",
+          description: "We'll email you a link to review and sign as soon as it's ready.",
+          icon: FileSignature,
+          ctaLabel: "",
+        };
+      }
     } else if (stage === "payment") {
       nextAction = {
         title: "Complete payment",
@@ -882,7 +899,7 @@ export default function ClientPortal() {
               Why clients choose us
             </p>
             <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-6">
-              Built for results, trusted by teams
+              What you can expect
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
