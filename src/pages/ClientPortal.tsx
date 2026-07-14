@@ -416,7 +416,7 @@ export default function ClientPortal() {
     setSubmitting(null);
     toast({
       title: "Proposal accepted",
-      description: "Next step: review and sign your contract.",
+      description: "Your agreement is being prepared and will be available for review once it's ready.",
     });
   };
 
