@@ -196,8 +196,16 @@ export default function ProposalView() {
     }
   };
 
-  const updateStatus = async (next: ProposalStatus) => {
-    if (!proposal) return;
+  // updateStatus performs the raw status transition and optionally tags a source
+  // for the matching `{status}_source` column. Explicit actions pass "system" or
+  // "owner_manual"; the stage-progress bar defaults to "owner_manual".
+  // Note: this function no longer sends any client email as a side-effect —
+  // system-confirmed sends live in `sendViaCloseSync` below.
+  const updateStatus = async (
+    next: ProposalStatus,
+    source: "system" | "owner_manual" | null = null,
+  ) => {
+    if (!proposal) return true;
     const nowIso = new Date().toISOString();
     const updates: Record<string, string | null> = { status: next };
     // Stamp timestamps once, preserving original event time.
@@ -213,61 +221,98 @@ export default function ProposalView() {
       updates.accepted_at = null;
     }
 
+    // Only stamp the *_source column when it isn't already set — a real client
+    // action recorded through client_portal_respond ("client") must never be
+    // downgraded to "owner_manual" by a later manual toggle. "system" from an
+    // explicit CloseSync send is allowed to overwrite a null.
+    if (source) {
+      const key = `${next}_source` as
+        | "sent_source" | "viewed_source" | "accepted_source" | "rejected_source";
+      const existing = (proposal as any)[key] as string | null | undefined;
+      if (!existing) updates[key] = source;
+    }
+
     const previous = proposal;
     setProposal({ ...proposal, ...(updates as Partial<ProposalData>) });
     const { error } = await supabase.from("proposals").update(updates as never).eq("id", proposal.id);
     if (error) {
       setProposal(previous);
       toast({ title: "Status update failed", description: error.message, variant: "destructive" });
-      return;
+      return false;
     }
     const labels: Record<ProposalStatus, string> = {
       draft: "Draft", sent: "Sent", viewed: "Viewed", accepted: "Accepted", rejected: "Rejected",
     };
     toast({ title: `Marked as ${labels[next]}` });
+    return true;
+  };
 
-    // First-time "sent" → email the client a review link.
-    if (next === "sent" && !previous.sent_at) {
-      const { data: row } = await supabase
-        .from("proposals")
-        .select("client_id, amount_cents, currency, user_id, client_name")
-        .eq("id", proposal.id)
-        .maybeSingle();
-      let clientEmail: string | null = null;
-      if (row?.client_id) {
-        const { data: c } = await supabase
-          .from("clients")
-          .select("email")
-          .eq("id", row.client_id)
-          .maybeSingle();
-        clientEmail = c?.email || null;
-      }
-      if (clientEmail && row) {
-        const { data: udata } = await supabase.auth.getUser();
-        const fromName =
-          (udata.user?.user_metadata as any)?.full_name ||
-          udata.user?.email?.split("@")[0] ||
-          "Your contact";
-        const amount =
-          row.amount_cents != null
-            ? new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: row.currency || "USD",
-              }).format((row.amount_cents || 0) / 100)
-            : undefined;
-        void sendEmail({
+  // Explicit owner action — "Mark as sent" without a delivery confirmation.
+  // Tags sent_source="owner_manual" so downstream automations can tell this
+  // apart from a real system-confirmed send.
+  const markAsSent = async () => {
+    if (!proposal) return;
+    if (currentStatus !== "draft") {
+      toast({ title: "Already sent" });
+      return;
+    }
+    await updateStatus("sent", "owner_manual");
+  };
+
+  // System-confirmed send — call the transactional email helper directly and
+  // ONLY on confirmed success mark the proposal as sent with source="system".
+  const sendViaCloseSync = async () => {
+    if (!proposal) return;
+    if (!clientEmail) {
+      toast({
+        title: "No client email on file",
+        description: "Add a client email to send via CloseSync.",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      const { data: udata } = await supabase.auth.getUser();
+      const fromName =
+        (udata.user?.user_metadata as any)?.full_name ||
+        udata.user?.email?.split("@")[0] ||
+        "Your contact";
+      const amount =
+        proposal.amount_cents != null
+          ? new Intl.NumberFormat("en-US", {
+              style: "currency",
+              currency: proposal.currency || "USD",
+            }).format((proposal.amount_cents || 0) / 100)
+          : undefined;
+      // Call the edge function directly instead of the `sendEmail` helper —
+      // the helper swallows errors, but here we must be certain the send
+      // succeeded before marking the proposal as sent.
+      const { data: res, error: sendErr } = await supabase.functions.invoke("send-email", {
+        body: {
           templateName: "proposal-sent",
           recipientEmail: clientEmail,
-          userId: row.user_id,
+          userId: udata.user?.id,
           idempotencyKey: `proposal-sent-${proposal.id}`,
           data: {
             from_name: fromName,
-            title: row.client_name,
+            title: proposal.client_name,
             amount,
             url: `${window.location.origin}/proposal/view/${proposal.id}`,
           },
-        });
+        },
+      });
+      if (sendErr) throw new Error(sendErr.message || "Email send failed");
+      if (res && typeof res === "object" && (res as any).error) {
+        throw new Error((res as any).error?.message || (res as any).error || "Email send failed");
       }
+      if (currentStatus === "draft") await updateStatus("sent", "system");
+      toast({ title: "Sent via CloseSync", description: `Email delivered to ${clientEmail}.` });
+    } catch (e: any) {
+      toast({
+        title: "Send failed",
+        description: e?.message || "Couldn't send the email. Proposal is still marked as draft.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -748,8 +793,10 @@ export default function ProposalView() {
 
   const handleSendCopy = async () => {
     await navigator.clipboard.writeText(clientUrl);
-    if (currentStatus === "draft") await updateStatus("sent");
-    toast({ title: "Link copied", description: "Share this with your client." });
+    toast({
+      title: "Link copied",
+      description: "Share this with your client, then mark as sent when you have.",
+    });
   };
   const handleSendEmail = () => {
     const subject = encodeURIComponent(`Your proposal from CloseSync`);
@@ -758,7 +805,6 @@ export default function ProposalView() {
     );
     const to = clientEmail ? encodeURIComponent(clientEmail) : "";
     window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
-    if (currentStatus === "draft") void updateStatus("sent");
   };
   const handlePreview = () => window.open(clientUrl, "_blank", "noopener,noreferrer");
 
@@ -899,7 +945,14 @@ export default function ProposalView() {
                       toast({ title: next ? "Marked as paid" : "Marked as unpaid" });
                       return;
                     }
-                    void updateStatus(key as ProposalStatus);
+                    // Route "sent" through the dedicated "Mark as sent" path so
+                    // there's a single consistent code path for owner-manual
+                    // sent-marking (no duplicate slightly-different behaviors).
+                    if (key === "sent") {
+                      void markAsSent();
+                      return;
+                    }
+                    void updateStatus(key as ProposalStatus, "owner_manual");
                   };
 
                   return (
@@ -949,7 +1002,7 @@ export default function ProposalView() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => updateStatus("rejected")}
+                    onClick={() => updateStatus("rejected", "owner_manual")}
                     className="gap-1.5 h-7 text-[11px] border-rose-500/30 text-rose-500 hover:bg-rose-500/10 hover:text-rose-500"
                   >
                     <XCircle className="w-3 h-3 shrink-0" /> Mark as rejected
@@ -959,7 +1012,7 @@ export default function ProposalView() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => updateStatus("sent")}
+                    onClick={() => markAsSent()}
                     className="gap-1.5 h-7 text-[11px]"
                   >
                     Reopen proposal
@@ -1094,11 +1147,19 @@ export default function ProposalView() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-56">
                   <DropdownMenuLabel>Send proposal</DropdownMenuLabel>
+                  <DropdownMenuItem
+                    onClick={sendViaCloseSync}
+                    disabled={!clientEmail}
+                    className="gap-2"
+                  >
+                    <Send className="w-4 h-4" /> Email via CloseSync {clientEmail ? "" : "(no client email)"}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSendCopy} className="gap-2">
                     <Copy className="w-4 h-4" /> Copy client link
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleSendEmail} className="gap-2">
-                    <Mail className="w-4 h-4" /> Email {clientEmail ? "client" : "(no client email)"}
+                    <Mail className="w-4 h-4" /> Open in mail app {clientEmail ? "" : "(no client email)"}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handlePreview} className="gap-2">
                     <ExternalLink className="w-4 h-4" /> Open client preview
@@ -1110,13 +1171,20 @@ export default function ProposalView() {
                       const link = waLink(clientPhone, msg);
                       if (link) {
                         window.open(link, "_blank", "noopener,noreferrer");
-                        if (currentStatus === "draft") void updateStatus("sent");
                       }
                     }}
                     className="gap-2"
                   >
                     <MessageCircle className="w-4 h-4" /> WhatsApp {clientPhone ? "client" : "(no phone)"}
                   </DropdownMenuItem>
+                  {currentStatus === "draft" && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={markAsSent} className="gap-2">
+                        <CheckCircle2 className="w-4 h-4" /> Mark as sent (I sent it myself)
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
 
