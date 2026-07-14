@@ -31,6 +31,7 @@ import {
   FileSignature,
   FileText,
   ChevronDown,
+  Star,
 } from "lucide-react";
 
 import { Link as RouterLink } from "react-router-dom";
@@ -157,6 +158,7 @@ export default function ClientPortal() {
   const [branding, setBranding] = useState<PortalBranding | null>(null);
   const [policies, setPolicies] = useState<Array<{ policy_type: string; content: string; updated_at: string | null }>>([]);
   const [openPolicy, setOpenPolicy] = useState<{ policy_type: string; content: string; updated_at: string | null } | null>(null);
+  const [testimonials, setTestimonials] = useState<Array<{ client_name: string | null; company: string | null; role_title: string | null; rating: number | null; content: string; avatar_url: string | null }>>([]);
 
   // Safety net: when Paddle hard-redirects back with ?paid=1, poll for the
   // webhook to flip client_paid before trusting the initial fetch.
@@ -261,6 +263,17 @@ export default function ClientPortal() {
         .then(({ data: rows }) => {
           if (Array.isArray(rows)) setPolicies(rows as any);
         });
+
+      // Fetch published, public-approved testimonials for this owner
+      (supabase.rpc(
+        "public_get_testimonials_for_user" as never,
+        { _user_id: (data as PublicProposal).user_id } as never,
+      ) as unknown as Promise<{ data: any }>)
+        .then(({ data: rows }) => {
+          if (Array.isArray(rows)) setTestimonials(rows as any);
+        });
+
+
 
 
       // Fetch latest contract for this proposal
@@ -901,24 +914,71 @@ export default function ClientPortal() {
         {!isRejected && (
           <section className="rounded-xl border border-border bg-card p-6 lg:p-10">
             <p className="text-xs uppercase tracking-[0.2em] text-purple font-semibold mb-2">
-              Why clients choose us
+              {testimonials.length > 0 ? "What clients say" : "Why clients choose us"}
             </p>
             <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-6">
-              What you can expect
+              {testimonials.length > 0 ? "Recent client feedback" : "What you can expect"}
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {[
-                { icon: CheckCircle2, title: "Clear deliverables", desc: "Everything included in your proposal is defined in writing before we begin." },
-                { icon: Calendar, title: "Transparent milestones", desc: "You'll see the timeline and stages laid out so nothing is a surprise." },
-                { icon: MessageCircle, title: "Defined communication", desc: "A single point of contact and a set cadence for updates throughout the project." },
-              ].map(({ icon: Icon, title, desc }) => (
-                <div key={title} className="rounded-lg border border-border/60 bg-background/40 p-4">
-                  <Icon className="w-5 h-5 text-purple mb-3" />
-                  <p className="text-sm font-semibold text-foreground mb-1">{title}</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
-                </div>
-              ))}
-            </div>
+            {testimonials.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {testimonials.map((t, idx) => {
+                  const subtitle = [t.role_title, t.company].filter(Boolean).join(" · ");
+                  const rating = typeof t.rating === "number" ? Math.max(0, Math.min(5, t.rating)) : 0;
+                  return (
+                    <div key={idx} className="rounded-lg border border-border/60 bg-background/40 p-4 flex flex-col">
+                      {rating > 0 && (
+                        <div className="flex items-center gap-0.5 mb-3">
+                          {Array.from({ length: 5 }, (_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-4 h-4 ${i < rating ? "fill-amber-500 text-amber-500" : "text-muted-foreground/30"}`}
+                            />
+                          ))}
+                        </div>
+                      )}
+                      <p className="text-sm text-foreground leading-relaxed mb-4 flex-1">
+                        “{t.content}”
+                      </p>
+                      <div className="flex items-center gap-3 mt-auto">
+                        {t.avatar_url ? (
+                          <img
+                            src={t.avatar_url}
+                            alt={t.client_name || "Client"}
+                            className="w-9 h-9 rounded-full object-cover border border-border/60"
+                          />
+                        ) : (
+                          <div className="w-9 h-9 rounded-full bg-purple/15 text-purple flex items-center justify-center text-xs font-semibold">
+                            {(t.client_name || "?").slice(0, 1).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          {t.client_name && (
+                            <p className="text-sm font-semibold text-foreground truncate">{t.client_name}</p>
+                          )}
+                          {subtitle && (
+                            <p className="text-xs text-muted-foreground truncate">{subtitle}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {[
+                  { icon: CheckCircle2, title: "Clear deliverables", desc: "Everything included in your proposal is defined in writing before we begin." },
+                  { icon: Calendar, title: "Transparent milestones", desc: "You'll see the timeline and stages laid out so nothing is a surprise." },
+                  { icon: MessageCircle, title: "Defined communication", desc: "A single point of contact and a set cadence for updates throughout the project." },
+                ].map(({ icon: Icon, title, desc }) => (
+                  <div key={title} className="rounded-lg border border-border/60 bg-background/40 p-4">
+                    <Icon className="w-5 h-5 text-purple mb-3" />
+                    <p className="text-sm font-semibold text-foreground mb-1">{title}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
         )}
 
