@@ -720,10 +720,8 @@ export default function ClientPortal() {
                     <p className="text-3xl lg:text-4xl font-bold text-foreground tracking-tight">
                       {formattedTotal}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1.5">
-                      No long-term contracts. Cancel anytime.
-                    </p>
                   </div>
+
                 )}
               </section>
             )}
