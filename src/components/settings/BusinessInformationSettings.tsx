@@ -64,6 +64,7 @@ const EMPTY: BusinessInfo = {
   default_invoice_due_days: 14,
   default_invoice_grace_days: 7,
   default_tax_rate: "",
+  default_tax_mode: "none",
 };
 
 const CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD", "NZD", "CHF", "SEK", "NOK", "DKK", "JPY"];
