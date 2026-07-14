@@ -28,6 +28,7 @@ import DealScoreBadge from "@/components/ai/DealScoreBadge";
 import ProposalAuditPanel from "@/components/ai/ProposalAuditPanel";
 import TemplateEditorDialog from "@/components/templates/TemplateEditorDialog";
 import { Bookmark } from "lucide-react";
+import { calculateCommercialTotals } from "@/lib/commercial-calc";
 
 interface ProposalData {
   id: string;
