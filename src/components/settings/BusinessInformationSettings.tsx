@@ -39,6 +39,7 @@ type BusinessInfo = {
   default_invoice_due_days: number;
   default_invoice_grace_days: number;
   default_tax_rate: string;
+  default_tax_mode: "none" | "exclusive" | "inclusive";
 };
 
 const EMPTY: BusinessInfo = {
