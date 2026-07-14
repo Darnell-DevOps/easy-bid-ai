@@ -105,8 +105,6 @@ export default function ContractDetail() {
     toast({ title: "Link copied" });
   };
 
-  const [sending, setSending] = useState(false);
-  const [markingSent, setMarkingSent] = useState(false);
 
   const hasCriticalPlaceholders = (): { blocked: boolean; missing: string } => {
     const body = contract?.body || "";
