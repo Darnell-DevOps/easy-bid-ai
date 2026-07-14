@@ -23,6 +23,7 @@ function parsePricing(content: string): {
   total: string | null;
   subtotal: string | null;
   vat: string | null;
+  vatLabel: string;
   paymentTerms: string;
   included: string[];
 } {
@@ -53,6 +54,7 @@ function parsePricing(content: string): {
   let total: string | null = null;
   let subtotal: string | null = null;
   let vat: string | null = null;
+  let vatLabel = "Tax";
 
   for (const raw of tableLines) {
     const cells = raw.trim().split("|").slice(1, -1).map((c) => c.trim());
@@ -75,6 +77,7 @@ function parsePricing(content: string): {
     }
     if (/vat|tax/.test(cells[0]?.toLowerCase() || "")) {
       vat = cost;
+      vatLabel = cells[0] || "Tax";
       continue;
     }
     if (/^total/.test(cells[0]?.toLowerCase() || "")) {
@@ -106,6 +109,7 @@ function parsePricing(content: string): {
     total,
     subtotal,
     vat,
+    vatLabel,
     paymentTerms,
     included,
   };
@@ -199,7 +203,7 @@ export default function PremiumPricingRenderer({ content, onPayClick, showPayCta
                 )}
                 {parsed.vat && (
                   <tr className="border-t border-border/60 bg-background/40">
-                    <td className="px-5 py-2.5 text-sm text-muted-foreground">VAT</td>
+                    <td className="px-5 py-2.5 text-sm text-muted-foreground">{parsed.vatLabel}</td>
                     <td className="px-5 py-2.5 text-right font-medium text-foreground tabular-nums">
                       {parsed.vat}
                     </td>
