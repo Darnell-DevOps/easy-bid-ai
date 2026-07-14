@@ -743,7 +743,9 @@ export default function NewProposal() {
                   <FieldError field="client_name" />
                 </div>
                 <div>
-                  <Label htmlFor="company_name">Company Name</Label>
+                  <Label htmlFor="company_name">
+                    Company Name <span className={optionalLabel}>Optional</span>
+                  </Label>
                   <div className="relative mt-2">
                     <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
@@ -755,7 +757,6 @@ export default function NewProposal() {
                       }}
                       onBlur={() => markTouched("company_name")}
                       placeholder="Their company or organisation"
-                      required
                       className={`pl-10 pr-10 ${inputStateClass("company_name", form.company_name)}`}
                     />
                     <FieldStatusIcon field="company_name" value={form.company_name} />
