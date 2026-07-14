@@ -3275,6 +3275,14 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      public_get_policies_for_user: {
+        Args: { _user_id: string }
+        Returns: {
+          content: string
+          policy_type: string
+          updated_at: string
+        }[]
+      }
       public_get_proposal_branding_for_user: {
         Args: { _user_id: string }
         Returns: {

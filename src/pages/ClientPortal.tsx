@@ -6,6 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
   Loader2,
   CheckCircle2,
   XCircle,
@@ -145,6 +152,8 @@ export default function ClientPortal() {
   const { openCheckout, loading: payLoading, available: paymentsAvailable } = useProposalCheckout();
   const [paymentConfirmMsg, setPaymentConfirmMsg] = useState<string | null>(null);
   const [branding, setBranding] = useState<PortalBranding | null>(null);
+  const [policies, setPolicies] = useState<Array<{ policy_type: string; content: string; updated_at: string | null }>>([]);
+  const [openPolicy, setOpenPolicy] = useState<{ policy_type: string; content: string; updated_at: string | null } | null>(null);
 
   // Safety net: when Paddle hard-redirects back with ?paid=1, poll for the
   // webhook to flip client_paid before trusting the initial fetch.
@@ -239,6 +248,17 @@ export default function ClientPortal() {
         .then(({ data: url }) => {
           if (typeof url === "string" && url.trim()) setOwnerKickoffUrl(url.trim());
         });
+
+      // Fetch the proposal owner's configured policies (Terms & Conditions, Refund Policy,
+      // Privacy Policy) — only ones with real content are returned by the RPC.
+      (supabase.rpc(
+        "public_get_policies_for_user" as never,
+        { _user_id: (data as PublicProposal).user_id } as never,
+      ) as unknown as Promise<{ data: any }>)
+        .then(({ data: rows }) => {
+          if (Array.isArray(rows)) setPolicies(rows as any);
+        });
+
 
       // Fetch latest contract for this proposal
       (supabase.rpc(
@@ -465,6 +485,30 @@ export default function ClientPortal() {
         : null,
     [proposal, commercialTotals],
   );
+
+  // Humanized wording of the proposal's actual payment_terms field. Prefer this
+  // over a separate "Payment Terms" policy document to avoid two contradictory
+  // sources for the same phrase — the proposal itself is authoritative here.
+  const proposalPaymentTermsLabel = useMemo(() => {
+    const raw = (proposal?.payment_terms || "").trim();
+    if (!raw) return null;
+    const map: Record<string, string> = {
+      due_immediately: "Payment due immediately on acceptance",
+      net_7: "Payment due within 7 days (Net 7)",
+      net_14: "Payment due within 14 days (Net 14)",
+      net_30: "Payment due within 30 days (Net 30)",
+      net_60: "Payment due within 60 days (Net 60)",
+    };
+    return map[raw] ?? raw;
+  }, [proposal?.payment_terms]);
+
+  // Split policies out so we can reference each cleanly. Only surface a policy
+  // in the agreement checkbox when the seller actually configured it.
+  const termsPolicy = policies.find((p) => /terms/i.test(p.policy_type)) || null;
+  const refundPolicy = policies.find((p) => /refund/i.test(p.policy_type)) || null;
+  const privacyPolicy = policies.find((p) => /privacy/i.test(p.policy_type)) || null;
+  const hasAnyPolicy = !!(termsPolicy || refundPolicy || privacyPolicy) || !!proposalPaymentTermsLabel;
+
 
   if (loading) {
     return (
@@ -1032,13 +1076,86 @@ export default function ClientPortal() {
                   className="mt-0.5"
                 />
                 <label htmlFor="agree-terms" className="text-sm text-foreground/90 leading-relaxed cursor-pointer select-none">
-                  I agree to the{" "}
-                  <span className="text-purple font-medium">Terms & Conditions</span>,{" "}
-                  <span className="text-purple font-medium">Refund Policy</span>, and{" "}
-                  <span className="text-purple font-medium">Payment Terms</span> outlined in this proposal.
+                  {hasAnyPolicy ? (
+                    <>
+                      I agree to{" "}
+                      {(() => {
+                        const parts: React.ReactNode[] = [];
+                        if (termsPolicy) {
+                          parts.push(
+                            <button
+                              key="terms"
+                              type="button"
+                              onClick={(e) => { e.preventDefault(); setOpenPolicy(termsPolicy); }}
+                              className="text-purple font-medium underline underline-offset-2 hover:text-purple/80"
+                            >
+                              {termsPolicy.policy_type}
+                            </button>
+                          );
+                        }
+                        if (refundPolicy) {
+                          parts.push(
+                            <button
+                              key="refund"
+                              type="button"
+                              onClick={(e) => { e.preventDefault(); setOpenPolicy(refundPolicy); }}
+                              className="text-purple font-medium underline underline-offset-2 hover:text-purple/80"
+                            >
+                              {refundPolicy.policy_type}
+                            </button>
+                          );
+                        }
+                        if (privacyPolicy) {
+                          parts.push(
+                            <button
+                              key="privacy"
+                              type="button"
+                              onClick={(e) => { e.preventDefault(); setOpenPolicy(privacyPolicy); }}
+                              className="text-purple font-medium underline underline-offset-2 hover:text-purple/80"
+                            >
+                              {privacyPolicy.policy_type}
+                            </button>
+                          );
+                        }
+                        if (proposalPaymentTermsLabel) {
+                          parts.push(
+                            <span key="pay" className="text-foreground/90">
+                              the payment terms in this proposal (<span className="font-medium">{proposalPaymentTermsLabel}</span>)
+                            </span>
+                          );
+                        }
+                        return parts.map((node, i) => (
+                          <span key={i}>
+                            {i > 0 && (i === parts.length - 1 ? ", and " : ", ")}
+                            {node}
+                          </span>
+                        ));
+                      })()}
+                      .
+                    </>
+                  ) : (
+                    <>I agree to proceed with this proposal.</>
+                  )}
                 </label>
               </div>
             </div>
+
+            <Dialog open={!!openPolicy} onOpenChange={(o) => { if (!o) setOpenPolicy(null); }}>
+              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>{openPolicy?.policy_type}</DialogTitle>
+                  {openPolicy?.updated_at && (
+                    <DialogDescription>
+                      Last updated {new Date(openPolicy.updated_at).toLocaleDateString()}
+                    </DialogDescription>
+                  )}
+                </DialogHeader>
+                <div className="text-sm whitespace-pre-wrap leading-relaxed text-foreground/90">
+                  {openPolicy?.content}
+                </div>
+              </DialogContent>
+            </Dialog>
+
 
             <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
               <Button
