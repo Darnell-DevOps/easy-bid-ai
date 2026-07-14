@@ -44,6 +44,8 @@ export default function ContractDetail() {
   const [downloading, setDownloading] = useState(false);
   const [countersignOpen, setCountersignOpen] = useState(false);
   const [ownerName, setOwnerName] = useState("");
+  const [sending, setSending] = useState(false);
+  const [markingSent, setMarkingSent] = useState(false);
   const pdfRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
