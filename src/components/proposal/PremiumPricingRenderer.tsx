@@ -23,6 +23,7 @@ function parsePricing(content: string): {
   total: string | null;
   subtotal: string | null;
   vat: string | null;
+  vatLabel: string;
   paymentTerms: string;
   included: string[];
 } {
