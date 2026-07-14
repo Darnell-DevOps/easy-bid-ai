@@ -36,6 +36,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useProposalCheckout } from "@/hooks/use-proposal-checkout";
 import { cn } from "@/lib/utils";
 import { buildOnboardingFields, type OnboardingFormRow } from "@/lib/onboarding";
+import { calculateCommercialTotals } from "@/lib/commercial-calc";
 import { ClipboardList } from "lucide-react";
 
 interface PublicProposal {
@@ -57,6 +58,8 @@ interface PublicProposal {
   currency: string | null;
   client_paid: boolean;
   payment_terms: string | null;
+  tax_rate: number | null;
+  tax_mode: string | null;
 }
 
 interface BookingLinkLite {
@@ -306,6 +309,11 @@ export default function ClientPortal() {
         const contractType = /retainer/i.test(proposal.service_type || "")
           ? "retainer_agreement"
           : "service_agreement";
+        const totals = calculateCommercialTotals(
+          proposal.amount_cents ?? 0,
+          proposal.tax_rate,
+          proposal.tax_mode as any,
+        );
         const { data } = await supabase.functions.invoke("generate-contract", {
           body: {
             contract_type: contractType,
@@ -316,6 +324,12 @@ export default function ClientPortal() {
             timeline: (proposal as any).timeline || "",
             budget: formattedTotal || "",
             payment_terms: proposal.payment_terms || undefined,
+            currency: proposal.currency,
+            subtotal_cents: totals.subtotalCents,
+            tax_rate: proposal.tax_rate,
+            tax_mode: proposal.tax_mode,
+            tax_amount_cents: totals.taxAmountCents,
+            total_cents: totals.totalCents,
           },
         });
         if (data?.body) {
@@ -330,7 +344,7 @@ export default function ClientPortal() {
               body: data.body,
               client_name: proposal.client_name,
               company_name: proposal.company_name,
-              amount_cents: proposal.amount_cents,
+              amount_cents: proposal.amount_cents != null ? totals.totalCents : null,
               currency: proposal.currency,
               status: "sent",
               sent_at: new Date().toISOString(),
@@ -413,9 +427,24 @@ export default function ClientPortal() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [proposal?.client_paid, onboarding?.id]);
 
+  const commercialTotals = useMemo(
+    () =>
+      proposal
+        ? calculateCommercialTotals(
+            proposal.amount_cents ?? 0,
+            proposal.tax_rate,
+            proposal.tax_mode as any,
+          )
+        : null,
+    [proposal],
+  );
+
   const formattedTotal = useMemo(
-    () => (proposal ? formatAmount(proposal.amount_cents, proposal.currency) : null),
-    [proposal]
+    () =>
+      proposal && commercialTotals
+        ? formatAmount(commercialTotals.totalCents, proposal.currency)
+        : null,
+    [proposal, commercialTotals],
   );
 
   if (loading) {
