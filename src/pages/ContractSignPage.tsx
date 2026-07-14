@@ -161,6 +161,72 @@ export default function ContractSignPage() {
     load();
   }, [token]);
 
+  // Silent background polling: while the contract is client-signed but not yet
+  // countersigned by the provider, poll for the transition to "executed" so
+  // the client sees the executed state (and payment CTA) without a manual
+  // refresh. Stops as soon as status is no longer "signed", or after a cap.
+  useEffect(() => {
+    if (!token) return;
+    if (!contract || contract.status !== "signed") return;
+
+    let cancelled = false;
+    let attempts = 0;
+    const MAX_ATTEMPTS = 20; // ~20 * 8s ≈ 2m40s
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const tick = async () => {
+      if (cancelled) return;
+      attempts += 1;
+      try {
+        const { data: rows } = (await supabase.rpc(
+          "public_get_contract_by_token" as never,
+          { _token: token } as never,
+        )) as { data: any };
+        const arr: any[] = Array.isArray(rows) ? rows : [];
+        const fresh = arr.length > 0 ? arr[0] : null;
+        if (!cancelled && fresh) {
+          if (fresh.status === "executed") {
+            setContract(fresh as any);
+            // Refresh signatures so the provider signature appears.
+            supabase
+              .rpc("public_get_contract_signatures_by_token" as never, { _token: token } as never)
+              .then(({ data: sigs }) => {
+                if (!cancelled && Array.isArray(sigs)) setSignatures(sigs as any);
+              });
+            // Refresh proposal paid state if relevant.
+            if (fresh.proposal_id) {
+              (supabase.rpc(
+                "public_get_proposal_by_id" as never,
+                { _id: fresh.proposal_id } as never,
+              ) as unknown as Promise<{ data: any }>)
+                .then(({ data: pr }) => {
+                  const row = Array.isArray(pr) && pr.length > 0 ? pr[0] : null;
+                  if (!cancelled && row) setProposalPaid(!!row.client_paid);
+                });
+            }
+            return; // stop polling — transitioned
+          }
+          if (fresh.status !== "signed") {
+            // Any other terminal/unexpected status — stop polling.
+            setContract(fresh as any);
+            return;
+          }
+        }
+      } catch {
+        // swallow — silent background poll
+      }
+      if (!cancelled && attempts < MAX_ATTEMPTS) {
+        timer = setTimeout(tick, 8000);
+      }
+    };
+
+    timer = setTimeout(tick, 8000);
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [token, contract?.status]);
+
   // Canvas init for high-DPI sharp drawing. Re-sizes on layout changes so the
   // pointer always lines up with the stroke.
   const resizeCanvas = () => {
