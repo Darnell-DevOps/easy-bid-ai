@@ -945,7 +945,14 @@ export default function ProposalView() {
                       toast({ title: next ? "Marked as paid" : "Marked as unpaid" });
                       return;
                     }
-                    void updateStatus(key as ProposalStatus);
+                    // Route "sent" through the dedicated "Mark as sent" path so
+                    // there's a single consistent code path for owner-manual
+                    // sent-marking (no duplicate slightly-different behaviors).
+                    if (key === "sent") {
+                      void markAsSent();
+                      return;
+                    }
+                    void updateStatus(key as ProposalStatus, "owner_manual");
                   };
 
                   return (
