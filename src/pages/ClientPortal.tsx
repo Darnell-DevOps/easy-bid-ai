@@ -249,6 +249,17 @@ export default function ClientPortal() {
           if (typeof url === "string" && url.trim()) setOwnerKickoffUrl(url.trim());
         });
 
+      // Fetch the proposal owner's configured policies (Terms & Conditions, Refund Policy,
+      // Privacy Policy) — only ones with real content are returned by the RPC.
+      (supabase.rpc(
+        "public_get_policies_for_user" as never,
+        { _user_id: (data as PublicProposal).user_id } as never,
+      ) as unknown as Promise<{ data: any }>)
+        .then(({ data: rows }) => {
+          if (Array.isArray(rows)) setPolicies(rows as any);
+        });
+
+
       // Fetch latest contract for this proposal
       (supabase.rpc(
         "public_get_contract_for_proposal" as never,
