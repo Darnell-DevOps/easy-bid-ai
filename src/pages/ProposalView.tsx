@@ -374,6 +374,9 @@ export default function ProposalView() {
         setEditedProposal(data.proposal_content || "");
         setEditedPricing(data.pricing_breakdown || "");
         setEditedInvoice(data.invoice_content || "");
+        setInitialProposal(data.proposal_content || "");
+        setInitialPricing(data.pricing_breakdown || "");
+        setInitialInvoice(data.invoice_content || "");
         setClientPaid(data.client_paid || false);
         if (data.client_id) {
           const { data: client } = await supabase
