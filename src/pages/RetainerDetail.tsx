@@ -267,11 +267,29 @@ export default function RetainerDetail() {
   const isActive = retainer.status === "active";
   const isPaused = retainer.status === "paused";
   const isCancelled = retainer.status === "cancelled";
-  const mrr = monthlyEquivalentCents(
+  const { totalCents: finalChargedCents } = calculateCommercialTotals(
     retainer.amount_cents,
+    retainer.tax_rate,
+    retainer.tax_mode as any,
+  );
+  const mrr = monthlyEquivalentCents(
+    finalChargedCents,
     retainer.billing_interval,
     retainer.custom_interval_days,
   );
+  const taxRateNum =
+    typeof retainer.tax_rate === "number" && Number.isFinite(retainer.tax_rate)
+      ? retainer.tax_rate
+      : null;
+  const hasRealTax =
+    (retainer.tax_mode === "exclusive" || retainer.tax_mode === "inclusive") &&
+    taxRateNum != null &&
+    taxRateNum > 0;
+  const taxSubtitle = hasRealTax
+    ? retainer.tax_mode === "exclusive"
+      ? `incl. ${taxRateNum}% tax`
+      : `${taxRateNum}% tax included`
+    : null;
   const renewIn = daysUntil(retainer.end_date);
 
   return (
