@@ -184,10 +184,16 @@ export default function RetainerDetail() {
     const userId = userRes.user?.id;
     if (!userId) return;
 
+    const { totalCents: chargedCents } = calculateCommercialTotals(
+      retainer.amount_cents,
+      retainer.tax_rate,
+      retainer.tax_mode as any,
+    );
+
     await supabase.from("retainer_invoices").insert({
       user_id: userId,
       retainer_id: retainer.id,
-      amount_cents: retainer.amount_cents,
+      amount_cents: chargedCents,
       currency: retainer.currency,
       due_date: retainer.next_billing_date || new Date().toISOString().slice(0, 10),
       paid_at: new Date().toISOString(),
@@ -198,7 +204,7 @@ export default function RetainerDetail() {
       {
         last_billed_date: new Date().toISOString().slice(0, 10),
         next_billing_date: next.toISOString().slice(0, 10),
-        total_billed_cents: retainer.total_billed_cents + retainer.amount_cents,
+        total_billed_cents: retainer.total_billed_cents + chargedCents,
         total_payments_count: retainer.total_payments_count + 1,
         has_failed_payment: false,
         failed_payment_reason: null,
