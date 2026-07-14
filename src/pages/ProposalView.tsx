@@ -1175,6 +1175,23 @@ export default function ProposalView() {
           </div>
         </div>
 
+        {/* Sticky unsaved-changes indicator */}
+        {dirty && (
+          <div className="sticky top-2 z-20 mb-4">
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-accent/30 bg-card/95 backdrop-blur px-4 py-2.5 shadow-lg">
+              <div className="flex items-center gap-2 text-sm text-foreground">
+                <AlertTriangle className="w-4 h-4 text-accent" />
+                You have unsaved changes
+              </div>
+              <Button size="sm" onClick={handleSave} disabled={saving} className="gap-2">
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                {saving ? "Saving…" : "Save changes"}
+              </Button>
+            </div>
+          </div>
+        )}
+
+
         {/* AI proposal audit (collapsible-feel: hidden until run) */}
         <div className="mb-5">
           <ProposalAuditPanel proposalId={proposal.id} />
