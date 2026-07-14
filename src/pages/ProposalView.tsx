@@ -1360,6 +1360,7 @@ export default function ProposalView() {
                         companyName={proposal.company_name}
                         serviceType={proposal.service_type}
                         createdAt={proposal.created_at}
+                        branding={ownerBranding}
                       />
                       <MarkdownPreview content={t.rendered} isPremium />
                       {watermark && <ProposalWatermark />}
