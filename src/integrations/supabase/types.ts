@@ -795,6 +795,7 @@ export type Database = {
           id: string
           proposal_id: string | null
           sent_at: string | null
+          sent_source: string | null
           signed_at: string | null
           signing_token: string
           source: string | null
@@ -820,6 +821,7 @@ export type Database = {
           id?: string
           proposal_id?: string | null
           sent_at?: string | null
+          sent_source?: string | null
           signed_at?: string | null
           signing_token?: string
           source?: string | null
@@ -845,6 +847,7 @@ export type Database = {
           id?: string
           proposal_id?: string | null
           sent_at?: string | null
+          sent_source?: string | null
           signed_at?: string | null
           signing_token?: string
           source?: string | null
@@ -3114,6 +3117,7 @@ export type Database = {
           id: string
           proposal_id: string | null
           sent_at: string | null
+          sent_source: string | null
           signed_at: string | null
           signing_token: string
           source: string | null
@@ -3148,6 +3152,7 @@ export type Database = {
           id: string
           proposal_id: string | null
           sent_at: string | null
+          sent_source: string | null
           signed_at: string | null
           signing_token: string
           source: string | null
