@@ -654,9 +654,24 @@ export default function ClientPortal() {
               <h1 className="text-2xl lg:text-4xl font-bold text-foreground mb-4">
                 {proposal.service_type}
               </h1>
-              <p className="text-base lg:text-lg text-foreground/90 leading-relaxed max-w-2xl mb-5">
-                Win more clients, grow visibility, and unlock new revenue — fast.
-              </p>
+              {(() => {
+                // Derive a short excerpt from the real Introduction section of proposal_content,
+                // if one exists. Never fabricate copy — omit the line entirely otherwise.
+                const raw = proposal.proposal_content || "";
+                const match = raw.match(/(?:^|\n)#{1,3}\s*Introduction\s*\n+([\s\S]*?)(?:\n#{1,3}\s|$)/i);
+                let excerpt = "";
+                if (match) {
+                  const firstPara = match[1].split(/\n\s*\n/)[0] || "";
+                  excerpt = firstPara.replace(/[*_`>#-]/g, "").replace(/\s+/g, " ").trim();
+                  if (excerpt.length > 240) excerpt = excerpt.slice(0, 237).trimEnd() + "…";
+                }
+                if (!excerpt) return null;
+                return (
+                  <p className="text-base lg:text-lg text-foreground/90 leading-relaxed max-w-2xl mb-5">
+                    {excerpt}
+                  </p>
+                );
+              })()}
               <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <Building2 className="w-4 h-4 shrink-0" />
