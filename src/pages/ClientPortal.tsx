@@ -124,7 +124,7 @@ function deriveProjectStage(
     return hasBooking ? "active" : "kickoff";
   }
   if (p.client_paid) return "onboarding";
-  if (contract?.status === "signed" || contract?.status === "executed") return "payment";
+  if (contract?.status === "executed") return "payment";
   if (p.status === "accepted" || p.accepted_at) return "contract";
   return "proposal";
 }
@@ -573,8 +573,9 @@ export default function ClientPortal() {
   const onboardingComplete = onboarding?.status === "completed";
   const onboardingStarted = onboarding?.status === "in_progress";
   const isContractSigned = contract?.status === "signed";
+  const isContractExecuted = contract?.status === "executed";
   const needsContractSignature = isAccepted && contract && !isContractSigned;
-  const readyToPay = isAccepted && isContractSigned && !isPaid;
+  const readyToPay = isAccepted && isContractExecuted && !isPaid;
   const acceptedNotPaid = isAccepted && !isPaid;
   const hasPrice = !!commercialTotals && commercialTotals.totalCents >= 70;
 
@@ -1120,7 +1121,7 @@ export default function ClientPortal() {
               </Button>
             )}
           </section>
-        ) : isAccepted && isContractSigned && !hasPrice && !upcomingBooking && (ownerKickoffUrl || bookingLink) ? (
+        ) : isAccepted && isContractExecuted && !hasPrice && !upcomingBooking && (ownerKickoffUrl || bookingLink) ? (
           <section className="rounded-xl border border-accent/25 bg-accent/[0.05] p-6 lg:p-10 text-center">
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-purple/15 mb-4">
               <CalendarPlus className="w-6 h-6 text-purple" />
