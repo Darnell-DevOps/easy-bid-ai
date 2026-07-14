@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -116,6 +116,9 @@ export default function ProposalView() {
   const [editedProposal, setEditedProposal] = useState("");
   const [editedPricing, setEditedPricing] = useState("");
   const [editedInvoice, setEditedInvoice] = useState("");
+  const [initialProposal, setInitialProposal] = useState("");
+  const [initialPricing, setInitialPricing] = useState("");
+  const [initialInvoice, setInitialInvoice] = useState("");
   const [copied, setCopied] = useState(false);
   const [clientPaid, setClientPaid] = useState(false);
   const [clientEmail, setClientEmail] = useState<string | null>(null);
@@ -371,6 +374,9 @@ export default function ProposalView() {
         setEditedProposal(data.proposal_content || "");
         setEditedPricing(data.pricing_breakdown || "");
         setEditedInvoice(data.invoice_content || "");
+        setInitialProposal(data.proposal_content || "");
+        setInitialPricing(data.pricing_breakdown || "");
+        setInitialInvoice(data.invoice_content || "");
         setClientPaid(data.client_paid || false);
         if (data.client_id) {
           const { data: client } = await supabase
@@ -465,6 +471,24 @@ export default function ProposalView() {
   }, [id]);
 
 
+  const dirty = useMemo(
+    () =>
+      editedProposal !== initialProposal ||
+      editedPricing !== initialPricing ||
+      editedInvoice !== initialInvoice,
+    [editedProposal, initialProposal, editedPricing, initialPricing, editedInvoice, initialInvoice],
+  );
+
+  useEffect(() => {
+    if (!dirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [dirty]);
+
   const handleSave = async () => {
     setSaving(true);
     const { error } = await supabase
@@ -480,6 +504,9 @@ export default function ProposalView() {
     if (error) {
       toast({ title: "Save failed", description: error.message, variant: "destructive" });
     } else {
+      setInitialProposal(editedProposal);
+      setInitialPricing(editedPricing);
+      setInitialInvoice(editedInvoice);
       toast({ title: "Saved successfully" });
     }
   };
@@ -1147,6 +1174,23 @@ export default function ProposalView() {
             <DealScoreBadge proposalId={proposal.id} enabled={currentStatus !== "draft"} />
           </div>
         </div>
+
+        {/* Sticky unsaved-changes indicator */}
+        {dirty && (
+          <div className="sticky top-2 z-20 mb-4">
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-accent/30 bg-card/95 backdrop-blur px-4 py-2.5 shadow-lg">
+              <div className="flex items-center gap-2 text-sm text-foreground">
+                <AlertTriangle className="w-4 h-4 text-accent" />
+                You have unsaved changes
+              </div>
+              <Button size="sm" onClick={handleSave} disabled={saving} className="gap-2">
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                {saving ? "Saving…" : "Save changes"}
+              </Button>
+            </div>
+          </div>
+        )}
+
 
         {/* AI proposal audit (collapsible-feel: hidden until run) */}
         <div className="mb-5">
