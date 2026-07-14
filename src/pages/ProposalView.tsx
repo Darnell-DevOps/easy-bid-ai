@@ -56,6 +56,7 @@ interface ProposalData {
   deliverables: string | null;
   tax_rate: number | null;
   payment_terms: string | null;
+  tax_mode: string | null;
 }
 
 const SECTION_HEADINGS = [
