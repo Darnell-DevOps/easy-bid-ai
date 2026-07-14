@@ -167,7 +167,7 @@ export default function ContractDetail() {
 
       const { error: upErr } = await supabase
         .from("contracts")
-        .update({ status: "sent", sent_at: new Date().toISOString() })
+        .update({ status: "sent", sent_at: new Date().toISOString(), sent_source: "system" })
         .eq("id", contract.id);
       if (upErr) throw new Error(upErr.message);
 
@@ -194,7 +194,7 @@ export default function ContractDetail() {
     try {
       const { error } = await supabase
         .from("contracts")
-        .update({ status: "sent", sent_at: new Date().toISOString() })
+        .update({ status: "sent", sent_at: new Date().toISOString(), sent_source: "owner_manual" })
         .eq("id", contract.id);
       if (error) throw new Error(error.message);
       toast({ title: "Marked as sent", description: "Recorded that you sent this outside CloseSync." });
