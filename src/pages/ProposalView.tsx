@@ -28,6 +28,7 @@ import DealScoreBadge from "@/components/ai/DealScoreBadge";
 import ProposalAuditPanel from "@/components/ai/ProposalAuditPanel";
 import TemplateEditorDialog from "@/components/templates/TemplateEditorDialog";
 import { Bookmark } from "lucide-react";
+import { calculateCommercialTotals } from "@/lib/commercial-calc";
 
 interface ProposalData {
   id: string;
@@ -120,6 +121,14 @@ export default function ProposalView() {
   const [mergeIntake, setMergeIntake] = useState<Record<string, string> | null>(null);
   const [autoFillingPrice, setAutoFillingPrice] = useState(false);
   const [followUpOpen, setFollowUpOpen] = useState(false);
+  const [linkedContract, setLinkedContract] = useState<{
+    id: string;
+    body: string | null;
+    source: string | null;
+    status: string | null;
+    title: string | null;
+  } | null>(null);
+  const [retryingContract, setRetryingContract] = useState(false);
 
   const [leadContext, setLeadContext] = useState<{ original_lead_message?: string; recent_thread?: string }>({});
   const [defaultCurrency, setDefaultCurrency] = useState<string>("USD");
@@ -412,11 +421,33 @@ export default function ProposalView() {
         } catch {
           // Ignore — dropdown will fall back to USD and header will render without branding.
         }
+        // Fetch the linked contract (if any) so we can detect an empty
+        // placeholder from acceptance-auto and offer a retry action.
+        try {
+          const { data: contractRow } = await supabase
+            .from("contracts")
+            .select("id, body, source, status, title")
+            .eq("proposal_id", id)
+            .is("deleted_at", null)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          setLinkedContract(contractRow ? {
+            id: contractRow.id,
+            body: contractRow.body ?? null,
+            source: (contractRow as any).source ?? null,
+            status: contractRow.status ?? null,
+            title: contractRow.title ?? null,
+          } : null);
+        } catch {
+          // Non-fatal — alert simply won't trigger.
+        }
       }
       setLoading(false);
     };
     fetchProposal();
   }, [id]);
+
 
   const handleSave = async () => {
     setSaving(true);
@@ -806,12 +837,152 @@ export default function ProposalView() {
     paid_at: proposal.paid_at,
   });
 
+  // Owner-triggered retry for auto-generated contract when the placeholder was
+  // left empty (or when no contract row exists yet despite acceptance). Uses
+  // the same idempotency guarantee as client_portal_respond's accept branch:
+  // only inserts if no acceptance_auto row already exists for this proposal.
+  const handleRetryContractGeneration = async () => {
+    if (!proposal || retryingContract) return;
+    setRetryingContract(true);
+    try {
+      const contractType = /retainer/i.test(proposal.service_type || "")
+        ? "retainer_agreement"
+        : "service_agreement";
+      const totals = calculateCommercialTotals(
+        proposal.amount_cents ?? 0,
+        proposal.tax_rate,
+        proposal.tax_mode as any,
+      );
+
+      // Resolve an existing acceptance_auto row for this proposal — do not
+      // create a duplicate if one already exists (Batch 1 idempotency).
+      let targetContractId: string | null = null;
+      const { data: existingAuto } = await supabase
+        .from("contracts")
+        .select("id, body")
+        .eq("proposal_id", proposal.id)
+        .eq("source", "acceptance_auto")
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (existingAuto?.id) {
+        targetContractId = existingAuto.id;
+      } else {
+        // No acceptance_auto row at all — safe to insert one now.
+        const { data: udata } = await supabase.auth.getUser();
+        const ownerId = udata?.user?.id;
+        if (!ownerId) throw new Error("Not authenticated");
+        const { data: inserted, error: insertErr } = await supabase
+          .from("contracts")
+          .insert({
+            user_id: ownerId,
+            proposal_id: proposal.id,
+            client_id: proposal.client_id,
+            contract_type: contractType,
+            title: (contractType === "retainer_agreement" ? "Retainer Agreement" : "Service Agreement")
+              + " — " + (proposal.client_name || "Client"),
+            client_name: proposal.client_name,
+            company_name: proposal.company_name,
+            body: "",
+            currency: proposal.currency || "USD",
+            amount_cents: null,
+            status: "draft",
+            source: "acceptance_auto",
+          } as any)
+          .select("id")
+          .single();
+        if (insertErr) throw insertErr;
+        targetContractId = inserted?.id ?? null;
+      }
+
+      if (!targetContractId) throw new Error("Could not resolve contract row");
+
+      const { data: genData, error: genErr } = await supabase.functions.invoke("generate-contract", {
+        body: {
+          contract_type: contractType,
+          client_name: proposal.client_name,
+          company_name: proposal.company_name,
+          service_type: proposal.service_type,
+          project_scope: proposal.project_scope || "",
+          timeline: proposal.timeline || "",
+          budget: proposal.budget || "",
+          payment_terms: proposal.payment_terms || undefined,
+          currency: proposal.currency,
+          subtotal_cents: totals.subtotalCents,
+          tax_rate: proposal.tax_rate,
+          tax_mode: proposal.tax_mode,
+          tax_amount_cents: totals.taxAmountCents,
+          total_cents: totals.totalCents,
+        },
+      });
+      if (genErr) throw genErr;
+      if (!genData?.body) throw new Error("Generator returned no body");
+
+      const { data: updated, error: updErr } = await supabase
+        .from("contracts")
+        .update({
+          title: genData.title || (contractType === "retainer_agreement" ? "Retainer Agreement" : "Service Agreement"),
+          body: genData.body,
+          amount_cents: proposal.amount_cents != null ? totals.totalCents : null,
+          currency: proposal.currency,
+        })
+        .eq("id", targetContractId)
+        .select("id, body, source, status, title")
+        .single();
+      if (updErr) throw updErr;
+
+      setLinkedContract(updated ? {
+        id: updated.id,
+        body: updated.body ?? null,
+        source: (updated as any).source ?? null,
+        status: updated.status ?? null,
+        title: updated.title ?? null,
+      } : null);
+
+      toast({ title: "Contract regenerated", description: "The agreement draft is ready to review." });
+    } catch (err: any) {
+      toast({
+        title: "Couldn't regenerate contract",
+        description: err?.message || "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setRetryingContract(false);
+    }
+  };
+
+  // Contract-draft-needs-attention: accepted proposal, but the linked contract
+  // either doesn't exist or has an empty body (Batch 1's placeholder was left
+  // unfilled because generate-contract failed at accept time).
+  const contractNeedsAttention =
+    currentStatus === "accepted" &&
+    !clientPaid &&
+    (!linkedContract || !((linkedContract.body || "").trim()));
+
   // Smart alerts (priority order)
-  const alerts: { tone: "warning" | "info" | "success"; icon: typeof AlertTriangle; text: string }[] = [];
+  const alerts: {
+    tone: "warning" | "info" | "success";
+    icon: typeof AlertTriangle;
+    text: string;
+    action?: { label: string; onClick: () => void; loading?: boolean };
+  }[] = [];
   if (isRejected) {
     alerts.push({ tone: "warning", icon: XCircle, text: "Client rejected this proposal. Consider following up or revising." });
   } else if (clientPaid) {
     alerts.push({ tone: "success", icon: CheckCircle2, text: "Payment received in full. You're all set." });
+  } else if (contractNeedsAttention) {
+    alerts.push({
+      tone: "warning",
+      icon: AlertTriangle,
+      text: "Contract draft needs attention — the auto-generated agreement is empty or missing.",
+      action: {
+        label: retryingContract ? "Generating…" : "Retry generation",
+        onClick: () => { void handleRetryContractGeneration(); },
+        loading: retryingContract,
+      },
+    });
   } else if (followUpScenario !== "none") {
     const meta = FOLLOW_UP_META[followUpScenario];
     alerts.push({ tone: meta.tone, icon: Sparkles, text: `${meta.headline} — ${meta.description}` });
@@ -824,6 +995,7 @@ export default function ProposalView() {
   } else if (currentStatus === "viewed") {
     alerts.push({ tone: "info", icon: Sparkles, text: "Client has viewed the proposal. Now's a great time to follow up." });
   }
+
 
   const clientUrl = `${window.location.origin}/proposal/view/${proposal.id}`;
 
@@ -939,6 +1111,18 @@ export default function ProposalView() {
                 <div key={i} className={`flex items-center gap-3 rounded-lg border px-4 py-2.5 ${toneCls}`}>
                   <Icon className={`w-4 h-4 shrink-0 ${iconCls}`} />
                   <p className="text-sm flex-1 text-foreground/90">{a.text}</p>
+                  {a.action && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="shrink-0"
+                      onClick={a.action.onClick}
+                      disabled={a.action.loading}
+                    >
+                      {a.action.loading && <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />}
+                      {a.action.label}
+                    </Button>
+                  )}
                 </div>
               );
             })}

@@ -934,6 +934,29 @@ export default function ClientPortal() {
           </section>
         )}
 
+
+
+        {/* Accepted but contract not yet ready — honest "being prepared" state */}
+        {isAccepted && (!contract || contract.status === "draft") && (
+          <section className="rounded-xl border border-border bg-card p-6 lg:p-8">
+            <div className="flex items-start gap-4">
+              <div className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 bg-purple/15 text-purple">
+                <FileSignature className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs uppercase tracking-wider text-purple font-semibold mb-1">Agreement</p>
+                <h3 className="text-lg font-semibold text-foreground mb-1">
+                  Your proposal has been accepted
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Your agreement is being prepared. We'll email you a link to review and sign as soon as it's ready.
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
+
+
         {/* Onboarding step — appears once payment is complete */}
         {isPaid && onboarding && !onboardingComplete && (
           <section className="rounded-xl border border-accent/25 bg-accent/[0.05] p-6 lg:p-8">
