@@ -1904,6 +1904,41 @@ export default function ProposalView() {
           notes: proposal.notes || "",
         }}
       />
+      <Dialog
+        open={regenPreviewOpen}
+        onOpenChange={(open) => {
+          if (!open && !committingRegen) {
+            // Treat dismissal (Esc / overlay click) as "Keep current".
+            handleDiscardRegen();
+          }
+        }}
+      >
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Review regenerated proposal</DialogTitle>
+            <DialogDescription>
+              This will replace your current proposal content. Pricing and invoice were regenerated too and will
+              be replaced together as a single unit. Review the new proposal below.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto rounded-md border border-border/60 bg-background/40 p-4">
+            {pendingRegen ? (
+              <MarkdownPreview content={pendingRegen.proposal} isPremium />
+            ) : (
+              <p className="text-sm text-muted-foreground">No preview available.</p>
+            )}
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={handleDiscardRegen} disabled={committingRegen}>
+              Keep current
+            </Button>
+            <Button onClick={handleConfirmRegen} disabled={committingRegen || !pendingRegen} className="gap-2">
+              {committingRegen ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              Replace current
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
