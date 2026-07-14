@@ -3297,6 +3297,7 @@ export type Database = {
           brand_color: string
           brand_secondary_color: string
           business_name: string
+          legal_name: string
           logo_url: string
           proposal_cover_show_date: boolean
           proposal_cover_show_name: boolean
@@ -3305,6 +3306,7 @@ export type Database = {
           show_logo_on_portal: boolean
           show_logo_on_proposals: boolean
           tagline: string
+          trading_name: string
         }[]
       }
       public_get_proposal_by_id: {

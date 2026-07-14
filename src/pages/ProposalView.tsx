@@ -29,6 +29,7 @@ import ProposalAuditPanel from "@/components/ai/ProposalAuditPanel";
 import TemplateEditorDialog from "@/components/templates/TemplateEditorDialog";
 import { Bookmark } from "lucide-react";
 import { calculateCommercialTotals } from "@/lib/commercial-calc";
+import { resolveProviderName } from "@/lib/provider-identity";
 
 interface ProposalData {
   id: string;
@@ -135,6 +136,8 @@ export default function ProposalView() {
   const [defaultCurrency, setDefaultCurrency] = useState<string>("USD");
   const [ownerBranding, setOwnerBranding] = useState<{
     business_name: string | null;
+    legal_name: string | null;
+    trading_name: string | null;
     tagline: string | null;
     logo_url: string | null;
     brand_color: string | null;
@@ -399,7 +402,7 @@ export default function ProposalView() {
             const { data: branding } = await supabase
               .from("business_branding")
               .select(
-                "default_currency, business_name, tagline, logo_url, brand_color, brand_secondary_color, show_logo_on_proposals, proposal_cover_show_name, proposal_cover_show_tagline, proposal_cover_show_date",
+                "default_currency, business_name, legal_name, trading_name, tagline, logo_url, brand_color, brand_secondary_color, show_logo_on_proposals, proposal_cover_show_name, proposal_cover_show_tagline, proposal_cover_show_date",
               )
               .eq("user_id", udata.user.id)
               .maybeSingle();
@@ -408,6 +411,8 @@ export default function ProposalView() {
               const b = branding as any;
               setOwnerBranding({
                 business_name: b.business_name ?? null,
+                legal_name: b.legal_name ?? null,
+                trading_name: b.trading_name ?? null,
                 tagline: b.tagline ?? null,
                 logo_url: b.logo_url ?? null,
                 brand_color: b.brand_color ?? null,
@@ -900,11 +905,13 @@ export default function ProposalView() {
 
       if (!targetContractId) throw new Error("Could not resolve contract row");
 
+      const providerName = resolveProviderName(ownerBranding);
       const { data: genData, error: genErr } = await supabase.functions.invoke("generate-contract", {
         body: {
           contract_type: contractType,
           client_name: proposal.client_name,
           company_name: proposal.company_name,
+          provider_name: providerName,
           service_type: proposal.service_type,
           project_scope: proposal.project_scope || "",
           timeline: proposal.timeline || "",

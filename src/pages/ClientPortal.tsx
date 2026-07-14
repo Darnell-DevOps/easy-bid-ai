@@ -44,6 +44,7 @@ import { useProposalCheckout } from "@/hooks/use-proposal-checkout";
 import { cn } from "@/lib/utils";
 import { buildOnboardingFields, type OnboardingFormRow } from "@/lib/onboarding";
 import { calculateCommercialTotals, formatCents } from "@/lib/commercial-calc";
+import { resolveProviderName } from "@/lib/provider-identity";
 import { ClipboardList } from "lucide-react";
 
 interface PublicProposal {
@@ -93,6 +94,8 @@ interface ContractLite {
 
 interface PortalBranding {
   business_name: string | null;
+  legal_name: string | null;
+  trading_name: string | null;
   tagline: string | null;
   logo_url: string | null;
   brand_color: string | null;
@@ -362,11 +365,13 @@ export default function ClientPortal() {
           proposal.tax_rate,
           proposal.tax_mode as any,
         );
+        const providerName = resolveProviderName(branding);
         const { data } = await supabase.functions.invoke("generate-contract", {
           body: {
             contract_type: contractType,
             client_name: proposal.client_name,
             company_name: proposal.company_name,
+            provider_name: providerName,
             service_type: proposal.service_type,
             project_scope: (proposal as any).project_scope || "",
             timeline: (proposal as any).timeline || "",
