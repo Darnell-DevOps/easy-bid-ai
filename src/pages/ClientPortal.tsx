@@ -573,8 +573,9 @@ export default function ClientPortal() {
   const onboardingComplete = onboarding?.status === "completed";
   const onboardingStarted = onboarding?.status === "in_progress";
   const isContractSigned = contract?.status === "signed";
+  const isContractExecuted = contract?.status === "executed";
   const needsContractSignature = isAccepted && contract && !isContractSigned;
-  const readyToPay = isAccepted && isContractSigned && !isPaid;
+  const readyToPay = isAccepted && isContractExecuted && !isPaid;
   const acceptedNotPaid = isAccepted && !isPaid;
   const hasPrice = !!commercialTotals && commercialTotals.totalCents >= 70;
 
