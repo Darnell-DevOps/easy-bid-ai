@@ -36,6 +36,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useProposalCheckout } from "@/hooks/use-proposal-checkout";
 import { cn } from "@/lib/utils";
 import { buildOnboardingFields, type OnboardingFormRow } from "@/lib/onboarding";
+import { calculateCommercialTotals } from "@/lib/commercial-calc";
 import { ClipboardList } from "lucide-react";
 
 interface PublicProposal {
