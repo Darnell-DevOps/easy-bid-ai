@@ -713,7 +713,7 @@ export default function NewProposal() {
                         <SelectValue placeholder="What service are you offering?" />
                       </SelectTrigger>
                       <SelectContent>
-                        {serviceTypes.map((s) => (
+                        {effectiveServiceTypes.map((s) => (
                           <SelectItem key={s} value={s}>{s}</SelectItem>
                         ))}
                       </SelectContent>
