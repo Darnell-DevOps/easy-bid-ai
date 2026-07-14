@@ -707,24 +707,8 @@ export default function ClientPortal() {
                   acceptedNotPaid && "opacity-70",
                 )}
               >
-                <div className="mb-8 pb-8 border-b border-border/60">
-                  <p className="text-xs uppercase tracking-[0.2em] text-purple font-semibold mb-3">
-                    What you're getting
-                  </p>
-                  <ul className="space-y-2">
-                    {[
-                      "A clear plan tailored to your goals",
-                      "Hands-on delivery from start to finish",
-                      "Measurable results you can track",
-                      "Direct support throughout the project",
-                    ].map((item) => (
-                      <li key={item} className="flex items-start gap-2 text-sm text-foreground">
-                        <CheckCircle2 className="w-4 h-4 text-purple shrink-0 mt-0.5" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                {/* "What you're getting" removed — the real "What You'll Get" section
+                    rendered by PremiumProposalRenderer above already covers this. */}
 
                 <PremiumPricingRenderer content={proposal.pricing_breakdown} showPayCta={false} />
 
