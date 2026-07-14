@@ -99,6 +99,7 @@ function MarkdownPreview({ content, isPremium }: { content: string; isPremium?: 
 
 export default function ProposalView() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { hasFeature, isFree } = usePlan();
   const paymentsUnlocked = hasFeature("payments");
