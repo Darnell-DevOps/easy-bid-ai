@@ -421,11 +421,33 @@ export default function ProposalView() {
         } catch {
           // Ignore — dropdown will fall back to USD and header will render without branding.
         }
+        // Fetch the linked contract (if any) so we can detect an empty
+        // placeholder from acceptance-auto and offer a retry action.
+        try {
+          const { data: contractRow } = await supabase
+            .from("contracts")
+            .select("id, body, source, status, title")
+            .eq("proposal_id", id)
+            .is("deleted_at", null)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          setLinkedContract(contractRow ? {
+            id: contractRow.id,
+            body: contractRow.body ?? null,
+            source: (contractRow as any).source ?? null,
+            status: contractRow.status ?? null,
+            title: contractRow.title ?? null,
+          } : null);
+        } catch {
+          // Non-fatal — alert simply won't trigger.
+        }
       }
       setLoading(false);
     };
     fetchProposal();
   }, [id]);
+
 
   const handleSave = async () => {
     setSaving(true);
