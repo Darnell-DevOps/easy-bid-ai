@@ -454,6 +454,13 @@ export default function ProposalView() {
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
 
+    // Owner branding for the exported PDF. Fall back to a neutral slate accent
+    // and omit the brand mark entirely when the owner hasn't configured branding.
+    const brandName = (ownerBranding?.business_name || "").trim();
+    const brandLogoUrl = ownerBranding?.logo_url || "";
+    const accent = ownerBranding?.brand_color || "#334155"; // neutral slate fallback
+    const accentSoftBg = ownerBranding?.brand_color ? `${ownerBranding.brand_color}0f` : "#f8fafc";
+
     // Markdown → structured HTML, section-wrapped
     const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
