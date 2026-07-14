@@ -263,6 +263,17 @@ export default function ClientPortal() {
           if (Array.isArray(rows)) setPolicies(rows as any);
         });
 
+      // Fetch published, public-approved testimonials for this owner
+      (supabase.rpc(
+        "public_get_testimonials_for_user" as never,
+        { _user_id: (data as PublicProposal).user_id } as never,
+      ) as unknown as Promise<{ data: any }>)
+        .then(({ data: rows }) => {
+          if (Array.isArray(rows)) setTestimonials(rows as any);
+        });
+
+
+
 
       // Fetch latest contract for this proposal
       (supabase.rpc(
