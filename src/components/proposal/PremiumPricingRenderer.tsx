@@ -77,6 +77,7 @@ function parsePricing(content: string): {
     }
     if (/vat|tax/.test(cells[0]?.toLowerCase() || "")) {
       vat = cost;
+      vatLabel = cells[0] || "Tax";
       continue;
     }
     if (/^total/.test(cells[0]?.toLowerCase() || "")) {
