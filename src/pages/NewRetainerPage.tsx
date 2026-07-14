@@ -71,6 +71,24 @@ export default function NewRetainerPage() {
         .select("id, name, email, company")
         .order("name");
       setClients((data as ClientLite[]) || []);
+
+      // Prefill tax defaults from business_branding.
+      const { data: userRes } = await supabase.auth.getUser();
+      const uid = userRes.user?.id;
+      if (uid) {
+        const { data: branding } = await supabase
+          .from("business_branding")
+          .select("default_tax_rate, default_tax_mode")
+          .eq("user_id", uid)
+          .maybeSingle();
+        if (branding) {
+          if (branding.default_tax_rate != null) {
+            setTaxRate(String(branding.default_tax_rate));
+          }
+          const mode = (branding.default_tax_mode as TaxMode) ?? "none";
+          setTaxMode(mode === "exclusive" || mode === "inclusive" ? mode : "none");
+        }
+      }
     })();
   }, []);
 
