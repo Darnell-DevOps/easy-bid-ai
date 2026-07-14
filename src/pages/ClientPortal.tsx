@@ -423,8 +423,8 @@ export default function ClientPortal() {
 
   const formattedTotal = useMemo(
     () =>
-      proposal && commercialTotals
-        ? formatAmount(commercialTotals.totalCents, proposal.currency)
+      proposal && commercialTotals && commercialTotals.totalCents
+        ? formatCents(commercialTotals.totalCents, proposal.currency)
         : null,
     [proposal, commercialTotals],
   );
