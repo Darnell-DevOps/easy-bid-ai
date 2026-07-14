@@ -120,6 +120,14 @@ export default function ProposalView() {
   const [mergeIntake, setMergeIntake] = useState<Record<string, string> | null>(null);
   const [autoFillingPrice, setAutoFillingPrice] = useState(false);
   const [followUpOpen, setFollowUpOpen] = useState(false);
+  const [linkedContract, setLinkedContract] = useState<{
+    id: string;
+    body: string | null;
+    source: string | null;
+    status: string | null;
+    title: string | null;
+  } | null>(null);
+  const [retryingContract, setRetryingContract] = useState(false);
 
   const [leadContext, setLeadContext] = useState<{ original_lead_message?: string; recent_thread?: string }>({});
   const [defaultCurrency, setDefaultCurrency] = useState<string>("USD");
