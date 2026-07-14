@@ -837,12 +837,36 @@ export default function ProposalView() {
     paid_at: proposal.paid_at,
   });
 
+  // Contract-draft-needs-attention: accepted proposal, but the linked contract
+  // either doesn't exist or has an empty body (Batch 1's placeholder was left
+  // unfilled because generate-contract failed at accept time).
+  const contractNeedsAttention =
+    currentStatus === "accepted" &&
+    !clientPaid &&
+    (!linkedContract || !((linkedContract.body || "").trim()));
+
   // Smart alerts (priority order)
-  const alerts: { tone: "warning" | "info" | "success"; icon: typeof AlertTriangle; text: string }[] = [];
+  const alerts: {
+    tone: "warning" | "info" | "success";
+    icon: typeof AlertTriangle;
+    text: string;
+    action?: { label: string; onClick: () => void; loading?: boolean };
+  }[] = [];
   if (isRejected) {
     alerts.push({ tone: "warning", icon: XCircle, text: "Client rejected this proposal. Consider following up or revising." });
   } else if (clientPaid) {
     alerts.push({ tone: "success", icon: CheckCircle2, text: "Payment received in full. You're all set." });
+  } else if (contractNeedsAttention) {
+    alerts.push({
+      tone: "warning",
+      icon: AlertTriangle,
+      text: "Contract draft needs attention — the auto-generated agreement is empty or missing.",
+      action: {
+        label: retryingContract ? "Generating…" : "Retry generation",
+        onClick: () => { void handleRetryContractGeneration(); },
+        loading: retryingContract,
+      },
+    });
   } else if (followUpScenario !== "none") {
     const meta = FOLLOW_UP_META[followUpScenario];
     alerts.push({ tone: meta.tone, icon: Sparkles, text: `${meta.headline} — ${meta.description}` });
@@ -855,6 +879,7 @@ export default function ProposalView() {
   } else if (currentStatus === "viewed") {
     alerts.push({ tone: "info", icon: Sparkles, text: "Client has viewed the proposal. Now's a great time to follow up." });
   }
+
 
   const clientUrl = `${window.location.origin}/proposal/view/${proposal.id}`;
 
