@@ -962,6 +962,25 @@ export default function ProposalView() {
     !clientPaid &&
     (!linkedContract || !((linkedContract.body || "").trim()));
 
+  const contractReadyForSend =
+    currentStatus === "accepted" &&
+    linkedContract?.status === "draft" &&
+    ((linkedContract.body || "").trim());
+
+  const contractSentOrViewed =
+    currentStatus === "accepted" &&
+    linkedContract &&
+    (linkedContract.status === "sent" || linkedContract.status === "viewed");
+
+  const contractSigned =
+    currentStatus === "accepted" &&
+    linkedContract?.status === "signed";
+
+  const contractExecutedUnpaid =
+    currentStatus === "accepted" &&
+    linkedContract?.status === "executed" &&
+    !clientPaid;
+
   // Smart alerts (priority order)
   const alerts: {
     tone: "warning" | "info" | "success";
@@ -984,6 +1003,34 @@ export default function ProposalView() {
         loading: retryingContract,
       },
     });
+  } else if (contractReadyForSend) {
+    alerts.push({
+      tone: "info",
+      icon: FileText,
+      text: `Review and send the agreement to ${proposal.client_name}. It's ready for their signature.`,
+      action: {
+        label: "Review & send contract",
+        onClick: () => navigate(`/dashboard/contracts/${linkedContract.id}`),
+      },
+    });
+  } else if (contractSentOrViewed) {
+    alerts.push({
+      tone: "info",
+      icon: Eye,
+      text: "Awaiting client signature. You'll be notified once they've signed.",
+    });
+  } else if (contractSigned) {
+    alerts.push({
+      tone: "warning",
+      icon: Pencil,
+      text: "Client has signed — countersign the agreement to execute it.",
+      action: {
+        label: "Countersign contract",
+        onClick: () => navigate(`/dashboard/contracts/${linkedContract.id}`),
+      },
+    });
+  } else if (contractExecutedUnpaid) {
+    alerts.push({ tone: "success", icon: Banknote, text: "Accepted — request payment now to close the deal." });
   } else if (followUpScenario !== "none") {
     const meta = FOLLOW_UP_META[followUpScenario];
     alerts.push({ tone: meta.tone, icon: Sparkles, text: `${meta.headline} — ${meta.description}` });
