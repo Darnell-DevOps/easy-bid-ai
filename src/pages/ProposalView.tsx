@@ -1712,6 +1712,20 @@ export default function ProposalView() {
                     <DropdownMenuItem onClick={() => handleRegenerateFull("alternative")} className="gap-2">
                       <Sparkles className="w-4 h-4" /> Alternative version
                     </DropdownMenuItem>
+                    {proposal?.previous_content_saved_at && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={handleRestorePrevious} className="gap-2">
+                          <RotateCcw className="w-4 h-4" />
+                          <span className="flex flex-col items-start">
+                            <span>Restore previous version</span>
+                            <span className="text-[10px] text-muted-foreground">
+                              from {formatRelativeTime(proposal.previous_content_saved_at)}
+                            </span>
+                          </span>
+                        </DropdownMenuItem>
+                      </>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
