@@ -56,6 +56,7 @@ interface ProposalData {
   deliverables: string | null;
   tax_rate: number | null;
   payment_terms: string | null;
+  tax_mode: string | null;
 }
 
 const SECTION_HEADINGS = [
@@ -135,7 +136,9 @@ export default function ProposalView() {
       notes: proposal.notes || "",
       goals: proposal.goals || "",
       deliverables: proposal.deliverables || "",
-      currency: proposal.currency || undefined,
+      currency: proposal.currency || defaultCurrency || undefined,
+      amount_cents: proposal.amount_cents ?? undefined,
+      tax_mode: proposal.tax_mode ?? undefined,
       tax_rate: proposal.tax_rate ?? undefined,
       payment_terms: proposal.payment_terms ?? undefined,
       original_lead_message: leadContext.original_lead_message || undefined,
