@@ -2251,6 +2251,8 @@ export type Database = {
           service_type: string | null
           start_date: string
           status: string
+          tax_mode: string | null
+          tax_rate: number | null
           template_key: string | null
           title: string
           total_billed_cents: number
@@ -2300,6 +2302,8 @@ export type Database = {
           service_type?: string | null
           start_date?: string
           status?: string
+          tax_mode?: string | null
+          tax_rate?: number | null
           template_key?: string | null
           title?: string
           total_billed_cents?: number
@@ -2349,6 +2353,8 @@ export type Database = {
           service_type?: string | null
           start_date?: string
           status?: string
+          tax_mode?: string | null
+          tax_rate?: number | null
           template_key?: string | null
           title?: string
           total_billed_cents?: number
@@ -3401,6 +3407,8 @@ export type Database = {
           service_type: string | null
           start_date: string
           status: string
+          tax_mode: string | null
+          tax_rate: number | null
           template_key: string | null
           title: string
           total_billed_cents: number
