@@ -593,24 +593,83 @@ export default function ClientPortal() {
   const stageOrder: ProjectStage[] = ["proposal", "contract", "payment", "onboarding", "kickoff", "active"];
   const progressPct = Math.round(((stageOrder.indexOf(stage) + (stage === "active" ? 1 : 0)) / stageOrder.length) * 100);
 
+  // Derive seller branding for header + ambient backdrop tinting
+  const sellerName = branding?.business_name?.trim() || "";
+  const sellerInitials = sellerName
+    ? sellerName.split(/\s+/).map((s) => s[0]).filter(Boolean).slice(0, 2).join("").toUpperCase()
+    : "";
+  const brandColor = branding?.brand_color || null;
+  const brandSecondary = branding?.brand_secondary_color || brandColor;
+  const showPortalLogo = branding?.show_logo_on_portal !== false;
+  const brandGradient =
+    brandColor && brandSecondary
+      ? { backgroundImage: `linear-gradient(135deg, ${brandColor}, ${brandSecondary})` }
+      : undefined;
+
   return (
     <div className="relative min-h-screen pb-24 sm:pb-8 overflow-hidden">
       <DynamicFavicon userId={proposal?.user_id} />
-      {/* Ambient backdrop */}
+      {/* Ambient backdrop — tinted with the seller's brand colors when configured */}
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute top-[12%] left-[10%] w-[480px] h-[480px] rounded-full bg-accent/10 blur-[120px] animate-soft-pulse" />
         <div
-          className="absolute bottom-[8%] right-[8%] w-[420px] h-[420px] rounded-full bg-purple/10 blur-[120px] animate-soft-pulse"
-          style={{ animationDelay: "1.5s" }}
+          className={
+            "absolute top-[12%] left-[10%] w-[480px] h-[480px] rounded-full blur-[120px] animate-soft-pulse " +
+            (brandColor ? "" : "bg-accent/10")
+          }
+          style={brandColor ? { backgroundColor: brandColor, opacity: 0.1 } : undefined}
         />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 w-[700px] h-[300px] rounded-full bg-accent/5 blur-[140px]" />
+        <div
+          className={
+            "absolute bottom-[8%] right-[8%] w-[420px] h-[420px] rounded-full blur-[120px] animate-soft-pulse " +
+            (brandSecondary ? "" : "bg-purple/10")
+          }
+          style={{
+            animationDelay: "1.5s",
+            ...(brandSecondary ? { backgroundColor: brandSecondary, opacity: 0.1 } : {}),
+          }}
+        />
+        <div
+          className={
+            "absolute top-1/2 left-1/2 -translate-x-1/2 w-[700px] h-[300px] rounded-full blur-[140px] " +
+            (brandColor ? "" : "bg-accent/5")
+          }
+          style={brandColor ? { backgroundColor: brandColor, opacity: 0.05 } : undefined}
+        />
       </div>
 
-      {/* Header */}
+      {/* Header — leads with the seller's brand identity */}
       <header className="sticky top-0 z-20 border-b border-border/60 bg-background/70 backdrop-blur-xl">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3">
-          <div className="flex-1 min-w-0 text-xs text-muted-foreground font-medium truncate">
-            {proposal.company_name || proposal.client_name} · {projectName}
+          {showPortalLogo && branding?.logo_url ? (
+            <img
+              src={branding.logo_url}
+              alt={sellerName || "Logo"}
+              className="h-7 w-auto max-w-[140px] object-contain shrink-0"
+            />
+          ) : showPortalLogo && sellerInitials ? (
+            <div
+              className={
+                "flex h-7 w-7 items-center justify-center rounded-md shrink-0 " +
+                (brandGradient ? "" : "bg-gradient-to-br from-purple to-accent")
+              }
+              style={brandGradient}
+            >
+              <span className="text-[10px] font-bold text-white">{sellerInitials}</span>
+            </div>
+          ) : null}
+          <div className="flex-1 min-w-0 text-xs font-medium truncate">
+            {sellerName ? (
+              <>
+                <span className="text-foreground">{sellerName}</span>
+                <span className="text-muted-foreground">
+                  {" "}· {proposal.company_name || proposal.client_name} · {projectName}
+                </span>
+              </>
+            ) : (
+              <span className="text-muted-foreground">
+                {proposal.company_name || proposal.client_name} · {projectName}
+              </span>
+            )}
           </div>
           <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-emerald-400 font-medium">
             <span className="relative flex h-1.5 w-1.5">
@@ -622,6 +681,7 @@ export default function ClientPortal() {
           <StatusBadge status={status} />
         </div>
       </header>
+
 
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 lg:py-10 space-y-6 lg:space-y-8">
