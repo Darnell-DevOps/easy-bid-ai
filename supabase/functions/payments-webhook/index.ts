@@ -78,7 +78,7 @@ async function handleTransactionCompleted(data: any) {
 
     const { data: prop } = await supabase
       .from("proposals")
-      .select("user_id, client_id, client_name, service_type, amount_cents, currency")
+      .select("user_id, client_id, client_name, service_type, amount_cents, currency, tax_rate, tax_mode")
       .eq("id", cd.proposalId)
       .maybeSingle();
     let clientEmail: string | null = null;
@@ -87,14 +87,30 @@ async function handleTransactionCompleted(data: any) {
       clientEmail = c?.email || null;
     }
 
+    // Resolve the authoritative final payable total.
+    // Paddle's payload is the strongest source (what was actually charged); fall back to our structured expectation.
+    const expectedTotalCents = prop?.amount_cents
+      ? calculateCommercialTotals(prop.amount_cents, prop.tax_rate, prop.tax_mode).totalCents
+      : 0;
+    const actualTotalCents = Number(data?.details?.totals?.total ?? data?.details?.totals?.grandTotal ?? 0);
+    const resolvedAmountCents = actualTotalCents > 0 ? actualTotalCents : expectedTotalCents;
+
+    if (actualTotalCents > 0 && expectedTotalCents > 0 && actualTotalCents !== expectedTotalCents) {
+      console.warn(
+        `Proposal payment total mismatch for ${cd.proposalId}: expected ${expectedTotalCents}c, actual ${actualTotalCents}c`
+      );
+    }
+
+    const resolvedCurrency = prop?.currency || data?.currencyCode || "USD";
+
     // Run automation side-effects (notifications, onboarding auto-send/task)
     const ran = prop?.user_id
       ? await automationsHandlePaymentEvent({
           userId: prop.user_id,
           kind: "proposal_paid",
           proposalId: cd.proposalId,
-          amountCents: prop.amount_cents || 0,
-          currency: prop.currency || "USD",
+          amountCents: resolvedAmountCents,
+          currency: resolvedCurrency,
         })
       : {};
 
@@ -107,7 +123,7 @@ async function handleTransactionCompleted(data: any) {
         idempotencyKey: `paid-prop-${cd.proposalId}-${data.id}`,
         data: {
           name: prop.client_name,
-          amount: fmtMoney(prop.amount_cents || 0, prop.currency || "USD"),
+          amount: fmtMoney(resolvedAmountCents, resolvedCurrency),
           description: prop.service_type || `Proposal — ${prop.client_name}`,
         },
       });
