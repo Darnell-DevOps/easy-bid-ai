@@ -793,8 +793,10 @@ export default function ProposalView() {
 
   const handleSendCopy = async () => {
     await navigator.clipboard.writeText(clientUrl);
-    if (currentStatus === "draft") await updateStatus("sent");
-    toast({ title: "Link copied", description: "Share this with your client." });
+    toast({
+      title: "Link copied",
+      description: "Share this with your client, then mark as sent when you have.",
+    });
   };
   const handleSendEmail = () => {
     const subject = encodeURIComponent(`Your proposal from CloseSync`);
@@ -803,7 +805,6 @@ export default function ProposalView() {
     );
     const to = clientEmail ? encodeURIComponent(clientEmail) : "";
     window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
-    if (currentStatus === "draft") void updateStatus("sent");
   };
   const handlePreview = () => window.open(clientUrl, "_blank", "noopener,noreferrer");
 
