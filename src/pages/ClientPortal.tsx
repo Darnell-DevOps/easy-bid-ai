@@ -416,9 +416,24 @@ export default function ClientPortal() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [proposal?.client_paid, onboarding?.id]);
 
+  const commercialTotals = useMemo(
+    () =>
+      proposal
+        ? calculateCommercialTotals(
+            proposal.amount_cents ?? 0,
+            proposal.tax_rate,
+            proposal.tax_mode as any,
+          )
+        : null,
+    [proposal],
+  );
+
   const formattedTotal = useMemo(
-    () => (proposal ? formatAmount(proposal.amount_cents, proposal.currency) : null),
-    [proposal]
+    () =>
+      proposal && commercialTotals
+        ? formatAmount(commercialTotals.totalCents, proposal.currency)
+        : null,
+    [proposal, commercialTotals],
   );
 
   if (loading) {
