@@ -193,7 +193,7 @@ export default function AttentionCenter({ proposals, clients, proposalClientIds 
       const [c, o, b, d] = await Promise.all([
         supabase
           .from("contracts")
-          .select("id, title, client_name, status, created_at, signed_at")
+          .select("id, title, client_name, status, created_at, signed_at, proposal_id, body")
           .is("deleted_at", null)
           .order("created_at", { ascending: false })
           .limit(50),
