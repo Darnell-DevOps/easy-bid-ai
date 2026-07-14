@@ -477,6 +477,18 @@ export default function NewProposal() {
 
   const [savedClients, setSavedClients] = useState<Array<{ id: string; name: string; company: string | null; service_requested: string | null; project_description: string | null; budget: string | null; timeline: string | null; goals: string | null; }>>([]);
 
+  // Business branding defaults (currency / tax rate / payment terms / invoice due days).
+  const [branding, setBranding] = useState<{
+    default_currency: string | null;
+    default_tax_rate: number | null;
+    default_payment_terms: string | null;
+    default_invoice_due_days: number | null;
+  } | null>(null);
+
+  // User's own catalogue of service types (from their saved proposal_templates).
+  // Falls back to the generic serviceTypes list when the user has none saved.
+  const [userServiceTypes, setUserServiceTypes] = useState<string[] | null>(null);
+
   useEffect(() => {
     supabase
       .from("clients")
@@ -484,7 +496,34 @@ export default function NewProposal() {
       .order("created_at", { ascending: false })
       .limit(50)
       .then(({ data }) => setSavedClients((data as any) || []));
+
+    supabase
+      .from("business_branding")
+      .select("default_currency, default_tax_rate, default_payment_terms, default_invoice_due_days")
+      .maybeSingle()
+      .then(({ data }) => {
+        setBranding((data as any) || null);
+        const def = (data as any)?.default_currency;
+        // Only override the currency default when no prefill actually contained one.
+        if (!detectedPrefillCurrency && def && (CURRENCY_CODES as readonly string[]).includes(def)) {
+          setCurrency(def as CurrencyCode);
+        }
+      });
+
+    supabase
+      .from("proposal_templates")
+      .select("service_type")
+      .then(({ data }) => {
+        const distinct = Array.from(
+          new Set(((data as any[]) || []).map((r) => (r?.service_type || "").trim()).filter(Boolean)),
+        );
+        setUserServiceTypes(distinct.length ? [...distinct, "Other"] : null);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const effectiveServiceTypes = userServiceTypes && userServiceTypes.length ? userServiceTypes : serviceTypes;
+
 
   const handleGenerateFromClient = (clientId: string) => {
     const c = savedClients.find((x) => x.id === clientId);
