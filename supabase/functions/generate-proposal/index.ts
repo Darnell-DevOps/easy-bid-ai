@@ -291,10 +291,22 @@ function buildSectionPrompt(p: any, section: string) {
   const previousBlock = currentSectionText
     ? `PREVIOUS VERSION OF THIS SECTION (this is a regeneration request — produce a genuinely different take: new opening line, different structure or ordering of points, different specific phrasing and word choice — do not restate this almost verbatim, but keep it factually consistent with the client details):\n${currentSectionText}\n\n`
     : "";
+  const currency = currencyCodeFor(p.currency);
+  const symbol = currencySymbolFor(p.currency);
+  const taxRate = typeof p.tax_rate === "number" ? p.tax_rate : parseFloat(p.tax_rate);
+  const hasTax = Number.isFinite(taxRate) && taxRate > 0;
+  const paymentPhrase = paymentTermsPhrase(p.payment_terms, p.invoice_due_days);
   return `Rewrite ONLY the "${section}" section of a proposal for this project. Keep it consistent with the rest of the proposal.
 
 CLIENT DETAILS:
 ${buildClientContext(p)}
+
+COMMERCIAL PARAMETERS (must remain consistent with the rest of the proposal):
+- Currency: ${currency} — use the "${symbol}" symbol for any price shown.
+- Tax: ${hasTax ? `${taxRate}% applied to subtotal` : "no tax applies"}.
+- Payment terms: ${paymentPhrase ?? "not specified — use neutral 'Payment terms as agreed'"}.
+
+TRUTHFULNESS: Do not invent specific percentages, ROI figures, testimonials, awards, years of experience, or delivery guarantees not provided in the client details.
 
 ${previousBlock}EXISTING PROPOSAL CONTEXT (for reference — do NOT rewrite anything other than the "${section}" section):
 ${(p.existing_proposal || "").slice(0, 4000)}
