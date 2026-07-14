@@ -84,6 +84,21 @@ interface ContractLite {
 }
 
 
+interface PortalBranding {
+  business_name: string | null;
+  tagline: string | null;
+  logo_url: string | null;
+  brand_color: string | null;
+  brand_secondary_color: string | null;
+  show_logo_on_proposals: boolean | null;
+  show_logo_on_contracts: boolean | null;
+  show_logo_on_portal: boolean | null;
+  proposal_cover_show_name: boolean | null;
+  proposal_cover_show_tagline: boolean | null;
+  proposal_cover_show_date: boolean | null;
+}
+
+
 function deriveProjectStage(
   p: PublicProposal,
   contract: ContractLite | null,
