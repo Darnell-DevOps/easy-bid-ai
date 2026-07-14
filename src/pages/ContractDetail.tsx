@@ -45,16 +45,23 @@ export default function ContractDetail() {
   const [downloading, setDownloading] = useState(false);
   const [countersignOpen, setCountersignOpen] = useState(false);
   const [ownerName, setOwnerName] = useState("");
+  const [branding, setBranding] = useState<ProviderIdentityFields | null>(null);
   const [sending, setSending] = useState(false);
   const [markingSent, setMarkingSent] = useState(false);
   const pdfRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       const u = data.user;
       if (!u) return;
       const meta: any = u.user_metadata || {};
       setOwnerName(meta.full_name || meta.name || u.email || "");
+      const { data: bb } = await supabase
+        .from("business_branding")
+        .select("legal_name, trading_name, business_name")
+        .eq("user_id", u.id)
+        .maybeSingle();
+      setBranding((bb as ProviderIdentityFields) || null);
     });
   }, []);
 
