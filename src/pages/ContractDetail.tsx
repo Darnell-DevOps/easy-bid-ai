@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import ContractRenderer from "@/components/contracts/ContractRenderer";
 import SignatureBlock from "@/components/contracts/SignatureBlock";
 import CountersignDialog from "@/components/contracts/CountersignDialog";
-import { Loader2, ArrowLeft, Copy, ExternalLink, Send, CheckCircle2, Clock, Eye, Download, FileSignature } from "lucide-react";
+import { Loader2, ArrowLeft, Copy, ExternalLink, Send, CheckCircle2, Clock, Eye, Download, FileSignature, Mail, CheckSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { contractTypeLabel, type ContractRow, type ContractSignatureRow } from "@/lib/contracts";
 import { sendEmail } from "@/lib/email";
