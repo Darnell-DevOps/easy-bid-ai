@@ -24,6 +24,7 @@ import {
   formatMoney,
   intervalLabel,
 } from "@/lib/retainers";
+import { calculateCommercialTotals, type TaxMode } from "@/lib/commercial-calc";
 import { ArrowLeft, Repeat, Sparkles, Check } from "lucide-react";
 
 interface ClientLite {
