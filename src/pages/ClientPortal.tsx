@@ -654,9 +654,24 @@ export default function ClientPortal() {
               <h1 className="text-2xl lg:text-4xl font-bold text-foreground mb-4">
                 {proposal.service_type}
               </h1>
-              <p className="text-base lg:text-lg text-foreground/90 leading-relaxed max-w-2xl mb-5">
-                Win more clients, grow visibility, and unlock new revenue — fast.
-              </p>
+              {(() => {
+                // Derive a short excerpt from the real Introduction section of proposal_content,
+                // if one exists. Never fabricate copy — omit the line entirely otherwise.
+                const raw = proposal.proposal_content || "";
+                const match = raw.match(/(?:^|\n)#{1,3}\s*Introduction\s*\n+([\s\S]*?)(?:\n#{1,3}\s|$)/i);
+                let excerpt = "";
+                if (match) {
+                  const firstPara = match[1].split(/\n\s*\n/)[0] || "";
+                  excerpt = firstPara.replace(/[*_`>#-]/g, "").replace(/\s+/g, " ").trim();
+                  if (excerpt.length > 240) excerpt = excerpt.slice(0, 237).trimEnd() + "…";
+                }
+                if (!excerpt) return null;
+                return (
+                  <p className="text-base lg:text-lg text-foreground/90 leading-relaxed max-w-2xl mb-5">
+                    {excerpt}
+                  </p>
+                );
+              })()}
               <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <Building2 className="w-4 h-4 shrink-0" />
@@ -692,24 +707,8 @@ export default function ClientPortal() {
                   acceptedNotPaid && "opacity-70",
                 )}
               >
-                <div className="mb-8 pb-8 border-b border-border/60">
-                  <p className="text-xs uppercase tracking-[0.2em] text-purple font-semibold mb-3">
-                    What you're getting
-                  </p>
-                  <ul className="space-y-2">
-                    {[
-                      "A clear plan tailored to your goals",
-                      "Hands-on delivery from start to finish",
-                      "Measurable results you can track",
-                      "Direct support throughout the project",
-                    ].map((item) => (
-                      <li key={item} className="flex items-start gap-2 text-sm text-foreground">
-                        <CheckCircle2 className="w-4 h-4 text-purple shrink-0 mt-0.5" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                {/* "What you're getting" removed — the real "What You'll Get" section
+                    rendered by PremiumProposalRenderer above already covers this. */}
 
                 <PremiumPricingRenderer content={proposal.pricing_breakdown} showPayCta={false} />
 
@@ -721,10 +720,8 @@ export default function ClientPortal() {
                     <p className="text-3xl lg:text-4xl font-bold text-foreground tracking-tight">
                       {formattedTotal}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1.5">
-                      No long-term contracts. Cancel anytime.
-                    </p>
                   </div>
+
                 )}
               </section>
             )}
@@ -743,9 +740,9 @@ export default function ClientPortal() {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
-                { icon: ShieldCheck, title: "Avg. 3× more leads", desc: "Clients see measurable growth within the first 90 days." },
-                { icon: Zap, title: "Delivered in days, not months", desc: "Fast turnaround without cutting corners on quality." },
-                { icon: MessageCircle, title: "One point of contact", desc: "Direct updates from the person doing the work." },
+                { icon: CheckCircle2, title: "Clear deliverables", desc: "Everything included in your proposal is defined in writing before we begin." },
+                { icon: Calendar, title: "Transparent milestones", desc: "You'll see the timeline and stages laid out so nothing is a surprise." },
+                { icon: MessageCircle, title: "Defined communication", desc: "A single point of contact and a set cadence for updates throughout the project." },
               ].map(({ icon: Icon, title, desc }) => (
                 <div key={title} className="rounded-lg border border-border/60 bg-background/40 p-4">
                   <Icon className="w-5 h-5 text-purple mb-3" />
