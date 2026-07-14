@@ -120,6 +120,9 @@ export default function ProposalView() {
   const [autoFillingPrice, setAutoFillingPrice] = useState(false);
   const [followUpOpen, setFollowUpOpen] = useState(false);
 
+  const [leadContext, setLeadContext] = useState<{ original_lead_message?: string; recent_thread?: string }>({});
+  const [defaultCurrency, setDefaultCurrency] = useState<string>("USD");
+
   const buildSourcePayload = () => {
     if (!proposal) return null;
     return {
@@ -130,6 +133,13 @@ export default function ProposalView() {
       budget: proposal.budget || "",
       timeline: proposal.timeline || "",
       notes: proposal.notes || "",
+      goals: proposal.goals || "",
+      deliverables: proposal.deliverables || "",
+      currency: proposal.currency || undefined,
+      tax_rate: proposal.tax_rate ?? undefined,
+      payment_terms: proposal.payment_terms ?? undefined,
+      original_lead_message: leadContext.original_lead_message || undefined,
+      recent_thread: leadContext.recent_thread || undefined,
     };
   };
 
