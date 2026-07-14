@@ -93,6 +93,8 @@ interface ContractLite {
 
 interface PortalBranding {
   business_name: string | null;
+  legal_name: string | null;
+  trading_name: string | null;
   tagline: string | null;
   logo_url: string | null;
   brand_color: string | null;
