@@ -108,7 +108,6 @@ Deno.serve(async (req) => {
     }
 
     const paddle = getPaddleClient(env);
-    const currency = (proposal.currency || "USD").toUpperCase();
     const description = `${proposal.service_type} — ${proposal.company_name || proposal.client_name}`;
 
     const txn = await paddle.transactions.create({
