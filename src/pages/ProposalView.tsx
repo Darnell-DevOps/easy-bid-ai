@@ -144,6 +144,9 @@ export default function ProposalView() {
 
   const [leadContext, setLeadContext] = useState<{ original_lead_message?: string; recent_thread?: string }>({});
   const [defaultCurrency, setDefaultCurrency] = useState<string>("USD");
+  const [pendingRegen, setPendingRegen] = useState<{ proposal: string; pricing: string; invoice: string; tone?: string } | null>(null);
+  const [regenPreviewOpen, setRegenPreviewOpen] = useState(false);
+  const [committingRegen, setCommittingRegen] = useState(false);
   const [ownerBranding, setOwnerBranding] = useState<{
     business_name: string | null;
     legal_name: string | null;
