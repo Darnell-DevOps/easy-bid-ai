@@ -39,6 +39,7 @@ type BusinessInfo = {
   default_invoice_due_days: number;
   default_invoice_grace_days: number;
   default_tax_rate: string;
+  default_tax_mode: "none" | "exclusive" | "inclusive";
 };
 
 const EMPTY: BusinessInfo = {
@@ -63,6 +64,7 @@ const EMPTY: BusinessInfo = {
   default_invoice_due_days: 14,
   default_invoice_grace_days: 7,
   default_tax_rate: "",
+  default_tax_mode: "none",
 };
 
 const CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD", "NZD", "CHF", "SEK", "NOK", "DKK", "JPY"];
@@ -293,7 +295,7 @@ export default function BusinessInformationSettings() {
       <Card>
         <CardContent className="p-6 space-y-5">
           <SectionHeader icon={Receipt} title="Invoice defaults" description="Used across invoices and retainers." />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Default due (days)">
               <Input type="number" min={0} value={data.default_invoice_due_days}
                 onChange={(e) => set("default_invoice_due_days", Number(e.target.value))} />
@@ -305,6 +307,20 @@ export default function BusinessInformationSettings() {
             <Field label="Default tax rate (%)" optional error={errors.default_tax_rate}>
               <Input type="number" min={0} max={100} step="0.01" value={data.default_tax_rate}
                 onChange={(e) => set("default_tax_rate", e.target.value)} placeholder="20" />
+            </Field>
+            <Field label="Tax treatment">
+              <Select
+                value={data.default_tax_mode}
+                onValueChange={(v) => set("default_tax_mode", v as BusinessInfo["default_tax_mode"])}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No tax</SelectItem>
+                  <SelectItem value="exclusive">Add tax on top of prices</SelectItem>
+                  <SelectItem value="inclusive">Prices already include tax</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground">Only applies when a tax rate is set above.</p>
             </Field>
           </div>
         </CardContent>
@@ -335,6 +351,14 @@ export default function BusinessInformationSettings() {
               <PreviewStat label="Payment terms" value={PAYMENT_TERMS.find(p => p.value === data.default_payment_terms)?.label ?? "—"} />
               <PreviewStat label="Proposal expiry" value={`${data.default_proposal_expiry_days} days`} />
               <PreviewStat label="Tax rate" value={data.default_tax_rate ? `${data.default_tax_rate}%` : "—"} />
+              <PreviewStat
+                label="Tax treatment"
+                value={
+                  data.default_tax_mode === "exclusive" ? "Add tax on top" :
+                  data.default_tax_mode === "inclusive" ? "Prices include tax" :
+                  "No tax"
+                }
+              />
             </div>
             {(data.registration_number || data.vat_number || data.tax_number) && (
               <p className="text-[11px] text-muted-foreground mt-4">
