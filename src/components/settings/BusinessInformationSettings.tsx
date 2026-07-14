@@ -351,6 +351,14 @@ export default function BusinessInformationSettings() {
               <PreviewStat label="Payment terms" value={PAYMENT_TERMS.find(p => p.value === data.default_payment_terms)?.label ?? "—"} />
               <PreviewStat label="Proposal expiry" value={`${data.default_proposal_expiry_days} days`} />
               <PreviewStat label="Tax rate" value={data.default_tax_rate ? `${data.default_tax_rate}%` : "—"} />
+              <PreviewStat
+                label="Tax treatment"
+                value={
+                  data.default_tax_mode === "exclusive" ? "Add tax on top" :
+                  data.default_tax_mode === "inclusive" ? "Prices include tax" :
+                  "No tax"
+                }
+              />
             </div>
             {(data.registration_number || data.vat_number || data.tax_number) && (
               <p className="text-[11px] text-muted-foreground mt-4">
