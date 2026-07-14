@@ -99,29 +99,52 @@ const toneInstruction = (tone?: string) => {
   }
 };
 
-const CURRENCY_SYMBOLS: Record<string, string> = {
-  GBP: "£",
-  USD: "$",
-  EUR: "€",
-  CAD: "C$",
-  AUD: "A$",
-  NZD: "NZ$",
-  CHF: "CHF ",
-  SEK: "kr ",
-  NOK: "kr ",
-  DKK: "kr ",
-  JPY: "¥",
-};
-
-function currencySymbolFor(code?: string | null): string {
-  const c = (code || "").toString().toUpperCase().trim();
-  if (c && CURRENCY_SYMBOLS[c]) return CURRENCY_SYMBOLS[c];
-  return CURRENCY_SYMBOLS.GBP; // backward-compat default
-}
+// currencySymbolFor / CURRENCY_SYMBOLS are imported from ../_shared/commercial-calc.ts —
+// single source of truth shared with the frontend (src/lib/commercial-calc.ts).
 
 function currencyCodeFor(code?: string | null): string {
   const c = (code || "").toString().toUpperCase().trim();
   return c && CURRENCY_SYMBOLS[c] ? c : "GBP";
+}
+
+// Build the actual CloseSync onboarding journey steps. Flag-driven so per-section
+// regeneration can call the same helper and produce identical bullets.
+function buildNextSteps(p: any): string[] {
+  const isRetainer = /retainer/i.test(p?.service_type || "");
+  if (isRetainer) {
+    return [
+      "Accept this proposal",
+      "Review and sign the retainer agreement",
+      "Start your subscription",
+      "Complete onboarding",
+      "Ongoing service begins",
+    ];
+  }
+  return [
+    "Accept this proposal",
+    "Review and sign your agreement",
+    "Complete payment",
+    "Complete onboarding",
+    "Project begins",
+  ];
+}
+
+// Derive exact commercial figures once, deterministically, from amount_cents +
+// tax_rate + tax_mode. Any subtotal_cents/tax_amount_cents/total_cents that the
+// caller happens to send are intentionally ignored — one calculation site only.
+function deriveExactCommercials(p: any):
+  | { subtotalCents: number; taxAmountCents: number; totalCents: number; taxRatePercent: number; taxMode: TaxMode; hasTax: boolean }
+  | null {
+  const amountCents = typeof p?.amount_cents === "number" ? p.amount_cents : NaN;
+  if (!Number.isFinite(amountCents) || amountCents <= 0) return null;
+  const taxRatePercent = typeof p?.tax_rate === "number" ? p.tax_rate : parseFloat(p?.tax_rate);
+  const taxMode: TaxMode = (p?.tax_mode ?? null) as TaxMode;
+  const totals = calculateCommercialTotals(amountCents, Number.isFinite(taxRatePercent) ? taxRatePercent : null, taxMode);
+  const hasTax =
+    (taxMode === "exclusive" || taxMode === "inclusive") &&
+    Number.isFinite(taxRatePercent) &&
+    (taxRatePercent as number) > 0;
+  return { ...totals, taxRatePercent: Number.isFinite(taxRatePercent) ? (taxRatePercent as number) : 0, taxMode, hasTax };
 }
 
 // Mirrors PAYMENT_TERMS in src/components/settings/BusinessInformationSettings.tsx
