@@ -1108,14 +1108,14 @@ export default function ProposalView() {
                     ? "text-emerald-500"
                     : "text-blue-500";
               return (
-                <div key={i} className={`flex items-center gap-3 rounded-lg border px-4 py-2.5 ${toneCls}`}>
+                <div key={i} className={`flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border px-4 py-2.5 ${toneCls}`}>
                   <Icon className={`w-4 h-4 shrink-0 ${iconCls}`} />
-                  <p className="text-sm flex-1 text-foreground/90">{a.text}</p>
+                  <p className="text-sm flex-1 min-w-[12rem] text-foreground/90">{a.text}</p>
                   {a.action && (
                     <Button
                       size="sm"
                       variant="outline"
-                      className="shrink-0"
+                      className="shrink-0 w-full sm:w-auto"
                       onClick={a.action.onClick}
                       disabled={a.action.loading}
                     >
