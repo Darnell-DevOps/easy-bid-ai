@@ -1883,11 +1883,14 @@ export type Database = {
           created_at: string
           currency: string | null
           deleted_at: string | null
+          deliverables: string | null
+          goals: string | null
           id: string
           invoice_content: string | null
           notes: string | null
           paddle_transaction_id: string | null
           paid_at: string | null
+          payment_terms: string | null
           pricing_breakdown: string | null
           project_scope: string
           proposal_content: string | null
@@ -1895,6 +1898,7 @@ export type Database = {
           sent_at: string | null
           service_type: string
           status: string
+          tax_rate: number | null
           timeline: string
           updated_at: string
           user_id: string
@@ -1912,11 +1916,14 @@ export type Database = {
           created_at?: string
           currency?: string | null
           deleted_at?: string | null
+          deliverables?: string | null
+          goals?: string | null
           id?: string
           invoice_content?: string | null
           notes?: string | null
           paddle_transaction_id?: string | null
           paid_at?: string | null
+          payment_terms?: string | null
           pricing_breakdown?: string | null
           project_scope?: string
           proposal_content?: string | null
@@ -1924,6 +1931,7 @@ export type Database = {
           sent_at?: string | null
           service_type: string
           status?: string
+          tax_rate?: number | null
           timeline?: string
           updated_at?: string
           user_id: string
@@ -1941,11 +1949,14 @@ export type Database = {
           created_at?: string
           currency?: string | null
           deleted_at?: string | null
+          deliverables?: string | null
+          goals?: string | null
           id?: string
           invoice_content?: string | null
           notes?: string | null
           paddle_transaction_id?: string | null
           paid_at?: string | null
+          payment_terms?: string | null
           pricing_breakdown?: string | null
           project_scope?: string
           proposal_content?: string | null
@@ -1953,6 +1964,7 @@ export type Database = {
           sent_at?: string | null
           service_type?: string
           status?: string
+          tax_rate?: number | null
           timeline?: string
           updated_at?: string
           user_id?: string
@@ -3254,11 +3266,14 @@ export type Database = {
           created_at: string
           currency: string | null
           deleted_at: string | null
+          deliverables: string | null
+          goals: string | null
           id: string
           invoice_content: string | null
           notes: string | null
           paddle_transaction_id: string | null
           paid_at: string | null
+          payment_terms: string | null
           pricing_breakdown: string | null
           project_scope: string
           proposal_content: string | null
@@ -3266,6 +3281,7 @@ export type Database = {
           sent_at: string | null
           service_type: string
           status: string
+          tax_rate: number | null
           timeline: string
           updated_at: string
           user_id: string
