@@ -94,7 +94,7 @@ type BudgetAnalysis =
   | { kind: "ambiguous"; currency: CurrencyCode };
 
 export function analyzeBudgetString(raw: string): BudgetAnalysis {
-  const currency = detectCurrency(raw);
+  const currency = detectCurrency(raw) || "GBP";
   const s = (raw || "").trim();
   if (!s) return { kind: "empty", currency };
   const lower = s.toLowerCase();
