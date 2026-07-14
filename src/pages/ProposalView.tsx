@@ -116,6 +116,9 @@ export default function ProposalView() {
   const [editedProposal, setEditedProposal] = useState("");
   const [editedPricing, setEditedPricing] = useState("");
   const [editedInvoice, setEditedInvoice] = useState("");
+  const [initialProposal, setInitialProposal] = useState("");
+  const [initialPricing, setInitialPricing] = useState("");
+  const [initialInvoice, setInitialInvoice] = useState("");
   const [copied, setCopied] = useState(false);
   const [clientPaid, setClientPaid] = useState(false);
   const [clientEmail, setClientEmail] = useState<string | null>(null);
