@@ -1147,11 +1147,19 @@ export default function ProposalView() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-56">
                   <DropdownMenuLabel>Send proposal</DropdownMenuLabel>
+                  <DropdownMenuItem
+                    onClick={sendViaCloseSync}
+                    disabled={!clientEmail}
+                    className="gap-2"
+                  >
+                    <Send className="w-4 h-4" /> Email via CloseSync {clientEmail ? "" : "(no client email)"}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSendCopy} className="gap-2">
                     <Copy className="w-4 h-4" /> Copy client link
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleSendEmail} className="gap-2">
-                    <Mail className="w-4 h-4" /> Email {clientEmail ? "client" : "(no client email)"}
+                    <Mail className="w-4 h-4" /> Open in mail app {clientEmail ? "" : "(no client email)"}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handlePreview} className="gap-2">
                     <ExternalLink className="w-4 h-4" /> Open client preview
@@ -1163,13 +1171,20 @@ export default function ProposalView() {
                       const link = waLink(clientPhone, msg);
                       if (link) {
                         window.open(link, "_blank", "noopener,noreferrer");
-                        if (currentStatus === "draft") void updateStatus("sent");
                       }
                     }}
                     className="gap-2"
                   >
                     <MessageCircle className="w-4 h-4" /> WhatsApp {clientPhone ? "client" : "(no phone)"}
                   </DropdownMenuItem>
+                  {currentStatus === "draft" && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={markAsSent} className="gap-2">
+                        <CheckCircle2 className="w-4 h-4" /> Mark as sent (I sent it myself)
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
 
