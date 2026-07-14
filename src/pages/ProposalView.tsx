@@ -28,7 +28,7 @@ import DealScoreBadge from "@/components/ai/DealScoreBadge";
 import ProposalAuditPanel from "@/components/ai/ProposalAuditPanel";
 import TemplateEditorDialog from "@/components/templates/TemplateEditorDialog";
 import { Bookmark } from "lucide-react";
-import { calculateCommercialTotals } from "@/lib/commercial-calc";
+import { calculateCommercialTotals, formatCents } from "@/lib/commercial-calc";
 import { resolveProviderName } from "@/lib/provider-identity";
 
 interface ProposalData {
@@ -131,6 +131,8 @@ export default function ProposalView() {
     title: string | null;
   } | null>(null);
   const [retryingContract, setRetryingContract] = useState(false);
+
+  const isPaymentLocked = linkedContract && linkedContract.status !== "draft";
 
   const [leadContext, setLeadContext] = useState<{ original_lead_message?: string; recent_thread?: string }>({});
   const [defaultCurrency, setDefaultCurrency] = useState<string>("USD");
@@ -1306,7 +1308,7 @@ export default function ProposalView() {
             <div className="pt-5 border-t border-border/60">
               <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
                 <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Payment Setup</p>
-                {paymentsUnlocked && (
+                {paymentsUnlocked && !isPaymentLocked && (
                   <Button
                     size="sm"
                     variant="ghost"
@@ -1346,67 +1348,88 @@ export default function ProposalView() {
                 </div>
               ) : (
                 <>
-                  <div className="flex items-stretch gap-2 max-w-md">
-                    <div className="relative flex-1">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base text-muted-foreground pointer-events-none">
-                        {proposal.currency === "EUR" ? "€" : proposal.currency === "GBP" ? "£" : "$"}
-                      </span>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        inputMode="decimal"
-                        placeholder="0.00"
-                        value={proposal.amount_cents != null ? (proposal.amount_cents / 100).toString() : ""}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          const cents = v === "" ? null : Math.round(parseFloat(v) * 100);
-                          setProposal({ ...proposal, amount_cents: Number.isFinite(cents as number) ? (cents as number) : null });
-                        }}
-                        onBlur={async () => {
-                          const cents = proposal.amount_cents;
-                          const { error } = await supabase
-                            .from("proposals")
-                            .update({ amount_cents: cents, currency: proposal.currency || defaultCurrency })
-                            .eq("id", proposal.id);
-                          if (error) {
-                            toast({ title: "Couldn't save amount", description: error.message, variant: "destructive" });
-                          } else {
-                            toast({ title: "Amount saved" });
-                          }
-                        }}
-                        className={`h-12 pl-8 text-lg font-semibold ${
-                          proposal.amount_cents == null
-                            ? "border-amber-500/40 focus-visible:ring-amber-500/30"
-                            : ""
-                        }`}
-                      />
+                  {isPaymentLocked ? (
+                    <div className="rounded-lg border border-border/60 bg-muted/30 p-4 max-w-md">
+                      <div className="flex items-start gap-3">
+                        <Lock className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">
+                            {formatCents(proposal.amount_cents ?? 0, proposal.currency || defaultCurrency)}
+                            <span className="ml-1.5 text-xs font-medium text-muted-foreground">
+                              {proposal.currency || defaultCurrency}
+                            </span>
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Locked — a contract has already been sent based on this amount. To change the price, create a new contract with the updated terms.
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <select
-                      value={proposal.currency || defaultCurrency}
-                      onChange={async (e) => {
-                        const currency = e.target.value;
-                        setProposal({ ...proposal, currency });
-                        await supabase.from("proposals").update({ currency }).eq("id", proposal.id);
-                      }}
-                      className="h-12 rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground"
-                    >
-                      <option value="USD">USD</option>
-                      <option value="EUR">EUR</option>
-                      <option value="GBP">GBP</option>
-                      <option value="CAD">CAD</option>
-                      <option value="AUD">AUD</option>
-                    </select>
-                  </div>
-                  <p className={`text-xs mt-2 ${
-                    proposal.amount_cents == null ? "text-amber-500" : "text-muted-foreground"
-                  }`}>
-                    {clientPaid
-                      ? "✓ Paid in full"
-                      : proposal.amount_cents
-                        ? "This is the amount your client will pay"
-                        : "Set a payment amount to enable client payment"}
-                  </p>
+                  ) : (
+                    <>
+                      <div className="flex items-stretch gap-2 max-w-md">
+                        <div className="relative flex-1">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base text-muted-foreground pointer-events-none">
+                            {proposal.currency === "EUR" ? "€" : proposal.currency === "GBP" ? "£" : "$"}
+                          </span>
+                          <Input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            inputMode="decimal"
+                            placeholder="0.00"
+                            value={proposal.amount_cents != null ? (proposal.amount_cents / 100).toString() : ""}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              const cents = v === "" ? null : Math.round(parseFloat(v) * 100);
+                              setProposal({ ...proposal, amount_cents: Number.isFinite(cents as number) ? (cents as number) : null });
+                            }}
+                            onBlur={async () => {
+                              const cents = proposal.amount_cents;
+                              const { error } = await supabase
+                                .from("proposals")
+                                .update({ amount_cents: cents, currency: proposal.currency || defaultCurrency })
+                                .eq("id", proposal.id);
+                              if (error) {
+                                toast({ title: "Couldn't save amount", description: error.message, variant: "destructive" });
+                              } else {
+                                toast({ title: "Amount saved" });
+                              }
+                            }}
+                            className={`h-12 pl-8 text-lg font-semibold ${
+                              proposal.amount_cents == null
+                                ? "border-amber-500/40 focus-visible:ring-amber-500/30"
+                                : ""
+                            }`}
+                          />
+                        </div>
+                        <select
+                          value={proposal.currency || defaultCurrency}
+                          onChange={async (e) => {
+                            const currency = e.target.value;
+                            setProposal({ ...proposal, currency });
+                            await supabase.from("proposals").update({ currency }).eq("id", proposal.id);
+                          }}
+                          className="h-12 rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground"
+                        >
+                          <option value="USD">USD</option>
+                          <option value="EUR">EUR</option>
+                          <option value="GBP">GBP</option>
+                          <option value="CAD">CAD</option>
+                          <option value="AUD">AUD</option>
+                        </select>
+                      </div>
+                      <p className={`text-xs mt-2 ${
+                        proposal.amount_cents == null ? "text-amber-500" : "text-muted-foreground"
+                      }`}>
+                        {clientPaid
+                          ? "✓ Paid in full"
+                          : proposal.amount_cents
+                            ? "This is the amount your client will pay"
+                            : "Set a payment amount to enable client payment"}
+                      </p>
+                    </>
+                  )}
                 </>
               )}
             </div>
