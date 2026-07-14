@@ -148,23 +148,7 @@ function deriveExactCommercials(p: any):
   return { ...totals, taxRatePercent: Number.isFinite(taxRatePercent) ? (taxRatePercent as number) : 0, taxMode, hasTax };
 }
 
-// Mirrors PAYMENT_TERMS in src/components/settings/BusinessInformationSettings.tsx
-function paymentTermsPhrase(code?: string | null, dueDays?: number | null): string | null {
-  const raw = (code || "").toString().trim();
-  if (!raw) return null;
-  const key = raw.toLowerCase();
-  const netMatch = key.match(/^net[_\s-]?(\d+)$/);
-  if (netMatch) {
-    const days = dueDays && dueDays > 0 ? dueDays : parseInt(netMatch[1], 10);
-    return `Payment due within ${days} days of invoice.`;
-  }
-  if (key === "due_immediately" || key === "immediate" || key === "on_receipt") {
-    return "Payment due immediately upon receipt of invoice.";
-  }
-  // If the stored value is already a human-readable phrase (e.g. legacy "50% deposit, 50% on completion"), pass it through.
-  if (raw.length > 3 && /\s/.test(raw)) return raw.endsWith(".") ? raw : `${raw}.`;
-  return null;
-}
+// paymentTermsPhrase moved to ../_shared/commercial-calc.ts (imported above).
 
 function buildClientContext(p: any) {
 
