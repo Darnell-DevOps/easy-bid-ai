@@ -164,7 +164,7 @@ export default function ContractDetail() {
           userId: contract.user_id,
           idempotencyKey: `contract-sent-${contract.id}`,
           data: {
-            from_name: contract.company_name || ownerName || "Your contact",
+            from_name: providerName,
             title: contract.title,
             url: signingUrl,
           },
