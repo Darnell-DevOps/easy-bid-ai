@@ -22,6 +22,37 @@ import { useProposalUsage } from "@/hooks/use-proposal-usage";
 import UpgradeModal from "@/components/plan/UpgradeModal";
 import ProposalLimitBanner from "@/components/plan/ProposalLimitBanner";
 import { PLANS } from "@/lib/plans";
+import { calculateCommercialTotals, type TaxMode } from "@/lib/commercial-calc";
+
+// Conservative parser for ai_preferences.business_services free-text.
+// Splits on commas / newlines / semicolons, trims, drops empties, dedupes
+// case-insensitively. Sanity-check thresholds (drop the whole parse if any
+// piece looks more like prose than a list item):
+//   - any single item longer than 40 characters
+//   - any single item with more than 6 words
+//   - only 1 item produced from an input longer than 60 characters
+export function parseBusinessServices(raw: string | null | undefined): string[] | null {
+  if (!raw || typeof raw !== "string") return null;
+  const src = raw.trim();
+  if (!src) return null;
+  const pieces = src
+    .split(/[,\n;]+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+  if (pieces.length === 0) return null;
+  if (pieces.length === 1 && src.length > 60) return null;
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const p of pieces) {
+    if (p.length > 40) return null;
+    if (p.split(/\s+/).length > 6) return null;
+    const key = p.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(p);
+  }
+  return out.length ? out : null;
+}
 
 const serviceTypes = [
   "Marketing Strategy",
