@@ -905,11 +905,13 @@ export default function ProposalView() {
 
       if (!targetContractId) throw new Error("Could not resolve contract row");
 
+      const providerName = resolveProviderName(ownerBranding);
       const { data: genData, error: genErr } = await supabase.functions.invoke("generate-contract", {
         body: {
           contract_type: contractType,
           client_name: proposal.client_name,
           company_name: proposal.company_name,
+          provider_name: providerName,
           service_type: proposal.service_type,
           project_scope: proposal.project_scope || "",
           timeline: proposal.timeline || "",
