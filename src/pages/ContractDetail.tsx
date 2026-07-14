@@ -285,9 +285,26 @@ export default function ContractDetail() {
                   {isExecuted ? "Download Executed PDF" : "Download PDF"}
                 </Button>
                 {contract.status === "draft" && (
-                  <Button className="gap-2 bg-accent text-accent-foreground" onClick={sendForSignature}>
-                    <Send className="w-4 h-4" /> Send for signature
-                  </Button>
+                  <>
+                    <Button
+                      className="gap-2 bg-accent text-accent-foreground"
+                      onClick={sendViaCloseSync}
+                      disabled={sending || !contract.client_email}
+                      title={!contract.client_email ? "Add a client email to send via CloseSync" : undefined}
+                    >
+                      {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                      Send via CloseSync email
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="gap-2"
+                      onClick={markAsSentManually}
+                      disabled={markingSent}
+                    >
+                      {markingSent ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckSquare className="w-4 h-4" />}
+                      Mark as sent — I sent it myself
+                    </Button>
+                  </>
                 )}
                 {isAwaitingCountersign && (
                   <Button
