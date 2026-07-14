@@ -29,6 +29,7 @@ import ProposalAuditPanel from "@/components/ai/ProposalAuditPanel";
 import TemplateEditorDialog from "@/components/templates/TemplateEditorDialog";
 import { Bookmark } from "lucide-react";
 import { calculateCommercialTotals } from "@/lib/commercial-calc";
+import { resolveProviderName } from "@/lib/provider-identity";
 
 interface ProposalData {
   id: string;
