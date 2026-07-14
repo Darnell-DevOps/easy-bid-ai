@@ -1030,7 +1030,7 @@ export default function ProposalView() {
                           const cents = proposal.amount_cents;
                           const { error } = await supabase
                             .from("proposals")
-                            .update({ amount_cents: cents, currency: proposal.currency || "USD" })
+                            .update({ amount_cents: cents, currency: proposal.currency || defaultCurrency })
                             .eq("id", proposal.id);
                           if (error) {
                             toast({ title: "Couldn't save amount", description: error.message, variant: "destructive" });
