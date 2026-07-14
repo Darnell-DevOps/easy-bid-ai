@@ -338,6 +338,7 @@ export default function ContractSignPage() {
   }
 
   const isSigned = contract.status === "signed" || contract.status === "executed";
+  const isDraft = contract.status === "draft";
   const isExecuted = contract.status === "executed";
   const clientSig = signatures.find((s) => s.signer_role === "client") || signatures.find((s) => !s.signer_role) || null;
   const providerSig = signatures.find((s) => s.signer_role === "provider") || null;
@@ -372,6 +373,10 @@ export default function ContractSignPage() {
             <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-purple bg-purple/10 px-2.5 py-1 rounded-full">
               <CheckCircle2 className="w-3.5 h-3.5" /> Signed — awaiting countersignature
             </span>
+          ) : isDraft ? (
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
+              <Lock className="w-3.5 h-3.5" /> Being prepared
+            </span>
           ) : (
             <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-purple bg-purple/10 px-2.5 py-1 rounded-full">
               <Lock className="w-3.5 h-3.5" /> Awaiting signature
@@ -403,8 +408,20 @@ export default function ContractSignPage() {
           <SignatureBlock signatures={signatures as any} />
         </section>
 
-        {/* Signature OR success */}
-        {isSigned ? (
+        {/* Signature OR success OR draft */}
+        {isDraft ? (
+          <section className="rounded-xl border border-border bg-card p-6 lg:p-10 text-center">
+            <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-4">
+              <Lock className="w-6 h-6 text-muted-foreground" />
+            </div>
+            <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-2">
+              This agreement is still being prepared
+            </h2>
+            <p className="text-muted-foreground text-sm max-w-md mx-auto">
+              It's not yet available for signature. Please check back soon, or contact the person who sent you this link if you need it urgently.
+            </p>
+          </section>
+        ) : isSigned ? (
           <section className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-6 lg:p-10 text-center">
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/15 mb-4">
               <CheckCircle2 className="w-6 h-6 text-emerald-500" />
