@@ -56,8 +56,11 @@ const CURRENCIES = [
   { code: "GBP", symbol: "£", locale: "en-GB" },
   { code: "USD", symbol: "$", locale: "en-US" },
   { code: "EUR", symbol: "€", locale: "en-IE" },
+  { code: "CAD", symbol: "C$", locale: "en-CA" },
+  { code: "AUD", symbol: "A$", locale: "en-AU" },
 ] as const;
 type CurrencyCode = typeof CURRENCIES[number]["code"];
+const CURRENCY_CODES = CURRENCIES.map((c) => c.code) as readonly CurrencyCode[];
 const getCurrency = (code: CurrencyCode) => CURRENCIES.find((c) => c.code === code) || CURRENCIES[0];
 
 const formatBudget = (digits: string, currency: CurrencyCode = "GBP") => {
@@ -68,12 +71,17 @@ const formatBudget = (digits: string, currency: CurrencyCode = "GBP") => {
   return `${c.symbol}${n.toLocaleString(c.locale)}`;
 };
 
-// Detect currency from a prefilled string like "$5,000" or "€2000"
-function detectCurrency(raw: string | undefined | null): CurrencyCode {
-  if (!raw) return "GBP";
-  if (raw.includes("$")) return "USD";
+// Detect currency from a prefilled string like "$5,000" or "€2000".
+// Returns null when nothing detectable is present so the caller can fall back
+// to the user's business_branding default instead of guessing GBP.
+function detectCurrency(raw: string | undefined | null): CurrencyCode | null {
+  if (!raw) return null;
+  if (raw.includes("£")) return "GBP";
   if (raw.includes("€")) return "EUR";
-  return "GBP";
+  if (/C\$/i.test(raw)) return "CAD";
+  if (/A\$/i.test(raw)) return "AUD";
+  if (raw.includes("$")) return "USD";
+  return null;
 }
 
 // Safely analyze a prefilled budget string so we never silently coerce ranges /
@@ -86,7 +94,7 @@ type BudgetAnalysis =
   | { kind: "ambiguous"; currency: CurrencyCode };
 
 export function analyzeBudgetString(raw: string): BudgetAnalysis {
-  const currency = detectCurrency(raw);
+  const currency = detectCurrency(raw) || "GBP";
   const s = (raw || "").trim();
   if (!s) return { kind: "empty", currency };
   const lower = s.toLowerCase();
@@ -173,7 +181,8 @@ export default function NewProposal() {
   const initialBudgetAnalysis = analyzeBudgetString(initialBudgetRaw);
   const initialBudgetDigits =
     initialBudgetAnalysis.kind === "exact" ? String(initialBudgetAnalysis.exactValue) : "";
-  const initialCurrency: CurrencyCode = initialBudgetAnalysis.currency;
+  const detectedPrefillCurrency = detectCurrency(initialBudgetRaw);
+  const initialCurrency: CurrencyCode = detectedPrefillCurrency || "GBP";
   const initialBudgetNotice =
     initialBudgetRaw && initialBudgetAnalysis.kind !== "exact" && initialBudgetAnalysis.kind !== "empty"
       ? initialBudgetRaw
@@ -181,13 +190,13 @@ export default function NewProposal() {
   const initialTimelineRaw = clientPrefill?.timeline || templateData?.prefill?.timeline || "";
   const initialTimeline = parseTimeline(initialTimelineRaw);
 
-  // Smart fallbacks for auto-generation: never reference missing data; use professional placeholders
+  // Smart fallback for auto-generation client name only. Company is genuinely
+  // optional — do not invent a "Your Company" placeholder.
   const fallbackClientName = autoGenerateRequested ? "Prospective Client" : "";
-  const fallbackCompanyName = autoGenerateRequested ? "Your Company" : "";
 
   const [form, setForm] = useState({
     client_name: clientPrefill?.client_name || fallbackClientName,
-    company_name: clientPrefill?.company_name || fallbackCompanyName,
+    company_name: clientPrefill?.company_name || "",
     service_type: clientPrefill?.service_type || templateData?.serviceType || "",
     project_scope:
       clientPrefill?.project_scope || templateData?.prefill?.project_scope || "",
@@ -276,8 +285,8 @@ export default function NewProposal() {
     else if (name.length < 2 || !NAME_REGEX.test(name)) e.client_name = "Enter a valid client name";
 
     const company = form.company_name.trim();
-    if (!company) e.company_name = "Company name is required";
-    else if (!COMPANY_REGEX.test(company)) e.company_name = "Enter a valid company name";
+    // Company is optional — only validate format when the user has actually typed something.
+    if (company && !COMPANY_REGEX.test(company)) e.company_name = "Enter a valid company name";
 
     if (!form.service_type) e.service_type = "Select a service type";
 
@@ -348,11 +357,18 @@ export default function NewProposal() {
     setLoading(true);
 
     const payload = { ...form, budget: formatBudget(form.budget, currency) };
+    const budgetDigits = form.budget;
+    const amountCents = budgetDigits ? parseInt(budgetDigits, 10) * 100 : null;
 
     try {
       const { data: aiData, error: aiError } = await supabase.functions.invoke("generate-proposal", {
         body: {
           ...payload,
+          currency,
+          amount_cents: amountCents,
+          tax_rate: branding?.default_tax_rate ?? null,
+          payment_terms: branding?.default_payment_terms ?? null,
+          invoice_due_days: branding?.default_invoice_due_days ?? null,
           original_lead_message: originalLeadMessage,
           recent_thread: recentThreadSummary || undefined,
         },
@@ -420,9 +436,16 @@ export default function NewProposal() {
           pricing_breakdown: aiData.pricing,
           invoice_content: aiData.invoice,
           client_id: clientId,
+          amount_cents: amountCents,
+          currency,
+          goals: payload.goals || null,
+          deliverables: payload.deliverables || null,
+          tax_rate: branding?.default_tax_rate ?? null,
+          payment_terms: branding?.default_payment_terms ?? null,
         })
         .select()
         .single();
+
 
       if (saveError || !proposal) throw saveError || new Error("Failed to save proposal");
 
@@ -454,6 +477,18 @@ export default function NewProposal() {
 
   const [savedClients, setSavedClients] = useState<Array<{ id: string; name: string; company: string | null; service_requested: string | null; project_description: string | null; budget: string | null; timeline: string | null; goals: string | null; }>>([]);
 
+  // Business branding defaults (currency / tax rate / payment terms / invoice due days).
+  const [branding, setBranding] = useState<{
+    default_currency: string | null;
+    default_tax_rate: number | null;
+    default_payment_terms: string | null;
+    default_invoice_due_days: number | null;
+  } | null>(null);
+
+  // User's own catalogue of service types (from their saved proposal_templates).
+  // Falls back to the generic serviceTypes list when the user has none saved.
+  const [userServiceTypes, setUserServiceTypes] = useState<string[] | null>(null);
+
   useEffect(() => {
     supabase
       .from("clients")
@@ -461,7 +496,34 @@ export default function NewProposal() {
       .order("created_at", { ascending: false })
       .limit(50)
       .then(({ data }) => setSavedClients((data as any) || []));
+
+    supabase
+      .from("business_branding")
+      .select("default_currency, default_tax_rate, default_payment_terms, default_invoice_due_days")
+      .maybeSingle()
+      .then(({ data }) => {
+        setBranding((data as any) || null);
+        const def = (data as any)?.default_currency;
+        // Only override the currency default when no prefill actually contained one.
+        if (!detectedPrefillCurrency && def && (CURRENCY_CODES as readonly string[]).includes(def)) {
+          setCurrency(def as CurrencyCode);
+        }
+      });
+
+    supabase
+      .from("proposal_templates")
+      .select("service_type")
+      .then(({ data }) => {
+        const distinct = Array.from(
+          new Set(((data as any[]) || []).map((r) => (r?.service_type || "").trim()).filter(Boolean)),
+        );
+        setUserServiceTypes(distinct.length ? [...distinct, "Other"] : null);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const effectiveServiceTypes = userServiceTypes && userServiceTypes.length ? userServiceTypes : serviceTypes;
+
 
   const handleGenerateFromClient = (clientId: string) => {
     const c = savedClients.find((x) => x.id === clientId);
@@ -651,7 +713,7 @@ export default function NewProposal() {
                         <SelectValue placeholder="What service are you offering?" />
                       </SelectTrigger>
                       <SelectContent>
-                        {serviceTypes.map((s) => (
+                        {effectiveServiceTypes.map((s) => (
                           <SelectItem key={s} value={s}>{s}</SelectItem>
                         ))}
                       </SelectContent>
@@ -681,7 +743,9 @@ export default function NewProposal() {
                   <FieldError field="client_name" />
                 </div>
                 <div>
-                  <Label htmlFor="company_name">Company Name</Label>
+                  <Label htmlFor="company_name">
+                    Company Name <span className={optionalLabel}>Optional</span>
+                  </Label>
                   <div className="relative mt-2">
                     <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
@@ -693,7 +757,6 @@ export default function NewProposal() {
                       }}
                       onBlur={() => markTouched("company_name")}
                       placeholder="Their company or organisation"
-                      required
                       className={`pl-10 pr-10 ${inputStateClass("company_name", form.company_name)}`}
                     />
                     <FieldStatusIcon field="company_name" value={form.company_name} />
