@@ -109,6 +109,7 @@ function parsePricing(content: string): {
     total,
     subtotal,
     vat,
+    vatLabel,
     paymentTerms,
     included,
   };
