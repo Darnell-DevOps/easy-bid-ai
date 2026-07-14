@@ -209,10 +209,22 @@ export default function NewRetainerPage() {
     navigate(`/dashboard/retainers/${data!.id}`);
   };
 
-  const previewMonthly =
-    amount && Number(amount) > 0
-      ? formatMoney(Math.round(Number(amount) * 100), currency)
-      : null;
+  const amountCentsNum =
+    amount && Number(amount) > 0 ? Math.round(Number(amount) * 100) : 0;
+  const parsedTaxRate = taxRate.trim() === "" ? null : Number(taxRate);
+  const previewTotals = calculateCommercialTotals(
+    amountCentsNum,
+    taxMode === "none" ? null : parsedTaxRate,
+    taxMode,
+  );
+  const previewMonthly = amountCentsNum > 0 ? formatMoney(amountCentsNum, currency) : null;
+  const previewFinal =
+    amountCentsNum > 0 ? formatMoney(previewTotals.totalCents, currency) : null;
+  const hasTax =
+    (taxMode === "exclusive" || taxMode === "inclusive") &&
+    parsedTaxRate != null &&
+    Number.isFinite(parsedTaxRate) &&
+    parsedTaxRate > 0;
 
   // Step 1 view
   if (!templateKey) {
