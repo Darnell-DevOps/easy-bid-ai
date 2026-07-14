@@ -932,6 +932,9 @@ export default function ClientPortal() {
               </div>
             </div>
           </section>
+        )}
+
+
 
         {/* Accepted but contract not yet ready — honest "being prepared" state */}
         {isAccepted && (!contract || contract.status === "draft") && (
