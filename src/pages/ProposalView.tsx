@@ -123,6 +123,17 @@ export default function ProposalView() {
 
   const [leadContext, setLeadContext] = useState<{ original_lead_message?: string; recent_thread?: string }>({});
   const [defaultCurrency, setDefaultCurrency] = useState<string>("USD");
+  const [ownerBranding, setOwnerBranding] = useState<{
+    business_name: string | null;
+    tagline: string | null;
+    logo_url: string | null;
+    brand_color: string | null;
+    brand_secondary_color: string | null;
+    show_logo_on_proposals: boolean | null;
+    proposal_cover_show_name: boolean | null;
+    proposal_cover_show_tagline: boolean | null;
+    proposal_cover_show_date: boolean | null;
+  } | null>(null);
 
   const buildSourcePayload = () => {
     if (!proposal) return null;
