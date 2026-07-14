@@ -284,22 +284,26 @@ export default function ProposalView() {
               currency: proposal.currency || "USD",
             }).format((proposal.amount_cents || 0) / 100)
           : undefined;
-      const res = await sendEmail({
-        templateName: "proposal-sent",
-        recipientEmail: clientEmail,
-        userId: udata.user?.id,
-        idempotencyKey: `proposal-sent-${proposal.id}`,
-        data: {
-          from_name: fromName,
-          title: proposal.client_name,
-          amount,
-          url: `${window.location.origin}/proposal/view/${proposal.id}`,
+      // Call the edge function directly instead of the `sendEmail` helper —
+      // the helper swallows errors, but here we must be certain the send
+      // succeeded before marking the proposal as sent.
+      const { data: res, error: sendErr } = await supabase.functions.invoke("send-email", {
+        body: {
+          templateName: "proposal-sent",
+          recipientEmail: clientEmail,
+          userId: udata.user?.id,
+          idempotencyKey: `proposal-sent-${proposal.id}`,
+          data: {
+            from_name: fromName,
+            title: proposal.client_name,
+            amount,
+            url: `${window.location.origin}/proposal/view/${proposal.id}`,
+          },
         },
       });
-      // Treat any thrown/rejected result as failure. `sendEmail` may resolve
-      // with a response object — if it exposes an explicit error flag, honor it.
+      if (sendErr) throw new Error(sendErr.message || "Email send failed");
       if (res && typeof res === "object" && (res as any).error) {
-        throw new Error((res as any).error?.message || "Email send failed");
+        throw new Error((res as any).error?.message || (res as any).error || "Email send failed");
       }
       if (currentStatus === "draft") await updateStatus("sent", "system");
       toast({ title: "Sent via CloseSync", description: `Email delivered to ${clientEmail}.` });
