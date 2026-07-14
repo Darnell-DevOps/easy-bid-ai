@@ -133,7 +133,24 @@ function paymentTermsPhrase(code?: string | null, dueDays?: number | null): stri
   // If the stored value is already a human-readable phrase (e.g. legacy "50% deposit, 50% on completion"), pass it through.
   if (raw.length > 3 && /\s/.test(raw)) return raw.endsWith(".") ? raw : `${raw}.`;
   return null;
+
+function buildClientContext(p: any) {
+  const lines = [
+    `- Client: ${p.client_name}`,
+    `- Company: ${p.company_name}`,
+    `- Service: ${p.service_type}`,
+    `- Scope: ${p.project_scope}`,
+    `- Budget: ${p.budget}`,
+    `- Timeline: ${p.timeline}`,
+  ];
+  if (p.goals) lines.push(`- Client goals/desired outcomes: ${p.goals}`);
+  if (p.deliverables) lines.push(`- Confirmed deliverables: ${p.deliverables}`);
+  if (p.original_lead_message) lines.push(`- Original lead enquiry: ${p.original_lead_message}`);
+  if (p.recent_thread) lines.push(`- Later clarification from client: ${p.recent_thread}`);
+  if (p.notes) lines.push(`- Additional context: ${p.notes}`);
+  return lines.join("\n");
 }
+
 
 function buildSystemPrompt() {
   return `You are an elite business proposal writer for agencies and consultants. You produce polished, client-ready proposals that read as if crafted by a top-tier agency strategist.
