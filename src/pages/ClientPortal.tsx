@@ -899,7 +899,7 @@ export default function ClientPortal() {
               Why clients choose us
             </p>
             <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-6">
-              Built for results, trusted by teams
+              What you can expect
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
