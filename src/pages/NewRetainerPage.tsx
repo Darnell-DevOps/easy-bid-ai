@@ -24,6 +24,7 @@ import {
   formatMoney,
   intervalLabel,
 } from "@/lib/retainers";
+import { calculateCommercialTotals, type TaxMode } from "@/lib/commercial-calc";
 import { ArrowLeft, Repeat, Sparkles, Check } from "lucide-react";
 
 interface ClientLite {
@@ -60,6 +61,8 @@ export default function NewRetainerPage() {
   const [endDate, setEndDate] = useState("");
   const [autoRenew, setAutoRenew] = useState(true);
   const [notes, setNotes] = useState("");
+  const [taxRate, setTaxRate] = useState<string>("");
+  const [taxMode, setTaxMode] = useState<TaxMode>("none");
 
   useEffect(() => {
     (async () => {
@@ -68,6 +71,24 @@ export default function NewRetainerPage() {
         .select("id, name, email, company")
         .order("name");
       setClients((data as ClientLite[]) || []);
+
+      // Prefill tax defaults from business_branding.
+      const { data: userRes } = await supabase.auth.getUser();
+      const uid = userRes.user?.id;
+      if (uid) {
+        const { data: branding } = await supabase
+          .from("business_branding")
+          .select("default_tax_rate, default_tax_mode")
+          .eq("user_id", uid)
+          .maybeSingle();
+        if (branding) {
+          if (branding.default_tax_rate != null) {
+            setTaxRate(String(branding.default_tax_rate));
+          }
+          const mode = (branding.default_tax_mode as TaxMode) ?? "none";
+          setTaxMode(mode === "exclusive" || mode === "inclusive" ? mode : "none");
+        }
+      }
     })();
   }, []);
 
@@ -158,6 +179,11 @@ export default function NewRetainerPage() {
         title: title.trim() || "Monthly Retainer",
         description: description.trim() || null,
         amount_cents: Math.round(amountNum * 100),
+        tax_rate:
+          taxMode === "none" || taxRate.trim() === ""
+            ? null
+            : Number(taxRate) || null,
+        tax_mode: taxMode,
         currency,
         billing_interval: billingInterval,
         custom_interval_days: customInterval,
@@ -183,10 +209,22 @@ export default function NewRetainerPage() {
     navigate(`/dashboard/retainers/${data!.id}`);
   };
 
-  const previewMonthly =
-    amount && Number(amount) > 0
-      ? formatMoney(Math.round(Number(amount) * 100), currency)
-      : null;
+  const amountCentsNum =
+    amount && Number(amount) > 0 ? Math.round(Number(amount) * 100) : 0;
+  const parsedTaxRate = taxRate.trim() === "" ? null : Number(taxRate);
+  const previewTotals = calculateCommercialTotals(
+    amountCentsNum,
+    taxMode === "none" ? null : parsedTaxRate,
+    taxMode,
+  );
+  const previewMonthly = amountCentsNum > 0 ? formatMoney(amountCentsNum, currency) : null;
+  const previewFinal =
+    amountCentsNum > 0 ? formatMoney(previewTotals.totalCents, currency) : null;
+  const hasTax =
+    (taxMode === "exclusive" || taxMode === "inclusive") &&
+    parsedTaxRate != null &&
+    Number.isFinite(parsedTaxRate) &&
+    parsedTaxRate > 0;
 
   // Step 1 view
   if (!templateKey) {
@@ -381,6 +419,52 @@ export default function NewRetainerPage() {
                 </Select>
               </div>
             </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label>Tax mode</Label>
+                <Select value={taxMode ?? "none"} onValueChange={(v) => setTaxMode(v as TaxMode)}>
+                  <SelectTrigger className="mt-1.5">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No tax</SelectItem>
+                    <SelectItem value="exclusive">Add tax on top of prices</SelectItem>
+                    <SelectItem value="inclusive">Prices already include tax</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {taxMode !== "none" && (
+                <div>
+                  <Label>Tax rate (%)</Label>
+                  <Input
+                    type="number"
+                    inputMode="decimal"
+                    value={taxRate}
+                    onChange={(e) => setTaxRate(e.target.value)}
+                    className="mt-1.5"
+                    placeholder="20"
+                    min={0}
+                  />
+                </div>
+              )}
+            </div>
+
+            {previewFinal && (
+              <div className="rounded-md border border-border/60 bg-secondary/40 p-3 text-xs text-muted-foreground">
+                <div className="flex items-center justify-between">
+                  <span>Client is charged per billing cycle</span>
+                  <span className="text-sm font-semibold text-foreground">{previewFinal}</span>
+                </div>
+                {hasTax && (
+                  <div className="mt-1 text-[11px]">
+                    {taxMode === "exclusive"
+                      ? `${formatMoney(amountCentsNum, currency)} + ${parsedTaxRate}% tax`
+                      : `Includes ${parsedTaxRate}% tax`}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>

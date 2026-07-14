@@ -15,6 +15,7 @@ import {
   computeNextBillingDate,
   daysUntil,
 } from "@/lib/retainers";
+import { calculateCommercialTotals } from "@/lib/commercial-calc";
 import {
   ArrowLeft,
   Pause,
@@ -41,6 +42,8 @@ interface Retainer {
   description: string | null;
   amount_cents: number;
   currency: string;
+  tax_rate: number | null;
+  tax_mode: string | null;
   billing_interval: string;
   custom_interval_days: number | null;
   status: string;
@@ -181,10 +184,16 @@ export default function RetainerDetail() {
     const userId = userRes.user?.id;
     if (!userId) return;
 
+    const { totalCents: chargedCents } = calculateCommercialTotals(
+      retainer.amount_cents,
+      retainer.tax_rate,
+      retainer.tax_mode as any,
+    );
+
     await supabase.from("retainer_invoices").insert({
       user_id: userId,
       retainer_id: retainer.id,
-      amount_cents: retainer.amount_cents,
+      amount_cents: chargedCents,
       currency: retainer.currency,
       due_date: retainer.next_billing_date || new Date().toISOString().slice(0, 10),
       paid_at: new Date().toISOString(),
@@ -195,7 +204,7 @@ export default function RetainerDetail() {
       {
         last_billed_date: new Date().toISOString().slice(0, 10),
         next_billing_date: next.toISOString().slice(0, 10),
-        total_billed_cents: retainer.total_billed_cents + retainer.amount_cents,
+        total_billed_cents: retainer.total_billed_cents + chargedCents,
         total_payments_count: retainer.total_payments_count + 1,
         has_failed_payment: false,
         failed_payment_reason: null,
@@ -258,11 +267,29 @@ export default function RetainerDetail() {
   const isActive = retainer.status === "active";
   const isPaused = retainer.status === "paused";
   const isCancelled = retainer.status === "cancelled";
-  const mrr = monthlyEquivalentCents(
+  const { totalCents: finalChargedCents } = calculateCommercialTotals(
     retainer.amount_cents,
+    retainer.tax_rate,
+    retainer.tax_mode as any,
+  );
+  const mrr = monthlyEquivalentCents(
+    finalChargedCents,
     retainer.billing_interval,
     retainer.custom_interval_days,
   );
+  const taxRateNum =
+    typeof retainer.tax_rate === "number" && Number.isFinite(retainer.tax_rate)
+      ? retainer.tax_rate
+      : null;
+  const hasRealTax =
+    (retainer.tax_mode === "exclusive" || retainer.tax_mode === "inclusive") &&
+    taxRateNum != null &&
+    taxRateNum > 0;
+  const taxSubtitle = hasRealTax
+    ? retainer.tax_mode === "exclusive"
+      ? `incl. ${taxRateNum}% tax`
+      : `${taxRateNum}% tax included`
+    : null;
   const renewIn = daysUntil(retainer.end_date);
 
   return (
@@ -465,7 +492,15 @@ export default function RetainerDetail() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <StatCard label="Amount" value={formatMoney(retainer.amount_cents, retainer.currency)} sub={`/ ${intervalLabel(retainer.billing_interval, retainer.custom_interval_days).toLowerCase()}`} />
+          <StatCard
+            label="Amount"
+            value={formatMoney(finalChargedCents, retainer.currency)}
+            sub={
+              taxSubtitle
+                ? `${taxSubtitle} · / ${intervalLabel(retainer.billing_interval, retainer.custom_interval_days).toLowerCase()}`
+                : `/ ${intervalLabel(retainer.billing_interval, retainer.custom_interval_days).toLowerCase()}`
+            }
+          />
           <StatCard label="Monthly equivalent" value={formatMoney(mrr, retainer.currency)} />
           <StatCard
             label="Next billing"
