@@ -144,6 +144,7 @@ export default function ClientPortal() {
   const [bookings, setBookings] = useState<BookingLite[]>([]);
   const { openCheckout, loading: payLoading, available: paymentsAvailable } = useProposalCheckout();
   const [paymentConfirmMsg, setPaymentConfirmMsg] = useState<string | null>(null);
+  const [branding, setBranding] = useState<PortalBranding | null>(null);
 
   // Safety net: when Paddle hard-redirects back with ?paid=1, poll for the
   // webhook to flip client_paid before trusting the initial fetch.
