@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import ContractRenderer from "@/components/contracts/ContractRenderer";
 import SignatureBlock from "@/components/contracts/SignatureBlock";
 import CountersignDialog from "@/components/contracts/CountersignDialog";
-import { Loader2, ArrowLeft, Copy, ExternalLink, Send, CheckCircle2, Clock, Eye, Download, FileSignature, Mail, CheckSquare } from "lucide-react";
+import { Loader2, ArrowLeft, Copy, ExternalLink, Send, CheckCircle2, Clock, Eye, Download, FileSignature, Mail, CheckSquare, MessageCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { contractTypeLabel, type ContractRow, type ContractSignatureRow } from "@/lib/contracts";
 import { sendEmail } from "@/lib/email";
@@ -111,6 +111,8 @@ export default function ContractDetail() {
   const signingUrl = `${window.location.origin}/sign/${contract.signing_token}`;
 
   const copyLink = async () => {
+    const { blocked, missing } = hasCriticalPlaceholders();
+    if (blocked) { showPlaceholderBlockedToast(missing); return; }
     await navigator.clipboard.writeText(signingUrl);
     toast({ title: "Link copied" });
   };
@@ -282,14 +284,34 @@ export default function ContractDetail() {
                     <ExternalLink className="w-4 h-4" /> Open
                   </a>
                 </Button>
-                <WhatsAppButton
-                  phone={clientPhone}
-                  context="contract"
-                  vars={{ clientName: contract.client_name, link: signingUrl }}
-                  variant="outline"
-                  size="default"
-                  label="WhatsApp"
-                />
+                {(() => {
+                  const { blocked, missing } = hasCriticalPlaceholders();
+                  if (blocked) {
+                    return (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="default"
+                        onClick={() => showPlaceholderBlockedToast(missing)}
+                        className="gap-2 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 border-emerald-500/30"
+                        aria-label="WhatsApp"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" />
+                        <span className="ml-1.5">WhatsApp</span>
+                      </Button>
+                    );
+                  }
+                  return (
+                    <WhatsAppButton
+                      phone={clientPhone}
+                      context="contract"
+                      vars={{ clientName: contract.client_name, link: signingUrl }}
+                      variant="outline"
+                      size="default"
+                      label="WhatsApp"
+                    />
+                  );
+                })()}
                 <Button variant="outline" className="gap-2" onClick={downloadPdf} disabled={downloading}>
                   {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                   {isExecuted ? "Download Executed PDF" : "Download PDF"}
