@@ -15,6 +15,7 @@ import {
   computeNextBillingDate,
   daysUntil,
 } from "@/lib/retainers";
+import { calculateCommercialTotals } from "@/lib/commercial-calc";
 import {
   ArrowLeft,
   Pause,
