@@ -74,7 +74,7 @@ function buildPrompt(payload: any) {
     `- Scope: ${payload.project_scope || ""}`,
     `- Timeline: ${payload.timeline || ""}`,
     `- Total Fee: ${payload.budget || ""}`,
-    `- Payment Terms: ${payload.payment_terms || "50% deposit, 50% on completion"}`,
+    `- Payment Terms: ${payload.payment_terms || "Payment terms as agreed"}`,
     `- Effective Date: ${payload.effective_date || new Date().toISOString().slice(0, 10)}`,
   ];
   if (payload.extra_clauses) {
@@ -133,7 +133,7 @@ ${payload.timeline || "To be agreed."}
 
 ## 5. Fees & Payment Terms
 - Total Fee: ${payload.budget || "[Total Fee]"}
-- Payment Terms: ${payload.payment_terms || "50% deposit upfront, 50% on completion"}
+- Payment Terms: ${payload.payment_terms || "Payment terms as agreed"}
 - Invoices are payable within 7 days of issue unless agreed otherwise.
 
 ## 6. Revisions & Acceptance

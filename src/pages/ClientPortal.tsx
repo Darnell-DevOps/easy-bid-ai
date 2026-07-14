@@ -56,6 +56,7 @@ interface PublicProposal {
   amount_cents: number | null;
   currency: string | null;
   client_paid: boolean;
+  payment_terms: string | null;
 }
 
 interface BookingLinkLite {
@@ -302,16 +303,19 @@ export default function ClientPortal() {
     // Auto-draft a contract and immediately make it available for signing
     if (!contract) {
       try {
+        const contractType = /retainer/i.test(proposal.service_type || "")
+          ? "retainer_agreement"
+          : "service_agreement";
         const { data } = await supabase.functions.invoke("generate-contract", {
           body: {
-            contract_type: "service_agreement",
+            contract_type: contractType,
             client_name: proposal.client_name,
             company_name: proposal.company_name,
             service_type: proposal.service_type,
             project_scope: (proposal as any).project_scope || "",
             timeline: (proposal as any).timeline || "",
             budget: formattedTotal || "",
-            payment_terms: "50% deposit, 50% on completion",
+            payment_terms: proposal.payment_terms || undefined,
           },
         });
         if (data?.body) {
@@ -321,8 +325,8 @@ export default function ClientPortal() {
               user_id: proposal.user_id,
               proposal_id: proposal.id,
               client_id: (proposal as any).client_id || null,
-              contract_type: "service_agreement",
-              title: data.title || "Service Agreement",
+              contract_type: contractType,
+              title: data.title || (contractType === "retainer_agreement" ? "Retainer Agreement" : "Service Agreement"),
               body: data.body,
               client_name: proposal.client_name,
               company_name: proposal.company_name,
