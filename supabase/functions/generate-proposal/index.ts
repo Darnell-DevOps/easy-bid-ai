@@ -367,19 +367,42 @@ function buildSectionPrompt(p: any, section: string) {
     ? `PREVIOUS VERSION OF THIS SECTION (this is a regeneration request — produce a genuinely different take: new opening line, different structure or ordering of points, different specific phrasing and word choice — do not restate this almost verbatim, but keep it factually consistent with the client details):\n${currentSectionText}\n\n`
     : "";
   const currency = currencyCodeFor(p.currency);
-  const symbol = currencySymbolFor(p.currency);
-  const taxRate = typeof p.tax_rate === "number" ? p.tax_rate : parseFloat(p.tax_rate);
-  const hasTax = Number.isFinite(taxRate) && taxRate > 0;
+  const symbol = currencySymbolFor(currency);
+  const exact = deriveExactCommercials(p);
+  const hasTax = exact ? exact.hasTax : (Number.isFinite(parseFloat(p.tax_rate)) && parseFloat(p.tax_rate) > 0);
+  const taxRate = exact ? exact.taxRatePercent : parseFloat(p.tax_rate);
   const paymentPhrase = paymentTermsPhrase(p.payment_terms, p.invoice_due_days);
+
+  // Deterministic Next Steps — regenerating this section must produce the exact
+  // same journey bullets, not an improvised alternative.
+  if (section === "Next Steps") {
+    const steps = buildNextSteps(p);
+    return `Rewrite the "Next Steps" section of the proposal. You MUST output EXACTLY the following ${steps.length} bullets, in this order, with no additions, removals, rewording, or reordering — this reflects the real CloseSync client onboarding journey:
+${steps.map((s) => `- ${s}`).join("\n")}
+
+${tone ? tone + "\n\n" : ""}Return valid JSON with a single key "section" whose value is Markdown starting with "## Next Steps" as the heading, followed by exactly those bullets. No code fences. No commentary.`;
+  }
+
+  const commercialBlock = exact
+    ? `COMMERCIAL PARAMETERS (exact figures — must remain consistent with the rest of the proposal; display precisely, do not recalculate):
+- Currency: ${currency} — use the "${symbol}" symbol for any price shown.
+- Subtotal: ${formatCents(exact.subtotalCents, currency)}
+- Tax mode: ${exact.taxMode ?? "none"}${exact.hasTax ? `
+- Tax rate: ${exact.taxRatePercent}%
+- Tax amount: ${formatCents(exact.taxAmountCents, currency)}` : ""}
+- Total payable: ${formatCents(exact.totalCents, currency)}
+- Payment terms: ${paymentPhrase ?? "not specified — use neutral 'Payment terms as agreed'"}.`
+    : `COMMERCIAL PARAMETERS (must remain consistent with the rest of the proposal):
+- Currency: ${currency} — use the "${symbol}" symbol for any price shown.
+- Tax: ${hasTax ? `${taxRate}% applied to subtotal` : "no tax applies"}.
+- Payment terms: ${paymentPhrase ?? "not specified — use neutral 'Payment terms as agreed'"}.`;
+
   return `Rewrite ONLY the "${section}" section of a proposal for this project. Keep it consistent with the rest of the proposal.
 
 CLIENT DETAILS:
 ${buildClientContext(p)}
 
-COMMERCIAL PARAMETERS (must remain consistent with the rest of the proposal):
-- Currency: ${currency} — use the "${symbol}" symbol for any price shown.
-- Tax: ${hasTax ? `${taxRate}% applied to subtotal` : "no tax applies"}.
-- Payment terms: ${paymentPhrase ?? "not specified — use neutral 'Payment terms as agreed'"}.
+${commercialBlock}
 
 TRUTHFULNESS: Do not invent specific percentages, ROI figures, testimonials, awards, years of experience, or delivery guarantees not provided in the client details.
 
