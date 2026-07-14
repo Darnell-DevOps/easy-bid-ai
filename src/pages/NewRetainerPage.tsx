@@ -179,6 +179,11 @@ export default function NewRetainerPage() {
         title: title.trim() || "Monthly Retainer",
         description: description.trim() || null,
         amount_cents: Math.round(amountNum * 100),
+        tax_rate:
+          taxMode === "none" || taxRate.trim() === ""
+            ? null
+            : Number(taxRate) || null,
+        tax_mode: taxMode,
         currency,
         billing_interval: billingInterval,
         custom_interval_days: customInterval,
