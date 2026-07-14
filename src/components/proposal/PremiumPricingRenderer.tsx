@@ -203,7 +203,7 @@ export default function PremiumPricingRenderer({ content, onPayClick, showPayCta
                 )}
                 {parsed.vat && (
                   <tr className="border-t border-border/60 bg-background/40">
-                    <td className="px-5 py-2.5 text-sm text-muted-foreground">VAT</td>
+                    <td className="px-5 py-2.5 text-sm text-muted-foreground">{parsed.vatLabel}</td>
                     <td className="px-5 py-2.5 text-right font-medium text-foreground tabular-nums">
                       {parsed.vat}
                     </td>
