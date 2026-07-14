@@ -338,6 +338,7 @@ export default function ContractSignPage() {
   }
 
   const isSigned = contract.status === "signed" || contract.status === "executed";
+  const isDraft = contract.status === "draft";
   const isExecuted = contract.status === "executed";
   const clientSig = signatures.find((s) => s.signer_role === "client") || signatures.find((s) => !s.signer_role) || null;
   const providerSig = signatures.find((s) => s.signer_role === "provider") || null;
