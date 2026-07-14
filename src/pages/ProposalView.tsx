@@ -1034,8 +1034,6 @@ export default function ProposalView() {
   } else if (followUpScenario !== "none") {
     const meta = FOLLOW_UP_META[followUpScenario];
     alerts.push({ tone: meta.tone, icon: Sparkles, text: `${meta.headline} — ${meta.description}` });
-  } else if (currentStatus === "accepted") {
-    alerts.push({ tone: "success", icon: Banknote, text: "Accepted — request payment now to close the deal." });
   } else if (currentStatus === "draft") {
     alerts.push({ tone: "warning", icon: AlertTriangle, text: "Proposal not sent yet. Send to client to start the clock." });
   } else if (currentStatus === "sent") {
