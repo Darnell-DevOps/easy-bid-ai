@@ -31,6 +31,7 @@ import {
   FileSignature,
   FileText,
   ChevronDown,
+  Star,
 } from "lucide-react";
 
 import { Link as RouterLink } from "react-router-dom";
