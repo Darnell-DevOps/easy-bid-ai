@@ -92,6 +92,49 @@ const toneInstruction = (tone?: string) => {
   }
 };
 
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  GBP: "£",
+  USD: "$",
+  EUR: "€",
+  CAD: "C$",
+  AUD: "A$",
+  NZD: "NZ$",
+  CHF: "CHF ",
+  SEK: "kr ",
+  NOK: "kr ",
+  DKK: "kr ",
+  JPY: "¥",
+};
+
+function currencySymbolFor(code?: string | null): string {
+  const c = (code || "").toString().toUpperCase().trim();
+  if (c && CURRENCY_SYMBOLS[c]) return CURRENCY_SYMBOLS[c];
+  return CURRENCY_SYMBOLS.GBP; // backward-compat default
+}
+
+function currencyCodeFor(code?: string | null): string {
+  const c = (code || "").toString().toUpperCase().trim();
+  return c && CURRENCY_SYMBOLS[c] ? c : "GBP";
+}
+
+// Mirrors PAYMENT_TERMS in src/components/settings/BusinessInformationSettings.tsx
+function paymentTermsPhrase(code?: string | null, dueDays?: number | null): string | null {
+  const raw = (code || "").toString().trim();
+  if (!raw) return null;
+  const key = raw.toLowerCase();
+  const netMatch = key.match(/^net[_\s-]?(\d+)$/);
+  if (netMatch) {
+    const days = dueDays && dueDays > 0 ? dueDays : parseInt(netMatch[1], 10);
+    return `Payment due within ${days} days of invoice.`;
+  }
+  if (key === "due_immediately" || key === "immediate" || key === "on_receipt") {
+    return "Payment due immediately upon receipt of invoice.";
+  }
+  // If the stored value is already a human-readable phrase (e.g. legacy "50% deposit, 50% on completion"), pass it through.
+  if (raw.length > 3 && /\s/.test(raw)) return raw.endsWith(".") ? raw : `${raw}.`;
+  return null;
+}
+
 function buildSystemPrompt() {
   return `You are an elite business proposal writer for agencies and consultants. You produce polished, client-ready proposals that read as if crafted by a top-tier agency strategist.
 
@@ -99,35 +142,51 @@ VOICE & TONE RULES:
 - Professional, confident, and direct — never robotic or generic
 - Client-focused: frame everything around the client's goals, challenges, and outcomes
 - Concise: short paragraphs (2-3 sentences max), no filler or waffle
-- British English, £ for currency
+- British English spelling and phrasing
 - CRITICAL: Never repeat the same phrases across proposals. Vary vocabulary, sentence structure, and opening lines every time.
 - Never use clichés like "It is a pleasure", "We are delighted", "In today's fast-paced world", "look no further", "cutting-edge", "synergy", "leverage" (as a verb), "utilize"
-- Lead with outcomes and results, not process descriptions`;
-}
+- Lead with outcomes and results, not process descriptions
 
-function buildClientContext(p: any) {
-  const lines = [
-    `- Client: ${p.client_name}`,
-    `- Company: ${p.company_name}`,
-    `- Service: ${p.service_type}`,
-    `- Scope: ${p.project_scope}`,
-    `- Budget: ${p.budget}`,
-    `- Timeline: ${p.timeline}`,
-  ];
-  if (p.goals) lines.push(`- Client goals/desired outcomes: ${p.goals}`);
-  if (p.deliverables) lines.push(`- Confirmed deliverables: ${p.deliverables}`);
-  if (p.original_lead_message) lines.push(`- Original lead enquiry: ${p.original_lead_message}`);
-  if (p.recent_thread) lines.push(`- Later clarification from client: ${p.recent_thread}`);
-  if (p.notes) lines.push(`- Additional context: ${p.notes}`);
-  return lines.join("\n");
+TRUTHFULNESS RULES (apply to the entire document — every section):
+- NEVER invent specific percentage improvements, ROI figures, conversion uplifts, revenue numbers, or any quantified guarantees that were not provided in the client details.
+- NEVER fabricate case studies, testimonials, past client names, past client results, awards, certifications, years of experience, team size, or delivery/turnaround guarantees.
+- You may describe intended outcomes, goals, process, and success criteria that could be measured — framed as things the client and business would agree on, NOT as promised numbers.
+- If a fact is not supplied in the client details, do not confidently assert it. Prefer neutral, honest framing over impressive-sounding fabrication.`;
 }
 
 function buildFullPrompt(p: any) {
   const tone = toneInstruction(p.tone);
+  const currency = currencyCodeFor(p.currency);
+  const symbol = currencySymbolFor(p.currency);
+  const taxRate = typeof p.tax_rate === "number" ? p.tax_rate : parseFloat(p.tax_rate);
+  const hasTax = Number.isFinite(taxRate) && taxRate > 0;
+  const paymentPhrase = paymentTermsPhrase(p.payment_terms, p.invoice_due_days);
+
+  const taxInvestmentInstruction = hasTax
+    ? `A tax row must be included in the pricing table and invoice, labeled "Tax (${taxRate}%)", applied to the subtotal. Do NOT call it "VAT" unless the client details explicitly reference VAT.`
+    : `Do NOT include any tax row anywhere. The subtotal equals the total. Do not invent a tax rate.`;
+
+  const paymentTermsInstruction = paymentPhrase
+    ? `**Payment terms:** ${paymentPhrase}`
+    : `**Payment terms:** Payment terms as agreed.`;
+
+  const nextStepsInstruction = `## Next Steps
+Use exactly these five bullets in this order — this reflects the real client onboarding journey and must not be shortened or reworded to imply work begins immediately upon payment:
+- Accept this proposal
+- Sign the service agreement
+- Complete payment
+- Complete the onboarding form
+- Project work begins`;
+
   return `Write a professional, client-ready proposal for this project. Make it specific, practical, and compelling.
 
 CLIENT DETAILS:
 ${buildClientContext(p)}
+
+COMMERCIAL PARAMETERS (use these EXACTLY — do not substitute your own defaults):
+- Currency: ${currency} (use the symbol "${symbol}" for every price shown anywhere in the proposal, pricing table, and invoice — never mix symbols).
+- Tax: ${hasTax ? `${taxRate}% applied to subtotal` : "no tax applies"}.
+- Payment terms phrasing: ${paymentPhrase ?? "not specified — use neutral 'Payment terms as agreed'"}.
 
 ${tone ? tone + "\n\n" : ""}Return valid JSON with exactly three keys: "proposal", "pricing", "invoice".
 
@@ -155,43 +214,44 @@ A bullet list of the final tangible assets the client will receive. Different fr
 Break the project into clear phases with durations. Use bold phase names with hyphenated descriptions (e.g. **Phase 1: Discovery** — Week 1-2: Stakeholder interviews and audit). Be realistic and specific to the stated timeline.
 
 ## Expected Outcomes
-List 4-6 specific, measurable outcomes as bullets. Each tailored to this project — no generic filler. Frame as tangible results (e.g. "30% increase in engagement within 90 days").
+List 4-6 specific outcomes the engagement is aimed at achieving, as bullets, each tailored to this client's stated goals. Describe intended outcomes and success criteria the client and business would agree on — NOT confident numeric guarantees. Frame as agreed measurable signals rather than promised percentages (e.g. "Success can be measured through agreed metrics such as qualified leads generated, engagement rate, and time saved"). Do not invent specific percentages, ROI figures, or timeframes that were not supplied in the client details.
 
 ## Investment
 Format EXACTLY as follows:
 
-**[Total price with £ symbol and comma formatting]**
+**[Total price using the "${symbol}" symbol and comma formatting]**
 
-A 1-2 sentence description of what's included at this price, framed in terms of value and ROI.
+A 1-2 sentence description of what's included at this price, framed in terms of value the client gets — no fabricated ROI numbers.
 
-**Payment terms:** 50% deposit to start, 50% on completion. Invoice payable within 14 days.
+${paymentTermsInstruction}
+
+${hasTax ? `Tax note: a ${taxRate}% tax applies on top of the subtotal (already reflected in the pricing table and invoice).` : ""}
 
 The total must align with the stated budget.
 
 ## Why Choose Us
-3-4 bullet points. Each one short sentence. Cover relevant expertise, results focus, delivery quality, and communication.
+3-4 bullet points. Each one short sentence. Frame this section around genuine working principles the business commits to — for example: clear communication, defined deliverables, transparent milestones, collaborative process, and focused project management. Do NOT invent expertise, years in business, past client results, awards, or testimonials unless the client details explicitly provide verified business proof — in which case you may reference that specifically.
 
-## Next Steps
-Exactly these three bullets in this order:
-- Accept this proposal
-- Make payment
-- Work begins immediately
+${nextStepsInstruction}
 
-"pricing" — A Markdown table with columns: Item | Description | Cost. Add subtotal, VAT (20%), and total rows. Costs must align with the stated budget. No prose before or after the table.
+"pricing" — A Markdown table with columns: Item | Description | Cost. All costs must use the "${symbol}" symbol. Include a Subtotal row. ${taxInvestmentInstruction} Then a Total row. Costs must align with the stated budget. No prose before or after the table.
 
 "invoice" — A professional Markdown invoice with:
-- Invoice number: INV-2026-001
+- Invoice number: Draft — to be assigned (this is a proposal preview only, not a live invoice; do NOT invent a specific invoice number like "INV-2026-001")
 - Date: today's date
 - Bill to: client name and company
-- Table of line items with costs (consistent with pricing breakdown)
-- Subtotal, VAT at 20%, Total
-- Payment terms: Due within 14 days
+- Table of line items with costs using the "${symbol}" symbol (consistent with the pricing breakdown)
+- Subtotal${hasTax ? `, Tax (${taxRate}%)` : ""}, Total
+- Payment terms: ${paymentPhrase ?? "As agreed"}
 
 QUALITY CHECKLIST:
 - Every section references this client's specific project, never generic templates
 - No repeated phrases or sentence patterns across sections
 - Bullet points are concrete, scannable, and actionable
 - Numbers and timelines are realistic for the stated budget
+- Every price uses the "${symbol}" symbol consistently — no mixed currency symbols anywhere
+- ${hasTax ? `Tax row present at ${taxRate}%` : "No tax row anywhere (tax was not configured)"}
+- No fabricated statistics, testimonials, case studies, or guarantees
 - Reads as ready to send — no placeholder text
 - DO NOT add a top-level title or "Project Proposal" heading
 
