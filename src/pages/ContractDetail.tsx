@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { contractTypeLabel, type ContractRow, type ContractSignatureRow } from "@/lib/contracts";
 import { sendEmail } from "@/lib/email";
 import { renderMergeTags } from "@/lib/merge-tags";
+import { resolveProviderName, type ProviderIdentityFields } from "@/lib/provider-identity";
 import { WhatsAppButton } from "@/components/whatsapp/WhatsAppButton";
 import { downloadContractPdf } from "@/lib/contract-pdf";
 
@@ -44,18 +45,27 @@ export default function ContractDetail() {
   const [downloading, setDownloading] = useState(false);
   const [countersignOpen, setCountersignOpen] = useState(false);
   const [ownerName, setOwnerName] = useState("");
+  const [branding, setBranding] = useState<ProviderIdentityFields | null>(null);
   const [sending, setSending] = useState(false);
   const [markingSent, setMarkingSent] = useState(false);
   const pdfRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       const u = data.user;
       if (!u) return;
       const meta: any = u.user_metadata || {};
       setOwnerName(meta.full_name || meta.name || u.email || "");
+      const { data: bb } = await supabase
+        .from("business_branding")
+        .select("legal_name, trading_name, business_name")
+        .eq("user_id", u.id)
+        .maybeSingle();
+      setBranding((bb as ProviderIdentityFields) || null);
     });
   }, []);
+
+  const providerName = resolveProviderName(branding) || ownerName || "Your contact";
 
   const load = async () => {
     if (!id) return;
@@ -154,7 +164,7 @@ export default function ContractDetail() {
           userId: contract.user_id,
           idempotencyKey: `contract-sent-${contract.id}`,
           data: {
-            from_name: contract.company_name || ownerName || "Your contact",
+            from_name: providerName,
             title: contract.title,
             url: signingUrl,
           },
@@ -231,7 +241,7 @@ export default function ContractDetail() {
         data: {
           title: contract.title,
           client_name: contract.client_name,
-          from_name: contract.company_name || ownerName || "Your contact",
+          from_name: providerName,
           url,
         },
       });
