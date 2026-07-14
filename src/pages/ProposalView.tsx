@@ -1002,7 +1002,7 @@ export default function ProposalView() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => updateStatus("rejected")}
+                    onClick={() => updateStatus("rejected", "owner_manual")}
                     className="gap-1.5 h-7 text-[11px] border-rose-500/30 text-rose-500 hover:bg-rose-500/10 hover:text-rose-500"
                   >
                     <XCircle className="w-3 h-3 shrink-0" /> Mark as rejected
@@ -1012,7 +1012,7 @@ export default function ProposalView() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => updateStatus("sent")}
+                    onClick={() => markAsSent()}
                     className="gap-1.5 h-7 text-[11px]"
                   >
                     Reopen proposal
