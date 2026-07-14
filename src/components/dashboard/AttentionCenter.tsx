@@ -70,6 +70,8 @@ interface ContractLite {
   status: string;
   created_at: string;
   signed_at: string | null;
+  proposal_id: string | null;
+  body: string | null;
 }
 
 interface OnboardingLite {
