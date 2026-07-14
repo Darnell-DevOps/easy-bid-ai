@@ -106,8 +106,10 @@ export default function ContractSignPage() {
           });
       }
 
-      // Mark viewed (non-blocking)
-      supabase.rpc("contract_record_view", { _token: token });
+      // Mark viewed (non-blocking) — never for a draft, so it can't advance toward signable.
+      if ((data as any).status !== "draft") {
+        supabase.rpc("contract_record_view", { _token: token });
+      }
 
       // Fetch first booking link from owner (for kickoff CTA)
       (supabase.rpc(
