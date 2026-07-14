@@ -390,6 +390,11 @@ export default function NewProposal() {
     const payload = { ...form, budget: formatBudget(form.budget, currency) };
     const budgetDigits = form.budget;
     const amountCents = budgetDigits ? parseInt(budgetDigits, 10) * 100 : null;
+    const taxMode: TaxMode = branding?.default_tax_mode ?? null;
+    const totals =
+      amountCents != null
+        ? calculateCommercialTotals(amountCents, branding?.default_tax_rate ?? null, taxMode)
+        : null;
 
     try {
       const { data: aiData, error: aiError } = await supabase.functions.invoke("generate-proposal", {
@@ -398,6 +403,10 @@ export default function NewProposal() {
           currency,
           amount_cents: amountCents,
           tax_rate: branding?.default_tax_rate ?? null,
+          tax_mode: taxMode,
+          subtotal_cents: totals?.subtotalCents ?? null,
+          tax_amount_cents: totals?.taxAmountCents ?? null,
+          total_cents: totals?.totalCents ?? null,
           payment_terms: branding?.default_payment_terms ?? null,
           invoice_due_days: branding?.default_invoice_due_days ?? null,
           original_lead_message: originalLeadMessage,
