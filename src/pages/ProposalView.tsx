@@ -577,7 +577,7 @@ export default function ProposalView() {
   /* COVER */
   .cover {
     border: 1px solid #e5e7eb;
-    border-top: 4px solid #6c5ce7;
+    border-top: 4px solid ${accent};
     border-radius: 6px;
     padding: 28px 32px 32px;
     margin-bottom: 32px;
@@ -587,7 +587,7 @@ export default function ProposalView() {
   .cover-brand img { width: 28px; height: 28px; border-radius: 6px; }
   .cover-brand-name { font-size: 11pt; font-weight: 700; color: #111827; letter-spacing: -0.2px; }
   .cover-brand-tag { font-size: 8.5pt; color: #6b7280; margin-left: auto; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
-  .cover-eyebrow { font-size: 9pt; color: #6c5ce7; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
+  .cover-eyebrow { font-size: 9pt; color: ${accent}; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
   .cover-title { font-family: 'Fraunces', 'Inter', serif; font-size: 28pt; font-weight: 700; color: #0f172a; letter-spacing: -0.8px; line-height: 1.1; margin-bottom: 22px; }
   .cover-meta { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px 32px; padding-top: 20px; border-top: 1px solid #f1f5f9; }
   .meta-label { font-size: 8pt; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 4px; }
@@ -611,7 +611,7 @@ export default function ProposalView() {
     position: absolute;
     left: 0; top: 8px; bottom: 8px;
     width: 3px;
-    background: #6c5ce7;
+    background: ${accent};
     border-radius: 2px;
   }
   .section-body h3 {
@@ -645,7 +645,7 @@ export default function ProposalView() {
     flex-shrink: 0;
     width: 6px; height: 6px;
     border-radius: 50%;
-    background: #6c5ce7;
+    background: ${accent};
     margin-top: 8px;
   }
 
@@ -677,8 +677,8 @@ export default function ProposalView() {
   tbody tr:last-child td { border-bottom: none; }
   td.num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; color: #0f172a; }
   tr.total-row td {
-    background: #faf9ff;
-    border-top: 2px solid #6c5ce7;
+    background: ${accentSoftBg};
+    border-top: 2px solid ${accent};
     font-weight: 700;
     color: #0f172a;
     font-size: 11.5pt;
@@ -696,7 +696,7 @@ export default function ProposalView() {
     font-size: 8.5pt;
     color: #94a3b8;
   }
-  .footer-brand { font-weight: 700; color: #6c5ce7; }
+  .footer-brand { font-weight: 700; color: ${accent}; }
 
   /* PRINT */
   @media print {
@@ -712,8 +712,8 @@ export default function ProposalView() {
   <div class="doc">
     <div class="cover">
       <div class="cover-brand">
-        <img src="${LOGO_BASE64}" alt="CloseSync" />
-        <div class="cover-brand-name">CloseSync</div>
+        ${brandLogoUrl ? `<img src="${escapeHtml(brandLogoUrl)}" alt="${escapeHtml(brandName || "Logo")}" />` : ""}
+        ${brandName ? `<div class="cover-brand-name">${escapeHtml(brandName)}</div>` : ""}
         <div class="cover-brand-tag">${type === "proposal" ? "Proposal" : "Invoice"}</div>
       </div>
       <div class="cover-eyebrow">Prepared for ${escapeHtml(proposal?.client_name || "")}</div>
@@ -729,7 +729,7 @@ export default function ProposalView() {
     ${sectionsHtml}
 
     <div class="doc-footer">
-      <div>Prepared by <span class="footer-brand">CloseSync</span></div>
+      <div>${brandName ? `Prepared by <span class="footer-brand">${escapeHtml(brandName)}</span>` : ""}</div>
       <div>Confidential · ${dateStr}</div>
     </div>
   </div>
