@@ -461,7 +461,7 @@ export default function ClientPortal() {
   const needsContractSignature = isAccepted && contract && !isContractSigned;
   const readyToPay = isAccepted && isContractSigned && !isPaid;
   const acceptedNotPaid = isAccepted && !isPaid;
-  const hasPrice = !!proposal.amount_cents && proposal.amount_cents >= 70;
+  const hasPrice = !!commercialTotals && commercialTotals.totalCents >= 70;
 
   // Build activity timeline events
   const activityEvents: { id: string; iso: string; label: string; tone: "blue" | "purple" | "emerald" | "amber" | "rose" }[] = [];
