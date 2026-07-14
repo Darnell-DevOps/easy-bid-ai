@@ -196,8 +196,16 @@ export default function ProposalView() {
     }
   };
 
-  const updateStatus = async (next: ProposalStatus) => {
-    if (!proposal) return;
+  // updateStatus performs the raw status transition and optionally tags a source
+  // for the matching `{status}_source` column. Explicit actions pass "system" or
+  // "owner_manual"; the stage-progress bar defaults to "owner_manual".
+  // Note: this function no longer sends any client email as a side-effect —
+  // system-confirmed sends live in `sendViaCloseSync` below.
+  const updateStatus = async (
+    next: ProposalStatus,
+    source: "system" | "owner_manual" | null = null,
+  ) => {
+    if (!proposal) return true;
     const nowIso = new Date().toISOString();
     const updates: Record<string, string | null> = { status: next };
     // Stamp timestamps once, preserving original event time.
@@ -213,61 +221,94 @@ export default function ProposalView() {
       updates.accepted_at = null;
     }
 
+    // Only stamp the *_source column when it isn't already set — a real client
+    // action recorded through client_portal_respond ("client") must never be
+    // downgraded to "owner_manual" by a later manual toggle. "system" from an
+    // explicit CloseSync send is allowed to overwrite a null.
+    if (source) {
+      const key = `${next}_source` as
+        | "sent_source" | "viewed_source" | "accepted_source" | "rejected_source";
+      const existing = (proposal as any)[key] as string | null | undefined;
+      if (!existing) updates[key] = source;
+    }
+
     const previous = proposal;
     setProposal({ ...proposal, ...(updates as Partial<ProposalData>) });
     const { error } = await supabase.from("proposals").update(updates as never).eq("id", proposal.id);
     if (error) {
       setProposal(previous);
       toast({ title: "Status update failed", description: error.message, variant: "destructive" });
-      return;
+      return false;
     }
     const labels: Record<ProposalStatus, string> = {
       draft: "Draft", sent: "Sent", viewed: "Viewed", accepted: "Accepted", rejected: "Rejected",
     };
     toast({ title: `Marked as ${labels[next]}` });
+    return true;
+  };
 
-    // First-time "sent" → email the client a review link.
-    if (next === "sent" && !previous.sent_at) {
-      const { data: row } = await supabase
-        .from("proposals")
-        .select("client_id, amount_cents, currency, user_id, client_name")
-        .eq("id", proposal.id)
-        .maybeSingle();
-      let clientEmail: string | null = null;
-      if (row?.client_id) {
-        const { data: c } = await supabase
-          .from("clients")
-          .select("email")
-          .eq("id", row.client_id)
-          .maybeSingle();
-        clientEmail = c?.email || null;
+  // Explicit owner action — "Mark as sent" without a delivery confirmation.
+  // Tags sent_source="owner_manual" so downstream automations can tell this
+  // apart from a real system-confirmed send.
+  const markAsSent = async () => {
+    if (!proposal) return;
+    if (currentStatus !== "draft") {
+      toast({ title: "Already sent" });
+      return;
+    }
+    await updateStatus("sent", "owner_manual");
+  };
+
+  // System-confirmed send — call the transactional email helper directly and
+  // ONLY on confirmed success mark the proposal as sent with source="system".
+  const sendViaCloseSync = async () => {
+    if (!proposal) return;
+    if (!clientEmail) {
+      toast({
+        title: "No client email on file",
+        description: "Add a client email to send via CloseSync.",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      const { data: udata } = await supabase.auth.getUser();
+      const fromName =
+        (udata.user?.user_metadata as any)?.full_name ||
+        udata.user?.email?.split("@")[0] ||
+        "Your contact";
+      const amount =
+        proposal.amount_cents != null
+          ? new Intl.NumberFormat("en-US", {
+              style: "currency",
+              currency: proposal.currency || "USD",
+            }).format((proposal.amount_cents || 0) / 100)
+          : undefined;
+      const res = await sendEmail({
+        templateName: "proposal-sent",
+        recipientEmail: clientEmail,
+        userId: udata.user?.id,
+        idempotencyKey: `proposal-sent-${proposal.id}`,
+        data: {
+          from_name: fromName,
+          title: proposal.client_name,
+          amount,
+          url: `${window.location.origin}/proposal/view/${proposal.id}`,
+        },
+      });
+      // Treat any thrown/rejected result as failure. `sendEmail` may resolve
+      // with a response object — if it exposes an explicit error flag, honor it.
+      if (res && typeof res === "object" && (res as any).error) {
+        throw new Error((res as any).error?.message || "Email send failed");
       }
-      if (clientEmail && row) {
-        const { data: udata } = await supabase.auth.getUser();
-        const fromName =
-          (udata.user?.user_metadata as any)?.full_name ||
-          udata.user?.email?.split("@")[0] ||
-          "Your contact";
-        const amount =
-          row.amount_cents != null
-            ? new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: row.currency || "USD",
-              }).format((row.amount_cents || 0) / 100)
-            : undefined;
-        void sendEmail({
-          templateName: "proposal-sent",
-          recipientEmail: clientEmail,
-          userId: row.user_id,
-          idempotencyKey: `proposal-sent-${proposal.id}`,
-          data: {
-            from_name: fromName,
-            title: row.client_name,
-            amount,
-            url: `${window.location.origin}/proposal/view/${proposal.id}`,
-          },
-        });
-      }
+      if (currentStatus === "draft") await updateStatus("sent", "system");
+      toast({ title: "Sent via CloseSync", description: `Email delivered to ${clientEmail}.` });
+    } catch (e: any) {
+      toast({
+        title: "Send failed",
+        description: e?.message || "Couldn't send the email. Proposal is still marked as draft.",
+        variant: "destructive",
+      });
     }
   };
 
