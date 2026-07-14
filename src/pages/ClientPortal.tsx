@@ -124,7 +124,7 @@ function deriveProjectStage(
     return hasBooking ? "active" : "kickoff";
   }
   if (p.client_paid) return "onboarding";
-  if (contract?.status === "signed" || contract?.status === "executed") return "payment";
+  if (contract?.status === "executed") return "payment";
   if (p.status === "accepted" || p.accepted_at) return "contract";
   return "proposal";
 }
