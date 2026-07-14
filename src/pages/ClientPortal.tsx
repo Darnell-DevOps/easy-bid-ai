@@ -602,14 +602,31 @@ export default function ClientPortal() {
           el?.scrollIntoView({ behavior: "smooth", block: "start" });
         },
       };
-    } else if (stage === "contract" && contract) {
-      nextAction = {
-        title: "Sign your contract",
-        description: "Review the agreement and add your signature to unlock payment.",
-        icon: FileSignature,
-        ctaLabel: "Review & sign",
-        href: `/sign/${contract.signing_token}`,
-      };
+    } else if (stage === "contract") {
+      if (contract?.status === "sent" || contract?.status === "viewed") {
+        nextAction = {
+          title: "Review and sign your agreement",
+          description: "Read through the contract and add your signature to move forward.",
+          icon: FileSignature,
+          ctaLabel: "Review & sign",
+          href: `/sign/${contract.signing_token}`,
+        };
+      } else if (contract?.status === "signed") {
+        nextAction = {
+          title: "Awaiting provider countersignature",
+          description: "You've signed — we'll countersign shortly and you'll be notified.",
+          icon: FileSignature,
+          ctaLabel: "",
+        };
+      } else {
+        // No contract row yet, or still in draft — no signing link exposed.
+        nextAction = {
+          title: "Your agreement is being prepared",
+          description: "We'll email you a link to review and sign as soon as it's ready.",
+          icon: FileSignature,
+          ctaLabel: "",
+        };
+      }
     } else if (stage === "payment") {
       nextAction = {
         title: "Complete payment",
