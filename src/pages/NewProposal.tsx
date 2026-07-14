@@ -285,8 +285,8 @@ export default function NewProposal() {
     else if (name.length < 2 || !NAME_REGEX.test(name)) e.client_name = "Enter a valid client name";
 
     const company = form.company_name.trim();
-    if (!company) e.company_name = "Company name is required";
-    else if (!COMPANY_REGEX.test(company)) e.company_name = "Enter a valid company name";
+    // Company is optional — only validate format when the user has actually typed something.
+    if (company && !COMPANY_REGEX.test(company)) e.company_name = "Enter a valid company name";
 
     if (!form.service_type) e.service_type = "Select a service type";
 
