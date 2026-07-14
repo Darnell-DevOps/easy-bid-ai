@@ -492,7 +492,15 @@ export default function RetainerDetail() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <StatCard label="Amount" value={formatMoney(retainer.amount_cents, retainer.currency)} sub={`/ ${intervalLabel(retainer.billing_interval, retainer.custom_interval_days).toLowerCase()}`} />
+          <StatCard
+            label="Amount"
+            value={formatMoney(finalChargedCents, retainer.currency)}
+            sub={
+              taxSubtitle
+                ? `${taxSubtitle} · / ${intervalLabel(retainer.billing_interval, retainer.custom_interval_days).toLowerCase()}`
+                : `/ ${intervalLabel(retainer.billing_interval, retainer.custom_interval_days).toLowerCase()}`
+            }
+          />
           <StatCard label="Monthly equivalent" value={formatMoney(mrr, retainer.currency)} />
           <StatCard
             label="Next billing"
