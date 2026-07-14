@@ -357,11 +357,18 @@ export default function NewProposal() {
     setLoading(true);
 
     const payload = { ...form, budget: formatBudget(form.budget, currency) };
+    const budgetDigits = form.budget;
+    const amountCents = budgetDigits ? parseInt(budgetDigits, 10) * 100 : null;
 
     try {
       const { data: aiData, error: aiError } = await supabase.functions.invoke("generate-proposal", {
         body: {
           ...payload,
+          currency,
+          amount_cents: amountCents,
+          tax_rate: branding?.default_tax_rate ?? null,
+          payment_terms: branding?.default_payment_terms ?? null,
+          invoice_due_days: branding?.default_invoice_due_days ?? null,
           original_lead_message: originalLeadMessage,
           recent_thread: recentThreadSummary || undefined,
         },
@@ -429,9 +436,16 @@ export default function NewProposal() {
           pricing_breakdown: aiData.pricing,
           invoice_content: aiData.invoice,
           client_id: clientId,
+          amount_cents: amountCents,
+          currency,
+          goals: payload.goals || null,
+          deliverables: payload.deliverables || null,
+          tax_rate: branding?.default_tax_rate ?? null,
+          payment_terms: branding?.default_payment_terms ?? null,
         })
         .select()
         .single();
+
 
       if (saveError || !proposal) throw saveError || new Error("Failed to save proposal");
 
