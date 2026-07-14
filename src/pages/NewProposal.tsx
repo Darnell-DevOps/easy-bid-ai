@@ -22,6 +22,37 @@ import { useProposalUsage } from "@/hooks/use-proposal-usage";
 import UpgradeModal from "@/components/plan/UpgradeModal";
 import ProposalLimitBanner from "@/components/plan/ProposalLimitBanner";
 import { PLANS } from "@/lib/plans";
+import { calculateCommercialTotals, type TaxMode } from "@/lib/commercial-calc";
+
+// Conservative parser for ai_preferences.business_services free-text.
+// Splits on commas / newlines / semicolons, trims, drops empties, dedupes
+// case-insensitively. Sanity-check thresholds (drop the whole parse if any
+// piece looks more like prose than a list item):
+//   - any single item longer than 40 characters
+//   - any single item with more than 6 words
+//   - only 1 item produced from an input longer than 60 characters
+export function parseBusinessServices(raw: string | null | undefined): string[] | null {
+  if (!raw || typeof raw !== "string") return null;
+  const src = raw.trim();
+  if (!src) return null;
+  const pieces = src
+    .split(/[,\n;]+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+  if (pieces.length === 0) return null;
+  if (pieces.length === 1 && src.length > 60) return null;
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const p of pieces) {
+    if (p.length > 40) return null;
+    if (p.split(/\s+/).length > 6) return null;
+    const key = p.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(p);
+  }
+  return out.length ? out : null;
+}
 
 const serviceTypes = [
   "Marketing Strategy",
@@ -359,6 +390,11 @@ export default function NewProposal() {
     const payload = { ...form, budget: formatBudget(form.budget, currency) };
     const budgetDigits = form.budget;
     const amountCents = budgetDigits ? parseInt(budgetDigits, 10) * 100 : null;
+    const taxMode: TaxMode = branding?.default_tax_mode ?? null;
+    const totals =
+      amountCents != null
+        ? calculateCommercialTotals(amountCents, branding?.default_tax_rate ?? null, taxMode)
+        : null;
 
     try {
       const { data: aiData, error: aiError } = await supabase.functions.invoke("generate-proposal", {
@@ -367,6 +403,10 @@ export default function NewProposal() {
           currency,
           amount_cents: amountCents,
           tax_rate: branding?.default_tax_rate ?? null,
+          tax_mode: taxMode,
+          subtotal_cents: totals?.subtotalCents ?? null,
+          tax_amount_cents: totals?.taxAmountCents ?? null,
+          total_cents: totals?.totalCents ?? null,
           payment_terms: branding?.default_payment_terms ?? null,
           invoice_due_days: branding?.default_invoice_due_days ?? null,
           original_lead_message: originalLeadMessage,
@@ -441,6 +481,7 @@ export default function NewProposal() {
           goals: payload.goals || null,
           deliverables: payload.deliverables || null,
           tax_rate: branding?.default_tax_rate ?? null,
+          tax_mode: taxMode,
           payment_terms: branding?.default_payment_terms ?? null,
         })
         .select()
@@ -477,10 +518,11 @@ export default function NewProposal() {
 
   const [savedClients, setSavedClients] = useState<Array<{ id: string; name: string; company: string | null; service_requested: string | null; project_description: string | null; budget: string | null; timeline: string | null; goals: string | null; }>>([]);
 
-  // Business branding defaults (currency / tax rate / payment terms / invoice due days).
+  // Business branding defaults (currency / tax rate / tax mode / payment terms / invoice due days).
   const [branding, setBranding] = useState<{
     default_currency: string | null;
     default_tax_rate: number | null;
+    default_tax_mode: TaxMode;
     default_payment_terms: string | null;
     default_invoice_due_days: number | null;
   } | null>(null);
@@ -488,6 +530,8 @@ export default function NewProposal() {
   // User's own catalogue of service types (from their saved proposal_templates).
   // Falls back to the generic serviceTypes list when the user has none saved.
   const [userServiceTypes, setUserServiceTypes] = useState<string[] | null>(null);
+  // Highest-priority source: parsed from ai_preferences.business_services.
+  const [prefServiceTypes, setPrefServiceTypes] = useState<string[] | null>(null);
 
   useEffect(() => {
     supabase
@@ -499,7 +543,7 @@ export default function NewProposal() {
 
     supabase
       .from("business_branding")
-      .select("default_currency, default_tax_rate, default_payment_terms, default_invoice_due_days")
+      .select("default_currency, default_tax_rate, default_tax_mode, default_payment_terms, default_invoice_due_days")
       .maybeSingle()
       .then(({ data }) => {
         setBranding((data as any) || null);
@@ -517,12 +561,40 @@ export default function NewProposal() {
         const distinct = Array.from(
           new Set(((data as any[]) || []).map((r) => (r?.service_type || "").trim()).filter(Boolean)),
         );
-        setUserServiceTypes(distinct.length ? [...distinct, "Other"] : null);
+        setUserServiceTypes(distinct.length ? distinct : null);
+      });
+
+    supabase
+      .from("ai_preferences")
+      .select("business_services")
+      .maybeSingle()
+      .then(({ data }) => {
+        const parsed = parseBusinessServices((data as any)?.business_services);
+        setPrefServiceTypes(parsed && parsed.length ? parsed : null);
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const effectiveServiceTypes = userServiceTypes && userServiceTypes.length ? userServiceTypes : serviceTypes;
+  // Priority: parsed ai_preferences.business_services → distinct proposal_templates.service_type → hardcoded generic list.
+  // Always ensure "Other" is present (case-insensitive) without duplicating.
+  // Also preserve any prefilled form.service_type not present in the effective list
+  // by prepending it, so the dropdown doesn't silently blank a valid prefill.
+  const effectiveServiceTypes = useMemo(() => {
+    const base: string[] =
+      prefServiceTypes && prefServiceTypes.length
+        ? prefServiceTypes
+        : userServiceTypes && userServiceTypes.length
+          ? userServiceTypes
+          : serviceTypes;
+    const list = [...base];
+    if (!list.some((s) => s.toLowerCase() === "other")) list.push("Other");
+    const pref = form.service_type?.trim();
+    if (pref && !list.some((s) => s.toLowerCase() === pref.toLowerCase())) {
+      list.unshift(pref);
+    }
+    return list;
+  }, [prefServiceTypes, userServiceTypes, form.service_type]);
+
 
 
   const handleGenerateFromClient = (clientId: string) => {
