@@ -103,54 +103,107 @@ export default function ContractDetail() {
     toast({ title: "Link copied" });
   };
 
-  const sendForSignature = async () => {
-    // Block sending if the contract body still contains critical unresolved
-    // identity placeholders — these indicate the provider identity or client
-    // identity couldn't be filled in at generation time. Sending anyway would
-    // ship a legally ambiguous agreement to the client.
-    const body = contract.body || "";
+  const [sending, setSending] = useState(false);
+  const [markingSent, setMarkingSent] = useState(false);
+
+  const hasCriticalPlaceholders = (): { blocked: boolean; missing: string } => {
+    const body = contract?.body || "";
     const missingProvider = body.includes("[Service Provider]");
     const missingClient = body.includes("[Client]");
-    if (missingProvider || missingClient) {
-      const missingBits = [
-        missingProvider ? "your business name" : null,
-        missingClient ? "the client's name" : null,
-      ].filter(Boolean).join(" and ");
+    const missingTbd = body.includes("[TBD]");
+    const bits = [
+      missingProvider ? "your business name" : null,
+      missingClient ? "the client's name" : null,
+      missingTbd ? "unfilled fields" : null,
+    ].filter(Boolean) as string[];
+    return { blocked: bits.length > 0, missing: bits.join(", ") };
+  };
+
+  const showPlaceholderBlockedToast = (missing: string) => {
+    toast({
+      title: "Complete your business details before sending this agreement.",
+      description: `The contract still references ${missing}. Update your business details in Settings and regenerate the contract before sending.`,
+      variant: "destructive",
+      action: (
+        <Button size="sm" variant="outline" onClick={() => navigate("/dashboard/settings")}>Open settings</Button>
+      ) as any,
+    });
+  };
+
+  // A. Send via CloseSync email — invoke send-email directly, confirm success,
+  // and only then mark the contract as sent.
+  const sendViaCloseSync = async () => {
+    if (!contract) return;
+    if (!contract.client_email) {
       toast({
-        title: "Complete your business details before sending this agreement.",
-        description: `The contract still references ${missingBits}. Update your business settings and regenerate the contract before sending.`,
+        title: "No client email on file",
+        description: "Add a client email, or use Copy link / WhatsApp / Mark as sent instead.",
         variant: "destructive",
-        action: (
-          <Button size="sm" variant="outline" onClick={() => navigate("/dashboard/settings")}>Open settings</Button>
-        ) as any,
       });
       return;
     }
+    const { blocked, missing } = hasCriticalPlaceholders();
+    if (blocked) { showPlaceholderBlockedToast(missing); return; }
 
-    const { error } = await supabase
-      .from("contracts")
-      .update({ status: "sent", sent_at: new Date().toISOString() })
-      .eq("id", contract.id);
-    if (error) {
-      toast({ title: "Couldn't send", description: error.message, variant: "destructive" });
-      return;
-    }
-    if (contract.client_email) {
-      void sendEmail({
-        templateName: "contract-signature-reminder",
-        recipientEmail: contract.client_email,
-        userId: contract.user_id,
-        idempotencyKey: `contract-sent-${contract.id}`,
-        data: {
-          from_name: contract.company_name || "Your contact",
-          title: contract.title,
-          url: signingUrl,
+    setSending(true);
+    try {
+      const { data: res, error: sendErr } = await supabase.functions.invoke("send-email", {
+        body: {
+          templateName: "contract-signature-reminder",
+          recipientEmail: contract.client_email,
+          userId: contract.user_id,
+          idempotencyKey: `contract-sent-${contract.id}`,
+          data: {
+            from_name: contract.company_name || ownerName || "Your contact",
+            title: contract.title,
+            url: signingUrl,
+          },
         },
       });
+      if (sendErr) throw new Error(sendErr.message || "Email send failed");
+      if (res && typeof res === "object" && (res as any).error) {
+        throw new Error((res as any).error?.message || (res as any).error || "Email send failed");
+      }
+
+      const { error: upErr } = await supabase
+        .from("contracts")
+        .update({ status: "sent", sent_at: new Date().toISOString() })
+        .eq("id", contract.id);
+      if (upErr) throw new Error(upErr.message);
+
+      toast({ title: "Sent via CloseSync", description: `Email delivered to ${contract.client_email}.` });
+      load();
+    } catch (e: any) {
+      toast({
+        title: "Send failed",
+        description: e?.message || "Couldn't send the email. Contract is still marked as draft.",
+        variant: "destructive",
+      });
+    } finally {
+      setSending(false);
     }
-    await navigator.clipboard.writeText(signingUrl);
-    toast({ title: "Marked as sent", description: "Signing link copied to clipboard — share it with your client." });
-    load();
+  };
+
+  // D. Owner-manual send — explicit "I sent it myself outside CloseSync".
+  const markAsSentManually = async () => {
+    if (!contract) return;
+    const { blocked, missing } = hasCriticalPlaceholders();
+    if (blocked) { showPlaceholderBlockedToast(missing); return; }
+
+    setMarkingSent(true);
+    try {
+      const { error } = await supabase
+        .from("contracts")
+        .update({ status: "sent", sent_at: new Date().toISOString() })
+        .eq("id", contract.id);
+      if (error) throw new Error(error.message);
+      toast({ title: "Marked as sent", description: "Recorded that you sent this outside CloseSync." });
+      load();
+    } catch (e: any) {
+      toast({ title: "Couldn't update status", description: e?.message || "Try again.", variant: "destructive" });
+    } finally {
+      setMarkingSent(false);
+    }
   };
 
   const downloadPdf = async () => {
