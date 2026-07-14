@@ -133,8 +133,10 @@ function paymentTermsPhrase(code?: string | null, dueDays?: number | null): stri
   // If the stored value is already a human-readable phrase (e.g. legacy "50% deposit, 50% on completion"), pass it through.
   if (raw.length > 3 && /\s/.test(raw)) return raw.endsWith(".") ? raw : `${raw}.`;
   return null;
+}
 
 function buildClientContext(p: any) {
+
   const lines = [
     `- Client: ${p.client_name}`,
     `- Company: ${p.company_name}`,
