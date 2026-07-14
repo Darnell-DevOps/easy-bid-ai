@@ -394,6 +394,7 @@ export type Database = {
           default_proposal_expiry_days: number | null
           default_sender_name: string | null
           default_sign_off: string | null
+          default_tax_mode: string | null
           default_tax_rate: number | null
           email_signature: string | null
           favicon_url: string | null
@@ -448,6 +449,7 @@ export type Database = {
           default_proposal_expiry_days?: number | null
           default_sender_name?: string | null
           default_sign_off?: string | null
+          default_tax_mode?: string | null
           default_tax_rate?: number | null
           email_signature?: string | null
           favicon_url?: string | null
@@ -502,6 +504,7 @@ export type Database = {
           default_proposal_expiry_days?: number | null
           default_sender_name?: string | null
           default_sign_off?: string | null
+          default_tax_mode?: string | null
           default_tax_rate?: number | null
           email_signature?: string | null
           favicon_url?: string | null
@@ -1898,6 +1901,7 @@ export type Database = {
           sent_at: string | null
           service_type: string
           status: string
+          tax_mode: string | null
           tax_rate: number | null
           timeline: string
           updated_at: string
@@ -1931,6 +1935,7 @@ export type Database = {
           sent_at?: string | null
           service_type: string
           status?: string
+          tax_mode?: string | null
           tax_rate?: number | null
           timeline?: string
           updated_at?: string
@@ -1964,6 +1969,7 @@ export type Database = {
           sent_at?: string | null
           service_type?: string
           status?: string
+          tax_mode?: string | null
           tax_rate?: number | null
           timeline?: string
           updated_at?: string
@@ -3281,6 +3287,7 @@ export type Database = {
           sent_at: string | null
           service_type: string
           status: string
+          tax_mode: string | null
           tax_rate: number | null
           timeline: string
           updated_at: string
