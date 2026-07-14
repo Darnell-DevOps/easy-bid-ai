@@ -241,7 +241,7 @@ export default function ContractDetail() {
         data: {
           title: contract.title,
           client_name: contract.client_name,
-          from_name: contract.company_name || ownerName || "Your contact",
+          from_name: providerName,
           url,
         },
       });
