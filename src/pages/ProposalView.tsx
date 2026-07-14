@@ -837,6 +837,122 @@ export default function ProposalView() {
     paid_at: proposal.paid_at,
   });
 
+  // Owner-triggered retry for auto-generated contract when the placeholder was
+  // left empty (or when no contract row exists yet despite acceptance). Uses
+  // the same idempotency guarantee as client_portal_respond's accept branch:
+  // only inserts if no acceptance_auto row already exists for this proposal.
+  const handleRetryContractGeneration = async () => {
+    if (!proposal || retryingContract) return;
+    setRetryingContract(true);
+    try {
+      const contractType = /retainer/i.test(proposal.service_type || "")
+        ? "retainer_agreement"
+        : "service_agreement";
+      const totals = calculateCommercialTotals(
+        proposal.amount_cents ?? 0,
+        proposal.tax_rate,
+        proposal.tax_mode as any,
+      );
+
+      // Resolve an existing acceptance_auto row for this proposal — do not
+      // create a duplicate if one already exists (Batch 1 idempotency).
+      let targetContractId: string | null = null;
+      const { data: existingAuto } = await supabase
+        .from("contracts")
+        .select("id, body")
+        .eq("proposal_id", proposal.id)
+        .eq("source", "acceptance_auto")
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (existingAuto?.id) {
+        targetContractId = existingAuto.id;
+      } else {
+        // No acceptance_auto row at all — safe to insert one now.
+        const { data: udata } = await supabase.auth.getUser();
+        const ownerId = udata?.user?.id;
+        if (!ownerId) throw new Error("Not authenticated");
+        const { data: inserted, error: insertErr } = await supabase
+          .from("contracts")
+          .insert({
+            user_id: ownerId,
+            proposal_id: proposal.id,
+            client_id: proposal.client_id,
+            contract_type: contractType,
+            title: (contractType === "retainer_agreement" ? "Retainer Agreement" : "Service Agreement")
+              + " — " + (proposal.client_name || "Client"),
+            client_name: proposal.client_name,
+            company_name: proposal.company_name,
+            body: "",
+            currency: proposal.currency || "USD",
+            amount_cents: null,
+            status: "draft",
+            source: "acceptance_auto",
+          } as any)
+          .select("id")
+          .single();
+        if (insertErr) throw insertErr;
+        targetContractId = inserted?.id ?? null;
+      }
+
+      if (!targetContractId) throw new Error("Could not resolve contract row");
+
+      const { data: genData, error: genErr } = await supabase.functions.invoke("generate-contract", {
+        body: {
+          contract_type: contractType,
+          client_name: proposal.client_name,
+          company_name: proposal.company_name,
+          service_type: proposal.service_type,
+          project_scope: proposal.project_scope || "",
+          timeline: proposal.timeline || "",
+          budget: proposal.budget || "",
+          payment_terms: proposal.payment_terms || undefined,
+          currency: proposal.currency,
+          subtotal_cents: totals.subtotalCents,
+          tax_rate: proposal.tax_rate,
+          tax_mode: proposal.tax_mode,
+          tax_amount_cents: totals.taxAmountCents,
+          total_cents: totals.totalCents,
+        },
+      });
+      if (genErr) throw genErr;
+      if (!genData?.body) throw new Error("Generator returned no body");
+
+      const { data: updated, error: updErr } = await supabase
+        .from("contracts")
+        .update({
+          title: genData.title || (contractType === "retainer_agreement" ? "Retainer Agreement" : "Service Agreement"),
+          body: genData.body,
+          amount_cents: proposal.amount_cents != null ? totals.totalCents : null,
+          currency: proposal.currency,
+        })
+        .eq("id", targetContractId)
+        .select("id, body, source, status, title")
+        .single();
+      if (updErr) throw updErr;
+
+      setLinkedContract(updated ? {
+        id: updated.id,
+        body: updated.body ?? null,
+        source: (updated as any).source ?? null,
+        status: updated.status ?? null,
+        title: updated.title ?? null,
+      } : null);
+
+      toast({ title: "Contract regenerated", description: "The agreement draft is ready to review." });
+    } catch (err: any) {
+      toast({
+        title: "Couldn't regenerate contract",
+        description: err?.message || "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setRetryingContract(false);
+    }
+  };
+
   // Contract-draft-needs-attention: accepted proposal, but the linked contract
   // either doesn't exist or has an empty body (Batch 1's placeholder was left
   // unfilled because generate-contract failed at accept time).
