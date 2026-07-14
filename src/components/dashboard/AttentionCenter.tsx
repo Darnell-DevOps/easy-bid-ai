@@ -70,6 +70,8 @@ interface ContractLite {
   status: string;
   created_at: string;
   signed_at: string | null;
+  proposal_id: string | null;
+  body: string | null;
 }
 
 interface OnboardingLite {
@@ -191,7 +193,7 @@ export default function AttentionCenter({ proposals, clients, proposalClientIds 
       const [c, o, b, d] = await Promise.all([
         supabase
           .from("contracts")
-          .select("id, title, client_name, status, created_at, signed_at")
+          .select("id, title, client_name, status, created_at, signed_at, proposal_id, body")
           .is("deleted_at", null)
           .order("created_at", { ascending: false })
           .limit(50),
@@ -227,11 +229,65 @@ export default function AttentionCenter({ proposals, clients, proposalClientIds 
   const items: Item[] = useMemo(() => {
     const out: Item[] = [];
 
-    // 1. Payment pending (accepted, unpaid) — highest priority (revenue in hand)
+    // Build a proposal_id -> most recent contract lookup. `contracts` is already
+    // ordered by created_at desc, so the first match per proposal_id wins.
+    const contractByProposal = new Map<string, ContractLite>();
+    for (const c of contracts) {
+      if (c.proposal_id && !contractByProposal.has(c.proposal_id)) {
+        contractByProposal.set(c.proposal_id, c);
+      }
+    }
+
+    // 1. Accepted-unpaid proposals — the correct next action depends on the
+    // linked contract's state. Match strictly via proposal_id (never by name).
     for (const p of proposals) {
       const s = (p.status || "").toLowerCase();
-      if (s === "accepted" && !p.client_paid) {
-        const amount = parseAmount(p.budget);
+      if (!(s === "accepted" && !p.client_paid)) continue;
+
+      const contract = contractByProposal.get(p.id);
+      const amount = parseAmount(p.budget);
+      const hasBody = !!(contract?.body && contract.body.trim().length > 0);
+      const cStatus = contract?.status;
+
+      if (!contract || (cStatus === "draft" && !hasBody)) {
+        // Contract missing or an empty placeholder — needs generation/regen.
+        out.push({
+          key: `ctrgen-${p.id}`,
+          tone: "critical",
+          icon: AlertTriangle,
+          title: `Contract draft needs attention — ${p.client_name}`,
+          subtitle: `${p.company_name || p.service_type} · Accepted ${relTime(p.accepted_at)} · Contract needs ${contract ? "regenerating" : "generating"}`,
+          cta: "Review proposal",
+          onClick: () => navigate(`/dashboard/proposal/${p.id}`),
+          priority: 95,
+          waitedFor: p.accepted_at || undefined,
+        });
+        continue;
+      }
+
+      if (cStatus === "draft") {
+        // Draft with real body — the natural next action is to review & send.
+        out.push({
+          key: `ctrreview-${contract.id}`,
+          tone: "info",
+          icon: FileSignature,
+          title: `Review & send contract — ${p.client_name}`,
+          subtitle: `${contract.title || p.company_name || p.service_type} · Accepted ${relTime(p.accepted_at)}`,
+          cta: "Review contract",
+          onClick: () => navigate(`/dashboard/contracts/${contract.id}`),
+          priority: 88,
+          waitedFor: p.accepted_at || undefined,
+        });
+        continue;
+      }
+
+      if (cStatus === "sent" || cStatus === "viewed" || cStatus === "signed") {
+        // Covered by items #2 / #3 — skip to avoid duplicate/contradictory cards.
+        continue;
+      }
+
+      if (cStatus === "executed") {
+        // Contract is fully executed but proposal isn't paid — payment truly pending.
         out.push({
           key: `pay-${p.id}`,
           tone: "critical",
