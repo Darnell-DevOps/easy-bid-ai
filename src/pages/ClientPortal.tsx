@@ -1126,7 +1126,7 @@ export default function ClientPortal() {
                               key="terms"
                               type="button"
                               onClick={(e) => { e.preventDefault(); setOpenPolicy(termsPolicy); }}
-                              className="text-purple font-medium underline underline-offset-2 hover:text-purple/80"
+                              className="inline-block py-1 -my-1 text-purple font-medium underline underline-offset-2 hover:text-purple/80"
                             >
                               {termsPolicy.policy_type}
                             </button>
@@ -1138,7 +1138,7 @@ export default function ClientPortal() {
                               key="refund"
                               type="button"
                               onClick={(e) => { e.preventDefault(); setOpenPolicy(refundPolicy); }}
-                              className="text-purple font-medium underline underline-offset-2 hover:text-purple/80"
+                              className="inline-block py-1 -my-1 text-purple font-medium underline underline-offset-2 hover:text-purple/80"
                             >
                               {refundPolicy.policy_type}
                             </button>
@@ -1150,7 +1150,7 @@ export default function ClientPortal() {
                               key="privacy"
                               type="button"
                               onClick={(e) => { e.preventDefault(); setOpenPolicy(privacyPolicy); }}
-                              className="text-purple font-medium underline underline-offset-2 hover:text-purple/80"
+                              className="inline-block py-1 -my-1 text-purple font-medium underline underline-offset-2 hover:text-purple/80"
                             >
                               {privacyPolicy.policy_type}
                             </button>
