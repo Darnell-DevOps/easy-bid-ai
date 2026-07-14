@@ -36,7 +36,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useProposalCheckout } from "@/hooks/use-proposal-checkout";
 import { cn } from "@/lib/utils";
 import { buildOnboardingFields, type OnboardingFormRow } from "@/lib/onboarding";
-import { calculateCommercialTotals } from "@/lib/commercial-calc";
+import { calculateCommercialTotals, formatCents } from "@/lib/commercial-calc";
 import { ClipboardList } from "lucide-react";
 
 interface PublicProposal {
@@ -83,24 +83,6 @@ interface ContractLite {
   signed_at: string | null;
 }
 
-const CURRENCY_SYMBOL: Record<string, string> = {
-  GBP: "£",
-  USD: "$",
-  EUR: "€",
-  CAD: "C$",
-  AUD: "A$",
-};
-
-function formatAmount(cents: number | null, currency: string | null) {
-  if (!cents) return null;
-  const cur = (currency || "USD").toUpperCase();
-  const symbol = CURRENCY_SYMBOL[cur] || "";
-  const value = (cents / 100).toLocaleString(undefined, {
-    minimumFractionDigits: cents % 100 === 0 ? 0 : 2,
-    maximumFractionDigits: 2,
-  });
-  return `${symbol}${value}`;
-}
 
 function deriveProjectStage(
   p: PublicProposal,
@@ -441,8 +423,8 @@ export default function ClientPortal() {
 
   const formattedTotal = useMemo(
     () =>
-      proposal && commercialTotals
-        ? formatAmount(commercialTotals.totalCents, proposal.currency)
+      proposal && commercialTotals && commercialTotals.totalCents
+        ? formatCents(commercialTotals.totalCents, proposal.currency)
         : null,
     [proposal, commercialTotals],
   );
@@ -479,7 +461,7 @@ export default function ClientPortal() {
   const needsContractSignature = isAccepted && contract && !isContractSigned;
   const readyToPay = isAccepted && isContractSigned && !isPaid;
   const acceptedNotPaid = isAccepted && !isPaid;
-  const hasPrice = !!proposal.amount_cents && proposal.amount_cents >= 70;
+  const hasPrice = !!commercialTotals && commercialTotals.totalCents >= 70;
 
   // Build activity timeline events
   const activityEvents: { id: string; iso: string; label: string; tone: "blue" | "purple" | "emerald" | "amber" | "rose" }[] = [];
