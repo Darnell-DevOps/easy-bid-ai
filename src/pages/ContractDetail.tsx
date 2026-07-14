@@ -65,6 +65,8 @@ export default function ContractDetail() {
     });
   }, []);
 
+  const providerName = resolveProviderName(branding) || ownerName || "Your contact";
+
   const load = async () => {
     if (!id) return;
     const [{ data: c }, { data: sigs }] = await Promise.all([
