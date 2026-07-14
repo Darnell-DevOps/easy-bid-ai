@@ -486,6 +486,30 @@ export default function ClientPortal() {
     [proposal, commercialTotals],
   );
 
+  // Humanized wording of the proposal's actual payment_terms field. Prefer this
+  // over a separate "Payment Terms" policy document to avoid two contradictory
+  // sources for the same phrase — the proposal itself is authoritative here.
+  const proposalPaymentTermsLabel = useMemo(() => {
+    const raw = (proposal?.payment_terms || "").trim();
+    if (!raw) return null;
+    const map: Record<string, string> = {
+      due_immediately: "Payment due immediately on acceptance",
+      net_7: "Payment due within 7 days (Net 7)",
+      net_14: "Payment due within 14 days (Net 14)",
+      net_30: "Payment due within 30 days (Net 30)",
+      net_60: "Payment due within 60 days (Net 60)",
+    };
+    return map[raw] ?? raw;
+  }, [proposal?.payment_terms]);
+
+  // Split policies out so we can reference each cleanly. Only surface a policy
+  // in the agreement checkbox when the seller actually configured it.
+  const termsPolicy = policies.find((p) => /terms/i.test(p.policy_type)) || null;
+  const refundPolicy = policies.find((p) => /refund/i.test(p.policy_type)) || null;
+  const privacyPolicy = policies.find((p) => /privacy/i.test(p.policy_type)) || null;
+  const hasAnyPolicy = !!(termsPolicy || refundPolicy || privacyPolicy) || !!proposalPaymentTermsLabel;
+
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
