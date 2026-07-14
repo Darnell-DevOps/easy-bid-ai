@@ -740,9 +740,9 @@ export default function ClientPortal() {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
-                { icon: ShieldCheck, title: "Avg. 3× more leads", desc: "Clients see measurable growth within the first 90 days." },
-                { icon: Zap, title: "Delivered in days, not months", desc: "Fast turnaround without cutting corners on quality." },
-                { icon: MessageCircle, title: "One point of contact", desc: "Direct updates from the person doing the work." },
+                { icon: CheckCircle2, title: "Clear deliverables", desc: "Everything included in your proposal is defined in writing before we begin." },
+                { icon: Calendar, title: "Transparent milestones", desc: "You'll see the timeline and stages laid out so nothing is a surprise." },
+                { icon: MessageCircle, title: "Defined communication", desc: "A single point of contact and a set cadence for updates throughout the project." },
               ].map(({ icon: Icon, title, desc }) => (
                 <div key={title} className="rounded-lg border border-border/60 bg-background/40 p-4">
                   <Icon className="w-5 h-5 text-purple mb-3" />
