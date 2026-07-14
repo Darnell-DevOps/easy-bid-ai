@@ -301,12 +301,20 @@ export default function ProposalView() {
         (udata.user?.user_metadata as any)?.full_name ||
         udata.user?.email?.split("@")[0] ||
         "Your contact";
-      const amount =
+      const totalsForEmail =
         proposal.amount_cents != null
+          ? calculateCommercialTotals(
+              proposal.amount_cents,
+              proposal.tax_rate,
+              (proposal as any).tax_mode,
+            )
+          : null;
+      const amount =
+        totalsForEmail
           ? new Intl.NumberFormat("en-US", {
               style: "currency",
               currency: proposal.currency || "USD",
-            }).format((proposal.amount_cents || 0) / 100)
+            }).format((totalsForEmail.totalCents || 0) / 100)
           : undefined;
       // Call the edge function directly instead of the `sendEmail` helper —
       // the helper swallows errors, but here we must be certain the send
