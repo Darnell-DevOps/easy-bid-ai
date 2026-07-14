@@ -2,6 +2,7 @@
 // then returns the transaction ID. Frontend opens checkout with this ID.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getPaddleClient, gatewayFetch, type PaddleEnv } from "../_shared/paddle.ts";
+import { calculateCommercialTotals } from "../_shared/commercial-calc.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
