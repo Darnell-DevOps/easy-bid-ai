@@ -58,6 +58,8 @@ interface PublicProposal {
   currency: string | null;
   client_paid: boolean;
   payment_terms: string | null;
+  tax_rate: number | null;
+  tax_mode: string | null;
 }
 
 interface BookingLinkLite {
