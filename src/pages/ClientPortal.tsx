@@ -211,6 +211,16 @@ export default function ClientPortal() {
       setProposal(data as PublicProposal);
       setLoading(false);
 
+      // Fetch the proposal owner's public branding (business name, logo, brand colors)
+      (supabase.rpc(
+        "public_get_proposal_branding_for_user" as never,
+        { _user_id: (data as PublicProposal).user_id } as never,
+      ) as unknown as Promise<{ data: any }>)
+        .then(({ data: rows }) => {
+          const b = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+          if (b) setBranding(b as PortalBranding);
+        });
+
       // Fetch the proposal owner's first active booking link (for kickoff CTA)
       (supabase.rpc(
         "public_get_kickoff_booking_link_for_user" as never,
