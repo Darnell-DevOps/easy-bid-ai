@@ -157,6 +157,7 @@ export default function ClientPortal() {
   const [branding, setBranding] = useState<PortalBranding | null>(null);
   const [policies, setPolicies] = useState<Array<{ policy_type: string; content: string; updated_at: string | null }>>([]);
   const [openPolicy, setOpenPolicy] = useState<{ policy_type: string; content: string; updated_at: string | null } | null>(null);
+  const [testimonials, setTestimonials] = useState<Array<{ client_name: string | null; company: string | null; role_title: string | null; rating: number | null; content: string; avatar_url: string | null }>>([]);
 
   // Safety net: when Paddle hard-redirects back with ?paid=1, poll for the
   // webhook to flip client_paid before trusting the initial fetch.
