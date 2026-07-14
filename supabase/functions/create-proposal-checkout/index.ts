@@ -58,11 +58,33 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { totalCents } = calculateCommercialTotals(
-      proposal.amount_cents,
-      proposal.tax_rate,
-      proposal.tax_mode,
-    );
+    // If a non-draft contract already exists for this proposal, the client has
+    // been shown / agreed to that contract's committed total. Charge that
+    // amount instead of recomputing from the (possibly edited) live proposal.
+    const { data: committedContract } = await supabase
+      .from("contracts")
+      .select("amount_cents, currency")
+      .eq("proposal_id", proposal.id)
+      .is("deleted_at", null)
+      .neq("status", "draft")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    let totalCents: number;
+    let currency: string;
+    if (committedContract && typeof committedContract.amount_cents === "number") {
+      totalCents = committedContract.amount_cents;
+      currency = (committedContract.currency || proposal.currency || "USD").toUpperCase();
+    } else {
+      const totals = calculateCommercialTotals(
+        proposal.amount_cents,
+        proposal.tax_rate,
+        proposal.tax_mode,
+      );
+      totalCents = totals.totalCents;
+      currency = (proposal.currency || "USD").toUpperCase();
+    }
 
     if (!totalCents || totalCents < 70) {
       return new Response(
@@ -86,7 +108,6 @@ Deno.serve(async (req) => {
     }
 
     const paddle = getPaddleClient(env);
-    const currency = (proposal.currency || "USD").toUpperCase();
     const description = `${proposal.service_type} — ${proposal.company_name || proposal.client_name}`;
 
     const txn = await paddle.transactions.create({
