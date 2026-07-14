@@ -508,10 +508,11 @@ export default function NewProposal() {
 
   const [savedClients, setSavedClients] = useState<Array<{ id: string; name: string; company: string | null; service_requested: string | null; project_description: string | null; budget: string | null; timeline: string | null; goals: string | null; }>>([]);
 
-  // Business branding defaults (currency / tax rate / payment terms / invoice due days).
+  // Business branding defaults (currency / tax rate / tax mode / payment terms / invoice due days).
   const [branding, setBranding] = useState<{
     default_currency: string | null;
     default_tax_rate: number | null;
+    default_tax_mode: TaxMode;
     default_payment_terms: string | null;
     default_invoice_due_days: number | null;
   } | null>(null);
@@ -519,6 +520,8 @@ export default function NewProposal() {
   // User's own catalogue of service types (from their saved proposal_templates).
   // Falls back to the generic serviceTypes list when the user has none saved.
   const [userServiceTypes, setUserServiceTypes] = useState<string[] | null>(null);
+  // Highest-priority source: parsed from ai_preferences.business_services.
+  const [prefServiceTypes, setPrefServiceTypes] = useState<string[] | null>(null);
 
   useEffect(() => {
     supabase
@@ -530,7 +533,7 @@ export default function NewProposal() {
 
     supabase
       .from("business_branding")
-      .select("default_currency, default_tax_rate, default_payment_terms, default_invoice_due_days")
+      .select("default_currency, default_tax_rate, default_tax_mode, default_payment_terms, default_invoice_due_days")
       .maybeSingle()
       .then(({ data }) => {
         setBranding((data as any) || null);
@@ -548,12 +551,40 @@ export default function NewProposal() {
         const distinct = Array.from(
           new Set(((data as any[]) || []).map((r) => (r?.service_type || "").trim()).filter(Boolean)),
         );
-        setUserServiceTypes(distinct.length ? [...distinct, "Other"] : null);
+        setUserServiceTypes(distinct.length ? distinct : null);
+      });
+
+    supabase
+      .from("ai_preferences")
+      .select("business_services")
+      .maybeSingle()
+      .then(({ data }) => {
+        const parsed = parseBusinessServices((data as any)?.business_services);
+        setPrefServiceTypes(parsed && parsed.length ? parsed : null);
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const effectiveServiceTypes = userServiceTypes && userServiceTypes.length ? userServiceTypes : serviceTypes;
+  // Priority: parsed ai_preferences.business_services → distinct proposal_templates.service_type → hardcoded generic list.
+  // Always ensure "Other" is present (case-insensitive) without duplicating.
+  // Also preserve any prefilled form.service_type not present in the effective list
+  // by prepending it, so the dropdown doesn't silently blank a valid prefill.
+  const effectiveServiceTypes = useMemo(() => {
+    const base: string[] =
+      prefServiceTypes && prefServiceTypes.length
+        ? prefServiceTypes
+        : userServiceTypes && userServiceTypes.length
+          ? userServiceTypes
+          : serviceTypes;
+    const list = [...base];
+    if (!list.some((s) => s.toLowerCase() === "other")) list.push("Other");
+    const pref = form.service_type?.trim();
+    if (pref && !list.some((s) => s.toLowerCase() === pref.toLowerCase())) {
+      list.unshift(pref);
+    }
+    return list;
+  }, [prefServiceTypes, userServiceTypes, form.service_type]);
+
 
 
   const handleGenerateFromClient = (clientId: string) => {
