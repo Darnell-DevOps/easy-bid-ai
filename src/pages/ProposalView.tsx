@@ -7,9 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Save, Loader2, Pencil, Eye, Copy, Check, Sparkles, RefreshCw, Wand2, Zap, Send, XCircle, CheckCircle2, Mail, ExternalLink, AlertTriangle, Banknote, FileText, Crown, Lock, MessageCircle } from "lucide-react";
+import { Download, Save, Loader2, Pencil, Eye, Copy, Check, Sparkles, RefreshCw, RotateCcw, Wand2, Zap, Send, XCircle, CheckCircle2, Mail, ExternalLink, AlertTriangle, Banknote, FileText, Crown, Lock, MessageCircle } from "lucide-react";
 import { waLink } from "@/lib/whatsapp";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ReactMarkdown from "react-markdown";
 import PremiumProposalRenderer from "@/components/proposal/PremiumProposalRenderer";
 import { renderMergeTags } from "@/lib/merge-tags";
@@ -59,6 +60,10 @@ interface ProposalData {
   tax_rate: number | null;
   payment_terms: string | null;
   tax_mode: string | null;
+  previous_proposal_content: string | null;
+  previous_pricing_breakdown: string | null;
+  previous_invoice_content: string | null;
+  previous_content_saved_at: string | null;
 }
 
 const SECTION_HEADINGS = [
@@ -139,6 +144,9 @@ export default function ProposalView() {
 
   const [leadContext, setLeadContext] = useState<{ original_lead_message?: string; recent_thread?: string }>({});
   const [defaultCurrency, setDefaultCurrency] = useState<string>("USD");
+  const [pendingRegen, setPendingRegen] = useState<{ proposal: string; pricing: string; invoice: string; tone?: string } | null>(null);
+  const [regenPreviewOpen, setRegenPreviewOpen] = useState(false);
+  const [committingRegen, setCommittingRegen] = useState(false);
   const [ownerBranding, setOwnerBranding] = useState<{
     business_name: string | null;
     legal_name: string | null;
@@ -186,21 +194,136 @@ export default function ProposalView() {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      if (data?.proposal) setEditedProposal(data.proposal);
-      if (data?.pricing) setEditedPricing(data.pricing);
-      if (data?.invoice) setEditedInvoice(data.invoice);
-      await supabase.from("proposals").update({
-        proposal_content: data.proposal,
-        pricing_breakdown: data.pricing,
-        invoice_content: data.invoice,
-      }).eq("id", id);
-      toast({ title: tone ? `Regenerated (${tone})` : "Proposal regenerated" });
+      const nextProposal = (data?.proposal ?? "").toString();
+      const nextPricing = (data?.pricing ?? "").toString();
+      const nextInvoice = (data?.invoice ?? "").toString();
+      if (!nextProposal && !nextPricing && !nextInvoice) {
+        throw new Error("Empty response from generator");
+      }
+      // Stage the new content for preview — do NOT commit or touch edited* / DB yet.
+      setPendingRegen({ proposal: nextProposal, pricing: nextPricing, invoice: nextInvoice, tone });
+      setRegenPreviewOpen(true);
     } catch (e: any) {
       toast({ title: "Regeneration failed", description: e.message || "Try again.", variant: "destructive" });
     } finally {
       setRegenerating(null);
     }
   };
+
+  const handleDiscardRegen = () => {
+    setRegenPreviewOpen(false);
+    setPendingRegen(null);
+  };
+
+  const handleConfirmRegen = async () => {
+    if (!pendingRegen || !id) return;
+    setCommittingRegen(true);
+    const nowIso = new Date().toISOString();
+    // Snapshot the CURRENT edited state as the "previous" version, and write the new content, in one update.
+    const snapshotPrev = editedProposal;
+    const snapshotPrevPricing = editedPricing;
+    const snapshotPrevInvoice = editedInvoice;
+    const { error } = await supabase
+      .from("proposals")
+      .update({
+        proposal_content: pendingRegen.proposal,
+        pricing_breakdown: pendingRegen.pricing,
+        invoice_content: pendingRegen.invoice,
+        previous_proposal_content: snapshotPrev,
+        previous_pricing_breakdown: snapshotPrevPricing,
+        previous_invoice_content: snapshotPrevInvoice,
+        previous_content_saved_at: nowIso,
+      })
+      .eq("id", id);
+    setCommittingRegen(false);
+    if (error) {
+      toast({ title: "Replace failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    // Success — align both edited AND initial snapshots so dirty stays false.
+    setEditedProposal(pendingRegen.proposal);
+    setEditedPricing(pendingRegen.pricing);
+    setEditedInvoice(pendingRegen.invoice);
+    setInitialProposal(pendingRegen.proposal);
+    setInitialPricing(pendingRegen.pricing);
+    setInitialInvoice(pendingRegen.invoice);
+    setProposal((prev) => prev ? {
+      ...prev,
+      proposal_content: pendingRegen.proposal,
+      pricing_breakdown: pendingRegen.pricing,
+      invoice_content: pendingRegen.invoice,
+      previous_proposal_content: snapshotPrev,
+      previous_pricing_breakdown: snapshotPrevPricing,
+      previous_invoice_content: snapshotPrevInvoice,
+      previous_content_saved_at: nowIso,
+    } : prev);
+    setRegenPreviewOpen(false);
+    setPendingRegen(null);
+    toast({
+      title: "Proposal replaced",
+      description: "Previous version saved — you can restore it from the Regenerate menu.",
+    });
+  };
+
+  const handleRestorePrevious = async () => {
+    if (!proposal || !id) return;
+    if (!proposal.previous_proposal_content && !proposal.previous_pricing_breakdown && !proposal.previous_invoice_content) return;
+    const ok = window.confirm(
+      "Restore the previous version? This will replace the current proposal, pricing, and invoice content. This action itself cannot be undone.",
+    );
+    if (!ok) return;
+    const restoredProposal = proposal.previous_proposal_content ?? "";
+    const restoredPricing = proposal.previous_pricing_breakdown ?? "";
+    const restoredInvoice = proposal.previous_invoice_content ?? "";
+    const { error } = await supabase
+      .from("proposals")
+      .update({
+        proposal_content: restoredProposal,
+        pricing_breakdown: restoredPricing,
+        invoice_content: restoredInvoice,
+        previous_proposal_content: null,
+        previous_pricing_breakdown: null,
+        previous_invoice_content: null,
+        previous_content_saved_at: null,
+      })
+      .eq("id", id);
+    if (error) {
+      toast({ title: "Restore failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    setEditedProposal(restoredProposal);
+    setEditedPricing(restoredPricing);
+    setEditedInvoice(restoredInvoice);
+    setInitialProposal(restoredProposal);
+    setInitialPricing(restoredPricing);
+    setInitialInvoice(restoredInvoice);
+    setProposal((prev) => prev ? {
+      ...prev,
+      proposal_content: restoredProposal,
+      pricing_breakdown: restoredPricing,
+      invoice_content: restoredInvoice,
+      previous_proposal_content: null,
+      previous_pricing_breakdown: null,
+      previous_invoice_content: null,
+      previous_content_saved_at: null,
+    } : prev);
+    toast({ title: "Previous version restored" });
+  };
+
+  const formatRelativeTime = (iso: string | null | undefined): string => {
+    if (!iso) return "";
+    const t = new Date(iso).getTime();
+    if (!Number.isFinite(t)) return "";
+    const diffSec = Math.max(0, Math.floor((Date.now() - t) / 1000));
+    if (diffSec < 60) return "just now";
+    const min = Math.floor(diffSec / 60);
+    if (min < 60) return `${min} minute${min === 1 ? "" : "s"} ago`;
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return `${hr} hour${hr === 1 ? "" : "s"} ago`;
+    const day = Math.floor(hr / 24);
+    return `${day} day${day === 1 ? "" : "s"} ago`;
+  };
+
 
   const handleRegenerateSection = async (section: string) => {
     const source = buildSourcePayload();
@@ -1589,6 +1712,20 @@ export default function ProposalView() {
                     <DropdownMenuItem onClick={() => handleRegenerateFull("alternative")} className="gap-2">
                       <Sparkles className="w-4 h-4" /> Alternative version
                     </DropdownMenuItem>
+                    {proposal?.previous_content_saved_at && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={handleRestorePrevious} className="gap-2">
+                          <RotateCcw className="w-4 h-4" />
+                          <span className="flex flex-col items-start">
+                            <span>Restore previous version</span>
+                            <span className="text-[10px] text-muted-foreground">
+                              from {formatRelativeTime(proposal.previous_content_saved_at)}
+                            </span>
+                          </span>
+                        </DropdownMenuItem>
+                      </>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -1767,6 +1904,41 @@ export default function ProposalView() {
           notes: proposal.notes || "",
         }}
       />
+      <Dialog
+        open={regenPreviewOpen}
+        onOpenChange={(open) => {
+          if (!open && !committingRegen) {
+            // Treat dismissal (Esc / overlay click) as "Keep current".
+            handleDiscardRegen();
+          }
+        }}
+      >
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Review regenerated proposal</DialogTitle>
+            <DialogDescription>
+              This will replace your current proposal content. Pricing and invoice were regenerated too and will
+              be replaced together as a single unit. Review the new proposal below.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto rounded-md border border-border/60 bg-background/40 p-4">
+            {pendingRegen ? (
+              <MarkdownPreview content={pendingRegen.proposal} isPremium />
+            ) : (
+              <p className="text-sm text-muted-foreground">No preview available.</p>
+            )}
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={handleDiscardRegen} disabled={committingRegen}>
+              Keep current
+            </Button>
+            <Button onClick={handleConfirmRegen} disabled={committingRegen || !pendingRegen} className="gap-2">
+              {committingRegen ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              Replace current
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

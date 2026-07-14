@@ -1902,6 +1902,10 @@ export type Database = {
           paddle_transaction_id: string | null
           paid_at: string | null
           payment_terms: string | null
+          previous_content_saved_at: string | null
+          previous_invoice_content: string | null
+          previous_pricing_breakdown: string | null
+          previous_proposal_content: string | null
           pricing_breakdown: string | null
           project_scope: string
           proposal_content: string | null
@@ -1941,6 +1945,10 @@ export type Database = {
           paddle_transaction_id?: string | null
           paid_at?: string | null
           payment_terms?: string | null
+          previous_content_saved_at?: string | null
+          previous_invoice_content?: string | null
+          previous_pricing_breakdown?: string | null
+          previous_proposal_content?: string | null
           pricing_breakdown?: string | null
           project_scope?: string
           proposal_content?: string | null
@@ -1980,6 +1988,10 @@ export type Database = {
           paddle_transaction_id?: string | null
           paid_at?: string | null
           payment_terms?: string | null
+          previous_content_saved_at?: string | null
+          previous_invoice_content?: string | null
+          previous_pricing_breakdown?: string | null
+          previous_proposal_content?: string | null
           pricing_breakdown?: string | null
           project_scope?: string
           proposal_content?: string | null
@@ -3344,6 +3356,10 @@ export type Database = {
           paddle_transaction_id: string | null
           paid_at: string | null
           payment_terms: string | null
+          previous_content_saved_at: string | null
+          previous_invoice_content: string | null
+          previous_pricing_breakdown: string | null
+          previous_proposal_content: string | null
           pricing_breakdown: string | null
           project_scope: string
           proposal_content: string | null
