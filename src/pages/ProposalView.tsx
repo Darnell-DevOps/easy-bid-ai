@@ -1111,6 +1111,18 @@ export default function ProposalView() {
                 <div key={i} className={`flex items-center gap-3 rounded-lg border px-4 py-2.5 ${toneCls}`}>
                   <Icon className={`w-4 h-4 shrink-0 ${iconCls}`} />
                   <p className="text-sm flex-1 text-foreground/90">{a.text}</p>
+                  {a.action && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="shrink-0"
+                      onClick={a.action.onClick}
+                      disabled={a.action.loading}
+                    >
+                      {a.action.loading && <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />}
+                      {a.action.label}
+                    </Button>
+                  )}
                 </div>
               );
             })}
