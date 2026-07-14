@@ -3457,6 +3457,17 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      public_get_testimonials_for_user: {
+        Args: { _user_id: string }
+        Returns: {
+          avatar_url: string
+          client_name: string
+          company: string
+          content: string
+          rating: number
+          role_title: string
+        }[]
+      }
       public_get_verified_domain: {
         Args: { _domain: string }
         Returns: {
