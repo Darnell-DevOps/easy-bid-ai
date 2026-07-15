@@ -8,10 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { ClipboardList, Copy, ArrowRight, Loader2, ExternalLink, Send, Clock, CheckCircle2, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { onboardingProgress, type OnboardingFormRow } from "@/lib/onboarding";
+import { getPrimaryCustomDomain, buildPublicUrl } from "@/lib/customDomain";
 
 export default function OnboardingDashboard() {
   const [forms, setForms] = useState<OnboardingFormRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [remindingId, setRemindingId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const load = async () => {
@@ -43,13 +45,45 @@ export default function OnboardingDashboard() {
     toast({ title: "Onboarding link copied", description: url });
   };
 
-  const followedUp = async (id: string) => {
-    await supabase
-      .from("onboarding_forms")
-      .update({ reminded_at: new Date().toISOString() })
-      .eq("id", id);
-    toast({ title: "Marked as followed up", description: "Reminder timestamp updated." });
-    load();
+  const sendReminder = async (f: OnboardingFormRow) => {
+    if (!f.client_email) {
+      toast({ title: "No client email on file", description: "Add a client email before sending.", variant: "destructive" });
+      return;
+    }
+    setRemindingId(f.id);
+    try {
+      const { domain, useForForms } = await getPrimaryCustomDomain(f.user_id);
+      const url = buildPublicUrl({
+        customDomain: useForForms ? domain : null,
+        path: `/onboard/${f.access_token}`,
+      });
+      const idempotencyKey = `onboarding-remind-manual-${f.id}-${new Date().toISOString().slice(0, 10)}`;
+      const { data, error } = await supabase.functions.invoke("send-email", {
+        body: {
+          templateName: "onboarding-reminder",
+          recipientEmail: f.client_email,
+          userId: f.user_id,
+          idempotencyKey,
+          data: { client_name: f.client_name, onboarding_link: url },
+        },
+      });
+      const ok = (data as any)?.ok === true;
+      if (error || !ok) {
+        const reason =
+          (data as any)?.suppressed ? "Recipient is suppressed"
+          : (data as any)?.error || (error as any)?.message || "Send failed";
+        toast({ title: "Send failed", description: reason, variant: "destructive" });
+        return;
+      }
+      const now = new Date().toISOString();
+      await supabase.from("onboarding_forms").update({ reminded_at: now }).eq("id", f.id);
+      toast({
+        title: (data as any)?.deduped ? "Reminder already sent today" : "Reminder sent",
+      });
+      load();
+    } finally {
+      setRemindingId(null);
+    }
   };
 
   return (
@@ -96,8 +130,13 @@ export default function OnboardingDashboard() {
           <div className="space-y-3">
             {forms.map((f) => {
               const progress = onboardingProgress({ fields: f.fields, responses: f.responses });
-              const ageMs = Date.now() - new Date(f.created_at).getTime();
-              const stale = f.status !== "completed" && ageMs > 24 * 3600 * 1000;
+              const referenceTs = f.sent_at ? new Date(f.sent_at).getTime() : null;
+              const stale =
+                f.status !== "completed" &&
+                !!f.sent_at &&
+                referenceTs !== null &&
+                Date.now() - referenceTs > 24 * 3600 * 1000;
+              const needsSend = f.status !== "completed" && !f.sent_at;
               return (
                 <Card key={f.id} className={stale ? "border-amber-500/40 bg-amber-500/5" : ""}>
                   <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
@@ -110,6 +149,11 @@ export default function OnboardingDashboard() {
                           </Badge>
                         )}
                         <StatusBadge status={f.status} />
+                        {needsSend && (
+                          <Badge variant="outline" className="border-muted-foreground/40 text-muted-foreground text-[10px]">
+                            Not sent
+                          </Badge>
+                        )}
                         {stale && (
                           <Badge variant="outline" className="border-amber-500/40 text-amber-500 text-[10px]">
                             Follow up
@@ -144,9 +188,13 @@ export default function OnboardingDashboard() {
                         <Button
                           size="sm"
                           className="gap-1.5 bg-amber-500 text-white hover:bg-amber-500/90"
-                          onClick={() => followedUp(f.id)}
+                          onClick={() => sendReminder(f)}
+                          disabled={remindingId === f.id}
                         >
-                          <Send className="w-3.5 h-3.5" /> Send Follow-Up
+                          {remindingId === f.id
+                            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            : <Send className="w-3.5 h-3.5" />}
+                          Send reminder
                         </Button>
                       )}
                       {f.proposal_id && (
