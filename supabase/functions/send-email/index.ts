@@ -3,6 +3,8 @@
 // `idempotency_key` (unique constraint on email_send_log).
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { renderTemplate, type EmailData } from "../_shared/email-templates.ts";
+import { renderClientEmail } from "../_shared/client-email-templates.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
