@@ -3,6 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { verifyWebhook, EventName, type PaddleEnv } from "../_shared/paddle.ts";
 import { calculateCommercialTotals } from "../_shared/commercial-calc.ts";
 import { buildOnboardingFields, buildOnboardingPrefill } from "../_shared/onboarding-fields.ts";
+import { resolvePublicUrl } from "../_shared/customDomain.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -162,7 +163,7 @@ async function handleTransactionCompleted(data: any) {
                 .maybeSingle();
               const token = formRow?.access_token;
               if (token) {
-                const originHeader = "https://app.closesync.io";
+                const url = await resolvePublicUrl(supabase, prop.user_id, `/onboard/${token}`, "forms");
                 let sentOk = false;
                 try {
                   const { error: sendErr } = await supabase.functions.invoke("send-email", {
@@ -173,7 +174,7 @@ async function handleTransactionCompleted(data: any) {
                       idempotencyKey: `onboarding-welcome-${formId}`,
                       data: {
                         name: prop.client_name,
-                        url: `${originHeader}/onboard/${token}`,
+                        url,
                       },
                     },
                   });

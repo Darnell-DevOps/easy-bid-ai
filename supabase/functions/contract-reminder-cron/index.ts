@@ -4,6 +4,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendWhatsAppFromCron } from "../_shared/whatsapp.ts";
 import { recordReminderAudit } from "../_shared/reminder-audit.ts";
+import { resolvePublicUrl } from "../_shared/customDomain.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -46,7 +47,7 @@ Deno.serve(async (req) => {
       const stage = stageFor(daysSince(c.sent_at as string, now));
       if (!stage) { skipped++; continue; }
 
-      const signingUrl = `${APP_URL}/sign/${c.signing_token}`;
+      const signingUrl = await resolvePublicUrl(supabase, c.user_id, `/sign/${c.signing_token}`, "portal");
       const idemBase = `contract-remind-${c.id}-${stage}`;
 
       // 1) Email reminder to client

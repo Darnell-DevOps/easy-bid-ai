@@ -4,6 +4,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendWhatsAppFromCron } from "../_shared/whatsapp.ts";
 import { recordReminderAudit } from "../_shared/reminder-audit.ts";
+import { resolvePublicUrl } from "../_shared/customDomain.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -64,7 +65,7 @@ Deno.serve(async (req) => {
       const stage = stageFor(daysSince(f.sent_at as string, now));
       if (!stage) { skipped++; continue; }
 
-      const formUrl = `${APP_URL}/onboard/${f.access_token}`;
+      const formUrl = await resolvePublicUrl(supabase, f.user_id, `/onboard/${f.access_token}`, "forms");
       const idemBase = `onboarding-remind-${f.id}-${stage}`;
 
       if (f.client_email) {
