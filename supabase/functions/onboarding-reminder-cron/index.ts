@@ -189,7 +189,7 @@ Deno.serve(async (req) => {
       }
 
       // Stamp reminded_at on first reminder for visibility
-      if (stage === "t2") {
+      if (stage === "t2" && anyDelivered) {
         await supabase
           .from("onboarding_forms")
           .update({ reminded_at: now.toISOString() })
