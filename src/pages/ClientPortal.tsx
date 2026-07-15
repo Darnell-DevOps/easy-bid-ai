@@ -125,9 +125,9 @@ function deriveProjectStage(
     // Authoritative signal: the owner's project_stage on the client row.
     if (projectStage === "project_active") return "active";
     if (projectStage === "kickoff_scheduled") return "kickoff";
-    // Fallback while the stage RPC is still loading: use booking presence
-    // (already cancellation-aware) but never claim "active" without the real signal.
-    return hasBooking ? "kickoff" : "kickoff";
+    // Fallback while the stage RPC hasn't loaded yet or is anything other than
+    // "project_active". We never claim "active" without the authoritative signal.
+    return "kickoff";
   }
   if (p.client_paid) return "onboarding";
   if (contract?.status === "executed") return "payment";
