@@ -654,6 +654,7 @@ export default function ProposalView() {
   }, [dirty]);
 
   const handleSave = async () => {
+    if (!confirmAcceptedEditIfNeeded()) return;
     setSaving(true);
     const { error } = await supabase
       .from("proposals")
