@@ -304,10 +304,12 @@ export default function OnboardingResponseDetail() {
                 <div className="h-full bg-accent" style={{ width: `${progress}%` }} />
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-muted-foreground">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs text-muted-foreground">
               <div><span className="text-foreground font-medium">Created:</span> {new Date(form.created_at).toLocaleString()}</div>
+              <div><span className="text-foreground font-medium">Sent:</span> {form.sent_at ? new Date(form.sent_at).toLocaleString() : "—"}</div>
               <div><span className="text-foreground font-medium">Started:</span> {form.started_at ? new Date(form.started_at).toLocaleString() : "—"}</div>
               <div><span className="text-foreground font-medium">Completed:</span> {form.completed_at ? new Date(form.completed_at).toLocaleString() : "—"}</div>
+              <div><span className="text-foreground font-medium">Reviewed:</span> {form.reviewed_at ? new Date(form.reviewed_at).toLocaleString() : "—"}</div>
             </div>
           </CardContent>
         </Card>
