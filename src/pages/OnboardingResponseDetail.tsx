@@ -68,6 +68,80 @@ export default function OnboardingResponseDetail() {
     toast({ title: "Questions updated" });
   };
 
+  const markReviewed = async () => {
+    if (!form) return;
+    setMarkingReviewed(true);
+    const { error } = await supabase.rpc("onboarding_mark_reviewed" as any, { _form_id: form.id });
+    setMarkingReviewed(false);
+    if (error) {
+      toast({ title: "Could not mark reviewed", description: error.message, variant: "destructive" });
+      return;
+    }
+    setForm({ ...form, reviewed_at: new Date().toISOString() });
+    toast({ title: "Marked as reviewed" });
+  };
+
+  const buildOnboardingUrl = async (): Promise<string> => {
+    if (!form) return "";
+    const { domain, useForForms } = await getPrimaryCustomDomain(form.user_id);
+    return buildPublicUrl({
+      customDomain: useForForms ? domain : null,
+      path: `/onboard/${form.access_token}`,
+    });
+  };
+
+  const sendOnboarding = async (kind: "welcome" | "reminder") => {
+    if (!form) return;
+    if (!form.client_email) {
+      toast({ title: "No client email on file", description: "Add a client email before sending.", variant: "destructive" });
+      return;
+    }
+    const setBusy = kind === "welcome" ? setSending : setReminding;
+    setBusy(true);
+    try {
+      const url = await buildOnboardingUrl();
+      const templateName = kind === "welcome" ? "onboarding-welcome" : "onboarding-reminder";
+      const idempotencyKey =
+        kind === "welcome"
+          ? `onboarding-welcome-${form.id}`
+          : `onboarding-remind-manual-${form.id}-${new Date().toISOString().slice(0, 10)}`;
+      const { data, error } = await supabase.functions.invoke("send-email", {
+        body: {
+          templateName,
+          recipientEmail: form.client_email,
+          userId: form.user_id,
+          idempotencyKey,
+          data: { client_name: form.client_name, onboarding_link: url },
+        },
+      });
+      const ok = (data as any)?.ok === true;
+      if (error || !ok) {
+        const reason =
+          (data as any)?.suppressed ? "Recipient is suppressed"
+          : (data as any)?.error || (error as any)?.message || "Send failed";
+        toast({ title: "Send failed", description: reason, variant: "destructive" });
+        return;
+      }
+      const now = new Date().toISOString();
+      if (kind === "welcome") {
+        await supabase.from("onboarding_forms").update({ sent_at: now }).eq("id", form.id).is("sent_at", null);
+        setForm({ ...form, sent_at: form.sent_at ?? now });
+        toast({
+          title: (data as any)?.deduped ? "Already sent" : "Onboarding sent",
+          description: (data as any)?.deduped ? "This welcome email was already delivered." : undefined,
+        });
+      } else {
+        await supabase.from("onboarding_forms").update({ reminded_at: now }).eq("id", form.id);
+        setForm({ ...form, reminded_at: now });
+        toast({
+          title: (data as any)?.deduped ? "Reminder already sent today" : "Reminder sent",
+        });
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
   useEffect(() => {
     let alive = true;
     (async () => {
