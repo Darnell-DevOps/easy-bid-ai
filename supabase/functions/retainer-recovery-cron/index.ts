@@ -143,9 +143,10 @@ Deno.serve(async (req) => {
           .maybeSingle();
         const phone = (client as any)?.phone as string | undefined;
         if (phone) {
+          const recoveryUrl = await resolvePublicUrl(supabase, r.user_id, `/recovery`, "portal");
           const waBody = isFinal
-            ? `Hi ${r.client_name}, this is a final reminder that your ${r.client_name ? "" : ""}retainer payment didn't go through. Please update your details here: https://app.closesync.io/recovery`
-            : `Hi ${r.client_name}, we had trouble processing your retainer payment. You can update your details here: https://app.closesync.io/recovery`;
+            ? `Hi ${r.client_name}, this is a final reminder that your ${r.client_name ? "" : ""}retainer payment didn't go through. Please update your details here: ${recoveryUrl}`
+            : `Hi ${r.client_name}, we had trouble processing your retainer payment. You can update your details here: ${recoveryUrl}`;
           await sendWhatsAppFromCron({
             supabase,
             userId: r.user_id,
