@@ -70,7 +70,7 @@ const CATEGORIES: CategoryDef[] = [
     description: "Keep cash moving without manual invoicing.",
     icon: CreditCard,
     items: [
-      { id: "payment_auto_request", label: "Automatically send payment request after contract signing", description: "Triggers the first invoice immediately after sign-off.", defaultOn: true },
+      { id: "payment_auto_request", label: "Automatically send payment request after contract signing", description: "Triggers the first invoice once the agreement is fully executed (both parties signed).", defaultOn: true },
       { id: "payment_auto_confirmation", label: "Automatically send payment confirmation", description: "Receipt email to the client after a successful payment.", defaultOn: true },
       { id: "payment_notify_received", label: "Notify me when payment received", description: "Instant alert with amount and client.", defaultOn: true },
       { id: "payment_notify_failed", label: "Notify me when payment fails", description: "So you can reach out before the relationship stalls.", defaultOn: true },
