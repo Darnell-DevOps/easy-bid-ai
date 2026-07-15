@@ -1,6 +1,7 @@
 // Sends 24-hour reminder emails for upcoming confirmed bookings.
 // Runs every 30 min via pg_cron. Idempotent via email_send_log.idempotency_key.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { resolvePublicUrl } from "../_shared/customDomain.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
