@@ -602,9 +602,8 @@ export default function ClientPortal() {
   if (proposal.accepted_at) activityEvents.push({ id: "accepted", iso: proposal.accepted_at, label: "Proposal accepted", tone: "emerald" });
   if (proposal.rejected_at) activityEvents.push({ id: "rejected", iso: proposal.rejected_at, label: "Proposal declined", tone: "rose" });
   if (contract?.signed_at) activityEvents.push({ id: "contract-signed", iso: contract.signed_at, label: "Contract signed", tone: "purple" });
-  if (isPaid && proposal.accepted_at) {
-    // Use accepted_at as a fallback; payment timestamp isn't on the public row
-    activityEvents.push({ id: "paid", iso: contract?.signed_at || proposal.accepted_at, label: "Payment received", tone: "emerald" });
+  if (isPaid && proposal.paid_at) {
+    activityEvents.push({ id: "paid", iso: proposal.paid_at, label: "Payment received", tone: "emerald" });
   }
   if (onboarding?.completed_at) {
     activityEvents.push({ id: "onboarding-done", iso: onboarding.completed_at, label: "Onboarding completed", tone: "emerald" });
