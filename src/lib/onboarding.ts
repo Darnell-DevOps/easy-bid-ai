@@ -31,6 +31,7 @@ export interface OnboardingFormRow {
   started_at: string | null;
   completed_at: string | null;
   reminded_at: string | null;
+  reviewed_at: string | null;
   created_at: string;
   updated_at: string;
 }
