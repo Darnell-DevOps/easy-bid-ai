@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
       const stage = stageFor(daysSince(f.sent_at as string, now));
       if (!stage) { skipped++; continue; }
 
-      const formUrl = `${APP_URL}/onboard/${f.access_token}`;
+      const formUrl = await resolvePublicUrl(supabase, f.user_id, `/onboard/${f.access_token}`, "forms");
       const idemBase = `onboarding-remind-${f.id}-${stage}`;
 
       if (f.client_email) {
