@@ -605,8 +605,8 @@ export default function ClientPortal() {
     // Use accepted_at as a fallback; payment timestamp isn't on the public row
     activityEvents.push({ id: "paid", iso: contract?.signed_at || proposal.accepted_at, label: "Payment received", tone: "emerald" });
   }
-  if ((onboarding as any)?.submitted_at) {
-    activityEvents.push({ id: "onboarding-done", iso: (onboarding as any).submitted_at, label: "Onboarding completed", tone: "emerald" });
+  if (onboarding?.completed_at) {
+    activityEvents.push({ id: "onboarding-done", iso: onboarding.completed_at, label: "Onboarding completed", tone: "emerald" });
   }
   for (const b of bookings) {
     if (b.status !== "cancelled") {
