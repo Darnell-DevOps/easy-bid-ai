@@ -2953,6 +2953,7 @@ export type Database = {
         Returns: string
       }
       booking_reschedule_get: { Args: { _token: string }; Returns: Json }
+      claim_onboarding_form: { Args: { _proposal_id: string }; Returns: Json }
       client_portal_respond: {
         Args: {
           _action: string

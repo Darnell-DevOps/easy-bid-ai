@@ -43,7 +43,7 @@ import ProjectOverview from "@/components/portal/ProjectOverview";
 import { useToast } from "@/hooks/use-toast";
 import { useProposalCheckout } from "@/hooks/use-proposal-checkout";
 import { cn } from "@/lib/utils";
-import { buildOnboardingFields, type OnboardingFormRow } from "@/lib/onboarding";
+import { type OnboardingFormRow } from "@/lib/onboarding";
 import { calculateCommercialTotals, formatCents } from "@/lib/commercial-calc";
 import { resolveProviderName } from "@/lib/provider-identity";
 import { ClipboardList } from "lucide-react";
@@ -460,45 +460,44 @@ export default function ClientPortal() {
     });
   };
 
-  // Auto-create onboarding form once payment is complete
-  const ensureOnboardingForm = async (p: PublicProposal) => {
-    if (onboarding) return;
-    const fields = buildOnboardingFields(p.service_type);
-    const { data, error } = await (supabase.from("onboarding_forms") as any)
-      .insert([
-        {
-          user_id: p.user_id,
-          proposal_id: p.id,
-          client_name: p.client_name,
-          service_type: p.service_type,
-          fields,
-          status: "pending",
-          sent_at: new Date().toISOString(),
-        },
-      ])
-      .select("*")
-      .single();
-    if (!error && data) setOnboarding(data as unknown as OnboardingFormRow);
-  };
-
+  // Once payment is complete, the payments-webhook edge function is the sole
+  // authoritative creator of the onboarding form. Poll a few times so the
+  // client sees it appear without a manual refresh.
   const handlePayAgain = async () => {
     if (!proposal) return;
     await openCheckout({
       proposalId: proposal.id,
       onPaid: () => {
         setProposal((p) => (p ? { ...p, client_paid: true } : p));
-        if (proposal) ensureOnboardingForm({ ...proposal, client_paid: true });
       },
     });
   };
 
-  // If we land on the page already paid but with no onboarding, create one.
   useEffect(() => {
-    if (proposal?.client_paid && !onboarding) {
-      ensureOnboardingForm(proposal);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [proposal?.client_paid, onboarding?.id]);
+    if (!proposal?.client_paid || onboarding || !id) return;
+    let cancelled = false;
+    let attempts = 0;
+    const maxAttempts = 6;
+    const poll = async () => {
+      if (cancelled) return;
+      try {
+        const { data: rows } = (await supabase.rpc(
+          "public_get_onboarding_by_proposal" as never,
+          { _proposal_id: id } as never,
+        )) as { data: any };
+        const ob = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+        if (ob) {
+          if (!cancelled) setOnboarding(ob as unknown as OnboardingFormRow);
+          return;
+        }
+      } catch { /* keep polling */ }
+      attempts++;
+      if (attempts >= maxAttempts) return;
+      setTimeout(poll, 2000);
+    };
+    const t = setTimeout(poll, 1500);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [proposal?.client_paid, onboarding?.id, id]);
 
   const commercialTotals = useMemo(
     () =>
@@ -1040,7 +1039,25 @@ export default function ClientPortal() {
         )}
 
 
-        {/* Onboarding step — appears once payment is complete */}
+        {/* Onboarding is being prepared server-side after payment */}
+        {isPaid && !onboarding && (
+          <section className="rounded-xl border border-border/50 bg-muted/20 p-6 lg:p-8">
+            <div className="flex items-start gap-4">
+              <div className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 bg-purple/20 text-purple">
+                <ClipboardList className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1">Next step</p>
+                <h3 className="text-lg font-semibold text-foreground mb-1">Payment received</h3>
+                <p className="text-sm text-muted-foreground max-w-md">
+                  Your onboarding is being prepared — we'll let you know when it's ready.
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Onboarding step — appears once the server has created the form */}
         {isPaid && onboarding && !onboardingComplete && (
           <section className="rounded-xl border border-accent/25 bg-accent/[0.05] p-6 lg:p-8">
             <div className="flex items-start gap-4">
