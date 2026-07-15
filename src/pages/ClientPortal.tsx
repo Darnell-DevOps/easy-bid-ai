@@ -584,7 +584,7 @@ export default function ClientPortal() {
   const isAccepted = status === "accepted";
   const isRejected = status === "rejected";
   const isPaid = proposal.client_paid;
-  const stage = deriveProjectStage(proposal, contract, onboarding, hasBooking);
+  const stage = deriveProjectStage(proposal, contract, onboarding, hasBooking, projectStage);
   const onboardingComplete = onboarding?.status === "completed";
   const onboardingStarted = onboarding?.status === "in_progress";
   const isContractSigned = contract?.status === "signed";
