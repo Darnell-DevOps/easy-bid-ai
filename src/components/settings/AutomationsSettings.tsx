@@ -70,7 +70,7 @@ const CATEGORIES: CategoryDef[] = [
     description: "Keep cash moving without manual invoicing.",
     icon: CreditCard,
     items: [
-      { id: "payment_auto_request", label: "Automatically send payment request after contract signing", description: "Triggers the first invoice immediately after sign-off.", defaultOn: true },
+      { id: "payment_auto_request", label: "Automatically send payment request after contract signing", description: "Triggers the first invoice once the agreement is fully executed (both parties signed).", defaultOn: true },
       { id: "payment_auto_confirmation", label: "Automatically send payment confirmation", description: "Receipt email to the client after a successful payment.", defaultOn: true },
       { id: "payment_notify_received", label: "Notify me when payment received", description: "Instant alert with amount and client.", defaultOn: true },
       { id: "payment_notify_failed", label: "Notify me when payment fails", description: "So you can reach out before the relationship stalls.", defaultOn: true },
@@ -86,7 +86,7 @@ const CATEGORIES: CategoryDef[] = [
       { id: "onboarding_auto_send", label: "Automatically send onboarding after payment", description: "Sends your onboarding form once the first invoice is paid.", defaultOn: true },
       { id: "onboarding_auto_task", label: "Automatically create onboarding task", description: "Adds an onboarding task to your dashboard for follow-through.", defaultOn: true },
       { id: "onboarding_notify_completed", label: "Notify me when onboarding completed", description: "Know the moment a client finishes the form.", defaultOn: true },
-      { id: "onboarding_remind_client", label: "Remind client if onboarding not completed", description: "Sends a friendly reminder after 3 days of inactivity.", defaultOn: true },
+      { id: "onboarding_remind_client", label: "Remind client if onboarding not completed", description: "Sends a friendly reminder 2 and 5 days after the onboarding form was sent, if still incomplete.", defaultOn: true },
     ],
   },
   {

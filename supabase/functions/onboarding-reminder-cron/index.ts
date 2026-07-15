@@ -36,6 +36,23 @@ Deno.serve(async (req) => {
       .not("sent_at", "is", null);
     if (error) throw error;
 
+    // Gate on automation toggle: batch-fetch preferences for all involved users.
+    // Default for onboarding_remind_client is ON (see automation_enabled default);
+    // a missing preferences row => enabled, matching the settings-page default-merge.
+    const userIds = Array.from(new Set((forms || []).map((f: any) => f.user_id).filter(Boolean)));
+    const enabledUserIds = new Set<string>(userIds);
+    if (userIds.length > 0) {
+      const { data: prefs } = await supabase
+        .from("automation_preferences")
+        .select("user_id, preferences")
+        .in("user_id", userIds);
+      for (const row of prefs || []) {
+        const val = (row as any).preferences?.onboarding_remind_client;
+        // Only explicit `false` disables; missing key or `true` = enabled (default-on).
+        if (val === false) enabledUserIds.delete((row as any).user_id);
+      }
+    }
+
     let evaluated = 0;
     let emailed = 0;
     let waSent = 0;
@@ -43,10 +60,11 @@ Deno.serve(async (req) => {
 
     for (const f of forms || []) {
       evaluated++;
+      if (!enabledUserIds.has(f.user_id as string)) { skipped++; continue; }
       const stage = stageFor(daysSince(f.sent_at as string, now));
       if (!stage) { skipped++; continue; }
 
-      const formUrl = `${APP_URL}/onboarding/${f.access_token}`;
+      const formUrl = `${APP_URL}/onboard/${f.access_token}`;
       const idemBase = `onboarding-remind-${f.id}-${stage}`;
 
       if (f.client_email) {
