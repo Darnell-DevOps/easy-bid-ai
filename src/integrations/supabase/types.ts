@@ -572,6 +572,7 @@ export type Database = {
           phone: string | null
           project_description: string | null
           project_stage: string | null
+          project_stage_proposal_id: string | null
           service_requested: string | null
           status: string
           timeline: string | null
@@ -611,6 +612,7 @@ export type Database = {
           phone?: string | null
           project_description?: string | null
           project_stage?: string | null
+          project_stage_proposal_id?: string | null
           service_requested?: string | null
           status?: string
           timeline?: string | null
@@ -650,6 +652,7 @@ export type Database = {
           phone?: string | null
           project_description?: string | null
           project_stage?: string | null
+          project_stage_proposal_id?: string | null
           service_requested?: string | null
           status?: string
           timeline?: string | null
@@ -1589,6 +1592,8 @@ export type Database = {
           proposal_id: string | null
           reminded_at: string | null
           responses: Json
+          reviewed_at: string | null
+          reviewed_by: string | null
           sent_at: string | null
           service_type: string | null
           started_at: string | null
@@ -1609,6 +1614,8 @@ export type Database = {
           proposal_id?: string | null
           reminded_at?: string | null
           responses?: Json
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           sent_at?: string | null
           service_type?: string | null
           started_at?: string | null
@@ -1629,6 +1636,8 @@ export type Database = {
           proposal_id?: string | null
           reminded_at?: string | null
           responses?: Json
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           sent_at?: string | null
           service_type?: string | null
           started_at?: string | null
@@ -3049,6 +3058,10 @@ export type Database = {
         Args: { _proposal_id: string; _txn_id: string }
         Returns: undefined
       }
+      onboarding_mark_reviewed: {
+        Args: { _form_id: string }
+        Returns: undefined
+      }
       onboarding_submit: {
         Args: { _complete?: boolean; _responses: Json; _token: string }
         Returns: string
@@ -3273,6 +3286,8 @@ export type Database = {
           proposal_id: string | null
           reminded_at: string | null
           responses: Json
+          reviewed_at: string | null
+          reviewed_by: string | null
           sent_at: string | null
           service_type: string | null
           started_at: string | null
@@ -3302,6 +3317,8 @@ export type Database = {
           proposal_id: string | null
           reminded_at: string | null
           responses: Json
+          reviewed_at: string | null
+          reviewed_by: string | null
           sent_at: string | null
           service_type: string | null
           started_at: string | null
