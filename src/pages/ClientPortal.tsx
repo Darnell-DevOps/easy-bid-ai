@@ -61,6 +61,7 @@ interface PublicProposal {
   sent_at: string | null;
   viewed_at: string | null;
   accepted_at: string | null;
+  paid_at: string | null;
   rejected_at: string | null;
   client_response_message: string | null;
   amount_cents: number | null;
