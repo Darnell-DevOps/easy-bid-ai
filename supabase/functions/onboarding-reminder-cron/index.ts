@@ -61,6 +61,7 @@ Deno.serve(async (req) => {
 
     for (const f of forms || []) {
       evaluated++;
+      let anyDelivered = false;
       if (!enabledUserIds.has(f.user_id as string)) { skipped++; continue; }
       const stage = stageFor(daysSince(f.sent_at as string, now));
       if (!stage) { skipped++; continue; }
@@ -99,6 +100,7 @@ Deno.serve(async (req) => {
             });
           } else {
             emailed++;
+            anyDelivered = true;
             const deduped = !!(sendData as any)?.deduped;
             await recordReminderAudit(supabase, {
               userId: f.user_id, kind: "onboarding_remind", stage, channel: "email",
@@ -153,11 +155,13 @@ Deno.serve(async (req) => {
         });
         if (res.sent) {
           waSent++;
+          anyDelivered = true;
           await recordReminderAudit(supabase, {
             userId: f.user_id, kind: "onboarding_remind", stage, channel: "whatsapp",
             status: "sent", relatedId: f.id, recipient: phone, idempotencyKey: waKey,
           });
         } else if (res.skipped === "deduped") {
+          if (res.sid) anyDelivered = true;
           await recordReminderAudit(supabase, {
             userId: f.user_id, kind: "onboarding_remind", stage, channel: "whatsapp",
             status: "deduped", relatedId: f.id, recipient: phone, idempotencyKey: waKey,
@@ -185,7 +189,7 @@ Deno.serve(async (req) => {
       }
 
       // Stamp reminded_at on first reminder for visibility
-      if (stage === "t2") {
+      if (stage === "t2" && anyDelivered) {
         await supabase
           .from("onboarding_forms")
           .update({ reminded_at: now.toISOString() })
