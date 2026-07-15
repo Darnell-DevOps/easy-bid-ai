@@ -86,6 +86,19 @@ Deno.serve(async (req) => {
   if (prerendered && prerendered.subject && prerendered.html) {
     // Pre-rendered by the in-app dialog using the user's template + branding.
     rendered = { subject: prerendered.subject, html: prerendered.html, text: prerendered.text };
+  } else if (templateName === "onboarding-welcome" || templateName === "onboarding-reminder") {
+    // These templates live in the customizable client-template system, not the
+    // static registry. Route through renderClientEmail so per-user overrides
+    // and branding apply.
+    try {
+      const client = await renderClientEmail(supabase, userId, templateName, data as any);
+      if (!client) {
+        return json({ error: "render_failed", message: `Unknown template: ${templateName}` }, 400);
+      }
+      rendered = client;
+    } catch (e: any) {
+      return json({ error: "render_failed", message: e?.message }, 400);
+    }
   } else {
     try {
       rendered = renderTemplate(templateName, data);
@@ -93,6 +106,7 @@ Deno.serve(async (req) => {
       return json({ error: "render_failed", message: e?.message }, 400);
     }
   }
+
 
   const RESEND_KEY = Deno.env.get("RESEND_API_KEY");
   const LOVABLE_KEY = Deno.env.get("LOVABLE_API_KEY");
