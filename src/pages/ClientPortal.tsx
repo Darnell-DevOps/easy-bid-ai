@@ -836,7 +836,7 @@ export default function ClientPortal() {
               clientName={proposal.client_name}
               projectName={projectName}
               stage={stage}
-              stageLabel={STAGE_LABEL[stage]}
+              stageLabel={getStageLabel(stage, projectStage)}
               nextAction={nextAction}
               upcomingBooking={upcomingBooking}
               upcomingDeadline={null}
