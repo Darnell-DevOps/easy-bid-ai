@@ -145,53 +145,64 @@ async function handleTransactionCompleted(data: any) {
         } else {
           const formId = (claim as any)?.form_id as string | null;
           const isNew = Boolean((claim as any)?.is_new);
-          if (formId && isNew) {
-            const fields = buildOnboardingFields(prop.service_type);
-            const responses = buildOnboardingPrefill(prop);
-            const { error: updErr } = await supabase
-              .from("onboarding_forms")
-              .update({ fields, responses })
-              .eq("id", formId);
-            if (updErr) console.error("onboarding_forms fields update error:", updErr.message);
-
-            const autoSend = ran.onboarding_auto_send === true;
-            if (autoSend && clientEmail) {
-              const { data: formRow } = await supabase
+          if (formId) {
+            // Only populate fields/prefill when we just created the form —
+            // never overwrite existing client responses or edited fields.
+            if (isNew) {
+              const fields = buildOnboardingFields(prop.service_type);
+              const responses = buildOnboardingPrefill(prop);
+              const { error: updErr } = await supabase
                 .from("onboarding_forms")
-                .select("access_token")
-                .eq("id", formId)
-                .maybeSingle();
-              const token = formRow?.access_token;
-              if (token) {
-                const url = await resolvePublicUrl(supabase, prop.user_id, `/onboard/${token}`, "forms");
-                let sentOk = false;
-                try {
-                  const { error: sendErr } = await supabase.functions.invoke("send-email", {
-                    body: {
-                      templateName: "onboarding-welcome",
-                      recipientEmail: clientEmail,
-                      userId: prop.user_id,
-                      idempotencyKey: `onboarding-welcome-${formId}`,
-                      data: {
-                        name: prop.client_name,
-                        url,
-                      },
+                .update({ fields, responses })
+                .eq("id", formId);
+              if (updErr) console.error("onboarding_forms fields update error:", updErr.message);
+            }
+
+            // Retry-safe: attempt the welcome send whenever auto-send is on,
+            // the canonical form still has sent_at null, and we have an email.
+            // Works whether this webhook call created the form or found one
+            // claimed by a prior failed attempt.
+            const { data: formRow } = await supabase
+              .from("onboarding_forms")
+              .select("access_token, sent_at")
+              .eq("id", formId)
+              .maybeSingle();
+            const token = (formRow as any)?.access_token as string | undefined;
+            const alreadySent = !!(formRow as any)?.sent_at;
+            const autoSend = ran.onboarding_auto_send === true;
+            if (autoSend && clientEmail && token && !alreadySent) {
+              const url = await resolvePublicUrl(supabase, prop.user_id, `/onboard/${token}`, "forms");
+              let sentOk = false;
+              try {
+                const { data: sendData, error: sendErr } = await supabase.functions.invoke("send-email", {
+                  body: {
+                    templateName: "onboarding-welcome",
+                    recipientEmail: clientEmail,
+                    userId: prop.user_id,
+                    idempotencyKey: `onboarding-welcome-${formId}`,
+                    data: {
+                      client_name: prop.client_name,
+                      onboarding_link: url,
                     },
-                  });
-                  if (sendErr) {
-                    console.error("onboarding-welcome invoke error:", sendErr.message);
-                  } else {
-                    sentOk = true;
-                  }
-                } catch (e: any) {
-                  console.error("onboarding-welcome exception:", e?.message || e);
+                  },
+                });
+                if (sendErr) {
+                  console.error("onboarding-welcome invoke error:", sendErr.message);
+                } else if ((sendData as any)?.ok === true) {
+                  // Covers fresh sends and deduped prior successes.
+                  sentOk = true;
+                } else {
+                  console.error("onboarding-welcome not sent:", JSON.stringify(sendData));
                 }
-                if (sentOk) {
-                  await supabase
-                    .from("onboarding_forms")
-                    .update({ sent_at: new Date().toISOString() })
-                    .eq("id", formId);
-                }
+              } catch (e: any) {
+                console.error("onboarding-welcome exception:", e?.message || e);
+              }
+              if (sentOk) {
+                await supabase
+                  .from("onboarding_forms")
+                  .update({ sent_at: new Date().toISOString() })
+                  .eq("id", formId)
+                  .is("sent_at", null);
               }
             }
           }
@@ -200,6 +211,7 @@ async function handleTransactionCompleted(data: any) {
         console.error("onboarding claim/send exception:", e?.message || e);
       }
     }
+
 
     return;
   }
