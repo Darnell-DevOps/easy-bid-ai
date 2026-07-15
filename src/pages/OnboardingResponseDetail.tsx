@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft, Loader2, Download, FileText, ExternalLink, User, Briefcase, Pencil,
+  CheckCircle2, Send, BellRing,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription,
@@ -20,6 +21,7 @@ import {
 } from "@/lib/onboarding";
 import { parseFilePayload, parseFilePayloads, type FilePayload, type SmartField } from "@/lib/form-fields";
 import { useToast } from "@/hooks/use-toast";
+import { getPrimaryCustomDomain, buildPublicUrl } from "@/lib/customDomain";
 
 function formatBytes(n: number): string {
   if (!n) return "0 B";
@@ -39,6 +41,9 @@ export default function OnboardingResponseDetail() {
   const [editOpen, setEditOpen] = useState(false);
   const [editedFields, setEditedFields] = useState<SmartField[]>([]);
   const [saving, setSaving] = useState(false);
+  const [markingReviewed, setMarkingReviewed] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [reminding, setReminding] = useState(false);
 
   const openEditor = () => {
     if (!form) return;
@@ -61,6 +66,80 @@ export default function OnboardingResponseDetail() {
     setForm({ ...form, fields: editedFields });
     setEditOpen(false);
     toast({ title: "Questions updated" });
+  };
+
+  const markReviewed = async () => {
+    if (!form) return;
+    setMarkingReviewed(true);
+    const { error } = await supabase.rpc("onboarding_mark_reviewed" as any, { _form_id: form.id });
+    setMarkingReviewed(false);
+    if (error) {
+      toast({ title: "Could not mark reviewed", description: error.message, variant: "destructive" });
+      return;
+    }
+    setForm({ ...form, reviewed_at: new Date().toISOString() });
+    toast({ title: "Marked as reviewed" });
+  };
+
+  const buildOnboardingUrl = async (): Promise<string> => {
+    if (!form) return "";
+    const { domain, useForForms } = await getPrimaryCustomDomain(form.user_id);
+    return buildPublicUrl({
+      customDomain: useForForms ? domain : null,
+      path: `/onboard/${form.access_token}`,
+    });
+  };
+
+  const sendOnboarding = async (kind: "welcome" | "reminder") => {
+    if (!form) return;
+    if (!form.client_email) {
+      toast({ title: "No client email on file", description: "Add a client email before sending.", variant: "destructive" });
+      return;
+    }
+    const setBusy = kind === "welcome" ? setSending : setReminding;
+    setBusy(true);
+    try {
+      const url = await buildOnboardingUrl();
+      const templateName = kind === "welcome" ? "onboarding-welcome" : "onboarding-reminder";
+      const idempotencyKey =
+        kind === "welcome"
+          ? `onboarding-welcome-${form.id}`
+          : `onboarding-remind-manual-${form.id}-${new Date().toISOString().slice(0, 10)}`;
+      const { data, error } = await supabase.functions.invoke("send-email", {
+        body: {
+          templateName,
+          recipientEmail: form.client_email,
+          userId: form.user_id,
+          idempotencyKey,
+          data: { client_name: form.client_name, onboarding_link: url },
+        },
+      });
+      const ok = (data as any)?.ok === true;
+      if (error || !ok) {
+        const reason =
+          (data as any)?.suppressed ? "Recipient is suppressed"
+          : (data as any)?.error || (error as any)?.message || "Send failed";
+        toast({ title: "Send failed", description: reason, variant: "destructive" });
+        return;
+      }
+      const now = new Date().toISOString();
+      if (kind === "welcome") {
+        await supabase.from("onboarding_forms").update({ sent_at: now }).eq("id", form.id).is("sent_at", null);
+        setForm({ ...form, sent_at: form.sent_at ?? now });
+        toast({
+          title: (data as any)?.deduped ? "Already sent" : "Onboarding sent",
+          description: (data as any)?.deduped ? "This welcome email was already delivered." : undefined,
+        });
+      } else {
+        await supabase.from("onboarding_forms").update({ reminded_at: now }).eq("id", form.id);
+        setForm({ ...form, reminded_at: now });
+        toast({
+          title: (data as any)?.deduped ? "Reminder already sent today" : "Reminder sent",
+        });
+      }
+    } finally {
+      setBusy(false);
+    }
   };
 
   useEffect(() => {
@@ -144,6 +223,46 @@ export default function OnboardingResponseDetail() {
                 <Link to={`/dashboard/proposal/${form.proposal_id}`}><Briefcase className="w-3.5 h-3.5" /> View proposal</Link>
               </Button>
             )}
+            {!form.sent_at && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5"
+                onClick={() => sendOnboarding("welcome")}
+                disabled={sending}
+              >
+                {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                Send onboarding
+              </Button>
+            )}
+            {form.sent_at && form.status !== "completed" && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5"
+                onClick={() => sendOnboarding("reminder")}
+                disabled={reminding}
+              >
+                {reminding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <BellRing className="w-3.5 h-3.5" />}
+                Send reminder
+              </Button>
+            )}
+            {form.status === "completed" && !form.reviewed_at && (
+              <Button
+                size="sm"
+                className="gap-1.5"
+                onClick={markReviewed}
+                disabled={markingReviewed}
+              >
+                {markingReviewed ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                Mark reviewed & ready for kickoff
+              </Button>
+            )}
+            {form.reviewed_at && (
+              <Badge variant="outline" className="text-[11px] border-emerald-500/40 text-emerald-500 gap-1">
+                <CheckCircle2 className="w-3 h-3" /> Reviewed
+              </Badge>
+            )}
             <Button asChild size="sm" variant="outline" className="gap-1.5">
               <a href={`/onboard/${form.access_token}`} target="_blank" rel="noreferrer">
                 <ExternalLink className="w-3.5 h-3.5" /> Open client form
@@ -185,10 +304,12 @@ export default function OnboardingResponseDetail() {
                 <div className="h-full bg-accent" style={{ width: `${progress}%` }} />
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-muted-foreground">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs text-muted-foreground">
               <div><span className="text-foreground font-medium">Created:</span> {new Date(form.created_at).toLocaleString()}</div>
+              <div><span className="text-foreground font-medium">Sent:</span> {form.sent_at ? new Date(form.sent_at).toLocaleString() : "—"}</div>
               <div><span className="text-foreground font-medium">Started:</span> {form.started_at ? new Date(form.started_at).toLocaleString() : "—"}</div>
               <div><span className="text-foreground font-medium">Completed:</span> {form.completed_at ? new Date(form.completed_at).toLocaleString() : "—"}</div>
+              <div><span className="text-foreground font-medium">Reviewed:</span> {form.reviewed_at ? new Date(form.reviewed_at).toLocaleString() : "—"}</div>
             </div>
           </CardContent>
         </Card>
