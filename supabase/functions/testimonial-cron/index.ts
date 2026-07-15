@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
         from_name: settings?.from_name || "",
         custom_message: settings?.custom_message || "",
         google_review_url: settings?.google_review_url || "",
-        url: `${APP_URL}/testimonial/${r.token}`,
+        url: await resolvePublicUrl(supabase, r.user_id, `/testimonial/${r.token}`, "forms"),
       },
     });
     if (ok) {
