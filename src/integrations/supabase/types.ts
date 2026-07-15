@@ -1883,6 +1883,9 @@ export type Database = {
         Row: {
           acceptance_evidence: Json | null
           accepted_at: string | null
+          accepted_invoice_content: string | null
+          accepted_pricing_breakdown: string | null
+          accepted_proposal_content: string | null
           accepted_source: string | null
           amount_cents: number | null
           budget: string
@@ -1926,6 +1929,9 @@ export type Database = {
         Insert: {
           acceptance_evidence?: Json | null
           accepted_at?: string | null
+          accepted_invoice_content?: string | null
+          accepted_pricing_breakdown?: string | null
+          accepted_proposal_content?: string | null
           accepted_source?: string | null
           amount_cents?: number | null
           budget?: string
@@ -1969,6 +1975,9 @@ export type Database = {
         Update: {
           acceptance_evidence?: Json | null
           accepted_at?: string | null
+          accepted_invoice_content?: string | null
+          accepted_pricing_breakdown?: string | null
+          accepted_proposal_content?: string | null
           accepted_source?: string | null
           amount_cents?: number | null
           budget?: string
@@ -3337,6 +3346,9 @@ export type Database = {
         Returns: {
           acceptance_evidence: Json | null
           accepted_at: string | null
+          accepted_invoice_content: string | null
+          accepted_pricing_breakdown: string | null
+          accepted_proposal_content: string | null
           accepted_source: string | null
           amount_cents: number | null
           budget: string
