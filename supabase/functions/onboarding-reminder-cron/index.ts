@@ -88,12 +88,14 @@ Deno.serve(async (req) => {
 
             },
           });
-          if (sendErr) {
-            console.error("onboarding reminder email failed:", sendErr.message);
+          const ok = (sendData as any)?.ok === true;
+          if (!ok) {
+            const errMsg = (sendData as any)?.suppressed ? "suppressed" : ((sendData as any)?.error || "send_failed");
+            console.error("onboarding reminder email failed:", errMsg);
             await recordReminderAudit(supabase, {
               userId: f.user_id, kind: "onboarding_remind", stage, channel: "email",
               status: "failed", relatedId: f.id, recipient: f.client_email,
-              idempotencyKey: idemBase, error: sendErr.message,
+              idempotencyKey: idemBase, error: errMsg,
             });
           } else {
             emailed++;
