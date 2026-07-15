@@ -4,6 +4,7 @@
 // Also fires real emails to the retainer owner via send-email.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendWhatsAppFromCron } from "../_shared/whatsapp.ts";
+import { resolvePublicUrl } from "../_shared/customDomain.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
