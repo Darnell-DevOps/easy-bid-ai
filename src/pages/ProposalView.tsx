@@ -215,8 +215,24 @@ export default function ProposalView() {
     setPendingRegen(null);
   };
 
+  // Batch 4: warn before materially editing an already-accepted proposal.
+  // Returns true if the user chose to proceed (or the proposal isn't accepted).
+  const confirmAcceptedEditIfNeeded = (): boolean => {
+    const status = proposal ? normalizeStatus(proposal.status) : "draft";
+    if (status !== "accepted") return true;
+    return window.confirm(
+      "This proposal has already been accepted by the client. Changing it now won't automatically ask them to re-accept — consider whether they need to review the update.",
+    );
+  };
+
   const handleConfirmRegen = async () => {
     if (!pendingRegen || !id) return;
+    if (!confirmAcceptedEditIfNeeded()) {
+      // Discard the pending regeneration exactly like a normal "Keep current".
+      setRegenPreviewOpen(false);
+      setPendingRegen(null);
+      return;
+    }
     setCommittingRegen(true);
     const nowIso = new Date().toISOString();
     // Snapshot the CURRENT edited state as the "previous" version, and write the new content, in one update.
@@ -350,6 +366,16 @@ export default function ProposalView() {
       }
       if (refusalPrefixes.some((prefix) => lower.startsWith(prefix))) {
         throw new Error("The regenerated section didn't look right — nothing was changed.");
+      }
+
+      if (refusalPrefixes.some((prefix) => lower.startsWith(prefix))) {
+        throw new Error("The regenerated section didn't look right — nothing was changed.");
+      }
+
+      // Batch 4: warn before overwriting a section on an accepted proposal.
+      if (!confirmAcceptedEditIfNeeded()) {
+        // User cancelled — discard the AI output, no state or DB change.
+        return;
       }
 
       const updated = replaceSection(editedProposal, section, newSection);
@@ -628,6 +654,7 @@ export default function ProposalView() {
   }, [dirty]);
 
   const handleSave = async () => {
+    if (!confirmAcceptedEditIfNeeded()) return;
     setSaving(true);
     const { error } = await supabase
       .from("proposals")
