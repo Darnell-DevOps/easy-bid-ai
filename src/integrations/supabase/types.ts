@@ -3366,57 +3366,30 @@ export type Database = {
       public_get_proposal_by_id: {
         Args: { _id: string }
         Returns: {
-          acceptance_evidence: Json | null
-          accepted_at: string | null
-          accepted_invoice_content: string | null
-          accepted_pricing_breakdown: string | null
-          accepted_proposal_content: string | null
-          accepted_source: string | null
-          amount_cents: number | null
-          budget: string
-          client_id: string | null
+          accepted_at: string
+          amount_cents: number
           client_name: string
           client_paid: boolean
-          client_response_message: string | null
+          client_response_message: string
           company_name: string
           created_at: string
-          currency: string | null
-          deleted_at: string | null
-          deliverables: string | null
-          goals: string | null
+          currency: string
           id: string
-          invoice_content: string | null
-          notes: string | null
-          paddle_transaction_id: string | null
-          paid_at: string | null
-          payment_terms: string | null
-          previous_content_saved_at: string | null
-          previous_invoice_content: string | null
-          previous_pricing_breakdown: string | null
-          previous_proposal_content: string | null
-          pricing_breakdown: string | null
+          paid_at: string
+          payment_terms: string
+          pricing_breakdown: string
           project_scope: string
-          proposal_content: string | null
-          rejected_at: string | null
-          rejected_source: string | null
-          sent_at: string | null
-          sent_source: string | null
+          proposal_content: string
+          rejected_at: string
+          sent_at: string
           service_type: string
           status: string
-          tax_mode: string | null
-          tax_rate: number | null
+          tax_mode: string
+          tax_rate: number
           timeline: string
-          updated_at: string
           user_id: string
-          viewed_at: string | null
-          viewed_source: string | null
+          viewed_at: string
         }[]
-        SetofOptions: {
-          from: "*"
-          to: "proposals"
-          isOneToOne: false
-          isSetofReturn: true
-        }
       }
       public_get_retainer_by_token: {
         Args: { _token: string }
