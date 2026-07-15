@@ -145,6 +145,14 @@ const STAGE_LABEL: Record<ProjectStage, string> = {
   active: "Project active",
 };
 
+function getStageLabel(stage: ProjectStage, projectStage: string | null): string {
+  if (stage === "kickoff") {
+    if (projectStage === "kickoff_scheduled") return "Kickoff scheduled";
+    return "Ready for kickoff";
+  }
+  return STAGE_LABEL[stage];
+}
+
 export default function ClientPortal() {
   const { id } = useParams();
   const { toast } = useToast();
