@@ -3341,6 +3341,10 @@ export type Database = {
           updated_at: string
         }[]
       }
+      public_get_project_stage_for_proposal: {
+        Args: { _proposal_id: string }
+        Returns: string
+      }
       public_get_proposal_branding_for_user: {
         Args: { _user_id: string }
         Returns: {

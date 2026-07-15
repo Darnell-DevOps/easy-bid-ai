@@ -115,13 +115,19 @@ function deriveProjectStage(
   contract: ContractLite | null,
   onboarding: OnboardingFormRow | null,
   hasBooking: boolean,
+  projectStage: string | null,
 ): ProjectStage {
   if (onboarding?.status === "completed") {
     // Kickoff/active require a fully executed contract (client-signed + provider-countersigned).
     if (contract && contract.status !== "executed") return "onboarding";
     // Completed but the owner hasn't reviewed the submission yet — stay in onboarding.
     if (!onboarding.reviewed_at) return "onboarding";
-    return hasBooking ? "active" : "kickoff";
+    // Authoritative signal: the owner's project_stage on the client row.
+    if (projectStage === "project_active") return "active";
+    if (projectStage === "kickoff_scheduled") return "kickoff";
+    // Fallback while the stage RPC is still loading: use booking presence
+    // (already cancellation-aware) but never claim "active" without the real signal.
+    return hasBooking ? "kickoff" : "kickoff";
   }
   if (p.client_paid) return "onboarding";
   if (contract?.status === "executed") return "payment";
@@ -153,6 +159,7 @@ export default function ClientPortal() {
   const [onboarding, setOnboarding] = useState<OnboardingFormRow | null>(null);
   const [hasBooking, setHasBooking] = useState(false);
   const [bookings, setBookings] = useState<BookingLite[]>([]);
+  const [projectStage, setProjectStage] = useState<string | null>(null);
   const { openCheckout, loading: payLoading, available: paymentsAvailable } = useProposalCheckout();
   const [paymentConfirmMsg, setPaymentConfirmMsg] = useState<string | null>(null);
   const [branding, setBranding] = useState<PortalBranding | null>(null);
@@ -304,7 +311,16 @@ export default function ClientPortal() {
         .then(({ data: bk }) => {
           const rows = (bk || []) as BookingLite[];
           setBookings(rows);
-          if (rows.length > 0) setHasBooking(true);
+          setHasBooking(rows.some((b) => b.status !== "cancelled"));
+        });
+
+      // Fetch the authoritative project stage from the owner's client row
+      (supabase.rpc(
+        "public_get_project_stage_for_proposal" as never,
+        { _proposal_id: id } as never,
+      ) as unknown as Promise<{ data: any }>)
+        .then(({ data }) => {
+          setProjectStage(typeof data === "string" ? data : (data ?? null));
         });
 
       // Auto-mark as viewed (non-blocking)
@@ -568,7 +584,7 @@ export default function ClientPortal() {
   const isAccepted = status === "accepted";
   const isRejected = status === "rejected";
   const isPaid = proposal.client_paid;
-  const stage = deriveProjectStage(proposal, contract, onboarding, hasBooking);
+  const stage = deriveProjectStage(proposal, contract, onboarding, hasBooking, projectStage);
   const onboardingComplete = onboarding?.status === "completed";
   const onboardingStarted = onboarding?.status === "in_progress";
   const isContractSigned = contract?.status === "signed";
@@ -589,8 +605,8 @@ export default function ClientPortal() {
     // Use accepted_at as a fallback; payment timestamp isn't on the public row
     activityEvents.push({ id: "paid", iso: contract?.signed_at || proposal.accepted_at, label: "Payment received", tone: "emerald" });
   }
-  if ((onboarding as any)?.submitted_at) {
-    activityEvents.push({ id: "onboarding-done", iso: (onboarding as any).submitted_at, label: "Onboarding completed", tone: "emerald" });
+  if (onboarding?.completed_at) {
+    activityEvents.push({ id: "onboarding-done", iso: onboarding.completed_at, label: "Onboarding completed", tone: "emerald" });
   }
   for (const b of bookings) {
     if (b.status !== "cancelled") {
@@ -654,7 +670,7 @@ export default function ClientPortal() {
         onClick: handlePayAgain,
         disabled: payLoading,
       };
-    } else if (stage === "onboarding" && onboarding) {
+    } else if (stage === "onboarding" && onboarding && onboarding.sent_at) {
       nextAction = {
         title: onboardingStarted ? "Continue your onboarding" : "Complete your onboarding",
         description: "Tell us about your project so we can hit the ground running. Takes 3–5 minutes.",
@@ -1040,7 +1056,7 @@ export default function ClientPortal() {
 
 
         {/* Onboarding is being prepared server-side after payment */}
-        {isPaid && !onboarding && (
+        {isPaid && (!onboarding || !onboarding.sent_at) && (
           <section className="rounded-xl border border-border/50 bg-muted/20 p-6 lg:p-8">
             <div className="flex items-start gap-4">
               <div className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 bg-purple/20 text-purple">
@@ -1058,7 +1074,7 @@ export default function ClientPortal() {
         )}
 
         {/* Onboarding step — appears once the server has created the form */}
-        {isPaid && onboarding && !onboardingComplete && (
+        {isPaid && onboarding && onboarding.sent_at && !onboardingComplete && (
           <section className="rounded-xl border border-accent/25 bg-accent/[0.05] p-6 lg:p-8">
             <div className="flex items-start gap-4">
               <div className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 bg-purple/20 text-purple">
