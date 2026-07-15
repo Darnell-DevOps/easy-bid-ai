@@ -100,6 +100,7 @@ Deno.serve(async (req) => {
             });
           } else {
             emailed++;
+            anyDelivered = true;
             const deduped = !!(sendData as any)?.deduped;
             await recordReminderAudit(supabase, {
               userId: f.user_id, kind: "onboarding_remind", stage, channel: "email",
