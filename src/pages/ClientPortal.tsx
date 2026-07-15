@@ -1181,7 +1181,7 @@ export default function ClientPortal() {
               </Button>
             )}
           </section>
-        ) : stage === "kickoff" && isAccepted && isContractExecuted && !hasPrice && !upcomingBooking && (ownerKickoffUrl || bookingLink) ? (
+        ) : projectStage === "ready_for_kickoff" && isAccepted && isContractExecuted && !hasPrice && !upcomingBooking && (ownerKickoffUrl || bookingLink) ? (
           <section className="rounded-xl border border-accent/25 bg-accent/[0.05] p-6 lg:p-10 text-center">
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-purple/15 mb-4">
               <CalendarPlus className="w-6 h-6 text-purple" />
