@@ -311,7 +311,16 @@ export default function ClientPortal() {
         .then(({ data: bk }) => {
           const rows = (bk || []) as BookingLite[];
           setBookings(rows);
-          if (rows.length > 0) setHasBooking(true);
+          setHasBooking(rows.some((b) => b.status !== "cancelled"));
+        });
+
+      // Fetch the authoritative project stage from the owner's client row
+      (supabase.rpc(
+        "public_get_project_stage_for_proposal" as never,
+        { _proposal_id: id } as never,
+      ) as unknown as Promise<{ data: any }>)
+        .then(({ data }) => {
+          setProjectStage(typeof data === "string" ? data : (data ?? null));
         });
 
       // Auto-mark as viewed (non-blocking)
