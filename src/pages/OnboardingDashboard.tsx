@@ -13,6 +13,7 @@ import { getPrimaryCustomDomain, buildPublicUrl } from "@/lib/customDomain";
 export default function OnboardingDashboard() {
   const [forms, setForms] = useState<OnboardingFormRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [remindingId, setRemindingId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const load = async () => {
