@@ -61,6 +61,7 @@ Deno.serve(async (req) => {
 
     for (const f of forms || []) {
       evaluated++;
+      let anyDelivered = false;
       if (!enabledUserIds.has(f.user_id as string)) { skipped++; continue; }
       const stage = stageFor(daysSince(f.sent_at as string, now));
       if (!stage) { skipped++; continue; }
