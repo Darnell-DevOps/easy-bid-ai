@@ -223,6 +223,46 @@ export default function OnboardingResponseDetail() {
                 <Link to={`/dashboard/proposal/${form.proposal_id}`}><Briefcase className="w-3.5 h-3.5" /> View proposal</Link>
               </Button>
             )}
+            {!form.sent_at && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5"
+                onClick={() => sendOnboarding("welcome")}
+                disabled={sending}
+              >
+                {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                Send onboarding
+              </Button>
+            )}
+            {form.sent_at && form.status !== "completed" && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5"
+                onClick={() => sendOnboarding("reminder")}
+                disabled={reminding}
+              >
+                {reminding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <BellRing className="w-3.5 h-3.5" />}
+                Send reminder
+              </Button>
+            )}
+            {form.status === "completed" && !form.reviewed_at && (
+              <Button
+                size="sm"
+                className="gap-1.5"
+                onClick={markReviewed}
+                disabled={markingReviewed}
+              >
+                {markingReviewed ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                Mark reviewed & ready for kickoff
+              </Button>
+            )}
+            {form.reviewed_at && (
+              <Badge variant="outline" className="text-[11px] border-emerald-500/40 text-emerald-500 gap-1">
+                <CheckCircle2 className="w-3 h-3" /> Reviewed
+              </Badge>
+            )}
             <Button asChild size="sm" variant="outline" className="gap-1.5">
               <a href={`/onboard/${form.access_token}`} target="_blank" rel="noreferrer">
                 <ExternalLink className="w-3.5 h-3.5" /> Open client form
