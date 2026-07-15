@@ -4,6 +4,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendWhatsAppFromCron } from "../_shared/whatsapp.ts";
 import { recordReminderAudit } from "../_shared/reminder-audit.ts";
+import { resolvePublicUrl } from "../_shared/customDomain.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
