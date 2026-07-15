@@ -15,7 +15,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const APP_URL = "https://app.closesync.io";
+import { resolvePublicUrl } from "../_shared/customDomain.ts";
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
   const tpl = buildFollowUpTemplate(scenario, {
     clientName: proposal.client_name || "",
     serviceType: proposal.service_type || undefined,
-    proposalUrl: `${APP_URL}/proposal/${proposal.id}`,
+    proposalUrl: await resolvePublicUrl(admin, userId, `/proposal/${proposal.id}`, "portal"),
     senderName: senderName || undefined,
   });
 

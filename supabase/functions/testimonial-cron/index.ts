@@ -7,7 +7,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const APP_URL = "https://app.closesync.io";
+import { resolvePublicUrl } from "../_shared/customDomain.ts";
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
         from_name: settings?.from_name || "",
         custom_message: settings?.custom_message || "",
         google_review_url: settings?.google_review_url || "",
-        url: `${APP_URL}/testimonial/${r.token}`,
+        url: await resolvePublicUrl(supabase, r.user_id, `/testimonial/${r.token}`, "forms"),
       },
     });
     if (ok) {
@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
         client_name: r.client_name,
         from_name: settings?.from_name || "",
         google_review_url: settings?.google_review_url || "",
-        url: `${APP_URL}/testimonial/${r.token}`,
+        url: await resolvePublicUrl(supabase, r.user_id, `/testimonial/${r.token}`, "forms"),
       },
     });
     if (ok) {

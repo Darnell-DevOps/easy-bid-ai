@@ -1,6 +1,7 @@
 // Sends 24-hour reminder emails for upcoming confirmed bookings.
 // Runs every 30 min via pg_cron. Idempotent via email_send_log.idempotency_key.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { resolvePublicUrl } from "../_shared/customDomain.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -47,7 +48,7 @@ Deno.serve(async (req) => {
     .lte("scheduled_at", max)
     .limit(200);
 
-  const APP_URL = "https://app.closesync.io";
+  
 
   let sent = 0;
   const hostEmailCache = new Map<string, string | null>();
@@ -69,7 +70,7 @@ Deno.serve(async (req) => {
       when,
       location: b.meeting_url || b.location_details || b.location_type,
       meeting_url: b.meeting_url || undefined,
-      reschedule_url: b.reschedule_token ? `${APP_URL}/reschedule/${b.reschedule_token}` : undefined,
+      reschedule_url: b.reschedule_token ? await resolvePublicUrl(supabase, b.user_id, `/reschedule/${b.reschedule_token}`, "portal") : undefined,
     };
 
     if (b.client_email) {
