@@ -1157,11 +1157,11 @@ export default function ClientPortal() {
             <p className="text-muted-foreground text-sm mb-5">
               Thanks! A confirmation has been sent. {upcomingBooking
                 ? `Your kickoff call is booked for ${new Date(upcomingBooking.scheduled_at).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}.`
-                : stage === "kickoff" && (ownerKickoffUrl || bookingLink)
+                : projectStage === "ready_for_kickoff" && (ownerKickoffUrl || bookingLink)
                   ? "Lock in your kickoff call below."
                   : "We'll be in touch shortly to kick things off."}
             </p>
-            {stage === "kickoff" && !upcomingBooking && (ownerKickoffUrl || bookingLink) && (
+            {projectStage === "ready_for_kickoff" && !upcomingBooking && (ownerKickoffUrl || bookingLink) && (
               <Button
                 size="lg"
                 asChild
