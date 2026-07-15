@@ -41,6 +41,9 @@ export default function OnboardingResponseDetail() {
   const [editOpen, setEditOpen] = useState(false);
   const [editedFields, setEditedFields] = useState<SmartField[]>([]);
   const [saving, setSaving] = useState(false);
+  const [markingReviewed, setMarkingReviewed] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [reminding, setReminding] = useState(false);
 
   const openEditor = () => {
     if (!form) return;
