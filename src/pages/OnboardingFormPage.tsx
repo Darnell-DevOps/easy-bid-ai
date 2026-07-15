@@ -180,7 +180,7 @@ export default function OnboardingFormPage() {
           </div>
           <h1 className="text-2xl font-bold text-foreground mb-2">Onboarding complete</h1>
           <p className="text-sm text-muted-foreground mb-6">
-            Thanks{form.client_name ? `, ${form.client_name}` : ""}! Your project is ready to begin. We'll be in touch shortly.
+            Thanks{form.client_name ? `, ${form.client_name}` : ""}! We'll review everything and let you know when the next step is ready.
           </p>
           {form.proposal_id && (
             <Button asChild variant="outline">
