@@ -1056,7 +1056,7 @@ export default function ClientPortal() {
 
 
         {/* Onboarding is being prepared server-side after payment */}
-        {isPaid && !onboarding && (
+        {isPaid && (!onboarding || !onboarding.sent_at) && (
           <section className="rounded-xl border border-border/50 bg-muted/20 p-6 lg:p-8">
             <div className="flex items-start gap-4">
               <div className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 bg-purple/20 text-purple">
