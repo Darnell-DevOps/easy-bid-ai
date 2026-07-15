@@ -147,7 +147,7 @@ export default function OnboardingFormPage() {
     toast({
       title: complete ? "Onboarding submitted" : "Progress saved",
       description: complete
-        ? "Thank you! We'll be in touch shortly to kick things off."
+        ? "Thanks — your information has been sent successfully. We'll review everything and let you know when the next step is ready."
         : "You can return to this link anytime to finish.",
     });
   };
