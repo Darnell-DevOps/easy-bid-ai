@@ -1039,7 +1039,25 @@ export default function ClientPortal() {
         )}
 
 
-        {/* Onboarding step — appears once payment is complete */}
+        {/* Onboarding is being prepared server-side after payment */}
+        {isPaid && !onboarding && (
+          <section className="rounded-xl border border-border/50 bg-muted/20 p-6 lg:p-8">
+            <div className="flex items-start gap-4">
+              <div className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 bg-purple/20 text-purple">
+                <ClipboardList className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1">Next step</p>
+                <h3 className="text-lg font-semibold text-foreground mb-1">Payment received</h3>
+                <p className="text-sm text-muted-foreground max-w-md">
+                  Your onboarding is being prepared — we'll let you know when it's ready.
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Onboarding step — appears once the server has created the form */}
         {isPaid && onboarding && !onboardingComplete && (
           <section className="rounded-xl border border-accent/25 bg-accent/[0.05] p-6 lg:p-8">
             <div className="flex items-start gap-4">
