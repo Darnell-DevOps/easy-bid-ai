@@ -15,7 +15,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const APP_URL = "https://app.closesync.io";
+import { resolvePublicUrl } from "../_shared/customDomain.ts";
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
