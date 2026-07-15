@@ -1074,7 +1074,7 @@ export default function ClientPortal() {
         )}
 
         {/* Onboarding step — appears once the server has created the form */}
-        {isPaid && onboarding && !onboardingComplete && (
+        {isPaid && onboarding && onboarding.sent_at && !onboardingComplete && (
           <section className="rounded-xl border border-accent/25 bg-accent/[0.05] p-6 lg:p-8">
             <div className="flex items-start gap-4">
               <div className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 bg-purple/20 text-purple">
