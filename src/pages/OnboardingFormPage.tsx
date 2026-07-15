@@ -15,21 +15,7 @@ import { isFieldVisible, type FieldResponses } from "@/lib/form-fields";
 import SmartFieldRenderer from "@/components/forms/SmartFieldRenderer";
 import OnboardingProgressTracker from "@/components/onboarding/OnboardingProgressTracker";
 import DynamicFavicon from "@/components/branding/DynamicFavicon";
-
-const CURRENCY_SYMBOL: Record<string, string> = {
-  GBP: "£", USD: "$", EUR: "€", CAD: "C$", AUD: "A$",
-};
-
-function formatAmount(cents: number | null | undefined, currency: string | null | undefined) {
-  if (!cents) return null;
-  const cur = (currency || "USD").toUpperCase();
-  const symbol = CURRENCY_SYMBOL[cur] || "";
-  const value = (cents / 100).toLocaleString(undefined, {
-    minimumFractionDigits: cents % 100 === 0 ? 0 : 2,
-    maximumFractionDigits: 2,
-  });
-  return `${symbol}${value}`;
-}
+import { calculateCommercialTotals, formatCents } from "@/lib/commercial-calc";
 
 interface ProposalSummary {
   service_type?: string | null;
@@ -39,6 +25,8 @@ interface ProposalSummary {
   currency?: string | null;
   budget?: string | null;
   timeline?: string | null;
+  tax_rate?: number | null;
+  tax_mode?: string | null;
 }
 
 function hydrate(raw: Record<string, string> | undefined): FieldResponses {
