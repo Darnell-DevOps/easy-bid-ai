@@ -1328,8 +1328,12 @@ export default function ProposalView() {
           <div className="flex items-center gap-3 min-w-0">
             <p className="text-xs text-muted-foreground truncate">
               <span className="text-foreground font-medium">{proposal.client_name}</span>
-              <span className="mx-2 text-muted-foreground/50">·</span>
-              {proposal.company_name}
+              {proposal.company_name && (
+                <>
+                  <span className="mx-2 text-muted-foreground/50">·</span>
+                  {proposal.company_name}
+                </>
+              )}
             </p>
             <StatusBadge status={currentStatus} paid={clientPaid} descriptive />
             <DealScoreBadge proposalId={proposal.id} enabled={currentStatus !== "draft"} />
@@ -1770,20 +1774,6 @@ export default function ProposalView() {
 
               {/* Tertiary actions */}
               <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 pt-3 border-t border-border/40">
-                <button
-                  type="button"
-                  onClick={handlePreview}
-                  className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <Eye className="w-3 h-3" /> Preview Client View
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSendCopy}
-                  className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <Copy className="w-3 h-3" /> Copy Link
-                </button>
                 <button
                   type="button"
                   onClick={() => handleExportPDF("invoice")}
