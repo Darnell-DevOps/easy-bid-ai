@@ -210,7 +210,16 @@ export default function OnboardingFormPage() {
 
         {proposalSummary && (() => {
           const money =
-            formatAmount(proposalSummary.amount_cents ?? null, proposalSummary.currency ?? null) ||
+            (proposalSummary.amount_cents != null
+              ? formatCents(
+                  calculateCommercialTotals(
+                    proposalSummary.amount_cents,
+                    proposalSummary.tax_rate ?? null,
+                    (proposalSummary.tax_mode as any) ?? null,
+                  ).totalCents,
+                  proposalSummary.currency ?? null,
+                )
+              : null) ||
             proposalSummary.budget ||
             null;
           const rows: { label: string; value: string }[] = [];
