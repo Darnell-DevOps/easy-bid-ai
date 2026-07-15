@@ -79,6 +79,11 @@ interface OnboardingLite {
   client_name: string | null;
   status: string;
   created_at: string;
+  sent_at: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  reviewed_at: string | null;
+  proposal_id: string | null;
 }
 
 interface BookingLite {
