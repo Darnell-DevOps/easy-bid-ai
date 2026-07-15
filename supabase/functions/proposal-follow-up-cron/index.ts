@@ -16,7 +16,7 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
 
-const APP_URL = "https://app.closesync.io";
+import { resolvePublicUrl } from "../_shared/customDomain.ts";
 
 async function ownerEmail(userId: string): Promise<string | null> {
   try {
