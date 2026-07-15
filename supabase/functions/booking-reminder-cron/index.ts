@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
     .lte("scheduled_at", max)
     .limit(200);
 
-  const APP_URL = "https://app.closesync.io";
+  
 
   let sent = 0;
   const hostEmailCache = new Map<string, string | null>();
