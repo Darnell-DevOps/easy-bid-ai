@@ -1088,18 +1088,19 @@ export default function ClientPortal() {
           </section>
         )}
 
-        {/* Onboarding completed confirmation */}
-        {isPaid && onboardingComplete && (
-          <section className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-6 lg:p-8">
+        {/* Onboarding submitted — awaiting owner review. Once reviewed, this
+            hides and the kickoff section below becomes the primary CTA. */}
+        {isPaid && onboardingComplete && !onboarding?.reviewed_at && (
+          <section className="rounded-xl border border-border/50 bg-muted/20 p-6 lg:p-8">
             <div className="flex items-start gap-4">
-              <div className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 bg-emerald-500/15 text-emerald-500">
+              <div className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 bg-purple/20 text-purple">
                 <CheckCircle2 className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs uppercase tracking-wider text-emerald-500 font-semibold mb-1">Project Ready</p>
-                <h3 className="text-lg font-semibold text-foreground mb-1">Onboarding complete 🚀</h3>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1">In review</p>
+                <h3 className="text-lg font-semibold text-foreground mb-1">Onboarding submitted</h3>
                 <p className="text-sm text-muted-foreground">
-                  Thanks! Everything's in place. We'll be in touch shortly to begin your project.
+                  Your information has been sent for review. We'll let you know when the next step is ready.
                 </p>
               </div>
             </div>
@@ -1116,9 +1117,11 @@ export default function ClientPortal() {
             <p className="text-muted-foreground text-sm mb-5">
               Thanks! A confirmation has been sent. {upcomingBooking
                 ? `Your kickoff call is booked for ${new Date(upcomingBooking.scheduled_at).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}.`
-                : (ownerKickoffUrl || bookingLink) ? "Lock in your kickoff call below." : "We'll be in touch shortly to kick things off."}
+                : stage === "kickoff" && (ownerKickoffUrl || bookingLink)
+                  ? "Lock in your kickoff call below."
+                  : "We'll be in touch shortly to kick things off."}
             </p>
-            {!upcomingBooking && (ownerKickoffUrl || bookingLink) && (
+            {stage === "kickoff" && !upcomingBooking && (ownerKickoffUrl || bookingLink) && (
               <Button
                 size="lg"
                 asChild
@@ -1138,7 +1141,7 @@ export default function ClientPortal() {
               </Button>
             )}
           </section>
-        ) : isAccepted && isContractExecuted && !hasPrice && !upcomingBooking && (ownerKickoffUrl || bookingLink) ? (
+        ) : stage === "kickoff" && isAccepted && isContractExecuted && !hasPrice && !upcomingBooking && (ownerKickoffUrl || bookingLink) ? (
           <section className="rounded-xl border border-accent/25 bg-accent/[0.05] p-6 lg:p-10 text-center">
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-purple/15 mb-4">
               <CalendarPlus className="w-6 h-6 text-purple" />
