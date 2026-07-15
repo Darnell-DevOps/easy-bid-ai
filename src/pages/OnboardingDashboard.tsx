@@ -45,13 +45,45 @@ export default function OnboardingDashboard() {
     toast({ title: "Onboarding link copied", description: url });
   };
 
-  const followedUp = async (id: string) => {
-    await supabase
-      .from("onboarding_forms")
-      .update({ reminded_at: new Date().toISOString() })
-      .eq("id", id);
-    toast({ title: "Marked as followed up", description: "Reminder timestamp updated." });
-    load();
+  const sendReminder = async (f: OnboardingFormRow) => {
+    if (!f.client_email) {
+      toast({ title: "No client email on file", description: "Add a client email before sending.", variant: "destructive" });
+      return;
+    }
+    setRemindingId(f.id);
+    try {
+      const { domain, useForForms } = await getPrimaryCustomDomain(f.user_id);
+      const url = buildPublicUrl({
+        customDomain: useForForms ? domain : null,
+        path: `/onboard/${f.access_token}`,
+      });
+      const idempotencyKey = `onboarding-remind-manual-${f.id}-${new Date().toISOString().slice(0, 10)}`;
+      const { data, error } = await supabase.functions.invoke("send-email", {
+        body: {
+          templateName: "onboarding-reminder",
+          recipientEmail: f.client_email,
+          userId: f.user_id,
+          idempotencyKey,
+          data: { client_name: f.client_name, onboarding_link: url },
+        },
+      });
+      const ok = (data as any)?.ok === true;
+      if (error || !ok) {
+        const reason =
+          (data as any)?.suppressed ? "Recipient is suppressed"
+          : (data as any)?.error || (error as any)?.message || "Send failed";
+        toast({ title: "Send failed", description: reason, variant: "destructive" });
+        return;
+      }
+      const now = new Date().toISOString();
+      await supabase.from("onboarding_forms").update({ reminded_at: now }).eq("id", f.id);
+      toast({
+        title: (data as any)?.deduped ? "Reminder already sent today" : "Reminder sent",
+      });
+      load();
+    } finally {
+      setRemindingId(null);
+    }
   };
 
   return (
