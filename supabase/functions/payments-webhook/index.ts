@@ -79,7 +79,7 @@ async function handleTransactionCompleted(data: any) {
 
     const { data: prop } = await supabase
       .from("proposals")
-      .select("user_id, client_id, client_name, service_type, amount_cents, currency, tax_rate, tax_mode")
+      .select("user_id, client_id, client_name, company_name, service_type, amount_cents, currency, tax_rate, tax_mode, goals, deliverables")
       .eq("id", cd.proposalId)
       .maybeSingle();
     let clientEmail: string | null = null;
@@ -104,7 +104,7 @@ async function handleTransactionCompleted(data: any) {
 
     const resolvedCurrency = prop?.currency || data?.currencyCode || "USD";
 
-    // Run automation side-effects (notifications, onboarding auto-send/task)
+    // Run automation side-effects (notifications, onboarding auto-send intent, onboarding task)
     const ran = prop?.user_id
       ? await automationsHandlePaymentEvent({
           userId: prop.user_id,
@@ -129,6 +129,77 @@ async function handleTransactionCompleted(data: any) {
         },
       });
     }
+
+    // Authoritative onboarding-form creation.
+    // Atomic claim → build fields/prefill → conditional real send → conditional sent_at.
+    // Any failure here must NOT affect the webhook's success response.
+    if (prop?.user_id) {
+      try {
+        const { data: claim, error: claimErr } = await supabase.rpc(
+          "claim_onboarding_form",
+          { _proposal_id: cd.proposalId },
+        );
+        if (claimErr) {
+          console.error("claim_onboarding_form error:", claimErr.message);
+        } else {
+          const formId = (claim as any)?.form_id as string | null;
+          const isNew = Boolean((claim as any)?.is_new);
+          if (formId && isNew) {
+            const fields = buildOnboardingFields(prop.service_type);
+            const responses = buildOnboardingPrefill(prop);
+            const { error: updErr } = await supabase
+              .from("onboarding_forms")
+              .update({ fields, responses })
+              .eq("id", formId);
+            if (updErr) console.error("onboarding_forms fields update error:", updErr.message);
+
+            const autoSend = ran.onboarding_auto_send === true;
+            if (autoSend && clientEmail) {
+              const { data: formRow } = await supabase
+                .from("onboarding_forms")
+                .select("access_token")
+                .eq("id", formId)
+                .maybeSingle();
+              const token = formRow?.access_token;
+              if (token) {
+                const originHeader = "https://app.closesync.io";
+                let sentOk = false;
+                try {
+                  const { error: sendErr } = await supabase.functions.invoke("send-email", {
+                    body: {
+                      templateName: "onboarding-welcome",
+                      recipientEmail: clientEmail,
+                      userId: prop.user_id,
+                      idempotencyKey: `onboarding-welcome-${formId}`,
+                      data: {
+                        name: prop.client_name,
+                        url: `${originHeader}/onboard/${token}`,
+                      },
+                    },
+                  });
+                  if (sendErr) {
+                    console.error("onboarding-welcome invoke error:", sendErr.message);
+                  } else {
+                    sentOk = true;
+                  }
+                } catch (e: any) {
+                  console.error("onboarding-welcome exception:", e?.message || e);
+                }
+                if (sentOk) {
+                  await supabase
+                    .from("onboarding_forms")
+                    .update({ sent_at: new Date().toISOString() })
+                    .eq("id", formId);
+                }
+              }
+            }
+          }
+        }
+      } catch (e: any) {
+        console.error("onboarding claim/send exception:", e?.message || e);
+      }
+    }
+
     return;
   }
   // Recurring retainer charge — record an invoice and bump totals
