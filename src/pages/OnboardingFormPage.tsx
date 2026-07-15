@@ -310,7 +310,7 @@ export default function OnboardingFormPage() {
               className="mt-0.5"
             />
             <label htmlFor="confirm-accurate" className="text-sm text-foreground/90 leading-relaxed cursor-pointer select-none">
-              I confirm the information provided is accurate and the project can begin.
+              I confirm the information provided is accurate and ready for review.
             </label>
           </div>
         </div>
