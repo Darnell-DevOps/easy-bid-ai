@@ -145,6 +145,14 @@ const STAGE_LABEL: Record<ProjectStage, string> = {
   active: "Project active",
 };
 
+function getStageLabel(stage: ProjectStage, projectStage: string | null): string {
+  if (stage === "kickoff") {
+    if (projectStage === "kickoff_scheduled") return "Kickoff scheduled";
+    return "Ready for kickoff";
+  }
+  return STAGE_LABEL[stage];
+}
+
 export default function ClientPortal() {
   const { id } = useParams();
   const { toast } = useToast();
@@ -828,7 +836,7 @@ export default function ClientPortal() {
               clientName={proposal.client_name}
               projectName={projectName}
               stage={stage}
-              stageLabel={STAGE_LABEL[stage]}
+              stageLabel={getStageLabel(stage, projectStage)}
               nextAction={nextAction}
               upcomingBooking={upcomingBooking}
               upcomingDeadline={null}
@@ -1149,11 +1157,11 @@ export default function ClientPortal() {
             <p className="text-muted-foreground text-sm mb-5">
               Thanks! A confirmation has been sent. {upcomingBooking
                 ? `Your kickoff call is booked for ${new Date(upcomingBooking.scheduled_at).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}.`
-                : stage === "kickoff" && (ownerKickoffUrl || bookingLink)
+                : projectStage === "ready_for_kickoff" && (ownerKickoffUrl || bookingLink)
                   ? "Lock in your kickoff call below."
                   : "We'll be in touch shortly to kick things off."}
             </p>
-            {stage === "kickoff" && !upcomingBooking && (ownerKickoffUrl || bookingLink) && (
+            {projectStage === "ready_for_kickoff" && !upcomingBooking && (ownerKickoffUrl || bookingLink) && (
               <Button
                 size="lg"
                 asChild
@@ -1173,7 +1181,7 @@ export default function ClientPortal() {
               </Button>
             )}
           </section>
-        ) : stage === "kickoff" && isAccepted && isContractExecuted && !hasPrice && !upcomingBooking && (ownerKickoffUrl || bookingLink) ? (
+        ) : projectStage === "ready_for_kickoff" && isAccepted && isContractExecuted && !hasPrice && !upcomingBooking && (ownerKickoffUrl || bookingLink) ? (
           <section className="rounded-xl border border-accent/25 bg-accent/[0.05] p-6 lg:p-10 text-center">
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-purple/15 mb-4">
               <CalendarPlus className="w-6 h-6 text-purple" />
