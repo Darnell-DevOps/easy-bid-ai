@@ -368,6 +368,16 @@ export default function ProposalView() {
         throw new Error("The regenerated section didn't look right — nothing was changed.");
       }
 
+      if (refusalPrefixes.some((prefix) => lower.startsWith(prefix))) {
+        throw new Error("The regenerated section didn't look right — nothing was changed.");
+      }
+
+      // Batch 4: warn before overwriting a section on an accepted proposal.
+      if (!confirmAcceptedEditIfNeeded()) {
+        // User cancelled — discard the AI output, no state or DB change.
+        return;
+      }
+
       const updated = replaceSection(editedProposal, section, newSection);
       setEditedProposal(updated);
       await supabase.from("proposals").update({ proposal_content: updated }).eq("id", id);
