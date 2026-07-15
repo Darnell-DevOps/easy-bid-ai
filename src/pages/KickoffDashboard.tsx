@@ -254,13 +254,15 @@ export default function KickoffDashboard() {
                       <CalendarPlus className="w-3.5 h-3.5 mr-1.5" /> Mark scheduled
                     </Button>
                   )}
-                  <Button
-                    size="sm"
-                    variant={isScheduled ? "default" : "secondary"}
-                    onClick={() => setStage(b, "project_active")}
-                  >
-                    <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Mark completed
-                  </Button>
+                  {isScheduled && (
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={() => setStage(b, "project_active")}
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Mark completed
+                    </Button>
+                  )}
                 </div>
               </div>
             );
