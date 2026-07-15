@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ClipboardList, Copy, ArrowRight, Loader2, ExternalLink, Send, Clock, CheckCircle2, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { onboardingProgress, type OnboardingFormRow } from "@/lib/onboarding";
+import { getPrimaryCustomDomain, buildPublicUrl } from "@/lib/customDomain";
 
 export default function OnboardingDashboard() {
   const [forms, setForms] = useState<OnboardingFormRow[]>([]);
