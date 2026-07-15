@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
       const tpl = buildFollowUpTemplate(scenario, {
         clientName: p.client_name || "",
         serviceType: p.service_type || undefined,
-        proposalUrl: `${APP_URL}/proposal/${p.id}`,
+        proposalUrl: await resolvePublicUrl(supabase, p.user_id, `/proposal/${p.id}`, "portal"),
         senderName: senderName || undefined,
       });
 
