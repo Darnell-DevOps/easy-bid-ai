@@ -670,7 +670,7 @@ export default function ClientPortal() {
         onClick: handlePayAgain,
         disabled: payLoading,
       };
-    } else if (stage === "onboarding" && onboarding) {
+    } else if (stage === "onboarding" && onboarding && onboarding.sent_at) {
       nextAction = {
         title: onboardingStarted ? "Continue your onboarding" : "Complete your onboarding",
         description: "Tell us about your project so we can hit the ground running. Takes 3–5 minutes.",
