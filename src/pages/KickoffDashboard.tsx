@@ -15,6 +15,7 @@ type ClientRow = {
   company: string | null;
   email: string | null;
   project_stage: string | null;
+  project_stage_proposal_id: string | null;
 };
 
 type Bundle = {
@@ -35,27 +36,81 @@ export default function KickoffDashboard() {
     if (!user) { setLoading(false); return; }
 
     const { data: clients } = await (supabase.from("clients") as any)
-      .select("id, name, company, email, project_stage")
+      .select("id, name, company, email, project_stage, project_stage_proposal_id")
       .eq("user_id", user.id)
       .is("deleted_at", null)
       .in("project_stage", ["ready_for_kickoff", "kickoff_scheduled"]);
 
     const list = (clients || []) as ClientRow[];
-    const ids = list.map((c) => c.id);
-    if (ids.length === 0) { setBundles([]); setLoading(false); return; }
+    if (list.length === 0) { setBundles([]); setLoading(false); return; }
 
-    const [{ data: proposals }, { data: contracts }, { data: forms }] = await Promise.all([
-      supabase.from("proposals").select("*").in("client_id", ids).order("created_at", { ascending: false }),
-      supabase.from("contracts").select("id, client_id, status").in("client_id", ids).is("deleted_at", null).order("created_at", { ascending: false }),
-      supabase.from("onboarding_forms").select("id, client_id, status").in("client_id", ids).order("created_at", { ascending: false }),
+    // Split clients into two groups:
+    // - Modern: have a project_stage_proposal_id → bundle strictly by that exact proposal
+    // - Legacy fallback: no project_stage_proposal_id (pre-existing records from
+    //   before this field was introduced) → keep old latest-of-each-type by client_id
+    const modernClients = list.filter((c) => !!c.project_stage_proposal_id);
+    const legacyClients = list.filter((c) => !c.project_stage_proposal_id);
+
+    const qualifyingProposalIds = modernClients.map((c) => c.project_stage_proposal_id as string);
+    const legacyClientIds = legacyClients.map((c) => c.id);
+
+    const [
+      { data: modernProposals },
+      { data: modernContracts },
+      { data: modernForms },
+      { data: legacyProposals },
+      { data: legacyContracts },
+      { data: legacyForms },
+    ] = await Promise.all([
+      qualifyingProposalIds.length
+        ? supabase.from("proposals").select("*").in("id", qualifyingProposalIds)
+        : Promise.resolve({ data: [] as any[] }),
+      qualifyingProposalIds.length
+        ? supabase.from("contracts").select("id, client_id, proposal_id, status")
+            .in("proposal_id", qualifyingProposalIds).is("deleted_at", null)
+            .order("created_at", { ascending: false })
+        : Promise.resolve({ data: [] as any[] }),
+      qualifyingProposalIds.length
+        ? supabase.from("onboarding_forms").select("id, client_id, proposal_id, status")
+            .in("proposal_id", qualifyingProposalIds)
+            .order("created_at", { ascending: false })
+        : Promise.resolve({ data: [] as any[] }),
+      legacyClientIds.length
+        ? supabase.from("proposals").select("*").in("client_id", legacyClientIds)
+            .order("created_at", { ascending: false })
+        : Promise.resolve({ data: [] as any[] }),
+      legacyClientIds.length
+        ? supabase.from("contracts").select("id, client_id, status").in("client_id", legacyClientIds)
+            .is("deleted_at", null).order("created_at", { ascending: false })
+        : Promise.resolve({ data: [] as any[] }),
+      legacyClientIds.length
+        ? supabase.from("onboarding_forms").select("id, client_id, status").in("client_id", legacyClientIds)
+            .order("created_at", { ascending: false })
+        : Promise.resolve({ data: [] as any[] }),
     ]);
 
-    const bundled: Bundle[] = list.map((c) => ({
-      client: c,
-      proposal: (proposals || []).find((p: any) => p.client_id === c.id) || null,
-      contract: (contracts || []).find((c2: any) => c2.client_id === c.id) || null,
-      onboarding: (forms || []).find((f: any) => f.client_id === c.id) || null,
-    }));
+    const bundled: Bundle[] = list.map((c) => {
+      if (c.project_stage_proposal_id) {
+        // Modern path — bundle strictly by qualifying proposal_id so contract + onboarding
+        // are guaranteed to belong to the SAME project as the proposal.
+        const pid = c.project_stage_proposal_id;
+        return {
+          client: c,
+          proposal: (modernProposals || []).find((p: any) => p.id === pid) || null,
+          contract: (modernContracts || []).find((x: any) => x.proposal_id === pid) || null,
+          onboarding: (modernForms || []).find((x: any) => x.proposal_id === pid) || null,
+        };
+      }
+      // Legacy fallback: pre-existing clients whose stage was set before
+      // project_stage_proposal_id existed. Preserve the original latest-of-each-type
+      // by client_id behavior so historical records aren't broken.
+      return {
+        client: c,
+        proposal: (legacyProposals || []).find((p: any) => p.client_id === c.id) || null,
+        contract: (legacyContracts || []).find((x: any) => x.client_id === c.id) || null,
+        onboarding: (legacyForms || []).find((x: any) => x.client_id === c.id) || null,
+      };
+    });
 
     // For agenda dialog we need full onboarding row (fields/responses) on demand — fetch here
     if (bundled.length > 0) {
@@ -72,6 +127,7 @@ export default function KickoffDashboard() {
     setBundles(bundled);
     setLoading(false);
   };
+
 
   useEffect(() => { load(); }, []);
 
@@ -198,13 +254,15 @@ export default function KickoffDashboard() {
                       <CalendarPlus className="w-3.5 h-3.5 mr-1.5" /> Mark scheduled
                     </Button>
                   )}
-                  <Button
-                    size="sm"
-                    variant={isScheduled ? "default" : "secondary"}
-                    onClick={() => setStage(b, "project_active")}
-                  >
-                    <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Mark completed
-                  </Button>
+                  {isScheduled && (
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={() => setStage(b, "project_active")}
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Mark completed
+                    </Button>
+                  )}
                 </div>
               </div>
             );
