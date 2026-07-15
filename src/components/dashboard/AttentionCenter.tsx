@@ -204,7 +204,7 @@ export default function AttentionCenter({ proposals, clients, proposalClientIds 
           .limit(50),
         supabase
           .from("onboarding_forms")
-          .select("id, client_name, status, created_at")
+          .select("id, client_name, status, created_at, sent_at, started_at, completed_at, reviewed_at, proposal_id")
           .is("deleted_at", null)
           .order("created_at", { ascending: false })
           .limit(50),
