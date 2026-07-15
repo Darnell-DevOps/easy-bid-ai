@@ -61,6 +61,7 @@ interface PublicProposal {
   sent_at: string | null;
   viewed_at: string | null;
   accepted_at: string | null;
+  paid_at: string | null;
   rejected_at: string | null;
   client_response_message: string | null;
   amount_cents: number | null;
@@ -601,9 +602,8 @@ export default function ClientPortal() {
   if (proposal.accepted_at) activityEvents.push({ id: "accepted", iso: proposal.accepted_at, label: "Proposal accepted", tone: "emerald" });
   if (proposal.rejected_at) activityEvents.push({ id: "rejected", iso: proposal.rejected_at, label: "Proposal declined", tone: "rose" });
   if (contract?.signed_at) activityEvents.push({ id: "contract-signed", iso: contract.signed_at, label: "Contract signed", tone: "purple" });
-  if (isPaid && proposal.accepted_at) {
-    // Use accepted_at as a fallback; payment timestamp isn't on the public row
-    activityEvents.push({ id: "paid", iso: contract?.signed_at || proposal.accepted_at, label: "Payment received", tone: "emerald" });
+  if (isPaid && proposal.paid_at) {
+    activityEvents.push({ id: "paid", iso: proposal.paid_at, label: "Payment received", tone: "emerald" });
   }
   if (onboarding?.completed_at) {
     activityEvents.push({ id: "onboarding-done", iso: onboarding.completed_at, label: "Onboarding completed", tone: "emerald" });
@@ -678,22 +678,38 @@ export default function ClientPortal() {
         ctaLabel: onboardingStarted ? "Continue" : "Start onboarding",
         href: `/onboard/${onboarding.access_token}`,
       };
-    } else if (stage === "kickoff" && (ownerKickoffUrl || bookingLink)) {
-      nextAction = ownerKickoffUrl
-        ? {
-            title: "Book your kickoff call",
-            description: "Pick a time that works for you and we'll get started.",
-            icon: CalendarPlus,
-            ctaLabel: "Schedule call",
-            onClick: () => window.open(ownerKickoffUrl, "_blank", "noopener,noreferrer"),
-          }
-        : {
-            title: "Book your kickoff call",
-            description: "Pick a time that works for you and we'll get started.",
-            icon: CalendarPlus,
-            ctaLabel: "Schedule call",
-            href: `/book/${bookingLink!.slug}?proposal=${proposal.id}`,
-          };
+    } else if (stage === "kickoff") {
+      if (projectStage === "kickoff_scheduled" || upcomingBooking) {
+        nextAction = upcomingBooking
+          ? {
+              title: "Kickoff scheduled",
+              description: `Your kickoff call is booked for ${new Date(upcomingBooking.scheduled_at).toLocaleString(undefined, { weekday: "long", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}.`,
+              icon: CalendarPlus,
+              ctaLabel: "",
+            }
+          : {
+              title: "Kickoff scheduled",
+              description: "Your kickoff has been scheduled. We'll share the meeting details when available.",
+              icon: CalendarPlus,
+              ctaLabel: "",
+            };
+      } else if (ownerKickoffUrl || bookingLink) {
+        nextAction = ownerKickoffUrl
+          ? {
+              title: "Book your kickoff call",
+              description: "Pick a time that works for you and we'll get started.",
+              icon: CalendarPlus,
+              ctaLabel: "Schedule call",
+              onClick: () => window.open(ownerKickoffUrl, "_blank", "noopener,noreferrer"),
+            }
+          : {
+              title: "Book your kickoff call",
+              description: "Pick a time that works for you and we'll get started.",
+              icon: CalendarPlus,
+              ctaLabel: "Schedule call",
+              href: `/book/${bookingLink!.slug}?proposal=${proposal.id}`,
+            };
+      }
     }
   }
 
