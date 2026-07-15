@@ -678,22 +678,38 @@ export default function ClientPortal() {
         ctaLabel: onboardingStarted ? "Continue" : "Start onboarding",
         href: `/onboard/${onboarding.access_token}`,
       };
-    } else if (stage === "kickoff" && (ownerKickoffUrl || bookingLink)) {
-      nextAction = ownerKickoffUrl
-        ? {
-            title: "Book your kickoff call",
-            description: "Pick a time that works for you and we'll get started.",
-            icon: CalendarPlus,
-            ctaLabel: "Schedule call",
-            onClick: () => window.open(ownerKickoffUrl, "_blank", "noopener,noreferrer"),
-          }
-        : {
-            title: "Book your kickoff call",
-            description: "Pick a time that works for you and we'll get started.",
-            icon: CalendarPlus,
-            ctaLabel: "Schedule call",
-            href: `/book/${bookingLink!.slug}?proposal=${proposal.id}`,
-          };
+    } else if (stage === "kickoff") {
+      if (projectStage === "kickoff_scheduled" || upcomingBooking) {
+        nextAction = upcomingBooking
+          ? {
+              title: "Kickoff scheduled",
+              description: `Your kickoff call is booked for ${new Date(upcomingBooking.scheduled_at).toLocaleString(undefined, { weekday: "long", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}.`,
+              icon: CalendarPlus,
+              ctaLabel: "",
+            }
+          : {
+              title: "Kickoff scheduled",
+              description: "Your kickoff has been scheduled. We'll share the meeting details when available.",
+              icon: CalendarPlus,
+              ctaLabel: "",
+            };
+      } else if (ownerKickoffUrl || bookingLink) {
+        nextAction = ownerKickoffUrl
+          ? {
+              title: "Book your kickoff call",
+              description: "Pick a time that works for you and we'll get started.",
+              icon: CalendarPlus,
+              ctaLabel: "Schedule call",
+              onClick: () => window.open(ownerKickoffUrl, "_blank", "noopener,noreferrer"),
+            }
+          : {
+              title: "Book your kickoff call",
+              description: "Pick a time that works for you and we'll get started.",
+              icon: CalendarPlus,
+              ctaLabel: "Schedule call",
+              href: `/book/${bookingLink!.slug}?proposal=${proposal.id}`,
+            };
+      }
     }
   }
 
