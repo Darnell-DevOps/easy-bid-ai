@@ -130,8 +130,13 @@ export default function OnboardingDashboard() {
           <div className="space-y-3">
             {forms.map((f) => {
               const progress = onboardingProgress({ fields: f.fields, responses: f.responses });
-              const ageMs = Date.now() - new Date(f.created_at).getTime();
-              const stale = f.status !== "completed" && ageMs > 24 * 3600 * 1000;
+              const referenceTs = f.sent_at ? new Date(f.sent_at).getTime() : null;
+              const stale =
+                f.status !== "completed" &&
+                !!f.sent_at &&
+                referenceTs !== null &&
+                Date.now() - referenceTs > 24 * 3600 * 1000;
+              const needsSend = f.status !== "completed" && !f.sent_at;
               return (
                 <Card key={f.id} className={stale ? "border-amber-500/40 bg-amber-500/5" : ""}>
                   <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
@@ -144,6 +149,11 @@ export default function OnboardingDashboard() {
                           </Badge>
                         )}
                         <StatusBadge status={f.status} />
+                        {needsSend && (
+                          <Badge variant="outline" className="border-muted-foreground/40 text-muted-foreground text-[10px]">
+                            Not sent
+                          </Badge>
+                        )}
                         {stale && (
                           <Badge variant="outline" className="border-amber-500/40 text-amber-500 text-[10px]">
                             Follow up
@@ -178,9 +188,13 @@ export default function OnboardingDashboard() {
                         <Button
                           size="sm"
                           className="gap-1.5 bg-amber-500 text-white hover:bg-amber-500/90"
-                          onClick={() => followedUp(f.id)}
+                          onClick={() => sendReminder(f)}
+                          disabled={remindingId === f.id}
                         >
-                          <Send className="w-3.5 h-3.5" /> Send Follow-Up
+                          {remindingId === f.id
+                            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            : <Send className="w-3.5 h-3.5" />}
+                          Send reminder
                         </Button>
                       )}
                       {f.proposal_id && (
