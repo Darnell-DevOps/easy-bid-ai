@@ -2,6 +2,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { verifyWebhook, EventName, type PaddleEnv } from "../_shared/paddle.ts";
 import { calculateCommercialTotals } from "../_shared/commercial-calc.ts";
+import { buildOnboardingFields, buildOnboardingPrefill } from "../_shared/onboarding-fields.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
