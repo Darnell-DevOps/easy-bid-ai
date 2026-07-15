@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft, Loader2, Download, FileText, ExternalLink, User, Briefcase, Pencil,
+  CheckCircle2, Send, BellRing,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription,
@@ -20,6 +21,7 @@ import {
 } from "@/lib/onboarding";
 import { parseFilePayload, parseFilePayloads, type FilePayload, type SmartField } from "@/lib/form-fields";
 import { useToast } from "@/hooks/use-toast";
+import { getPrimaryCustomDomain, buildPublicUrl } from "@/lib/customDomain";
 
 function formatBytes(n: number): string {
   if (!n) return "0 B";
