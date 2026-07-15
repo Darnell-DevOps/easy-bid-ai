@@ -155,11 +155,13 @@ Deno.serve(async (req) => {
         });
         if (res.sent) {
           waSent++;
+          anyDelivered = true;
           await recordReminderAudit(supabase, {
             userId: f.user_id, kind: "onboarding_remind", stage, channel: "whatsapp",
             status: "sent", relatedId: f.id, recipient: phone, idempotencyKey: waKey,
           });
         } else if (res.skipped === "deduped") {
+          if (res.sid) anyDelivered = true;
           await recordReminderAudit(supabase, {
             userId: f.user_id, kind: "onboarding_remind", stage, channel: "whatsapp",
             status: "deduped", relatedId: f.id, recipient: phone, idempotencyKey: waKey,
