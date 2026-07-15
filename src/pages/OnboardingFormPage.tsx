@@ -15,21 +15,7 @@ import { isFieldVisible, type FieldResponses } from "@/lib/form-fields";
 import SmartFieldRenderer from "@/components/forms/SmartFieldRenderer";
 import OnboardingProgressTracker from "@/components/onboarding/OnboardingProgressTracker";
 import DynamicFavicon from "@/components/branding/DynamicFavicon";
-
-const CURRENCY_SYMBOL: Record<string, string> = {
-  GBP: "£", USD: "$", EUR: "€", CAD: "C$", AUD: "A$",
-};
-
-function formatAmount(cents: number | null | undefined, currency: string | null | undefined) {
-  if (!cents) return null;
-  const cur = (currency || "USD").toUpperCase();
-  const symbol = CURRENCY_SYMBOL[cur] || "";
-  const value = (cents / 100).toLocaleString(undefined, {
-    minimumFractionDigits: cents % 100 === 0 ? 0 : 2,
-    maximumFractionDigits: 2,
-  });
-  return `${symbol}${value}`;
-}
+import { calculateCommercialTotals, formatCents } from "@/lib/commercial-calc";
 
 interface ProposalSummary {
   service_type?: string | null;
@@ -39,6 +25,8 @@ interface ProposalSummary {
   currency?: string | null;
   budget?: string | null;
   timeline?: string | null;
+  tax_rate?: number | null;
+  tax_mode?: string | null;
 }
 
 function hydrate(raw: Record<string, string> | undefined): FieldResponses {
@@ -159,7 +147,7 @@ export default function OnboardingFormPage() {
     toast({
       title: complete ? "Onboarding submitted" : "Progress saved",
       description: complete
-        ? "Thank you! We'll be in touch shortly to kick things off."
+        ? "Thanks — your information has been sent successfully. We'll review everything and let you know when the next step is ready."
         : "You can return to this link anytime to finish.",
     });
   };
@@ -192,7 +180,7 @@ export default function OnboardingFormPage() {
           </div>
           <h1 className="text-2xl font-bold text-foreground mb-2">Onboarding complete</h1>
           <p className="text-sm text-muted-foreground mb-6">
-            Thanks{form.client_name ? `, ${form.client_name}` : ""}! Your project is ready to begin. We'll be in touch shortly.
+            Thanks{form.client_name ? `, ${form.client_name}` : ""}! We'll review everything and let you know when the next step is ready.
           </p>
           {form.proposal_id && (
             <Button asChild variant="outline">
@@ -222,7 +210,16 @@ export default function OnboardingFormPage() {
 
         {proposalSummary && (() => {
           const money =
-            formatAmount(proposalSummary.amount_cents ?? null, proposalSummary.currency ?? null) ||
+            (proposalSummary.amount_cents != null
+              ? formatCents(
+                  calculateCommercialTotals(
+                    proposalSummary.amount_cents,
+                    proposalSummary.tax_rate ?? null,
+                    (proposalSummary.tax_mode as any) ?? null,
+                  ).totalCents,
+                  proposalSummary.currency ?? null,
+                )
+              : null) ||
             proposalSummary.budget ||
             null;
           const rows: { label: string; value: string }[] = [];
@@ -313,7 +310,7 @@ export default function OnboardingFormPage() {
               className="mt-0.5"
             />
             <label htmlFor="confirm-accurate" className="text-sm text-foreground/90 leading-relaxed cursor-pointer select-none">
-              I confirm the information provided is accurate and the project can begin.
+              I confirm the information provided is accurate and ready for review.
             </label>
           </div>
         </div>

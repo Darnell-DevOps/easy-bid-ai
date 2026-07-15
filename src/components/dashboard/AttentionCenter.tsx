@@ -79,6 +79,11 @@ interface OnboardingLite {
   client_name: string | null;
   status: string;
   created_at: string;
+  sent_at: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  reviewed_at: string | null;
+  proposal_id: string | null;
 }
 
 interface BookingLite {
@@ -199,7 +204,7 @@ export default function AttentionCenter({ proposals, clients, proposalClientIds 
           .limit(50),
         supabase
           .from("onboarding_forms")
-          .select("id, client_name, status, created_at")
+          .select("id, client_name, status, created_at, sent_at, started_at, completed_at, reviewed_at, proposal_id")
           .is("deleted_at", null)
           .order("created_at", { ascending: false })
           .limit(50),
@@ -437,21 +442,49 @@ export default function AttentionCenter({ proposals, clients, proposalClientIds 
       });
     }
 
-    // 7. Onboarding forms pending > 2 days
+    // 7. Onboarding awareness ladder
     for (const f of onboarding) {
-      if (f.status === "pending" || f.status === "in_progress") {
-        const days = (Date.now() - new Date(f.created_at).getTime()) / 86400000;
+      const clientLabel = f.client_name || "Client";
+      const detailUrl = `/dashboard/onboarding/${f.id}`;
+      if (!f.sent_at) {
+        // Unsent (draft awaiting review/send)
+        out.push({
+          key: `ob-unsent-${f.id}`,
+          tone: "info",
+          icon: ClipboardList,
+          title: `Review & send onboarding — ${clientLabel}`,
+          subtitle: `Draft created ${relTime(f.created_at)}`,
+          cta: "Review onboarding",
+          onClick: () => navigate(detailUrl),
+          priority: 30,
+          waitedFor: f.created_at,
+        });
+      } else if (f.status === "completed" && !f.reviewed_at) {
+        // Completed but not yet reviewed by owner
+        out.push({
+          key: `ob-review-${f.id}`,
+          tone: "warning",
+          icon: ClipboardList,
+          title: `Review onboarding — ${clientLabel}`,
+          subtitle: `Client submitted ${relTime(f.completed_at || f.sent_at)}`,
+          cta: "Review responses",
+          onClick: () => navigate(detailUrl),
+          priority: 70,
+          waitedFor: f.completed_at || f.sent_at,
+        });
+      } else if (f.status === "pending" || f.status === "in_progress") {
+        const days = (Date.now() - new Date(f.sent_at).getTime()) / 86400000;
         if (days >= 2) {
           out.push({
-            key: `ob-${f.id}`,
+            key: `ob-stalled-${f.id}`,
             tone: "info",
             icon: ClipboardList,
-            title: `Onboarding stalled — ${f.client_name || "Client"}`,
-            subtitle: `${f.status === "pending" ? "Not started" : "In progress"} · Sent ${relTime(f.created_at)}`,
-            cta: "Nudge client",
-            onClick: () => navigate(`/dashboard/onboarding`),
+            title: `Onboarding stalled — ${clientLabel}`,
+            subtitle: `${f.status === "pending" ? "Not started" : "In progress"} · Sent ${relTime(f.sent_at)}`,
+            cta: "Open onboarding",
+            onClick: () => navigate(detailUrl),
             priority: 45,
-            waitedFor: f.created_at,
+            waitedFor: f.sent_at,
           });
         }
       }
