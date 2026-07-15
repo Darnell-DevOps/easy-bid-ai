@@ -83,10 +83,9 @@ Deno.serve(async (req) => {
               idempotencyKey: idemBase,
               data: {
                 client_name: f.client_name || "there",
-                service_type: f.service_type || "",
-                url: formUrl,
-                stage,
+                onboarding_link: formUrl,
               },
+
             },
           });
           if (sendErr) {
