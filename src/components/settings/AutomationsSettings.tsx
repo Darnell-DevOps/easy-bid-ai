@@ -86,7 +86,7 @@ const CATEGORIES: CategoryDef[] = [
       { id: "onboarding_auto_send", label: "Automatically send onboarding after payment", description: "Sends your onboarding form once the first invoice is paid.", defaultOn: true },
       { id: "onboarding_auto_task", label: "Automatically create onboarding task", description: "Adds an onboarding task to your dashboard for follow-through.", defaultOn: true },
       { id: "onboarding_notify_completed", label: "Notify me when onboarding completed", description: "Know the moment a client finishes the form.", defaultOn: true },
-      { id: "onboarding_remind_client", label: "Remind client if onboarding not completed", description: "Sends a friendly reminder after 3 days of inactivity.", defaultOn: true },
+      { id: "onboarding_remind_client", label: "Remind client if onboarding not completed", description: "Sends a friendly reminder 2 and 5 days after the onboarding form was sent, if still incomplete.", defaultOn: true },
     ],
   },
   {
