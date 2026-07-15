@@ -337,6 +337,21 @@ export default function ProposalView() {
       if (data?.error) throw new Error(data.error);
       const newSection = (data?.section || "").trim();
       if (!newSection) throw new Error("Empty section returned");
+
+      // Lightweight sanity checks before overwriting a section.
+      const MIN_SECTION_LENGTH = 40;
+      const refusalPrefixes = ["i cannot", "i'm unable", "i am unable", "error:", "as an ai"];
+      const lower = newSection.toLowerCase();
+      if (newSection.length < MIN_SECTION_LENGTH) {
+        throw new Error("The regenerated section didn't look right — nothing was changed.");
+      }
+      if (!/^##\s+/m.test(newSection)) {
+        throw new Error("The regenerated section didn't look right — nothing was changed.");
+      }
+      if (refusalPrefixes.some((prefix) => lower.startsWith(prefix))) {
+        throw new Error("The regenerated section didn't look right — nothing was changed.");
+      }
+
       const updated = replaceSection(editedProposal, section, newSection);
       setEditedProposal(updated);
       await supabase.from("proposals").update({ proposal_content: updated }).eq("id", id);
