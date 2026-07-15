@@ -115,13 +115,19 @@ function deriveProjectStage(
   contract: ContractLite | null,
   onboarding: OnboardingFormRow | null,
   hasBooking: boolean,
+  projectStage: string | null,
 ): ProjectStage {
   if (onboarding?.status === "completed") {
     // Kickoff/active require a fully executed contract (client-signed + provider-countersigned).
     if (contract && contract.status !== "executed") return "onboarding";
     // Completed but the owner hasn't reviewed the submission yet — stay in onboarding.
     if (!onboarding.reviewed_at) return "onboarding";
-    return hasBooking ? "active" : "kickoff";
+    // Authoritative signal: the owner's project_stage on the client row.
+    if (projectStage === "project_active") return "active";
+    if (projectStage === "kickoff_scheduled") return "kickoff";
+    // Fallback while the stage RPC is still loading: use booking presence
+    // (already cancellation-aware) but never claim "active" without the real signal.
+    return hasBooking ? "kickoff" : "kickoff";
   }
   if (p.client_paid) return "onboarding";
   if (contract?.status === "executed") return "payment";
