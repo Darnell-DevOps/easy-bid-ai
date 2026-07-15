@@ -1,0 +1,133 @@
+// Deno-side onboarding field builder. Ported from src/lib/onboarding.ts to keep
+// the canonical shape in one place — payments-webhook uses this after creating
+// an onboarding form via claim_onboarding_form.
+
+export type OnboardingFieldType =
+  | "short_text" | "long_text" | "url" | "email" | "phone" | "number"
+  | "date" | "select" | "radio" | "multi_select" | "checkbox" | "file";
+
+export interface OnboardingField {
+  id: string;
+  label: string;
+  type: OnboardingFieldType;
+  placeholder?: string;
+  helpText?: string;
+  required?: boolean;
+  options?: string[];
+  group?: string;
+  condition?: null | Record<string, unknown>;
+  maxSizeMb?: number;
+  accept?: string;
+  multiple?: boolean;
+}
+
+const BASE_FIELDS: OnboardingField[] = [
+  { id: "business_name", label: "Business name", type: "short_text", required: true, group: "About your business" },
+  { id: "project_goals", label: "Top project goals", type: "long_text", required: true, placeholder: "What does success look like?", group: "About your business" },
+  { id: "target_audience", label: "Target audience", type: "long_text", placeholder: "Who are we trying to reach?", group: "About your business" },
+  { id: "preferred_deadline", label: "Preferred deadline", type: "date", group: "Timing" },
+  { id: "brand_preferences", label: "Brand preferences", type: "long_text", placeholder: "Tone, vibe, colours, fonts you love", group: "Brand" },
+  { id: "important_links", label: "Important links", type: "long_text", placeholder: "Website, socials, references — one per line", group: "Resources" },
+  { id: "assets_required", label: "Assets you'll provide", type: "long_text", placeholder: "Logos, photos, copy, videos…", group: "Resources" },
+  { id: "login_access", label: "How can we get access?", type: "long_text", placeholder: "e.g. invite us as a collaborator/admin on your platform, or let us know how you'd like to share access — please don't type passwords here.", group: "Resources" },
+  { id: "reference_materials_upload", label: "Upload any reference documents (brand guidelines, briefs, past materials)", type: "file", accept: "image/*,.pdf,.doc,.docx", maxSizeMb: 30, multiple: true, group: "Uploads" },
+  { id: "decision_maker", label: "Who is the main decision-maker for this project?", type: "short_text", group: "Approvals & Contact" },
+  { id: "preferred_contact_method", label: "Best way to reach you", type: "short_text", placeholder: "e.g. email, phone, WhatsApp, Slack", group: "Approvals & Contact" },
+  { id: "extra_notes", label: "Anything else we should know?", type: "long_text", group: "Notes" },
+];
+
+const SERVICE_SPECIFIC: Record<string, OnboardingField[]> = {
+  website: [
+    { id: "sitemap_needs", label: "Pages / sitemap you need", type: "long_text", placeholder: "Home, About, Services, Contact…", group: "Website specifics" },
+    { id: "inspiration_sites", label: "Inspiration websites", type: "long_text", placeholder: "URLs of sites you love", group: "Website specifics" },
+    { id: "hosting_domain", label: "Hosting / domain details", type: "long_text", group: "Website specifics" },
+    { id: "current_website_url", label: "Current website URL (if any)", type: "short_text", group: "Website specifics" },
+    { id: "needs_copywriting", label: "Do you need copywriting for the site?", type: "short_text", placeholder: "Yes/No — or let us know if you'll provide the text", group: "Website specifics" },
+    { id: "forms_needed", label: "Do you need booking, payment, or contact forms?", type: "long_text", placeholder: "List any forms or interactive features needed", group: "Website specifics" },
+    { id: "competitor_websites", label: "Competitor websites", type: "long_text", placeholder: "Sites of similar businesses, for reference", group: "Website specifics" },
+    { id: "content_copy_upload", label: "Upload your website copy/content (if ready)", type: "file", accept: ".doc,.docx,.pdf,.txt", maxSizeMb: 15, group: "Website specifics" },
+    { id: "site_reference_screenshots_upload", label: "Screenshots of sites you like or dislike", type: "file", accept: "image/*", maxSizeMb: 15, multiple: true, group: "Website specifics" },
+  ],
+  branding: [
+    { id: "color_preferences", label: "Colour preferences", type: "long_text", group: "Branding specifics" },
+    { id: "competitors", label: "Main competitors", type: "long_text", group: "Branding specifics" },
+    { id: "style_references", label: "Style references", type: "long_text", placeholder: "Brands, moodboards, Pinterest…", group: "Branding specifics" },
+    { id: "logo_inspiration", label: "Logo inspiration", type: "long_text", group: "Branding specifics" },
+    { id: "has_existing_logo", label: "Do you already have a logo?", type: "short_text", placeholder: "Yes/No — if yes, you can upload it under Assets you'll provide", group: "Branding specifics" },
+    { id: "logo_usage", label: "Where will the logo be used?", type: "long_text", placeholder: "Website, packaging, signage, social media…", group: "Branding specifics" },
+    { id: "current_logo_file_upload", label: "Your current logo (if you have one)", type: "file", accept: "image/*", maxSizeMb: 10, group: "Branding specifics" },
+    { id: "moodboard_upload", label: "Moodboard or style references", type: "file", accept: "image/*", maxSizeMb: 15, multiple: true, group: "Branding specifics" },
+  ],
+  social: [
+    { id: "platforms", label: "Platforms used", type: "long_text", placeholder: "Instagram, TikTok, LinkedIn…", group: "Social specifics" },
+    { id: "post_frequency", label: "Posting frequency", type: "short_text", placeholder: "e.g. 3x/week", group: "Social specifics" },
+    { id: "brand_tone", label: "Brand tone", type: "long_text", group: "Social specifics" },
+    { id: "content_goals", label: "Content goals", type: "long_text", group: "Social specifics" },
+    { id: "existing_media_upload", label: "Existing photos to work from", type: "file", accept: "image/*", maxSizeMb: 30, multiple: true, group: "Social specifics" },
+  ],
+  marketing: [
+    { id: "audience", label: "Who is the audience?", type: "long_text", group: "Marketing specifics" },
+    { id: "offers", label: "Offers / promotions", type: "long_text", group: "Marketing specifics" },
+    { id: "campaign_goals", label: "Campaign goals", type: "long_text", group: "Marketing specifics" },
+    { id: "ad_budget", label: "Ad budget", type: "short_text", placeholder: "Monthly spend", group: "Marketing specifics" },
+    { id: "ad_creative_upload", label: "Ad creative examples you like", type: "file", accept: "image/*,.pdf", maxSizeMb: 15, multiple: true, group: "Marketing specifics" },
+  ],
+  consulting: [
+    { id: "current_challenges", label: "Current challenges", type: "long_text", group: "Consulting specifics" },
+    { id: "business_goals", label: "Business goals", type: "long_text", group: "Consulting specifics" },
+    { id: "priorities", label: "Top priorities right now", type: "long_text", group: "Consulting specifics" },
+  ],
+  automation: [
+    { id: "process_to_automate", label: "What process do you want automated?", type: "long_text", group: "Automation specifics" },
+    { id: "current_tools", label: "What tools/software do you currently use?", type: "long_text", placeholder: "e.g. Gmail, Notion, Airtable, a specific CRM…", group: "Automation specifics" },
+    { id: "automation_trigger", label: "What should trigger this workflow?", type: "long_text", placeholder: "e.g. a new form submission, a new lead, a specific time each day", group: "Automation specifics" },
+    { id: "automation_outcome", label: "What should happen after it's triggered?", type: "long_text", placeholder: "e.g. send an email, create a task, notify the team", group: "Automation specifics" },
+    { id: "process_screenshot_upload", label: "Screenshot or export of your current process", type: "file", accept: "image/*,.pdf,.csv,.xlsx", maxSizeMb: 15, multiple: true, group: "Automation specifics" },
+    { id: "sample_data_upload", label: "Sample data file (e.g. a spreadsheet of leads)", type: "file", accept: ".csv,.xlsx,.xls", maxSizeMb: 15, group: "Automation specifics" },
+  ],
+};
+
+export function detectServiceKey(service: string | null | undefined): keyof typeof SERVICE_SPECIFIC | "general" {
+  const s = (service || "").toLowerCase();
+  if (/(web ?site|web ?design|landing|wordpress|shopify)/i.test(s)) return "website";
+  if (/(brand|logo|identity)/i.test(s)) return "branding";
+  if (/(social|instagram|tiktok|content|community)/i.test(s)) return "social";
+  if (/(market|ads?|seo|paid|growth|email)/i.test(s)) return "marketing";
+  if (/(automation|workflow|zapier|make\.com|integration|ai agent|chatbot|whatsapp bot)/i.test(s)) return "automation";
+  if (/(consult|advis|coach|strateg)/i.test(s)) return "consulting";
+  return "general";
+}
+
+export function buildOnboardingFields(serviceType: string | null | undefined): OnboardingField[] {
+  const key = detectServiceKey(serviceType);
+  const extras = key === "general" ? [] : SERVICE_SPECIFIC[key];
+  const fields: OnboardingField[] = [];
+  let inserted = false;
+  for (const f of BASE_FIELDS) {
+    fields.push(f);
+    if (!inserted && f.id === "target_audience" && extras.length) {
+      fields.push(...extras);
+      inserted = true;
+    }
+  }
+  if (!inserted) fields.push(...extras);
+  return fields;
+}
+
+/**
+ * Build a conservative deterministic prefill for a new onboarding form.
+ * Only prefills fields whose source is unambiguous — never invents dates or content.
+ */
+export function buildOnboardingPrefill(prop: {
+  company_name?: string | null;
+  goals?: string | null;
+  deliverables?: string | null;
+} | null | undefined): Record<string, string> {
+  const responses: Record<string, string> = {};
+  if (!prop) return responses;
+  const company = (prop.company_name || "").trim();
+  if (company) responses.business_name = company;
+  const goals = (prop.goals || "").trim();
+  if (goals) responses.project_goals = goals;
+  return responses;
+}
