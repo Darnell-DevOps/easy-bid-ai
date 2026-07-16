@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
   }
   const userId = userData.user.id;
 
-  let body: { client_id?: string; subject?: string; body?: string };
+  let body: { client_id?: string; subject?: string; body?: string; attempt_id?: string };
   try { body = await req.json(); } catch {
     return new Response(JSON.stringify({ error: "invalid_json" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
@@ -57,11 +57,15 @@ Deno.serve(async (req) => {
   const clientId = (body.client_id || "").trim();
   const subject = (body.subject || "").trim();
   const messageBody = (body.body || "").trim();
+  const attemptId = (body.attempt_id || "").trim();
   if (!clientId || !subject || !messageBody) {
     return new Response(JSON.stringify({ error: "missing_fields" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
   if (subject.length > 300 || messageBody.length > 20000) {
     return new Response(JSON.stringify({ error: "too_long" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+  if (attemptId && (attemptId.length > 100 || !/^[A-Za-z0-9._-]+$/.test(attemptId))) {
+    return new Response(JSON.stringify({ error: "invalid_attempt_id" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
   const svc = createClient(supabaseUrl, serviceKey);
@@ -92,7 +96,16 @@ Deno.serve(async (req) => {
   // If the user has already pasted/edited the signature into the body, don't double it.
   const bodyHasSignature = signature ? messageBody.includes(signature) : false;
   const html = renderHtml(messageBody, bodyHasSignature ? null : signature);
-  const idempotencyKey = `lead-reply:${clientId}:${Date.now()}`;
+
+  // Stable idempotency key: prefer client-supplied attempt_id (fresh UUID per explicit
+  // "Send" click, reused across retries of the same click). Fallback to a content hash
+  // so identical repeat submissions from the same client still dedupe.
+  const contentHash = await (async () => {
+    const buf = new TextEncoder().encode(`${subject}\n\n${messageBody}`);
+    const digest = await crypto.subtle.digest("SHA-256", buf);
+    return Array.from(new Uint8Array(digest)).slice(0, 12).map((b) => b.toString(16).padStart(2, "0")).join("");
+  })();
+  const idempotencyKey = `lead-reply:${clientId}:${attemptId || `hash-${contentHash}`}`;
 
   const { data: sent, error: sendErr } = await svc.functions.invoke("send-email", {
     body: {
@@ -104,29 +117,41 @@ Deno.serve(async (req) => {
       meta: { client_id: clientId, kind: "lead_reply" },
     },
   });
-  if (sendErr || (sent as any)?.error) {
+
+  const sentOk = (sent as any)?.ok === true;
+  if (sendErr || !sentOk) {
+    const reason = (sent as any)?.suppressed
+      ? "suppressed"
+      : (sent as any)?.error || sendErr?.message || "send_failed";
     return new Response(
-      JSON.stringify({ error: "send_failed", detail: sendErr?.message || (sent as any)?.error }),
+      JSON.stringify({ error: "send_failed", reason, ok: false }),
       { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 
+  const sentAt = new Date().toISOString();
   const updates: Record<string, unknown> = {
-    lead_reply_sent_at: new Date().toISOString(),
+    lead_reply_sent_at: sentAt,
     lead_draft_reply: messageBody,
     lead_draft_subject: subject,
   };
   if (client.status === "New") updates.status = "Contacted";
   await svc.from("clients").update(updates).eq("id", clientId);
 
-  await logLeadActivity(svc, {
-    user_id: userId,
-    type: "reply_sent",
-    title: `Reply sent to ${client.name || client.email}`,
-    summary: subject.slice(0, 200),
-    client_id: clientId,
-    metadata: { to: client.email },
-  });
+  // Skip duplicate activity row for a deduped send — the prior successful send already logged one.
+  if (!(sent as any)?.deduped) {
+    await logLeadActivity(svc, {
+      user_id: userId,
+      type: "reply_sent",
+      title: `Reply sent to ${client.name || client.email}`,
+      summary: subject.slice(0, 200),
+      client_id: clientId,
+      metadata: { to: client.email, attempt_id: attemptId || null },
+    });
+  }
 
-  return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  return new Response(
+    JSON.stringify({ ok: true, sent_at: sentAt, deduped: !!(sent as any)?.deduped }),
+    { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+  );
 });
