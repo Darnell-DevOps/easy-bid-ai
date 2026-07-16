@@ -193,7 +193,11 @@ Deno.serve(async (req) => {
     if (totalBytes > MAX_TOTAL_ATTACHMENT_BYTES) {
       return json({ error: "attachments_total_too_large" }, 400);
     }
-  }
+
+  // Reflect resolved values back onto body so downstream `...body` spreads (logSend) see them.
+  body.userId = userId;
+  body.from = from;
+
 
   // Idempotency: if a row with this key already exists and was sent, no-op.
   if (idempotencyKey) {
