@@ -439,31 +439,42 @@ export default function ClientDetail() {
       return;
     }
     setDraftSending(true);
+    // Fresh UUID per explicit send click. Server uses it as a stable idempotency key so
+    // an accidental double-click or network retry of the same click won't double-send.
+    const attemptId = (typeof crypto !== "undefined" && "randomUUID" in crypto)
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     try {
       const { data, error } = await supabase.functions.invoke("send-lead-reply", {
-        body: { client_id: client.id, subject: draftSubject.trim(), body: draftBody.trim() },
+        body: {
+          client_id: client.id,
+          subject: draftSubject.trim(),
+          body: draftBody.trim(),
+          attempt_id: attemptId,
+        },
       });
       if (error) throw error;
-      if ((data as any)?.error) throw new Error((data as any).error);
-      const now = new Date().toISOString();
+      if ((data as any)?.error) throw new Error((data as any).reason || (data as any).error);
+      if (!(data as any)?.ok) throw new Error("send_failed");
+      const sentAt = (data as any)?.sent_at || new Date().toISOString();
       setClient({
         ...client,
-        lead_reply_sent_at: now,
+        lead_reply_sent_at: sentAt,
         lead_draft_subject: draftSubject.trim(),
         lead_draft_reply: draftBody.trim(),
         status: client.status === "New" ? "Contacted" : client.status,
       });
       setDraftEditing(false);
-      void logLeadActivity({
-        type: "reply_sent",
-        title: `AI reply sent to ${client.name}`,
-        summary: draftSubject.trim().slice(0, 200),
-        client_id: client.id,
-        metadata: { to: client.email },
-      });
+      // NOTE: activity logging happens server-side in send-lead-reply. Do NOT log here.
       toast({ title: "Reply sent", description: `Sent to ${client.email}` });
     } catch (e: any) {
-      toast({ title: "Could not send reply", description: e.message || "Try again.", variant: "destructive" });
+      const reason = e?.message || "";
+      const desc = reason === "suppressed"
+        ? "Recipient is on the suppression list."
+        : reason === "send_failed"
+          ? "The email could not be delivered. Your draft is preserved."
+          : reason || "Try again.";
+      toast({ title: "Could not send reply", description: desc, variant: "destructive" });
     } finally {
       setDraftSending(false);
     }
