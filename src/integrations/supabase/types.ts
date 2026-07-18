@@ -41,102 +41,6 @@ export type Database = {
         }
         Relationships: []
       }
-      app_error_reports: {
-        Row: {
-          id: string
-          message: string
-          metadata: Json
-          occurred_at: string
-          path: string | null
-          request_fingerprint: string | null
-          resolved_at: string | null
-          resolved_by: string | null
-          severity: string
-          source: string
-          stack: string | null
-          user_agent: string | null
-          user_id: string | null
-        }
-        Insert: {
-          id?: string
-          message: string
-          metadata?: Json
-          occurred_at?: string
-          path?: string | null
-          request_fingerprint?: string | null
-          resolved_at?: string | null
-          resolved_by?: string | null
-          severity?: string
-          source: string
-          stack?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          id?: string
-          message?: string
-          metadata?: Json
-          occurred_at?: string
-          path?: string | null
-          request_fingerprint?: string | null
-          resolved_at?: string | null
-          resolved_by?: string | null
-          severity?: string
-          source?: string
-          stack?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      automation_job_registry: {
-        Row: {
-          enabled: boolean
-          function_name: string
-          interval_minutes: number
-          job_name: string
-          last_completed_at: string | null
-          last_duration_ms: number | null
-          last_error: string | null
-          last_failed_at: string | null
-          last_result: Json | null
-          last_started_at: string | null
-          last_succeeded_at: string | null
-          next_run_at: string
-          updated_at: string
-        }
-        Insert: {
-          enabled?: boolean
-          function_name: string
-          interval_minutes: number
-          job_name: string
-          last_completed_at?: string | null
-          last_duration_ms?: number | null
-          last_error?: string | null
-          last_failed_at?: string | null
-          last_result?: Json | null
-          last_started_at?: string | null
-          last_succeeded_at?: string | null
-          next_run_at?: string
-          updated_at?: string
-        }
-        Update: {
-          enabled?: boolean
-          function_name?: string
-          interval_minutes?: number
-          job_name?: string
-          last_completed_at?: string | null
-          last_duration_ms?: number | null
-          last_error?: string | null
-          last_failed_at?: string | null
-          last_result?: Json | null
-          last_started_at?: string | null
-          last_succeeded_at?: string | null
-          next_run_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       ai_insights: {
         Row: {
           action_url: string | null
@@ -891,12 +795,6 @@ export type Database = {
           created_at: string
           currency: string | null
           deleted_at: string | null
-          generation_attempts: number
-          generation_completed_at: string | null
-          generation_last_error: string | null
-          generation_next_retry_at: string | null
-          generation_started_at: string | null
-          generation_status: string
           id: string
           proposal_id: string | null
           sent_at: string | null
@@ -923,12 +821,6 @@ export type Database = {
           created_at?: string
           currency?: string | null
           deleted_at?: string | null
-          generation_attempts?: number
-          generation_completed_at?: string | null
-          generation_last_error?: string | null
-          generation_next_retry_at?: string | null
-          generation_started_at?: string | null
-          generation_status?: string
           id?: string
           proposal_id?: string | null
           sent_at?: string | null
@@ -955,12 +847,6 @@ export type Database = {
           created_at?: string
           currency?: string | null
           deleted_at?: string | null
-          generation_attempts?: number
-          generation_completed_at?: string | null
-          generation_last_error?: string | null
-          generation_next_retry_at?: string | null
-          generation_started_at?: string | null
-          generation_status?: string
           id?: string
           proposal_id?: string | null
           sent_at?: string | null
@@ -2626,34 +2512,16 @@ export type Database = {
       }
       subscriptions: {
         Row: {
-          cancel_at_period_end: boolean
-          current_period_end: string | null
-          environment: string | null
-          paddle_customer_id: string | null
-          paddle_price_id: string | null
-          paddle_subscription_id: string | null
           plan: string
           updated_at: string
           user_id: string
         }
         Insert: {
-          cancel_at_period_end?: boolean
-          current_period_end?: string | null
-          environment?: string | null
-          paddle_customer_id?: string | null
-          paddle_price_id?: string | null
-          paddle_subscription_id?: string | null
           plan?: string
           updated_at?: string
           user_id: string
         }
         Update: {
-          cancel_at_period_end?: boolean
-          current_period_end?: string | null
-          environment?: string | null
-          paddle_customer_id?: string | null
-          paddle_price_id?: string | null
-          paddle_subscription_id?: string | null
           plan?: string
           updated_at?: string
           user_id?: string
@@ -2861,11 +2729,6 @@ export type Database = {
           id: string
           language: string
           last_name: string | null
-          onboarding_client_id: string | null
-          onboarding_completed_at: string | null
-          onboarding_proposal_id: string | null
-          onboarding_skipped_at: string | null
-          onboarding_step: string
           phone: string | null
           timezone: string
           updated_at: string
@@ -2880,11 +2743,6 @@ export type Database = {
           id?: string
           language?: string
           last_name?: string | null
-          onboarding_client_id?: string | null
-          onboarding_completed_at?: string | null
-          onboarding_proposal_id?: string | null
-          onboarding_skipped_at?: string | null
-          onboarding_step?: string
           phone?: string | null
           timezone?: string
           updated_at?: string
@@ -2899,11 +2757,6 @@ export type Database = {
           id?: string
           language?: string
           last_name?: string | null
-          onboarding_client_id?: string | null
-          onboarding_completed_at?: string | null
-          onboarding_proposal_id?: string | null
-          onboarding_skipped_at?: string | null
-          onboarding_step?: string
           phone?: string | null
           timezone?: string
           updated_at?: string
@@ -3049,14 +2902,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      admin_resolve_error_report: {
-        Args: { _error_id: string }
-        Returns: undefined
-      }
-      admin_retry_automation_job: {
-        Args: { _job_name: string }
-        Returns: undefined
-      }
       admin_get_actions_log: {
         Args: { _limit?: number }
         Returns: {
