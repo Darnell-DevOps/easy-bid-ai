@@ -36,6 +36,8 @@ jobs:
       - name: Check launch-critical functions
         run: >-
           deno check
+          --node-modules-dir=auto
+          --no-lock
           supabase/functions/client-portal-accept/index.ts
           supabase/functions/automation-dispatcher/index.ts
           supabase/functions/contract-generation-retry-cron/index.ts
