@@ -2,9 +2,25 @@
 
 const clientToken = import.meta.env.VITE_PAYMENTS_CLIENT_TOKEN as string | undefined;
 
+export interface PaddleEvent {
+  name?: string;
+  data?: unknown;
+}
+
+export type PaddleEventCallback = (event: PaddleEvent) => void;
+
+interface PaddleWindowApi {
+  Environment: { set: (environment: "sandbox" | "production") => void };
+  Initialize: (options: { token: string; eventCallback?: PaddleEventCallback }) => void;
+  Update: (options: { eventCallback: PaddleEventCallback }) => void;
+  Checkout: {
+    open: (options: Record<string, unknown>) => void;
+  };
+}
+
 declare global {
   interface Window {
-    Paddle: any;
+    Paddle: PaddleWindowApi;
   }
 }
 
@@ -19,9 +35,20 @@ export function isTestMode() {
   return !!clientToken?.startsWith("test_");
 }
 
-export async function initializePaddle(): Promise<void> {
-  if (paddleInitialized) return;
-  if (paddleLoading) return paddleLoading;
+function updateEventCallback(eventCallback?: PaddleEventCallback) {
+  if (eventCallback) window.Paddle.Update({ eventCallback });
+}
+
+export async function initializePaddle(eventCallback?: PaddleEventCallback): Promise<void> {
+  if (paddleInitialized) {
+    updateEventCallback(eventCallback);
+    return;
+  }
+  if (paddleLoading) {
+    await paddleLoading;
+    updateEventCallback(eventCallback);
+    return;
+  }
   if (!clientToken) {
     throw new Error("VITE_PAYMENTS_CLIENT_TOKEN is not set");
   }
@@ -34,11 +61,12 @@ export async function initializePaddle(): Promise<void> {
       try {
         const environment = clientToken.startsWith("test_") ? "sandbox" : "production";
         window.Paddle.Environment.set(environment);
-        window.Paddle.Initialize({ token: clientToken });
+        window.Paddle.Initialize({ token: clientToken, eventCallback });
         paddleInitialized = true;
         resolve();
-      } catch (e) {
-        reject(e);
+      } catch (error) {
+        paddleLoading = null;
+        reject(error);
       }
     };
 
@@ -53,7 +81,10 @@ export async function initializePaddle(): Promise<void> {
       document.head.appendChild(script);
     }
     script.addEventListener("load", onReady, { once: true });
-    script.addEventListener("error", () => reject(new Error("Failed to load Paddle.js")), { once: true });
+    script.addEventListener("error", () => {
+      paddleLoading = null;
+      reject(new Error("Failed to load Paddle.js"));
+    }, { once: true });
   });
 
   return paddleLoading;

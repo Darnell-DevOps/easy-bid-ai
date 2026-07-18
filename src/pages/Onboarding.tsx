@@ -8,6 +8,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
+  loadOnboardingProgress,
+  migrateLegacyOnboarding,
+  saveOnboardingProgress,
+  type OnboardingStep,
+} from "@/lib/onboarding-progress";
+import {
   Sparkles,
   Loader2,
   ArrowRight,
@@ -18,12 +24,10 @@ import {
   Rocket,
 } from "lucide-react";
 
-type Step = "welcome" | "client" | "proposal" | "value";
+type Step = Exclude<OnboardingStep, "completed" | "skipped">;
 
-const ONBOARDING_KEY_PREFIX = "ss_onboarding_done_";
-
-export function getOnboardingKey(userId: string) {
-  return `${ONBOARDING_KEY_PREFIX}${userId}`;
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "Please try again.";
 }
 
 export default function Onboarding() {
@@ -32,6 +36,8 @@ export default function Onboarding() {
 
   const [userId, setUserId] = useState<string | null>(null);
   const [step, setStep] = useState<Step>("welcome");
+  const [initializing, setInitializing] = useState(true);
+  const [completing, setCompleting] = useState(false);
 
   // Step 1 — Client
   const [clientName, setClientName] = useState("");
@@ -46,24 +52,116 @@ export default function Onboarding() {
   const [proposalPreview, setProposalPreview] = useState<string>("");
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    let active = true;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        navigate("/login");
+        navigate("/login", { replace: true });
         return;
       }
       setUserId(user.id);
-    });
-  }, [navigate]);
 
-  const finish = () => {
-    if (userId) localStorage.setItem(getOnboardingKey(userId), "1");
-    navigate("/dashboard?onboarded=1");
+      try {
+        const stored = await loadOnboardingProgress(user.id);
+        const progress = await migrateLegacyOnboarding(user.id, stored);
+        if (!active) return;
+        if (progress?.onboarding_completed_at) {
+          navigate("/dashboard", { replace: true });
+          return;
+        }
+
+        if (progress?.onboarding_client_id) {
+          const { data: client } = await supabase
+            .from("clients")
+            .select("id, name, service_requested, project_description")
+            .eq("id", progress.onboarding_client_id)
+            .eq("user_id", user.id)
+            .maybeSingle();
+          if (client && active) {
+            setClientId(client.id);
+            setClientName(client.name || "");
+            setServiceRequested(client.service_requested || "");
+            setShortDescription(client.project_description || "");
+          }
+        }
+
+        if (progress?.onboarding_proposal_id) {
+          const { data: proposal } = await supabase
+            .from("proposals")
+            .select("id, proposal_content")
+            .eq("id", progress.onboarding_proposal_id)
+            .eq("user_id", user.id)
+            .maybeSingle();
+          if (proposal && active) {
+            setProposalId(proposal.id);
+            setProposalPreview((proposal.proposal_content || "").slice(0, 800));
+          }
+        }
+
+        const savedStep = progress?.onboarding_step;
+        if (
+          savedStep === "client" ||
+          savedStep === "proposal" ||
+          savedStep === "value"
+        ) {
+          setStep(savedStep);
+        }
+      } catch (error) {
+        console.error("Could not restore onboarding", error);
+        toast({
+          title: "Could not restore your setup progress",
+          description: "You can continue, and we'll try saving again at the next step.",
+          variant: "destructive",
+        });
+      } finally {
+        if (active) setInitializing(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [navigate, toast]);
+
+  const moveToStep = async (nextStep: Step) => {
+    if (!userId) return;
+    try {
+      await saveOnboardingProgress(userId, { onboarding_step: nextStep });
+      setStep(nextStep);
+    } catch (error) {
+      toast({
+        title: "Could not save your progress",
+        description: errorMessage(error),
+        variant: "destructive",
+      });
+    }
   };
 
-  const skip = () => {
-    if (userId) localStorage.setItem(getOnboardingKey(userId), "1");
-    navigate("/dashboard");
+  const completeOnboarding = async (destination: string, skipped = false) => {
+    if (!userId) return;
+    setCompleting(true);
+    try {
+      const completedAt = new Date().toISOString();
+      await saveOnboardingProgress(userId, {
+        onboarding_step: skipped ? "skipped" : "completed",
+        onboarding_completed_at: completedAt,
+        onboarding_skipped_at: skipped ? completedAt : null,
+        onboarding_client_id: clientId,
+        onboarding_proposal_id: proposalId,
+      });
+      navigate(destination);
+    } catch (error) {
+      toast({
+        title: "Could not finish setup",
+        description: errorMessage(error),
+        variant: "destructive",
+      });
+    } finally {
+      setCompleting(false);
+    }
   };
+
+  const finish = () => completeOnboarding("/dashboard");
+  const skip = () => completeOnboarding("/dashboard", true);
 
   const handleSaveClient = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,11 +181,15 @@ export default function Onboarding() {
         .single();
       if (error) throw error;
       setClientId(data.id);
+      await saveOnboardingProgress(userId, {
+        onboarding_step: "proposal",
+        onboarding_client_id: data.id,
+      });
       setStep("proposal");
-    } catch (err: any) {
+    } catch (err) {
       toast({
         title: "Could not save client",
-        description: err.message || "Please try again.",
+        description: errorMessage(err),
         variant: "destructive",
       });
     } finally {
@@ -138,16 +240,29 @@ export default function Onboarding() {
 
       setProposalId(proposal.id);
       setProposalPreview((aiData?.proposal || "").slice(0, 800));
-    } catch (err: any) {
+      await saveOnboardingProgress(userId, {
+        onboarding_step: "proposal",
+        onboarding_client_id: clientId,
+        onboarding_proposal_id: proposal.id,
+      });
+    } catch (err) {
       toast({
         title: "Generation failed",
-        description: err.message || "Please try again.",
+        description: errorMessage(err),
         variant: "destructive",
       });
     } finally {
       setGenerating(false);
     }
   };
+
+  if (initializing) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -157,6 +272,7 @@ export default function Onboarding() {
         </span>
         <button
           onClick={skip}
+          disabled={completing}
           className="text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           Skip for now
@@ -190,7 +306,7 @@ export default function Onboarding() {
                 <Button
                   size="lg"
                   className="w-full sm:w-auto"
-                  onClick={() => setStep("client")}
+                  onClick={() => moveToStep("client")}
                 >
                   Get Started <ArrowRight className="w-4 h-4" />
                 </Button>
@@ -312,7 +428,7 @@ export default function Onboarding() {
                     <Button
                       size="lg"
                       className="w-full"
-                      onClick={() => setStep("value")}
+                      onClick={() => moveToStep("value")}
                     >
                       Continue <ArrowRight className="w-4 h-4" />
                     </Button>
@@ -360,17 +476,14 @@ export default function Onboarding() {
                     <Button
                       variant="outline"
                       className="flex-1"
-                      onClick={() => {
-                        if (userId)
-                          localStorage.setItem(getOnboardingKey(userId), "1");
-                        navigate(`/dashboard/proposal/${proposalId}`);
-                      }}
+                      disabled={completing}
+                      onClick={() => completeOnboarding(`/dashboard/proposal/${proposalId}`)}
                     >
                       View Proposal
                     </Button>
                   )}
-                  <Button size="lg" className="flex-1" onClick={finish}>
-                    Go to Dashboard <ArrowRight className="w-4 h-4" />
+                  <Button size="lg" className="flex-1" onClick={finish} disabled={completing}>
+                    {completing ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Go to Dashboard <ArrowRight className="w-4 h-4" /></>}
                   </Button>
                 </div>
               </CardContent>

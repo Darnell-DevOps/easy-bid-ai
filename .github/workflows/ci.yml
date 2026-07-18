@@ -1,0 +1,87 @@
+name: Launch checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: launch-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    name: App typecheck, tests, and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check:launch
+
+  edge-functions:
+    name: Critical Edge Function typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Check launch-critical functions
+        run: >-
+          deno check
+          supabase/functions/client-portal-accept/index.ts
+          supabase/functions/automation-dispatcher/index.ts
+          supabase/functions/contract-generation-retry-cron/index.ts
+          supabase/functions/report-client-error/index.ts
+          supabase/functions/create-plan-checkout/index.ts
+          supabase/functions/cancel-plan-subscription/index.ts
+          supabase/functions/create-proposal-checkout/index.ts
+          supabase/functions/generate-proposal/index.ts
+          supabase/functions/generate-policy/index.ts
+          supabase/functions/lead-response/index.ts
+          supabase/functions/payments-webhook/index.ts
+
+  migrations:
+    name: Database migrations
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Start disposable Supabase project
+        run: supabase start
+      - name: Rebuild database from migrations
+        run: supabase db reset --local
+
+  e2e:
+    name: Hosted contract-signing smoke test
+    runs-on: ubuntu-latest
+    needs: app
+    env:
+      E2E_BASE_URL: ${{ vars.E2E_BASE_URL }}
+      TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+      TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install Chromium
+        if: env.E2E_BASE_URL != '' && env.TEST_USER_EMAIL != '' && env.TEST_USER_PASSWORD != ''
+        run: npx playwright install --with-deps chromium
+      - name: Run hosted smoke test
+        if: env.E2E_BASE_URL != '' && env.TEST_USER_EMAIL != '' && env.TEST_USER_PASSWORD != ''
+        run: npm run test:e2e
+      - name: Explain skipped smoke test
+        if: env.E2E_BASE_URL == '' || env.TEST_USER_EMAIL == '' || env.TEST_USER_PASSWORD == ''
+        run: echo "Set E2E_BASE_URL, TEST_USER_EMAIL, and TEST_USER_PASSWORD to enable the hosted smoke test."

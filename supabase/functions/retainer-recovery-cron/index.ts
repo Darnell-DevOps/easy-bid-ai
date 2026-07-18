@@ -5,6 +5,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendWhatsAppFromCron } from "../_shared/whatsapp.ts";
 import { resolvePublicUrl } from "../_shared/customDomain.ts";
+import { cronUnauthorized, isCronAuthorized } from "../_shared/cron-auth.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -41,6 +42,7 @@ async function sendEmail(args: {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok");
+  if (!isCronAuthorized(req)) return cronUnauthorized();
   try {
     const now = new Date();
 

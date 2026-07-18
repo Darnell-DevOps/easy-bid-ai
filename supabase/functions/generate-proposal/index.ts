@@ -8,6 +8,7 @@ import {
   paymentTermsPhrase,
   type TaxMode,
 } from "../_shared/commercial-calc.ts";
+import { getUserPlan } from "../_shared/plan-entitlements.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,7 +23,7 @@ const PLAN_MONTHLY_PROPOSAL_LIMIT: Record<string, number | "unlimited"> = {
   pro: "unlimited",
 };
 
-async function enforcePlanLimit(req: Request, payload: any): Promise<Response | null> {
+async function requireAuthUser(req: Request): Promise<Response | { user: any; supabase: any }> {
   const authHeader = req.headers.get("Authorization") ?? "";
   const token = authHeader.replace(/^Bearer\s+/i, "");
   if (!token) {
@@ -41,6 +42,13 @@ async function enforcePlanLimit(req: Request, payload: any): Promise<Response | 
       status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
+  return { user, supabase };
+}
+
+async function enforcePlanLimit(req: Request, payload: any): Promise<Response | null> {
+  const auth = await requireAuthUser(req);
+  if (auth instanceof Response) return auth;
+  const { user, supabase } = auth;
 
   // If this is a regeneration of an existing proposal owned by the caller, skip the limit.
   const proposalId = payload?.proposal_id;
@@ -50,10 +58,8 @@ async function enforcePlanLimit(req: Request, payload: any): Promise<Response | 
     if (existing && existing.user_id === user.id) return null;
   }
 
-  const { data: sub } = await supabase
-    .from("subscriptions").select("plan").eq("user_id", user.id).maybeSingle();
-  const plan = (sub?.plan as string) ?? "pro";
-  const limit = PLAN_MONTHLY_PROPOSAL_LIMIT[plan] ?? "unlimited";
+  const plan = await getUserPlan(supabase, user.id);
+  const limit = PLAN_MONTHLY_PROPOSAL_LIMIT[plan];
   if (limit === "unlimited") return null;
 
   const monthStart = new Date();
@@ -455,6 +461,8 @@ serve(async (req) => {
 
     // Section-only regeneration
     if (section && typeof section === "string") {
+      const auth = await requireAuthUser(req);
+      if (auth instanceof Response) return auth;
       if (!SECTION_HEADINGS.includes(section)) {
         return new Response(JSON.stringify({ error: `Unknown section: ${section}` }), {
           status: 400,

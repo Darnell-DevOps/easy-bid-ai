@@ -24,13 +24,22 @@ interface Policy {
   content: string;
 }
 
+function escapeHtml(text: string) {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 function renderMarkdown(md: string) {
   // Lightweight markdown -> HTML for headings, bold, lists, paragraphs.
+  // Every line is HTML-escaped before being wrapped in tags since this
+  // content (user-edited or AI-generated) is rendered via dangerouslySetInnerHTML.
   const lines = md.split("\n");
   const out: string[] = [];
   let inList = false;
   for (const raw of lines) {
-    const line = raw.trimEnd();
+    const line = escapeHtml(raw.trimEnd());
     if (/^### /.test(line)) {
       if (inList) { out.push("</ul>"); inList = false; }
       out.push(`<h3>${line.replace(/^### /, "")}</h3>`);

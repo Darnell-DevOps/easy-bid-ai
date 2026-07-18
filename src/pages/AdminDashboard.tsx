@@ -53,6 +53,28 @@ type AdminLogRow = {
   target_user_id: string | null; target_email: string | null;
   action_type: string; details: any; created_at: string;
 };
+type AutomationJobRow = {
+  job_name: string;
+  function_name: string;
+  interval_minutes: number;
+  enabled: boolean;
+  next_run_at: string;
+  last_started_at: string | null;
+  last_completed_at: string | null;
+  last_succeeded_at: string | null;
+  last_failed_at: string | null;
+  last_error: string | null;
+  last_duration_ms: number | null;
+};
+type ErrorReportRow = {
+  id: string;
+  source: string;
+  severity: string;
+  message: string;
+  path: string | null;
+  occurred_at: string;
+  user_id: string | null;
+};
 type PaddleMetrics = {
   revenue: any; mrr: any; subscribers: any; window: { from: string; to: string };
 } | null;
@@ -89,6 +111,9 @@ export default function AdminDashboard() {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [actionsLog, setActionsLog] = useState<AdminLogRow[]>([]);
   const [loadingLog, setLoadingLog] = useState(false);
+  const [automationJobs, setAutomationJobs] = useState<AutomationJobRow[]>([]);
+  const [errorReports, setErrorReports] = useState<ErrorReportRow[]>([]);
+  const [recoveryBusy, setRecoveryBusy] = useState<string | null>(null);
 
   const [editUser, setEditUser] = useState<UserRow | null>(null);
   const [editEmail, setEditEmail] = useState("");
@@ -232,11 +257,66 @@ export default function AdminDashboard() {
     setPaddle(data);
   };
 
+  const loadAutomationHealth = async () => {
+    const { data, error } = await supabase
+      .from("automation_job_registry")
+      .select("job_name, function_name, interval_minutes, enabled, next_run_at, last_started_at, last_completed_at, last_succeeded_at, last_failed_at, last_error, last_duration_ms")
+      .order("job_name");
+    if (error) {
+      toast({ title: "Automation health unavailable", description: error.message, variant: "destructive" });
+      return;
+    }
+    setAutomationJobs((data as unknown as AutomationJobRow[]) || []);
+  };
+
+  const loadErrorReports = async () => {
+    const { data, error } = await supabase
+      .from("app_error_reports")
+      .select("id, source, severity, message, path, occurred_at, user_id")
+      .is("resolved_at", null)
+      .order("occurred_at", { ascending: false })
+      .limit(25);
+    if (error) {
+      toast({ title: "Error reports unavailable", description: error.message, variant: "destructive" });
+      return;
+    }
+    setErrorReports((data as unknown as ErrorReportRow[]) || []);
+  };
+
+  const retryAutomation = async (jobName: string) => {
+    setRecoveryBusy(`job:${jobName}`);
+    const { error } = await supabase.rpc("admin_retry_automation_job", {
+      _job_name: jobName,
+    });
+    setRecoveryBusy(null);
+    if (error) {
+      toast({ title: "Could not queue retry", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Retry queued", description: "The dispatcher will pick it up within five minutes." });
+    loadAutomationHealth();
+  };
+
+  const resolveErrorReport = async (errorId: string) => {
+    setRecoveryBusy(`error:${errorId}`);
+    const { error } = await supabase.rpc("admin_resolve_error_report", {
+      _error_id: errorId,
+    });
+    setRecoveryBusy(null);
+    if (error) {
+      toast({ title: "Could not resolve incident", description: error.message, variant: "destructive" });
+      return;
+    }
+    setErrorReports((reports) => reports.filter((report) => report.id !== errorId));
+  };
+
   useEffect(() => {
     loadAll();
     loadUsers();
     loadPaddle();
     loadLog();
+    loadAutomationHealth();
+    loadErrorReports();
   }, []);
 
   const signupChart = useMemo(
@@ -268,7 +348,7 @@ export default function AdminDashboard() {
             </h1>
             <p className="text-sm text-muted-foreground mt-1">Platform-wide stats. Only visible to super admins.</p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => { loadAll(); loadPaddle(); loadUsers(search); loadLog(); }}>
+          <Button variant="outline" size="sm" onClick={() => { loadAll(); loadPaddle(); loadUsers(search); loadLog(); loadAutomationHealth(); loadErrorReports(); }}>
             <RefreshCw className="w-4 h-4 mr-2" /> Refresh
           </Button>
         </div>
@@ -384,6 +464,121 @@ export default function AdminDashboard() {
             <Stat label="Emails sent (7d)" value={usageStats?.emails_7d_sent} />
             <Stat label="Emails failed (7d)" value={usageStats?.emails_7d_failed} />
           </div>
+        </section>
+
+        {/* Scheduled automation health */}
+        <section>
+          <h2 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+            <Activity className="w-4 h-4" /> Scheduled automation health
+          </h2>
+          <Card>
+            <CardContent className="pt-6 overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Job</TableHead>
+                    <TableHead>Cadence</TableHead>
+                    <TableHead>Last success</TableHead>
+                    <TableHead>Next run</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Recovery</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {automationJobs.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                        No dispatcher results yet. Confirm the CRON_SECRET deployment and Vault setup.
+                      </TableCell>
+                    </TableRow>
+                  ) : automationJobs.map((job) => {
+                    const lastSuccess = job.last_succeeded_at ? Date.parse(job.last_succeeded_at) : 0;
+                    const lastFailure = job.last_failed_at ? Date.parse(job.last_failed_at) : 0;
+                    const overdue = job.enabled && Date.now() > Date.parse(job.next_run_at) + job.interval_minutes * 120_000;
+                    const failed = lastFailure > lastSuccess;
+                    const label = !job.enabled ? "Disabled" : failed ? "Failed" : overdue ? "Overdue" : lastSuccess ? "Healthy" : "Awaiting first run";
+                    return (
+                      <TableRow key={job.job_name}>
+                        <TableCell>
+                          <div className="font-medium">{job.job_name}</div>
+                          <div className="text-xs text-muted-foreground font-mono">{job.function_name}</div>
+                        </TableCell>
+                        <TableCell>{job.interval_minutes} min</TableCell>
+                        <TableCell>{fmtDateTime(job.last_succeeded_at || "")}</TableCell>
+                        <TableCell>{fmtDateTime(job.next_run_at)}</TableCell>
+                        <TableCell>
+                          <Badge variant={failed || overdue ? "destructive" : "outline"}>{label}</Badge>
+                          {job.last_error && failed && (
+                            <div className="text-xs text-destructive mt-1 max-w-xs truncate" title={job.last_error}>{job.last_error}</div>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {(failed || overdue) && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => retryAutomation(job.job_name)}
+                              disabled={recoveryBusy === `job:${job.job_name}`}
+                            >
+                              {recoveryBusy === `job:${job.job_name}` ? "Queuing..." : "Retry"}
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Unresolved client incidents */}
+        <section>
+          <h2 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+            <History className="w-4 h-4" /> Unresolved client incidents
+          </h2>
+          <Card>
+            <CardContent className="pt-6 overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>When</TableHead>
+                    <TableHead>Source</TableHead>
+                    <TableHead>Page</TableHead>
+                    <TableHead>Message</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {errorReports.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                        No unresolved browser incidents.
+                      </TableCell>
+                    </TableRow>
+                  ) : errorReports.map((report) => (
+                    <TableRow key={report.id}>
+                      <TableCell className="whitespace-nowrap">{fmtDateTime(report.occurred_at)}</TableCell>
+                      <TableCell><Badge variant={report.severity === "fatal" ? "destructive" : "outline"}>{report.source}</Badge></TableCell>
+                      <TableCell className="font-mono text-xs">{report.path || "Unknown"}</TableCell>
+                      <TableCell className="max-w-md truncate" title={report.message}>{report.message}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => resolveErrorReport(report.id)}
+                          disabled={recoveryBusy === `error:${report.id}`}
+                        >
+                          Resolve
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         </section>
 
         {/* Per-user drilldown */}

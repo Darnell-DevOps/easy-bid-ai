@@ -2,6 +2,7 @@
 // For each user who has new unread leads since their last digest (or last 24h if never sent),
 // sends one email summarising the new leads. Marks last_digest_sent_at on the alias.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { cronUnauthorized, isCronAuthorized } from "../_shared/cron-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,6 +11,7 @@ const corsHeaders = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (!isCronAuthorized(req)) return cronUnauthorized();
 
   const svc = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 

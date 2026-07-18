@@ -9,7 +9,10 @@ import ActivationChecklist from "@/components/dashboard/ActivationChecklist";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getOnboardingKey } from "@/pages/Onboarding";
+import {
+  loadOnboardingProgress,
+  migrateLegacyOnboarding,
+} from "@/lib/onboarding-progress";
 
 interface FullProposal {
   id: string;
@@ -108,14 +111,23 @@ export default function Dashboard() {
 
   // Redirect first-time users to onboarding
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
-      const done = localStorage.getItem(getOnboardingKey(user.id));
-      const params = new URLSearchParams(window.location.search);
-      if (!done && params.get("onboarded") !== "1") {
-        navigate("/onboarding", { replace: true });
+    let active = true;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !active) return;
+      try {
+        const stored = await loadOnboardingProgress(user.id);
+        const progress = await migrateLegacyOnboarding(user.id, stored);
+        if (!progress?.onboarding_completed_at && active) {
+          navigate("/onboarding", { replace: true });
+        }
+      } catch (error) {
+        console.error("Could not load onboarding progress", error);
       }
-    });
+    })();
+    return () => {
+      active = false;
+    };
   }, [navigate]);
 
   const proposalClientNames = useMemo(

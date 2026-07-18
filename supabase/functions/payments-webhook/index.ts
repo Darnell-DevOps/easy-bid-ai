@@ -1,6 +1,12 @@
 // Paddle webhook: marks proposals paid and manages retainer subscriptions.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { verifyWebhook, EventName, type PaddleEnv } from "../_shared/paddle.ts";
+import {
+  verifyWebhook,
+  EventName,
+  getPlanForPriceId,
+  getServerPaddleEnv,
+  type PaddleEnv,
+} from "../_shared/paddle.ts";
 import { calculateCommercialTotals } from "../_shared/commercial-calc.ts";
 import { buildOnboardingFields, buildOnboardingPrefill } from "../_shared/onboarding-fields.ts";
 import { resolvePublicUrl } from "../_shared/customDomain.ts";
@@ -9,6 +15,42 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
+
+function valueAtPath(value: unknown, path: Array<string | number>): unknown {
+  let current = value;
+  for (const part of path) {
+    if (typeof part === "number") {
+      if (!Array.isArray(current)) return undefined;
+      current = current[part];
+    } else {
+      if (!current || typeof current !== "object") return undefined;
+      current = (current as Record<string, unknown>)[part];
+    }
+  }
+  return current;
+}
+
+function planEventPriceId(data: unknown): string | null {
+  const candidates = [
+    valueAtPath(data, ["items", 0, "price", "id"]),
+    valueAtPath(data, ["items", 0, "priceId"]),
+    valueAtPath(data, ["details", "lineItems", 0, "price", "id"]),
+    valueAtPath(data, ["details", "lineItems", 0, "priceId"]),
+  ];
+  return candidates.find((value): value is string => typeof value === "string") ?? null;
+}
+
+function isAuthoritativePlanEnvironment(env: PaddleEnv): boolean {
+  return env === getServerPaddleEnv();
+}
+
+function requirePlanFromEvent(data: unknown, env: PaddleEnv) {
+  const priceId = planEventPriceId(data);
+  if (!priceId) throw new Error("Plan event is missing its Paddle price ID");
+  const plan = getPlanForPriceId(env, priceId);
+  if (!plan) throw new Error(`Unrecognized plan price ID: ${priceId}`);
+  return { plan, priceId };
+}
 
 function fmtMoney(cents: number, currency = "USD") {
   try {
@@ -68,8 +110,33 @@ async function automationsHandlePaymentEvent(args: {
   }
 }
 
-async function handleTransactionCompleted(data: any) {
+async function handleTransactionCompleted(data: any, env: PaddleEnv) {
   const cd = data?.customData || {};
+
+  // Paid plan entitlements are derived from a configured Paddle price ID,
+  // never from browser input or mutable custom data.
+  if (cd.kind === "plan_subscription" && cd.userId) {
+    if (!isAuthoritativePlanEnvironment(env)) {
+      console.warn("Ignoring plan transaction from non-authoritative environment:", env);
+      return;
+    }
+    const { plan, priceId } = requirePlanFromEvent(data, env);
+    const { error } = await supabase
+      .from("subscriptions")
+      .upsert(
+        {
+          user_id: cd.userId,
+          plan,
+          paddle_price_id: priceId,
+          paddle_subscription_id: data.subscriptionId || undefined,
+          environment: env,
+        },
+        { onConflict: "user_id" },
+      );
+    if (error) throw new Error(`plan_subscription provisioning failed: ${error.message}`);
+    return;
+  }
+
   // Proposal one-off payments
   if (cd.proposalId && cd.kind !== "retainer_subscription") {
     const { error } = await supabase.rpc("mark_proposal_paid", {
@@ -302,8 +369,17 @@ async function handleTransactionCompleted(data: any) {
   }
 }
 
-async function handleTransactionPaymentFailed(data: any) {
+async function handleTransactionPaymentFailed(data: any, env: PaddleEnv) {
   const cd = data?.customData || {};
+
+  if (cd.kind === "plan_subscription") {
+    if (!isAuthoritativePlanEnvironment(env)) return;
+    // Paddle retries per its own dunning schedule; if retries are exhausted
+    // it fires subscription.canceled, which downgrades the user to Free.
+    console.warn("plan_subscription payment failed for user:", cd.userId);
+    return;
+  }
+
   let retainerId: string | null = cd.retainerId || null;
   if (!retainerId && data.subscriptionId) {
     const { data: r } = await supabase
@@ -398,8 +474,34 @@ async function handleTransactionPaymentFailed(data: any) {
   }
 }
 
-async function handleSubscriptionCreated(data: any) {
+async function handleSubscriptionCreated(data: any, env: PaddleEnv) {
   const cd = data?.customData || {};
+
+  if (cd.kind === "plan_subscription" && cd.userId) {
+    if (!isAuthoritativePlanEnvironment(env)) {
+      console.warn("Ignoring plan subscription from non-authoritative environment:", env);
+      return;
+    }
+    const { plan, priceId } = requirePlanFromEvent(data, env);
+    const { error } = await supabase
+      .from("subscriptions")
+      .upsert(
+        {
+          user_id: cd.userId,
+          plan,
+          paddle_subscription_id: data.id,
+          paddle_customer_id: data.customerId,
+          paddle_price_id: priceId,
+          environment: env,
+          current_period_end: data?.currentBillingPeriod?.endsAt || null,
+          cancel_at_period_end: false,
+        },
+        { onConflict: "user_id" },
+      );
+    if (error) throw new Error(`plan subscription creation failed: ${error.message}`);
+    return;
+  }
+
   const retainerId = cd.retainerId;
   if (!retainerId) return;
   await supabase
@@ -418,8 +520,35 @@ async function handleSubscriptionCreated(data: any) {
     .eq("id", retainerId);
 }
 
-async function handleSubscriptionUpdated(data: any) {
+async function handleSubscriptionUpdated(data: any, env: PaddleEnv) {
   const subId = data.id;
+
+  const { data: planSub, error: planLookupError } = await supabase
+    .from("subscriptions")
+    .select("user_id")
+    .eq("paddle_subscription_id", subId)
+    .maybeSingle();
+  if (planLookupError) throw new Error(`plan subscription lookup failed: ${planLookupError.message}`);
+  if (planSub) {
+    if (!isAuthoritativePlanEnvironment(env)) {
+      console.warn("Ignoring plan update from non-authoritative environment:", env);
+      return;
+    }
+    const { plan, priceId } = requirePlanFromEvent(data, env);
+    const { error } = await supabase
+      .from("subscriptions")
+      .update({
+        plan,
+        paddle_price_id: priceId,
+        environment: env,
+        current_period_end: data?.currentBillingPeriod?.endsAt || null,
+        cancel_at_period_end: data?.scheduledChange?.action === "cancel",
+      })
+      .eq("user_id", planSub.user_id);
+    if (error) throw new Error(`plan subscription update failed: ${error.message}`);
+    return;
+  }
+
   const { data: ret } = await supabase
     .from("retainers")
     .select("id")
@@ -440,7 +569,36 @@ async function handleSubscriptionUpdated(data: any) {
     .eq("id", ret.id);
 }
 
-async function handleSubscriptionCanceled(data: any) {
+async function handleSubscriptionCanceled(data: any, env: PaddleEnv) {
+  const { data: planSub, error: planLookupError } = await supabase
+    .from("subscriptions")
+    .select("user_id")
+    .eq("paddle_subscription_id", data.id)
+    .maybeSingle();
+  if (planLookupError) throw new Error(`plan subscription lookup failed: ${planLookupError.message}`);
+  if (planSub) {
+    if (!isAuthoritativePlanEnvironment(env)) {
+      console.warn("Ignoring plan cancellation from non-authoritative environment:", env);
+      return;
+    }
+    // Payment retries exhausted, or cancelled directly in Paddle — downgrade
+    // to Free rather than leaving the user on a paid tier with no subscription.
+    const { error } = await supabase
+      .from("subscriptions")
+      .update({
+        plan: "free",
+        paddle_subscription_id: null,
+        paddle_customer_id: null,
+        paddle_price_id: null,
+        environment: null,
+        cancel_at_period_end: false,
+        current_period_end: null,
+      })
+      .eq("user_id", planSub.user_id);
+    if (error) throw new Error(`plan subscription cancellation failed: ${error.message}`);
+    return;
+  }
+
   await supabase
     .from("retainers")
     .update({
@@ -464,19 +622,19 @@ Deno.serve(async (req) => {
 
     switch (event.eventType) {
       case EventName.TransactionCompleted:
-        await handleTransactionCompleted(event.data as any);
+        await handleTransactionCompleted(event.data as any, env);
         break;
       case EventName.TransactionPaymentFailed:
-        await handleTransactionPaymentFailed(event.data as any);
+        await handleTransactionPaymentFailed(event.data as any, env);
         break;
       case EventName.SubscriptionCreated:
-        await handleSubscriptionCreated(event.data as any);
+        await handleSubscriptionCreated(event.data as any, env);
         break;
       case EventName.SubscriptionUpdated:
-        await handleSubscriptionUpdated(event.data as any);
+        await handleSubscriptionUpdated(event.data as any, env);
         break;
       case EventName.SubscriptionCanceled:
-        await handleSubscriptionCanceled(event.data as any);
+        await handleSubscriptionCanceled(event.data as any, env);
         break;
       default:
         console.log("Unhandled event:", event.eventType);
@@ -487,7 +645,20 @@ Deno.serve(async (req) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (e: any) {
-    console.error("webhook error:", e?.message || e);
+    const message = String(e?.message || e || "Unknown webhook error");
+    console.error("webhook error:", message);
+    try {
+      const { error: logError } = await supabase.from("app_error_reports").insert({
+        source: "payments_webhook",
+        severity: "error",
+        message: message.slice(0, 1_000),
+        path: `/payments-webhook?env=${env}`,
+        metadata: { environment: env },
+      });
+      if (logError) console.error("webhook incident logging failed", logError);
+    } catch (logError) {
+      console.error("webhook incident logging failed", logError);
+    }
     return new Response("Webhook error", { status: 400 });
   }
 });

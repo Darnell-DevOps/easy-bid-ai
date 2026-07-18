@@ -66,7 +66,12 @@ export default function ProposalPayNow({
       if (error || !data?.transactionId) {
         throw new Error(error?.message || data?.error || "Could not start checkout");
       }
-      await initializePaddle();
+      await initializePaddle((event) => {
+        if (event.name === "checkout.completed") {
+          toast({ title: "Payment complete", description: "Thanks! Your payment was received." });
+          onPaid?.();
+        }
+      });
       window.Paddle.Checkout.open({
         transactionId: data.transactionId,
         customer: clientEmail ? { email: clientEmail } : undefined,
@@ -77,17 +82,11 @@ export default function ProposalPayNow({
           allowLogout: false,
           theme: "dark",
         },
-        eventCallback: (ev: any) => {
-          if (ev?.name === "checkout.completed") {
-            toast({ title: "Payment complete", description: "Thanks! Your payment was received." });
-            onPaid?.();
-          }
-        },
       });
-    } catch (e: any) {
+    } catch (error: unknown) {
       toast({
         title: "Payment failed to start",
-        description: e?.message || "Please try again.",
+        description: error instanceof Error ? error.message : "Please try again.",
         variant: "destructive",
       });
     } finally {

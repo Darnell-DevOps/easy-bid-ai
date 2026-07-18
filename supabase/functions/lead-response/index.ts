@@ -9,6 +9,11 @@ import {
   normalizeMissingInfo,
   runQualification,
 } from "../_shared/qualify-core.ts";
+import {
+  getUserPlan,
+  planHasFeature,
+  planUpgradeRequired,
+} from "../_shared/plan-entitlements.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -44,6 +49,11 @@ Deno.serve(async (req) => {
       return json({ error: "Unauthorized" }, 401);
     }
     const userId = claims.claims.sub;
+
+    const plan = await getUserPlan(supabase, userId);
+    if (!planHasFeature(plan, "aiLeadResponse")) {
+      return json(planUpgradeRequired(plan, "aiLeadResponse"), 403);
+    }
 
     const { leadName, leadEmail, message } = await req.json();
     if (!message || typeof message !== "string" || message.trim().length < 5) {

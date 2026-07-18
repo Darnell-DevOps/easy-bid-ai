@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { formatCents, paymentTermsPhrase } from "../_shared/commercial-calc.ts";
 
 function buildFeesBlock(payload: any): { promptLines: string[]; templateLines: string[] } {
@@ -240,11 +241,37 @@ async function callAI(payload: any): Promise<string | null> {
   }
 }
 
+// Dashboard calls require a real user JWT. Acceptance-triggered generation is
+// server-owned and uses the service-role credential; a proposal ID alone no
+// longer authorizes an AI generation request.
+async function isAuthorized(req: Request): Promise<boolean> {
+  const authHeader = req.headers.get("Authorization");
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (serviceKey && authHeader === `Bearer ${serviceKey}`) return true;
+  if (authHeader) {
+    const userClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } },
+    );
+    const { data: userData } = await userClient.auth.getUser();
+    if (userData?.user) return true;
+  }
+
+  return false;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const payload = await req.json();
+
+    if (!(await isAuthorized(req))) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const aiContent = await callAI(payload);
     const body = aiContent || templateFallback(payload);

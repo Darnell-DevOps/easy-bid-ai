@@ -1,8 +1,5 @@
-// Plan definitions and limits. Pure data — no side effects.
-// Backend billing isn't wired yet, so the user's plan is stored in localStorage
-// (see hooks/use-plan.ts). When Lovable Cloud payments are enabled, swap the
-// hook for a Supabase-backed `subscriptions` query — the rest of the app
-// only ever talks to that hook.
+// Plan definitions and limits. Paid entitlements are stored in Supabase and
+// changed only by the server-side Paddle billing flow (see hooks/use-plan.ts).
 
 export type PlanId = "free" | "starter" | "pro";
 

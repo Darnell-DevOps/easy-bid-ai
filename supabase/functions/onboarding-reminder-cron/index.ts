@@ -5,6 +5,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendWhatsAppFromCron } from "../_shared/whatsapp.ts";
 import { recordReminderAudit } from "../_shared/reminder-audit.ts";
 import { resolvePublicUrl } from "../_shared/customDomain.ts";
+import { cronUnauthorized, isCronAuthorized } from "../_shared/cron-auth.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -27,6 +28,7 @@ function stageFor(days: number): Stage | null {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok");
+  if (!isCronAuthorized(req)) return cronUnauthorized();
   try {
     const now = new Date();
     const { data: forms, error } = await supabase

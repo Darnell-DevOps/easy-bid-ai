@@ -1,4 +1,6 @@
 // Creates a Paddle hosted customer portal session for a retainer's subscription.
+// Resolves the retainer by its secret access_token (never by raw id) so that
+// knowledge of a retainer's UUID alone can't be used to open its billing portal.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getPaddleClient, type PaddleEnv } from "../_shared/paddle.ts";
 
@@ -19,9 +21,9 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: cors });
   }
   try {
-    const { retainerId } = await req.json();
-    if (!retainerId) {
-      return new Response(JSON.stringify({ error: "retainerId required" }), {
+    const { token } = await req.json();
+    if (!token || typeof token !== "string" || token.length < 16) {
+      return new Response(JSON.stringify({ error: "Invalid token" }), {
         status: 400,
         headers: cors,
       });
@@ -30,7 +32,7 @@ Deno.serve(async (req) => {
     const { data: retainer, error } = await supabase
       .from("retainers")
       .select("paddle_subscription_id, paddle_customer_id, environment")
-      .eq("id", retainerId)
+      .eq("access_token", token)
       .maybeSingle();
 
     if (error || !retainer) {

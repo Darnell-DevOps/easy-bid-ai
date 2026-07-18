@@ -45,7 +45,6 @@ import { useProposalCheckout } from "@/hooks/use-proposal-checkout";
 import { cn } from "@/lib/utils";
 import { type OnboardingFormRow } from "@/lib/onboarding";
 import { calculateCommercialTotals, formatCents } from "@/lib/commercial-calc";
-import { resolveProviderName } from "@/lib/provider-identity";
 import { ClipboardList } from "lucide-react";
 
 interface PublicProposal {
@@ -91,6 +90,7 @@ interface ContractLite {
   status: string;
   signing_token: string;
   signed_at: string | null;
+  generation_status: string;
 }
 
 
@@ -162,6 +162,7 @@ export default function ClientPortal() {
   const [message, setMessage] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [submitting, setSubmitting] = useState<"accept" | "reject" | null>(null);
+  const [retryingContract, setRetryingContract] = useState(false);
   const [bookingLink, setBookingLink] = useState<BookingLinkLite | null>(null);
   const [ownerKickoffUrl, setOwnerKickoffUrl] = useState<string | null>(null);
   const [contract, setContract] = useState<ContractLite | null>(null);
@@ -368,15 +369,20 @@ export default function ClientPortal() {
       user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
       accepted_via: "client_portal",
     };
-    const { data: rpcData, error } = await supabase.rpc("client_portal_respond", {
-      _proposal_id: proposal.id,
-      _action: "accept",
-      _message: message.trim() || null,
-      _evidence: evidence,
-    } as never);
-    if (error) {
+    const { data, error } = await supabase.functions.invoke("client-portal-accept", {
+      body: {
+        proposalId: proposal.id,
+        message: message.trim() || null,
+        evidence,
+      },
+    });
+    if (error || data?.error) {
       setSubmitting(null);
-      toast({ title: "Couldn't accept proposal", description: error.message, variant: "destructive" });
+      toast({
+        title: "Couldn't accept proposal",
+        description: data?.error || error?.message || "Please try again.",
+        variant: "destructive",
+      });
       return;
     }
     const updated = {
@@ -388,78 +394,42 @@ export default function ClientPortal() {
     };
     setProposal(updated);
 
-    const rpcResult = (rpcData || {}) as { contract_id?: string | null; contract_is_new?: boolean };
-    const contractId = rpcResult.contract_id || null;
-    const contractIsNew = !!rpcResult.contract_is_new;
-
-    if (contractId && contractIsNew) {
-      // Placeholder contract was just claimed by the RPC — fill it with real content.
-      try {
-        const contractType = /retainer/i.test(proposal.service_type || "")
-          ? "retainer_agreement"
-          : "service_agreement";
-        const totals = calculateCommercialTotals(
-          proposal.amount_cents ?? 0,
-          proposal.tax_rate,
-          proposal.tax_mode as any,
-        );
-        const providerName = resolveProviderName(branding);
-        const { data } = await supabase.functions.invoke("generate-contract", {
-          body: {
-            contract_type: contractType,
-            client_name: proposal.client_name,
-            company_name: proposal.company_name,
-            provider_name: providerName,
-            service_type: proposal.service_type,
-            project_scope: (proposal as any).project_scope || "",
-            timeline: (proposal as any).timeline || "",
-            budget: formattedTotal || "",
-            payment_terms: proposal.payment_terms || undefined,
-            currency: proposal.currency,
-            subtotal_cents: totals.subtotalCents,
-            tax_rate: proposal.tax_rate,
-            tax_mode: proposal.tax_mode,
-            tax_amount_cents: totals.taxAmountCents,
-            total_cents: totals.totalCents,
-          },
-        });
-        if (data?.body) {
-          const { data: updatedRow, error: updateErr } = await supabase
-            .from("contracts")
-            .update({
-              title: data.title || (contractType === "retainer_agreement" ? "Retainer Agreement" : "Service Agreement"),
-              body: data.body,
-              amount_cents: proposal.amount_cents != null ? totals.totalCents : null,
-              currency: proposal.currency,
-            })
-            .eq("id", contractId)
-            .select("id, title, status, signing_token, signed_at")
-            .single();
-          if (updateErr) {
-            console.warn("auto-draft contract update failed", updateErr);
-          } else if (updatedRow) {
-            setContract(updatedRow as ContractLite);
-          }
-        } else {
-          console.warn("generate-contract returned no body; placeholder left as draft");
-        }
-      } catch (err) {
-        console.warn("auto-draft contract failed", err);
-      }
-    } else if (contractId && !contractIsNew) {
-      // A prior call already claimed the placeholder — just load it.
-      const { data: existing } = await supabase
-        .from("contracts")
-        .select("id, title, status, signing_token, signed_at")
-        .eq("id", contractId)
-        .maybeSingle();
-      if (existing) setContract(existing as ContractLite);
-    }
+    const preparedContract = data?.contract as ContractLite | null;
+    if (preparedContract) setContract(preparedContract);
+    // Acceptance and generation are both persisted by client-portal-accept.
 
     setSubmitting(null);
     toast({
       title: "Proposal accepted",
-      description: "Your agreement is being prepared and will be available for review once it's ready.",
+      description: preparedContract?.generation_status === "failed"
+        ? "The proposal is accepted, but the agreement needs another generation attempt."
+        : preparedContract?.generation_status === "ready"
+          ? "Your agreement has been prepared for the provider to review and send."
+          : "The provider will prepare your agreement next.",
+    });
+  };
+
+  const handleRetryContract = async () => {
+    if (!proposal) return;
+    setRetryingContract(true);
+    const { data, error } = await supabase.functions.invoke("client-portal-accept", {
+      body: { proposalId: proposal.id, retry: true },
+    });
+    setRetryingContract(false);
+    if (error || data?.error) {
+      toast({
+        title: "Could not retry the agreement",
+        description: data?.error || error?.message || "Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (data?.contract) setContract(data.contract as ContractLite);
+    toast({
+      title: data?.contract?.generation_status === "ready" ? "Agreement prepared" : "Retry queued",
+      description: data?.contract?.generation_status === "ready"
+        ? "The provider can now review and send it."
+        : "The accepted proposal is safe while the agreement is retried.",
     });
   };
 
@@ -660,11 +630,27 @@ export default function ClientPortal() {
           icon: FileSignature,
           ctaLabel: "",
         };
+      } else if (contract?.generation_status === "failed") {
+        nextAction = {
+          title: "Your agreement needs another attempt",
+          description: "The proposal is safely accepted. Retry preparing the agreement without accepting again.",
+          icon: FileSignature,
+          ctaLabel: retryingContract ? "Retrying..." : "Retry agreement",
+          onClick: handleRetryContract,
+          disabled: retryingContract,
+        };
+      } else if (contract?.generation_status === "ready") {
+        nextAction = {
+          title: "Agreement awaiting provider review",
+          description: "The draft is ready. The provider will review and send it for signature.",
+          icon: FileSignature,
+          ctaLabel: "",
+        };
       } else {
-        // No contract row yet, or still in draft — no signing link exposed.
+        // No contract row yet, or generation is queued/in progress.
         nextAction = {
           title: "Your agreement is being prepared",
-          description: "We'll email you a link to review and sign as soon as it's ready.",
+          description: "Your accepted proposal is safe while the agreement is prepared.",
           icon: FileSignature,
           ctaLabel: "",
         };
@@ -1071,8 +1057,24 @@ export default function ClientPortal() {
                   Your proposal has been accepted
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Your agreement is being prepared. We'll email you a link to review and sign as soon as it's ready.
+                  {contract?.generation_status === "failed"
+                    ? "The agreement could not be prepared on the last attempt. Your acceptance is safe, and you can retry without accepting again."
+                    : contract?.generation_status === "ready"
+                      ? "Your agreement draft is ready for the provider to review and send."
+                      : "Your accepted proposal is safe while the agreement is prepared."}
                 </p>
+                {contract?.generation_status === "failed" && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="mt-4"
+                    onClick={handleRetryContract}
+                    disabled={retryingContract}
+                  >
+                    {retryingContract && <Loader2 className="w-4 h-4 animate-spin" />}
+                    Retry agreement
+                  </Button>
+                )}
               </div>
             </div>
           </section>

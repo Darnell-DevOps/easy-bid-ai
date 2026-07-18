@@ -12,6 +12,7 @@ import DynamicFavicon from "@/components/branding/DynamicFavicon";
 
 interface Retainer {
   id: string;
+  access_token: string;
   user_id: string;
   client_name: string;
   client_email: string | null;
@@ -39,10 +40,10 @@ export default function RetainerSubscribePage() {
 
   const load = async () => {
     if (!token) return;
-    const { data: rows } = (await supabase.rpc(
-      "public_get_retainer_by_token" as never,
-      { _token: token } as never,
-    )) as { data: any };
+    const { data: rows } = await supabase.rpc(
+      "public_get_retainer_by_token",
+      { _token: token },
+    );
     const data = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
     setRetainer(data as Retainer | null);
     setLoading(false);
@@ -69,7 +70,15 @@ export default function RetainerSubscribePage() {
       if (error || !data?.transactionId) {
         throw new Error(error?.message || data?.error || "Could not start checkout");
       }
-      await initializePaddle();
+      await initializePaddle((event) => {
+        if (event.name === "checkout.completed") {
+          toast({
+            title: "Subscription started",
+            description: "Thanks — your retainer is now active.",
+          });
+          setTimeout(load, 1500);
+        }
+      });
       window.Paddle.Checkout.open({
         transactionId: data.transactionId,
         customer: retainer.client_email ? { email: retainer.client_email } : undefined,
@@ -80,20 +89,11 @@ export default function RetainerSubscribePage() {
           allowLogout: false,
           theme: "dark",
         },
-        eventCallback: (ev: any) => {
-          if (ev?.name === "checkout.completed") {
-            toast({
-              title: "Subscription started",
-              description: "Thanks — your retainer is now active.",
-            });
-            setTimeout(load, 1500);
-          }
-        },
       });
-    } catch (e: any) {
+    } catch (error: unknown) {
       toast({
         title: "Could not start subscription",
-        description: e?.message || "Try again",
+        description: error instanceof Error ? error.message : "Try again",
         variant: "destructive",
       });
     } finally {
@@ -107,16 +107,16 @@ export default function RetainerSubscribePage() {
     try {
       const { data, error } = await supabase.functions.invoke(
         "retainer-portal-session",
-        { body: { retainerId: retainer.id } },
+        { body: { token: retainer.access_token } },
       );
       if (error || !data?.url) {
         throw new Error(error?.message || data?.error || "Could not open portal");
       }
       window.open(data.url, "_blank", "noopener,noreferrer");
-    } catch (e: any) {
+    } catch (error: unknown) {
       toast({
         title: "Could not open billing portal",
-        description: e?.message || "Try again",
+        description: error instanceof Error ? error.message : "Try again",
         variant: "destructive",
       });
     } finally {

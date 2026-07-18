@@ -1,6 +1,7 @@
 // Processes pending review requests: sends initial emails and follow-up reminders.
 // Runs on cron (every 30 min). Idempotent per request via status + reminder_count.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { cronUnauthorized, isCronAuthorized } from "../_shared/cron-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -34,6 +35,7 @@ async function sendEmail(args: {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (!isCronAuthorized(req)) return cronUnauthorized();
 
   const now = new Date();
   let processed = 0, reminded = 0, expired = 0;

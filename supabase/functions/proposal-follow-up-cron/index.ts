@@ -10,6 +10,7 @@ import {
   scenarioToPrefKey,
 } from "../_shared/follow-up.ts";
 import { sendWhatsAppFromCron } from "../_shared/whatsapp.ts";
+import { cronUnauthorized, isCronAuthorized } from "../_shared/cron-auth.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -38,6 +39,7 @@ async function ownerName(userId: string): Promise<string | null> {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok");
+  if (!isCronAuthorized(req)) return cronUnauthorized();
   try {
     // Pull all candidate proposals (sent/viewed/accepted, unpaid).
     const { data: proposals, error } = await supabase

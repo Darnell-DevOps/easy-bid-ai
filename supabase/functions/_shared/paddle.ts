@@ -4,7 +4,33 @@ export { EventName };
 
 export type PaddleEnv = 'sandbox' | 'live';
 
+export type PaidPlan = 'starter' | 'pro';
+
 const GATEWAY_BASE_URL = 'https://connector-gateway.lovable.dev/paddle';
+
+export function getServerPaddleEnv(): PaddleEnv {
+  const value = Deno.env.get('PAYMENTS_ENVIRONMENT');
+  if (value !== 'sandbox' && value !== 'live') {
+    throw new Error('PAYMENTS_ENVIRONMENT must be set to sandbox or live');
+  }
+  return value;
+}
+
+export function getPlanPriceId(env: PaddleEnv, plan: PaidPlan): string {
+  const prefix = env === 'sandbox' ? 'PADDLE_SANDBOX' : 'PADDLE_LIVE';
+  const key = `${prefix}_${plan.toUpperCase()}_PRICE_ID`;
+  const priceId = Deno.env.get(key);
+  if (!priceId || !/^pri_[a-z\d]{26}$/.test(priceId)) {
+    throw new Error(`${key} must contain a valid Paddle price ID`);
+  }
+  return priceId;
+}
+
+export function getPlanForPriceId(env: PaddleEnv, priceId: string): PaidPlan | null {
+  if (priceId === getPlanPriceId(env, 'starter')) return 'starter';
+  if (priceId === getPlanPriceId(env, 'pro')) return 'pro';
+  return null;
+}
 
 export function getConnectionApiKey(env: PaddleEnv): string {
   return env === 'sandbox'

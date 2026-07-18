@@ -1,19 +1,21 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Check, Crown, Sparkles, Zap, Lock, ArrowRight } from "lucide-react";
+import { Check, Crown, Sparkles, Zap, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePlan } from "@/hooks/use-plan";
 import { useProposalUsage } from "@/hooks/use-proposal-usage";
+import { isPaymentsConfigured } from "@/lib/paddle";
 import { PLANS, type PlanId } from "@/lib/plans";
 
 export default function Billing() {
   const { toast } = useToast();
-  const { planId, plan, setPlan } = usePlan();
+  const { planId, plan, upgradePlan, cancelToFree } = usePlan();
   const { countThisMonth, loading } = useProposalUsage();
+  const [switching, setSwitching] = useState<PlanId | null>(null);
 
   const limit = plan.features.proposalsPerMonth;
   const isUnlimited = limit === "unlimited";
@@ -24,16 +26,39 @@ export default function Billing() {
 
   const tiers: PlanId[] = useMemo(() => ["free", "starter", "pro"], []);
 
-  const handleSelectPlan = (next: PlanId) => {
-    if (next === planId) return;
-    setPlan(next);
-    toast({
-      title: `Switched to ${PLANS[next].name}`,
-      description:
-        next === "free"
-          ? "You're back on the Free plan."
-          : `Welcome to ${PLANS[next].name}! All features unlocked. (Billing not yet collected — preview mode.)`,
-    });
+  const handleSelectPlan = async (next: PlanId) => {
+    if (next === planId || switching) return;
+    if (next !== "free" && !isPaymentsConfigured()) {
+      toast({ title: "Payments unavailable", description: "Payment system is not configured yet.", variant: "destructive" });
+      return;
+    }
+    setSwitching(next);
+    try {
+      const ok = next === "free" ? await cancelToFree() : await upgradePlan(next);
+      if (!ok) {
+        toast({
+          title: next === "free" ? "Cancellation failed" : "Plan change failed",
+          description: "Your current plan has not been changed. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+      toast({
+        title: next === "free" ? "Subscription cancelled" : `Switching to ${PLANS[next].name}…`,
+        description:
+          next === "free"
+            ? "Paddle confirmed the cancellation. You're back on the Free plan."
+            : `Welcome to ${PLANS[next].name}! It can take a few seconds for your new limits to apply.`,
+      });
+    } catch {
+      toast({
+        title: next === "free" ? "Cancellation failed" : "Plan change failed",
+        description: "Your current plan has not been changed. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSwitching(null);
+    }
   };
 
   return (
@@ -159,7 +184,7 @@ export default function Billing() {
 
                   <Button
                     onClick={() => handleSelectPlan(tier.id)}
-                    disabled={isCurrent}
+                    disabled={isCurrent || !!switching}
                     className={`w-full ${
                       isHighlight && !isCurrent
                         ? "bg-accent text-accent-foreground font-semibold hover:bg-accent/90"
@@ -167,7 +192,9 @@ export default function Billing() {
                     }`}
                     variant={isCurrent ? "outline" : isHighlight ? "default" : "secondary"}
                   >
-                    {isCurrent ? (
+                    {switching === tier.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : isCurrent ? (
                       "Current plan"
                     ) : tier.id === "free" ? (
                       "Switch to Free"
@@ -195,8 +222,8 @@ export default function Billing() {
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-3">
-            Billing collection isn't enabled yet — switching plans here updates your access
-            instantly for preview purposes. Payments will be wired up next.
+            Upgrading opens a secure Paddle checkout. Switching to Free cancels your
+            subscription immediately.
           </p>
         </div>
       </div>

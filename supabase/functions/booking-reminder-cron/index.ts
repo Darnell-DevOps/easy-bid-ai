@@ -2,6 +2,7 @@
 // Runs every 30 min via pg_cron. Idempotent via email_send_log.idempotency_key.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { resolvePublicUrl } from "../_shared/customDomain.ts";
+import { cronUnauthorized, isCronAuthorized } from "../_shared/cron-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -34,6 +35,7 @@ async function send(args: {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (!isCronAuthorized(req)) return cronUnauthorized();
 
   // Bookings starting in 23-25 hours from now (gives 30-min cron window slack)
   const now = new Date();

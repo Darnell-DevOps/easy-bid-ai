@@ -3,6 +3,11 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getPaddleClient, gatewayFetch, type PaddleEnv } from "../_shared/paddle.ts";
 import { calculateCommercialTotals } from "../_shared/commercial-calc.ts";
+import {
+  getUserPlan,
+  planHasFeature,
+  planUpgradeRequired,
+} from "../_shared/plan-entitlements.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -34,7 +39,7 @@ Deno.serve(async (req) => {
     const { data: proposal, error: pErr } = await supabase
       .from("proposals")
       .select(
-        "id, client_name, company_name, service_type, amount_cents, currency, tax_rate, tax_mode, client_paid",
+        "id, user_id, client_name, company_name, service_type, amount_cents, currency, tax_rate, tax_mode, client_paid",
       )
       .eq("id", proposalId)
       .maybeSingle();
@@ -50,6 +55,13 @@ Deno.serve(async (req) => {
         status: 400,
         headers: cors,
       });
+    }
+    const ownerPlan = await getUserPlan(supabase, proposal.user_id);
+    if (!planHasFeature(ownerPlan, "payments")) {
+      return new Response(
+        JSON.stringify(planUpgradeRequired(ownerPlan, "payments")),
+        { status: 403, headers: cors },
+      );
     }
     if (!proposal.amount_cents) {
       return new Response(

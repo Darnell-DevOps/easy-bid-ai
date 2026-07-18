@@ -27,7 +27,8 @@ import path from "node:path";
  * exercises the download flow in minimal environments.
  */
 function hasBinary(bin: string): boolean {
-  const res = spawnSync("which", [bin], { encoding: "utf8" });
+  const locator = process.platform === "win32" ? "where" : "which";
+  const res = spawnSync(locator, [bin], { encoding: "utf8" });
   return res.status === 0 && res.stdout.trim().length > 0;
 }
 

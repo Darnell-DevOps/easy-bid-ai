@@ -792,7 +792,7 @@ export default function ProposalView() {
 <html>
 <head>
 <meta charset="utf-8" />
-<title>${title}</title>
+<title>${escapeHtml(title)}</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
   @page { size: A4; margin: 18mm 16mm; }
