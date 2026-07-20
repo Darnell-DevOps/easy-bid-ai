@@ -795,6 +795,12 @@ export type Database = {
           created_at: string
           currency: string | null
           deleted_at: string | null
+          generation_attempts: number
+          generation_completed_at: string | null
+          generation_last_error: string | null
+          generation_next_retry_at: string | null
+          generation_started_at: string | null
+          generation_status: string
           id: string
           proposal_id: string | null
           sent_at: string | null
@@ -821,6 +827,12 @@ export type Database = {
           created_at?: string
           currency?: string | null
           deleted_at?: string | null
+          generation_attempts?: number
+          generation_completed_at?: string | null
+          generation_last_error?: string | null
+          generation_next_retry_at?: string | null
+          generation_started_at?: string | null
+          generation_status?: string
           id?: string
           proposal_id?: string | null
           sent_at?: string | null
@@ -847,6 +859,12 @@ export type Database = {
           created_at?: string
           currency?: string | null
           deleted_at?: string | null
+          generation_attempts?: number
+          generation_completed_at?: string | null
+          generation_last_error?: string | null
+          generation_next_retry_at?: string | null
+          generation_started_at?: string | null
+          generation_status?: string
           id?: string
           proposal_id?: string | null
           sent_at?: string | null
@@ -2995,6 +3013,14 @@ export type Database = {
         Returns: string
       }
       booking_reschedule_get: { Args: { _token: string }; Returns: Json }
+      claim_acceptance_contract_generation: {
+        Args: { _force?: boolean; _proposal_id: string }
+        Returns: {
+          claimed: boolean
+          contract_id: string
+          current_status: string
+        }[]
+      }
       claim_onboarding_form: { Args: { _proposal_id: string }; Returns: Json }
       client_portal_respond: {
         Args: {
@@ -3182,6 +3208,12 @@ export type Database = {
           created_at: string
           currency: string | null
           deleted_at: string | null
+          generation_attempts: number
+          generation_completed_at: string | null
+          generation_last_error: string | null
+          generation_next_retry_at: string | null
+          generation_started_at: string | null
+          generation_status: string
           id: string
           proposal_id: string | null
           sent_at: string | null
@@ -3205,37 +3237,13 @@ export type Database = {
       public_get_contract_for_proposal: {
         Args: { _proposal_id: string }
         Returns: {
-          amount_cents: number | null
-          body: string
-          client_email: string | null
-          client_id: string | null
-          client_name: string
-          company_name: string | null
-          contract_type: string
-          countersigned_at: string | null
-          countersigner_name: string | null
-          created_at: string
-          currency: string | null
-          deleted_at: string | null
+          generation_status: string
           id: string
-          proposal_id: string | null
-          sent_at: string | null
-          sent_source: string | null
-          signed_at: string | null
+          signed_at: string
           signing_token: string
-          source: string | null
           status: string
           title: string
-          updated_at: string
-          user_id: string
-          viewed_at: string | null
         }[]
-        SetofOptions: {
-          from: "*"
-          to: "contracts"
-          isOneToOne: false
-          isSetofReturn: true
-        }
       }
       public_get_contract_signatures_by_token: {
         Args: { _token: string }
