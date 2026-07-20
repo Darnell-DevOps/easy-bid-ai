@@ -3117,6 +3117,10 @@ export type Database = {
         Returns: string
       }
       booking_reschedule_get: { Args: { _token: string }; Returns: Json }
+      bootstrap_replace_cron_vault_secret: {
+        Args: { _value: string }
+        Returns: undefined
+      }
       claim_acceptance_contract_generation: {
         Args: { _force?: boolean; _proposal_id: string }
         Returns: {
