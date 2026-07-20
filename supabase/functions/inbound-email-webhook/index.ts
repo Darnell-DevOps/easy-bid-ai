@@ -2,7 +2,7 @@
 // Accepts a parsed email payload from any inbound-email service (SendGrid Inbound Parse,
 // Postmark Inbound, Cloudflare Worker, Mailgun, etc.) and:
 //   1. Resolves recipient address (leads-{slug}@...) to a user_id
-//   2. Optionally validates a per-user shared secret (stronger than open ingest)
+//   2. Requires a per-user shared secret before processing the message
 //   3. Calls the AI lead-response model to extract qualification + draft a reply
 //   4. Creates a `clients` row marked unread + saves the draft reply
 //
@@ -14,16 +14,17 @@
 //     "subject": "Quick question about pricing",
 //     "text":    "Plain text body...",
 //     "html":    "<p>Optional HTML body</p>",
-//     "secret":  "optional per-user shared secret"
+//     "secret":  "per-user shared secret (prefer the X-Inbound-Secret header)"
 //   }
 //
 // Auth: public endpoint (verify_jwt = false). Security comes from:
-//   - The slug being unguessable (12 hex chars)
-//   - Optional `secret` parameter or `X-Inbound-Secret` header that must match alias.inbound_secret
+//   - A required `X-Inbound-Secret` header or `secret` parameter that must match alias.inbound_secret
+//   - The unguessable 12-hex-character slug as a secondary defense
 //
 // Returns: { ok: true, client_id: string, draft: { subject, body } }
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { hasConfiguredInboundSecret, isInboundSecretValid } from "../_shared/inbound-auth.ts";
 import { logLeadActivity } from "../_shared/lead-activity.ts";
 
 const corsHeaders = {
@@ -281,10 +282,17 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Unknown inbound alias" }, 404);
   }
 
-  // Shared-secret enforcement: if the alias has a secret configured, a matching
-  // secret is REQUIRED. If no secret is configured, ingest stays open.
-  const providedSecret = body.secret || req.headers.get("x-inbound-secret");
-  if (alias.inbound_secret && providedSecret !== alias.inbound_secret) {
+  // Fail closed if an alias is ever missing its generated secret. The database
+  // enforces this invariant, but the runtime guard prevents configuration drift
+  // from turning the public endpoint into open ingest.
+  if (!hasConfiguredInboundSecret(alias.inbound_secret)) {
+    console.error("Inbound alias has no valid shared secret configured");
+    return jsonResponse({ error: "Inbound webhook authentication unavailable" }, 503);
+  }
+
+  const providedSecret = req.headers.get("x-inbound-secret") ??
+    (typeof body.secret === "string" ? body.secret : null);
+  if (!(await isInboundSecretValid(alias.inbound_secret, providedSecret))) {
     return jsonResponse({ error: "Invalid secret" }, 401);
   }
 
