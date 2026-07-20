@@ -152,13 +152,13 @@ export default function InboundEmailSettings() {
                 </div>
                 {secret && (
                   <div>
-                    <p className="font-semibold text-foreground mb-1">Optional shared secret</p>
+                    <p className="font-semibold text-foreground mb-1">Required shared secret</p>
                     <code className="block bg-background border border-border rounded px-2 py-1.5 break-all font-mono">
                       {secret}
                     </code>
                     <p className="mt-1.5">
                       Send this either as a <code>secret</code> field in the body or as an{" "}
-                      <code>X-Inbound-Secret</code> header to block spoofed posts.
+                      <code>X-Inbound-Secret</code> header. Requests without an exact match are rejected.
                     </p>
                   </div>
                 )}
