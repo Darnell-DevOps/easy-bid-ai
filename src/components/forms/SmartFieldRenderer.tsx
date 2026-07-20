@@ -82,12 +82,13 @@ function FileFieldInput({ field, value, onChange, formContext }: Props) {
       },
     });
     if (error) throw error;
-    const payload = data as { path: string; upload_url: string };
+    const payload = data as { path: string; upload_url: string; content_type?: string };
     if (!payload?.upload_url) throw new Error("No signed URL returned");
+    const validatedContentType = payload.content_type || file.type || "application/octet-stream";
 
     const res = await fetch(payload.upload_url, {
       method: "PUT",
-      headers: { "Content-Type": file.type || "application/octet-stream" },
+      headers: { "Content-Type": validatedContentType },
       body: file,
     });
     if (!res.ok) throw new Error(`Upload failed (${res.status})`);
@@ -96,7 +97,7 @@ function FileFieldInput({ field, value, onChange, formContext }: Props) {
       path: payload.path,
       name: file.name,
       size: file.size,
-      type: file.type || "application/octet-stream",
+      type: validatedContentType,
     };
   };
 

@@ -2,24 +2,11 @@
 // Resolves form owner from either onboarding access_token or active lead_forms slug.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
-
-const MAX_BYTES = 30 * 1024 * 1024; // 30 MB
-const ALLOWED_PREFIXES = ["image/", "text/"];
-const ALLOWED_EXACT = new Set([
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "application/vnd.ms-powerpoint",
-  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-  "application/zip",
-  "application/json",
-]);
-
-function safeName(name: string): string {
-  return name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 120);
-}
+import {
+  MAX_FORM_UPLOAD_BYTES,
+  normalizeFormUploadType,
+  safeUploadName,
+} from "../_shared/form-upload-policy.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -28,12 +15,11 @@ Deno.serve(async (req) => {
     if (!field_id || !filename || !content_type || typeof size !== "number") {
       return Response.json({ error: "missing_fields" }, { status: 400, headers: corsHeaders });
     }
-    if (size <= 0 || size > MAX_BYTES) {
-      return Response.json({ error: "file_too_large", limit: MAX_BYTES }, { status: 400, headers: corsHeaders });
+    if (size <= 0 || size > MAX_FORM_UPLOAD_BYTES) {
+      return Response.json({ error: "file_too_large", limit: MAX_FORM_UPLOAD_BYTES }, { status: 400, headers: corsHeaders });
     }
-    const ct = String(content_type).toLowerCase();
-    const ok = ALLOWED_PREFIXES.some((p) => ct.startsWith(p)) || ALLOWED_EXACT.has(ct);
-    if (!ok) {
+    const ct = normalizeFormUploadType(filename, content_type);
+    if (!ct) {
       return Response.json({ error: "file_type_not_allowed" }, { status: 400, headers: corsHeaders });
     }
 
@@ -75,7 +61,8 @@ Deno.serve(async (req) => {
     }
 
     const uuid = crypto.randomUUID();
-    const path = `${user_id}/${form_kind}/${form_id}/${field_id}/${uuid}-${safeName(filename)}`;
+    const safeFieldId = safeUploadName(String(field_id), "field");
+    const path = `${user_id}/${form_kind}/${form_id}/${safeFieldId}/${uuid}-${safeUploadName(String(filename))}`;
     const { data: signed, error: signErr } = await supabase.storage
       .from("form-uploads")
       .createSignedUploadUrl(path);
@@ -88,7 +75,8 @@ Deno.serve(async (req) => {
         path,
         upload_url: signed.signedUrl,
         token: signed.token,
-        size_limit: MAX_BYTES,
+        size_limit: MAX_FORM_UPLOAD_BYTES,
+        content_type: ct,
       },
       { headers: corsHeaders },
     );

@@ -2,6 +2,7 @@
 // only if the caller owns the path (path starts with their user id).
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { formUploadDownloadName } from "../_shared/form-upload-policy.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -28,9 +29,10 @@ Deno.serve(async (req) => {
       return Response.json({ error: "forbidden" }, { status: 403, headers: corsHeaders });
     }
 
+    const downloadName = formUploadDownloadName(path);
     const { data, error } = await supabase.storage
       .from("form-uploads")
-      .createSignedUrl(path, 60 * 5);
+      .createSignedUrl(path, 60 * 5, { download: downloadName });
     if (error || !data) {
       return Response.json({ error: "sign_failed", detail: error?.message }, { status: 500, headers: corsHeaders });
     }

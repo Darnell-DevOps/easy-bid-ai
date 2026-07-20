@@ -42,6 +42,8 @@ jobs:
           supabase/functions/automation-dispatcher/index.ts
           supabase/functions/contract-generation-retry-cron/index.ts
           supabase/functions/inbound-email-webhook/index.ts
+          supabase/functions/form-upload-sign/index.ts
+          supabase/functions/form-upload-signed-read/index.ts
           supabase/functions/report-client-error/index.ts
           supabase/functions/create-plan-checkout/index.ts
           supabase/functions/cancel-plan-subscription/index.ts
