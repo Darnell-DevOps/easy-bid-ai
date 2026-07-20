@@ -1,4 +1,6 @@
-CREATE TABLE public.automation_job_registry (
+-- Lovable Cloud already applied the equivalent 20260717150000 migration.
+-- Keep this synced migration replay-safe for fresh databases and CI.
+CREATE TABLE IF NOT EXISTS public.automation_job_registry (
   job_name TEXT PRIMARY KEY,
   function_name TEXT NOT NULL UNIQUE,
   interval_minutes INTEGER NOT NULL CHECK (interval_minutes BETWEEN 1 AND 10080),
@@ -18,11 +20,15 @@ ALTER TABLE public.automation_job_registry ENABLE ROW LEVEL SECURITY;
 GRANT SELECT ON public.automation_job_registry TO authenticated;
 GRANT ALL ON public.automation_job_registry TO service_role;
 
+DROP POLICY IF EXISTS "Super admins view automation health"
+  ON public.automation_job_registry;
 CREATE POLICY "Super admins view automation health"
   ON public.automation_job_registry
   FOR SELECT TO authenticated
   USING (public.is_super_admin());
 
+DROP TRIGGER IF EXISTS automation_job_registry_updated_at
+  ON public.automation_job_registry;
 CREATE TRIGGER automation_job_registry_updated_at
   BEFORE UPDATE ON public.automation_job_registry
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();

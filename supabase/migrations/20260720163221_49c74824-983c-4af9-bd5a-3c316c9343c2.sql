@@ -1,4 +1,6 @@
-CREATE TABLE public.app_error_reports (
+-- Lovable Cloud already applied the equivalent 20260717160000 migration.
+-- Keep this synced migration replay-safe for fresh databases and CI.
+CREATE TABLE IF NOT EXISTS public.app_error_reports (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   source TEXT NOT NULL CHECK (source IN ('react_boundary', 'window_error', 'unhandled_rejection', 'payments_webhook')),
   severity TEXT NOT NULL DEFAULT 'error' CHECK (severity IN ('warning', 'error', 'fatal')),
@@ -14,10 +16,10 @@ CREATE TABLE public.app_error_reports (
   resolved_by UUID REFERENCES auth.users(id) ON DELETE SET NULL
 );
 
-CREATE INDEX app_error_reports_unresolved_idx
+CREATE INDEX IF NOT EXISTS app_error_reports_unresolved_idx
   ON public.app_error_reports(occurred_at DESC)
   WHERE resolved_at IS NULL;
-CREATE INDEX app_error_reports_rate_limit_idx
+CREATE INDEX IF NOT EXISTS app_error_reports_rate_limit_idx
   ON public.app_error_reports(request_fingerprint, occurred_at DESC)
   WHERE request_fingerprint IS NOT NULL;
 
@@ -25,6 +27,8 @@ ALTER TABLE public.app_error_reports ENABLE ROW LEVEL SECURITY;
 GRANT SELECT ON public.app_error_reports TO authenticated;
 GRANT ALL ON public.app_error_reports TO service_role;
 
+DROP POLICY IF EXISTS "Super admins view error reports"
+  ON public.app_error_reports;
 CREATE POLICY "Super admins view error reports"
   ON public.app_error_reports
   FOR SELECT TO authenticated
