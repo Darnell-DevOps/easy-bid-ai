@@ -2747,6 +2747,11 @@ export type Database = {
           id: string
           language: string
           last_name: string | null
+          onboarding_client_id: string | null
+          onboarding_completed_at: string | null
+          onboarding_proposal_id: string | null
+          onboarding_skipped_at: string | null
+          onboarding_step: string
           phone: string | null
           timezone: string
           updated_at: string
@@ -2761,6 +2766,11 @@ export type Database = {
           id?: string
           language?: string
           last_name?: string | null
+          onboarding_client_id?: string | null
+          onboarding_completed_at?: string | null
+          onboarding_proposal_id?: string | null
+          onboarding_skipped_at?: string | null
+          onboarding_step?: string
           phone?: string | null
           timezone?: string
           updated_at?: string
@@ -2775,6 +2785,11 @@ export type Database = {
           id?: string
           language?: string
           last_name?: string | null
+          onboarding_client_id?: string | null
+          onboarding_completed_at?: string | null
+          onboarding_proposal_id?: string | null
+          onboarding_skipped_at?: string | null
+          onboarding_step?: string
           phone?: string | null
           timezone?: string
           updated_at?: string
