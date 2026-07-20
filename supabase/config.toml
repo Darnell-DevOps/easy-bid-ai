@@ -29,3 +29,5 @@ project_id = "avtogztwdoemxuffnwyv"
     verify_jwt = false
   [functions.lead-digest-cron]
     verify_jwt = false
+  [functions.bootstrap-vault-cron-secret]
+    verify_jwt = false
