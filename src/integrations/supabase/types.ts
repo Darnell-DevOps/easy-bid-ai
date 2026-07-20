@@ -191,6 +191,54 @@ export type Database = {
         }
         Relationships: []
       }
+      automation_job_registry: {
+        Row: {
+          enabled: boolean
+          function_name: string
+          interval_minutes: number
+          job_name: string
+          last_completed_at: string | null
+          last_duration_ms: number | null
+          last_error: string | null
+          last_failed_at: string | null
+          last_result: Json | null
+          last_started_at: string | null
+          last_succeeded_at: string | null
+          next_run_at: string
+          updated_at: string
+        }
+        Insert: {
+          enabled?: boolean
+          function_name: string
+          interval_minutes: number
+          job_name: string
+          last_completed_at?: string | null
+          last_duration_ms?: number | null
+          last_error?: string | null
+          last_failed_at?: string | null
+          last_result?: Json | null
+          last_started_at?: string | null
+          last_succeeded_at?: string | null
+          next_run_at?: string
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          function_name?: string
+          interval_minutes?: number
+          job_name?: string
+          last_completed_at?: string | null
+          last_duration_ms?: number | null
+          last_error?: string | null
+          last_failed_at?: string | null
+          last_result?: Json | null
+          last_started_at?: string | null
+          last_succeeded_at?: string | null
+          next_run_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       automation_preferences: {
         Row: {
           created_at: string
@@ -3021,6 +3069,13 @@ export type Database = {
           current_status: string
         }[]
       }
+      claim_due_automation_jobs: {
+        Args: { _limit?: number }
+        Returns: {
+          function_name: string
+          job_name: string
+        }[]
+      }
       claim_onboarding_form: { Args: { _proposal_id: string }; Returns: Json }
       client_portal_respond: {
         Args: {
@@ -3094,6 +3149,7 @@ export type Database = {
       }
       inbound_message_ignore: { Args: { _id: string }; Returns: undefined }
       inbound_message_promote: { Args: { _id: string }; Returns: string }
+      invoke_automation_dispatcher: { Args: never; Returns: number }
       is_super_admin: { Args: never; Returns: boolean }
       lead_convert_to_client: { Args: { _lead_id: string }; Returns: string }
       lead_form_record_view: {
