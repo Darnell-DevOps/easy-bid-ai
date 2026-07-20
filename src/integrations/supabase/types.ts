@@ -191,6 +191,54 @@ export type Database = {
         }
         Relationships: []
       }
+      app_error_reports: {
+        Row: {
+          id: string
+          message: string
+          metadata: Json
+          occurred_at: string
+          path: string | null
+          request_fingerprint: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          source: string
+          stack: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          message: string
+          metadata?: Json
+          occurred_at?: string
+          path?: string | null
+          request_fingerprint?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          source: string
+          stack?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          message?: string
+          metadata?: Json
+          occurred_at?: string
+          path?: string | null
+          request_fingerprint?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          source?: string
+          stack?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       automation_job_registry: {
         Row: {
           enabled: boolean
@@ -3017,6 +3065,14 @@ export type Database = {
       admin_is_super_admin_user: {
         Args: { _target_user_id: string }
         Returns: boolean
+      }
+      admin_resolve_error_report: {
+        Args: { _error_id: string }
+        Returns: undefined
+      }
+      admin_retry_automation_job: {
+        Args: { _job_name: string }
+        Returns: undefined
       }
       admin_revenue_stats: { Args: never; Returns: Json }
       admin_usage_stats: { Args: never; Returns: Json }
