@@ -191,6 +191,102 @@ export type Database = {
         }
         Relationships: []
       }
+      app_error_reports: {
+        Row: {
+          id: string
+          message: string
+          metadata: Json
+          occurred_at: string
+          path: string | null
+          request_fingerprint: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          source: string
+          stack: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          message: string
+          metadata?: Json
+          occurred_at?: string
+          path?: string | null
+          request_fingerprint?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          source: string
+          stack?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          message?: string
+          metadata?: Json
+          occurred_at?: string
+          path?: string | null
+          request_fingerprint?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          source?: string
+          stack?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      automation_job_registry: {
+        Row: {
+          enabled: boolean
+          function_name: string
+          interval_minutes: number
+          job_name: string
+          last_completed_at: string | null
+          last_duration_ms: number | null
+          last_error: string | null
+          last_failed_at: string | null
+          last_result: Json | null
+          last_started_at: string | null
+          last_succeeded_at: string | null
+          next_run_at: string
+          updated_at: string
+        }
+        Insert: {
+          enabled?: boolean
+          function_name: string
+          interval_minutes: number
+          job_name: string
+          last_completed_at?: string | null
+          last_duration_ms?: number | null
+          last_error?: string | null
+          last_failed_at?: string | null
+          last_result?: Json | null
+          last_started_at?: string | null
+          last_succeeded_at?: string | null
+          next_run_at?: string
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          function_name?: string
+          interval_minutes?: number
+          job_name?: string
+          last_completed_at?: string | null
+          last_duration_ms?: number | null
+          last_error?: string | null
+          last_failed_at?: string | null
+          last_result?: Json | null
+          last_started_at?: string | null
+          last_succeeded_at?: string | null
+          next_run_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       automation_preferences: {
         Row: {
           created_at: string
@@ -795,6 +891,12 @@ export type Database = {
           created_at: string
           currency: string | null
           deleted_at: string | null
+          generation_attempts: number
+          generation_completed_at: string | null
+          generation_last_error: string | null
+          generation_next_retry_at: string | null
+          generation_started_at: string | null
+          generation_status: string
           id: string
           proposal_id: string | null
           sent_at: string | null
@@ -821,6 +923,12 @@ export type Database = {
           created_at?: string
           currency?: string | null
           deleted_at?: string | null
+          generation_attempts?: number
+          generation_completed_at?: string | null
+          generation_last_error?: string | null
+          generation_next_retry_at?: string | null
+          generation_started_at?: string | null
+          generation_status?: string
           id?: string
           proposal_id?: string | null
           sent_at?: string | null
@@ -847,6 +955,12 @@ export type Database = {
           created_at?: string
           currency?: string | null
           deleted_at?: string | null
+          generation_attempts?: number
+          generation_completed_at?: string | null
+          generation_last_error?: string | null
+          generation_next_retry_at?: string | null
+          generation_started_at?: string | null
+          generation_status?: string
           id?: string
           proposal_id?: string | null
           sent_at?: string | null
@@ -2512,16 +2626,34 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          cancel_at_period_end: boolean
+          current_period_end: string | null
+          environment: string | null
+          paddle_customer_id: string | null
+          paddle_price_id: string | null
+          paddle_subscription_id: string | null
           plan: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          cancel_at_period_end?: boolean
+          current_period_end?: string | null
+          environment?: string | null
+          paddle_customer_id?: string | null
+          paddle_price_id?: string | null
+          paddle_subscription_id?: string | null
           plan?: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          cancel_at_period_end?: boolean
+          current_period_end?: string | null
+          environment?: string | null
+          paddle_customer_id?: string | null
+          paddle_price_id?: string | null
+          paddle_subscription_id?: string | null
           plan?: string
           updated_at?: string
           user_id?: string
@@ -2729,6 +2861,11 @@ export type Database = {
           id: string
           language: string
           last_name: string | null
+          onboarding_client_id: string | null
+          onboarding_completed_at: string | null
+          onboarding_proposal_id: string | null
+          onboarding_skipped_at: string | null
+          onboarding_step: string
           phone: string | null
           timezone: string
           updated_at: string
@@ -2743,6 +2880,11 @@ export type Database = {
           id?: string
           language?: string
           last_name?: string | null
+          onboarding_client_id?: string | null
+          onboarding_completed_at?: string | null
+          onboarding_proposal_id?: string | null
+          onboarding_skipped_at?: string | null
+          onboarding_step?: string
           phone?: string | null
           timezone?: string
           updated_at?: string
@@ -2757,6 +2899,11 @@ export type Database = {
           id?: string
           language?: string
           last_name?: string | null
+          onboarding_client_id?: string | null
+          onboarding_completed_at?: string | null
+          onboarding_proposal_id?: string | null
+          onboarding_skipped_at?: string | null
+          onboarding_step?: string
           phone?: string | null
           timezone?: string
           updated_at?: string
@@ -2919,6 +3066,14 @@ export type Database = {
         Args: { _target_user_id: string }
         Returns: boolean
       }
+      admin_resolve_error_report: {
+        Args: { _error_id: string }
+        Returns: undefined
+      }
+      admin_retry_automation_job: {
+        Args: { _job_name: string }
+        Returns: undefined
+      }
       admin_revenue_stats: { Args: never; Returns: Json }
       admin_usage_stats: { Args: never; Returns: Json }
       admin_user_list: {
@@ -2962,6 +3117,25 @@ export type Database = {
         Returns: string
       }
       booking_reschedule_get: { Args: { _token: string }; Returns: Json }
+      bootstrap_replace_cron_vault_secret: {
+        Args: { _value: string }
+        Returns: undefined
+      }
+      claim_acceptance_contract_generation: {
+        Args: { _force?: boolean; _proposal_id: string }
+        Returns: {
+          claimed: boolean
+          contract_id: string
+          current_status: string
+        }[]
+      }
+      claim_due_automation_jobs: {
+        Args: { _limit?: number }
+        Returns: {
+          function_name: string
+          job_name: string
+        }[]
+      }
       claim_onboarding_form: { Args: { _proposal_id: string }; Returns: Json }
       client_portal_respond: {
         Args: {
@@ -3035,6 +3209,7 @@ export type Database = {
       }
       inbound_message_ignore: { Args: { _id: string }; Returns: undefined }
       inbound_message_promote: { Args: { _id: string }; Returns: string }
+      invoke_automation_dispatcher: { Args: never; Returns: number }
       is_super_admin: { Args: never; Returns: boolean }
       lead_convert_to_client: { Args: { _lead_id: string }; Returns: string }
       lead_form_record_view: {
@@ -3149,6 +3324,12 @@ export type Database = {
           created_at: string
           currency: string | null
           deleted_at: string | null
+          generation_attempts: number
+          generation_completed_at: string | null
+          generation_last_error: string | null
+          generation_next_retry_at: string | null
+          generation_started_at: string | null
+          generation_status: string
           id: string
           proposal_id: string | null
           sent_at: string | null
@@ -3172,37 +3353,13 @@ export type Database = {
       public_get_contract_for_proposal: {
         Args: { _proposal_id: string }
         Returns: {
-          amount_cents: number | null
-          body: string
-          client_email: string | null
-          client_id: string | null
-          client_name: string
-          company_name: string | null
-          contract_type: string
-          countersigned_at: string | null
-          countersigner_name: string | null
-          created_at: string
-          currency: string | null
-          deleted_at: string | null
+          generation_status: string
           id: string
-          proposal_id: string | null
-          sent_at: string | null
-          sent_source: string | null
-          signed_at: string | null
+          signed_at: string
           signing_token: string
-          source: string | null
           status: string
           title: string
-          updated_at: string
-          user_id: string
-          viewed_at: string | null
         }[]
-        SetofOptions: {
-          from: "*"
-          to: "contracts"
-          isOneToOne: false
-          isSetofReturn: true
-        }
       }
       public_get_contract_signatures_by_token: {
         Args: { _token: string }
