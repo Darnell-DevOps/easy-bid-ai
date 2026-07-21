@@ -3312,43 +3312,23 @@ export type Database = {
       public_get_contract_by_token: {
         Args: { _token: string }
         Returns: {
-          amount_cents: number | null
+          amount_cents: number
           body: string
-          client_email: string | null
-          client_id: string | null
+          client_email: string
           client_name: string
-          company_name: string | null
+          company_name: string
           contract_type: string
-          countersigned_at: string | null
-          countersigner_name: string | null
-          created_at: string
-          currency: string | null
-          deleted_at: string | null
-          generation_attempts: number
-          generation_completed_at: string | null
-          generation_last_error: string | null
-          generation_next_retry_at: string | null
-          generation_started_at: string | null
-          generation_status: string
+          countersigned_at: string
+          countersigner_name: string
+          currency: string
           id: string
-          proposal_id: string | null
-          sent_at: string | null
-          sent_source: string | null
-          signed_at: string | null
+          proposal_id: string
+          signed_at: string
           signing_token: string
-          source: string | null
           status: string
           title: string
-          updated_at: string
           user_id: string
-          viewed_at: string | null
         }[]
-        SetofOptions: {
-          from: "*"
-          to: "contracts"
-          isOneToOne: false
-          isSetofReturn: true
-        }
       }
       public_get_contract_for_proposal: {
         Args: { _proposal_id: string }
@@ -3366,22 +3346,13 @@ export type Database = {
         Returns: {
           contract_id: string
           id: string
-          ip_address: string | null
           method: string
           signature_data: string
           signed_at: string
-          signer_email: string | null
+          signer_email: string
           signer_name: string
           signer_role: string
-          user_agent: string | null
-          user_id: string
         }[]
-        SetofOptions: {
-          from: "*"
-          to: "contract_signatures"
-          isOneToOne: false
-          isSetofReturn: true
-        }
       }
       public_get_first_booking_link_for_user: {
         Args: { _user_id: string }
