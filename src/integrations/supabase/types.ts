@@ -3312,18 +3312,18 @@ export type Database = {
       public_get_contract_by_token: {
         Args: { _token: string }
         Returns: {
-          amount_cents: number | null
+          amount_cents: number
           body: string
-          client_email: string | null
+          client_email: string
           client_name: string
-          company_name: string | null
+          company_name: string
           contract_type: string
-          countersigned_at: string | null
-          countersigner_name: string | null
-          currency: string | null
+          countersigned_at: string
+          countersigner_name: string
+          currency: string
           id: string
-          proposal_id: string | null
-          signed_at: string | null
+          proposal_id: string
+          signed_at: string
           signing_token: string
           status: string
           title: string
@@ -3349,7 +3349,7 @@ export type Database = {
           method: string
           signature_data: string
           signed_at: string
-          signer_email: string | null
+          signer_email: string
           signer_name: string
           signer_role: string
         }[]
