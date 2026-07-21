@@ -67,7 +67,7 @@ jobs:
         run: supabase db reset --local
 
   e2e:
-    name: Hosted contract-signing smoke test
+    name: Browser smoke tests
     runs-on: ubuntu-latest
     needs: app
     env:
@@ -82,11 +82,9 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Install Chromium
-        if: env.E2E_BASE_URL != '' && env.TEST_USER_EMAIL != '' && env.TEST_USER_PASSWORD != ''
         run: npx playwright install --with-deps chromium
-      - name: Run hosted smoke test
-        if: env.E2E_BASE_URL != '' && env.TEST_USER_EMAIL != '' && env.TEST_USER_PASSWORD != ''
+      - name: Run browser smoke tests
         run: npm run test:e2e
-      - name: Explain skipped smoke test
-        if: env.E2E_BASE_URL == '' || env.TEST_USER_EMAIL == '' || env.TEST_USER_PASSWORD == ''
-        run: echo "Set E2E_BASE_URL, TEST_USER_EMAIL, and TEST_USER_PASSWORD to enable the hosted smoke test."
+      - name: Report credentialed sign-flow coverage
+        if: env.TEST_USER_EMAIL == '' || env.TEST_USER_PASSWORD == ''
+        run: echo "::warning::Public browser smoke tests ran, but TEST_USER_EMAIL and TEST_USER_PASSWORD are required for the full sign/countersign flow."

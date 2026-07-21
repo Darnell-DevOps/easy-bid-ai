@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Playwright output
+test-results/
+playwright-report/
+
 # Local and deployment environment files. Only the documented template is tracked.
 .env
 .env.*
