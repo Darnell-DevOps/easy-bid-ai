@@ -1,6 +1,7 @@
 // Paddle.js loader. The client token is a Vite env var swapped at build time.
+import { publicClientConfig } from "@/config/public-client-config";
 
-const clientToken = import.meta.env.VITE_PAYMENTS_CLIENT_TOKEN as string | undefined;
+const clientToken = publicClientConfig.paymentsClientToken;
 
 export interface PaddleEvent {
   name?: string;

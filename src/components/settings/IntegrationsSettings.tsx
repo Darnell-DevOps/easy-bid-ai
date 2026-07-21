@@ -19,6 +19,7 @@ import {
 import { Link } from "react-router-dom";
 import WhatsAppSettings from "@/components/settings/WhatsAppSettings";
 import MessagingHistory from "@/components/settings/MessagingHistory";
+import { publicClientConfig } from "@/config/public-client-config";
 
 type Status = "managed" | "attention" | "coming_soon";
 
@@ -187,7 +188,7 @@ const CATEGORIES: Category[] = [
 function displayStatus(integration: Integration): Status {
   if (
     integration.id === "paddle" &&
-    !(import.meta.env.VITE_PAYMENTS_CLIENT_TOKEN as string | undefined)
+    !publicClientConfig.paymentsClientToken
   ) {
     return "attention";
   }
@@ -195,7 +196,7 @@ function displayStatus(integration: Integration): Status {
 }
 
 export default function IntegrationsSettings() {
-  const hasPaymentClientToken = Boolean(import.meta.env.VITE_PAYMENTS_CLIENT_TOKEN);
+  const hasPaymentClientToken = Boolean(publicClientConfig.paymentsClientToken);
 
   return (
     <div className="space-y-6">

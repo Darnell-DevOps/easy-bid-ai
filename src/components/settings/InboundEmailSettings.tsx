@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Inbox, Copy, Check, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { publicClientConfig } from "@/config/public-client-config";
 
 const INBOUND_DOMAIN = "leads.closesync.io"; // user-facing display domain
 
@@ -134,7 +135,7 @@ export default function InboundEmailSettings() {
                 <div>
                   <p className="font-semibold text-foreground mb-1">Webhook URL</p>
                   <code className="block bg-background border border-border rounded px-2 py-1.5 break-all">
-                    {`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/inbound-email-webhook`}
+                    {`${publicClientConfig.supabaseUrl}/functions/v1/inbound-email-webhook`}
                   </code>
                 </div>
                 <div>

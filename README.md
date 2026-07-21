@@ -16,6 +16,17 @@ The matching browser build must use a sandbox or live
 `VITE_PAYMENTS_CLIENT_TOKEN`. Never expose Paddle API keys or the server-side
 price configuration through Vite variables.
 
+## Browser configuration
+
+All `VITE_` variables are public because Vite embeds them in the browser bundle.
+The checked-in defaults live in `src/config/public-client-config.ts` so local
+environment files can remain untracked. Copy `.env.example` to `.env.local` to
+override a value. Lovable Cloud build variables take precedence automatically.
+
+Never put API keys, webhook secrets, salts, service-role keys, or other
+server-only credentials in a `VITE_` variable. Store them as Lovable Cloud /
+Supabase Edge Function secrets.
+
 ## Scheduled automation configuration
 
 Reminder, digest, recovery, testimonial, and contract-generation retry jobs run
