@@ -9,7 +9,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { markOAuthRedirect } from "@/lib/oauth-return";
 import { consumeReturnPath } from "@/lib/session-expiry";
 import { useToast } from "@/hooks/use-toast";
-import { Clock } from "lucide-react";
+import { CheckCircle2, Clock } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
