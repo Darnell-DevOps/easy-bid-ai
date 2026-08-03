@@ -17,6 +17,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
+  const [signedOut, setSignedOut] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
@@ -35,6 +36,21 @@ export default function Login() {
       description: "You were signed out for your security. Please sign in again.",
     });
   }, [expired, toast]);
+
+  useEffect(() => {
+    try {
+      if (window.sessionStorage.getItem("show_signed_out_notice") === "1") {
+        window.sessionStorage.removeItem("show_signed_out_notice");
+        setSignedOut(true);
+        toast({
+          title: "Signed out",
+          description: "You have been signed out successfully.",
+        });
+      }
+    } catch {
+      /* storage unavailable */
+    }
+  }, [toast]);
 
 
   const handleGoogle = async () => {
