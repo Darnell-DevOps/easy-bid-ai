@@ -57,6 +57,7 @@ import LeadInbox from "./pages/LeadInbox";
 import Trash from "./pages/Trash";
 import KickoffDashboard from "./pages/KickoffDashboard";
 import NotFound from "./pages/NotFound";
+import OAuthConsent from "./pages/OAuthConsent";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { PageTransition } from "@/components/PageTransition";
 
