@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/use-theme";
 import { z } from "zod";
+import { isAppleRelayEmail } from "@/lib/apple-relay";
 
 const CURRENCIES = [
   { code: "USD", label: "USD — US Dollar" },
