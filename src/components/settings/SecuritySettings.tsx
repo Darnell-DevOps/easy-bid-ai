@@ -73,6 +73,8 @@ export default function SecuritySettings() {
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [userCreatedAt, setUserCreatedAt] = useState<string | null>(null);
+  const [providers, setProviders] = useState<string[]>([]);
+  const [lastSignInAt, setLastSignInAt] = useState<string | null>(null);
 
   // password
   const [currentPw, setCurrentPw] = useState("");
@@ -148,7 +150,13 @@ export default function SecuritySettings() {
       if (user) {
         setEmail(user.email || "");
         setUserCreatedAt(user.created_at || null);
+        const ids = (user.identities || []).map((i) => i.provider);
+        const primary = (user.app_metadata as { provider?: string } | undefined)?.provider;
+        const all = Array.from(new Set([...(primary ? [primary] : []), ...ids]));
+        setProviders(all.length ? all : ["email"]);
+        setLastSignInAt(user.last_sign_in_at || null);
       }
+
       try {
         const raw = localStorage.getItem("security_alert_prefs");
         if (raw) setAlerts({ ...DEFAULT_ALERTS, ...JSON.parse(raw) });
@@ -418,6 +426,35 @@ export default function SecuritySettings() {
           </ul>
         </CardContent>
       </Card>
+
+      {/* Sign-in method */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <KeyRound className="w-4 h-4 text-muted-foreground" />
+            <h3 className="text-base font-semibold text-foreground">Sign-in method</h3>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            {providers.length === 0 ? (
+              <span className="text-sm text-muted-foreground">Loading…</span>
+            ) : (
+              providers.map((p) => (
+                <Badge key={p} variant="secondary" className="capitalize">
+                  {p === "email" ? "Email & password" : p}
+                </Badge>
+              ))
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {email ? <>Signed in as <span className="text-foreground">{email}</span>. </> : null}
+            {lastSignInAt
+              ? `Last sign-in ${new Date(lastSignInAt).toLocaleString()}.`
+              : ""}
+          </p>
+        </CardContent>
+      </Card>
+
+
 
       {/* Password */}
       <Card>
