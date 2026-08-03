@@ -75,7 +75,16 @@ const TIMEZONES = [
 const profileSchema = z.object({
   first_name: z.string().trim().max(60, "Too long").optional().or(z.literal("")),
   last_name: z.string().trim().max(60, "Too long").optional().or(z.literal("")),
+  contact_email: z
+    .string()
+    .trim()
+    .max(255, "Too long")
+    .refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), "Invalid email address")
+    .refine((v) => !isAppleRelayEmail(v), "Use a real inbox, not an Apple relay address")
+    .optional()
+    .or(z.literal("")),
   business_name: z.string().trim().max(120, "Too long").optional().or(z.literal("")),
+
   phone: z
     .string()
     .trim()
