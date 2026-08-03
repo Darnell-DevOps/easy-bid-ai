@@ -116,6 +116,15 @@ export default function Login() {
             </span>
           </div>
         )}
+        {signedOut && (
+          <div
+            role="status"
+            className="mb-4 flex items-start gap-2.5 rounded-lg border border-green-500/40 bg-green-500/10 px-3.5 py-3 text-sm text-foreground"
+          >
+            <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0 text-green-500" />
+            <span>You have been signed out successfully.</span>
+          </div>
+        )}
 
         <Card className="border-border">
           <CardContent className="p-6">
