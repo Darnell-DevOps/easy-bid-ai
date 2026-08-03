@@ -73,6 +73,8 @@ export default function SecuritySettings() {
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [userCreatedAt, setUserCreatedAt] = useState<string | null>(null);
+  const [providers, setProviders] = useState<string[]>([]);
+  const [lastSignInAt, setLastSignInAt] = useState<string | null>(null);
 
   // password
   const [currentPw, setCurrentPw] = useState("");
