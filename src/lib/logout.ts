@@ -42,6 +42,7 @@ export async function performSignOut(redirectTo = "/login") {
 
   try {
     window.sessionStorage.removeItem("post_oauth_redirect");
+    window.sessionStorage.setItem("show_signed_out_notice", "1");
   } catch {
     /* ignore */
   }

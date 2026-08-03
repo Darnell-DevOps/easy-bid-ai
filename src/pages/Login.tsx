@@ -9,7 +9,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { markOAuthRedirect } from "@/lib/oauth-return";
 import { consumeReturnPath } from "@/lib/session-expiry";
 import { useToast } from "@/hooks/use-toast";
-import { Clock } from "lucide-react";
+import { CheckCircle2, Clock } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -17,6 +17,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
+  const [signedOut, setSignedOut] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
@@ -35,6 +36,21 @@ export default function Login() {
       description: "You were signed out for your security. Please sign in again.",
     });
   }, [expired, toast]);
+
+  useEffect(() => {
+    try {
+      if (window.sessionStorage.getItem("show_signed_out_notice") === "1") {
+        window.sessionStorage.removeItem("show_signed_out_notice");
+        setSignedOut(true);
+        toast({
+          title: "Signed out",
+          description: "You have been signed out successfully.",
+        });
+      }
+    } catch {
+      /* storage unavailable */
+    }
+  }, [toast]);
 
 
   const handleGoogle = async () => {
@@ -98,6 +114,15 @@ export default function Login() {
               Your session expired and you were signed out for security. Sign in again to pick up where
               you left off.
             </span>
+          </div>
+        )}
+        {signedOut && (
+          <div
+            role="status"
+            className="mb-4 flex items-start gap-2.5 rounded-lg border border-success/40 bg-success/10 px-3.5 py-3 text-sm text-foreground"
+          >
+            <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0 text-success" />
+            <span>You have been signed out successfully.</span>
           </div>
         )}
 
