@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { isAppleRelayEmail } from "@/lib/apple-relay";
 import {
   Eye,
   EyeOff,
