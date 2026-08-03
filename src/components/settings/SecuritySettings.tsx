@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { performSignOut } from "@/lib/logout";
 import { isAppleRelayEmail } from "@/lib/apple-relay";
 import {
   Eye,
@@ -229,8 +230,7 @@ export default function SecuritySettings() {
   };
 
   const handleSignOutCurrent = async () => {
-    await supabase.auth.signOut();
-    window.location.href = "/login";
+    await performSignOut("/login");
   };
 
   const handlePasswordReset = async () => {

@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
+import { performSignOut } from "@/lib/logout";
 import {
   FileText, Plus, Settings, LogOut, Menu, X, LayoutTemplate, Users, Sparkles,
   ScrollText, Calendar, FileSignature, ClipboardList, Repeat, LifeBuoy, Mail,
@@ -140,6 +141,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem(COLLAPSE_KEY) === "1";
   });
+  const [loggingOut, setLoggingOut] = useState(false);
   const isAdmin = useIsSuperAdmin();
   const unreadLeads = useUnreadLeadsCount();
 
