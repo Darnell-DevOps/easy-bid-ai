@@ -427,6 +427,35 @@ export default function SecuritySettings() {
         </CardContent>
       </Card>
 
+      {/* Sign-in method */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <KeyRound className="w-4 h-4 text-muted-foreground" />
+            <h3 className="text-base font-semibold text-foreground">Sign-in method</h3>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            {providers.length === 0 ? (
+              <span className="text-sm text-muted-foreground">Loading…</span>
+            ) : (
+              providers.map((p) => (
+                <Badge key={p} variant="secondary" className="capitalize">
+                  {p === "email" ? "Email & password" : p}
+                </Badge>
+              ))
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {email ? <>Signed in as <span className="text-foreground">{email}</span>. </> : null}
+            {lastSignInAt
+              ? `Last sign-in ${new Date(lastSignInAt).toLocaleString()}.`
+              : ""}
+          </p>
+        </CardContent>
+      </Card>
+
+
+
       {/* Password */}
       <Card>
         <CardContent className="p-6">
