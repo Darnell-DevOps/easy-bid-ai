@@ -525,10 +525,16 @@ function WorkflowOverview() {
 export default function Index() {
   const scrollY = useScrollY();
   const [docProgress, setDocProgress] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     track("landing_view");
   }, []);
+
+  // Land signed-in users on the dashboard after a full-page OAuth round-trip.
+  useEffect(() => {
+    return consumeOAuthRedirect((path) => navigate(path, { replace: true }));
+  }, [navigate]);
 
   useEffect(() => {
     const total = document.documentElement.scrollHeight - window.innerHeight;
