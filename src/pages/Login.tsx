@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,7 +7,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { markOAuthRedirect } from "@/lib/oauth-return";
+import { consumeReturnPath } from "@/lib/session-expiry";
 import { useToast } from "@/hooks/use-toast";
+import { Clock } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -17,6 +19,23 @@ export default function Login() {
   const [appleLoading, setAppleLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const expired = searchParams.get("expired") === "1";
+  const returnTo = useRef<string>("/dashboard");
+
+  useEffect(() => {
+    const saved = consumeReturnPath();
+    if (saved) returnTo.current = saved;
+  }, []);
+
+  useEffect(() => {
+    if (!expired) return;
+    toast({
+      title: "Session expired",
+      description: "You were signed out for your security. Please sign in again.",
+    });
+  }, [expired, toast]);
+
 
   const handleGoogle = async () => {
     setGoogleLoading(true);
