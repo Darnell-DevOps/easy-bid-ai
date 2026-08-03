@@ -234,6 +234,48 @@
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "outputSchema": null
+      },
+      {
+        "name": "list_connected_apps",
+        "title": "List connected apps",
+        "description": "List the external apps (AI assistants, integrations) the signed-in user has authorised to access CloseSync AI on their behalf, including when access was granted and how many sessions are active.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "revoke_connected_app",
+        "title": "Revoke connected app",
+        "description": "Revoke one of the signed-in user's own app authorisations by its consent id (from `list_connected_apps`). This immediately ends every session that app holds. Destructive — confirm with the user first.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "consent_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Consent id returned by list_connected_apps."
+            }
+          },
+          "required": [
+            "consent_id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
       }
     ]
   }
