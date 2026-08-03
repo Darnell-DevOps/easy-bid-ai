@@ -269,7 +269,41 @@ export default function ProfileSettings() {
             </p>
           </div>
 
+          {relay && (
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-foreground">
+                    You signed in with Apple's Hide My Email
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    That address is a private relay — it changes if you revoke access and
+                    can't be matched to your real inbox. Add a contact email below so
+                    notifications, receipts and duplicate-account checks work correctly.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div>
+            <Field
+              label="Contact email"
+              value={form.contact_email || ""}
+              onChange={(v) => set("contact_email", v)}
+              error={errors.contact_email}
+              placeholder="you@yourbusiness.com"
+              hint={
+                relay
+                  ? "Where we'll actually reach you instead of the Apple relay address"
+                  : "Optional — used instead of your sign-in email for app notifications"
+              }
+            />
+          </div>
+
           <Separator />
+
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field
