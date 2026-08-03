@@ -3235,6 +3235,19 @@ export type Database = {
         }
         Returns: Json
       }
+      list_my_oauth_consents: {
+        Args: never
+        Returns: {
+          active_sessions: number
+          client_id: string
+          client_name: string
+          client_uri: string
+          consent_id: string
+          granted_at: string
+          logo_uri: string
+          scopes: string
+        }[]
+      }
       mark_proposal_paid: {
         Args: { _proposal_id: string; _txn_id: string }
         Returns: undefined
@@ -3659,6 +3672,7 @@ export type Database = {
         Args: { _client_id: string }
         Returns: undefined
       }
+      revoke_my_oauth_consent: { Args: { p_consent_id: string }; Returns: Json }
       testimonial_request_get: { Args: { _token: string }; Returns: Json }
       testimonial_submit: {
         Args: {

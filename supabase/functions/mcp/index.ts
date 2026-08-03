@@ -263,13 +263,61 @@ var pipeline_summary_default = defineTool7({
   }
 });
 
+// src/lib/mcp/tools/list-connected-apps.ts
+import { defineTool as defineTool8 } from "npm:@lovable.dev/mcp-js@0.26.1";
+var list_connected_apps_default = defineTool8({
+  name: "list_connected_apps",
+  title: "List connected apps",
+  description: "List the external apps (AI assistants, integrations) the signed-in user has authorised to access CloseSync AI on their behalf, including when access was granted and how many sessions are active.",
+  inputSchema: {},
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async (_input, ctx) => {
+    if (!requireUser(ctx)) return errorResult("Not authenticated.");
+    const supabase = supabaseForUser(ctx);
+    const { data, error } = await supabase.rpc("list_my_oauth_consents");
+    if (error) return errorResult(error.message);
+    const rows = data ?? [];
+    return jsonResult({ count: rows.length, connections: rows });
+  }
+});
+
+// src/lib/mcp/tools/revoke-connected-app.ts
+import { defineTool as defineTool9 } from "npm:@lovable.dev/mcp-js@0.26.1";
+import { z as z7 } from "npm:zod@^3.25.76";
+var revoke_connected_app_default = defineTool9({
+  name: "revoke_connected_app",
+  title: "Revoke connected app",
+  description: "Revoke one of the signed-in user's own app authorisations by its consent id (from `list_connected_apps`). This immediately ends every session that app holds. Destructive \u2014 confirm with the user first.",
+  inputSchema: {
+    consent_id: z7.string().uuid().describe("Consent id returned by list_connected_apps.")
+  },
+  annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false },
+  handler: async ({ consent_id }, ctx) => {
+    if (!requireUser(ctx)) return errorResult("Not authenticated.");
+    const supabase = supabaseForUser(ctx);
+    const { data, error } = await supabase.rpc("revoke_my_oauth_consent", {
+      p_consent_id: consent_id
+    });
+    if (error) return errorResult(error.message);
+    const result = data ?? {};
+    if (!result.revoked) {
+      return errorResult("No matching connection found for this account.");
+    }
+    return jsonResult({
+      revoked: true,
+      consent_id,
+      sessions_ended: result.sessions_ended ?? 0
+    });
+  }
+});
+
 // src/lib/mcp/index.ts
 var projectRef = "avtogztwdoemxuffnwyv";
 var mcp_default = defineMcp({
   name: "closesync-ai",
   title: "CloseSync AI",
   version: "0.1.0",
-  instructions: "Tools for CloseSync AI, a proposal, contract and client pipeline app. Every tool acts as the signed-in CloseSync user and only ever sees that user's own data. Use `pipeline_summary` for an overview, `list_clients` / `list_leads` for people, `list_proposals` and `get_proposal` for proposal detail, `list_contracts` for signature status, and `create_client` to add a new client or lead.",
+  instructions: "Tools for CloseSync AI, a proposal, contract and client pipeline app. Every tool acts as the signed-in CloseSync user and only ever sees that user's own data. Use `pipeline_summary` for an overview, `list_clients` / `list_leads` for people, `list_proposals` and `get_proposal` for proposal detail, `list_contracts` for signature status, and `create_client` to add a new client or lead. Use `list_connected_apps` to show which external apps the user has authorised, and `revoke_connected_app` to revoke one (destructive \u2014 always confirm first).",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated"
@@ -281,7 +329,9 @@ var mcp_default = defineMcp({
     list_proposals_default,
     get_proposal_default,
     list_contracts_default,
-    list_leads_default
+    list_leads_default,
+    list_connected_apps_default,
+    revoke_connected_app_default
   ]
 });
 

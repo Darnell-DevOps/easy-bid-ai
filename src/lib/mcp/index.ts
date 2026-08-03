@@ -6,6 +6,8 @@ import getProposalTool from "./tools/get-proposal";
 import listContractsTool from "./tools/list-contracts";
 import listLeadsTool from "./tools/list-leads";
 import pipelineSummaryTool from "./tools/pipeline-summary";
+import listConnectedAppsTool from "./tools/list-connected-apps";
+import revokeConnectedAppTool from "./tools/revoke-connected-app";
 
 // Build the OAuth issuer from the project ref (inlined at build time), never
 // from SUPABASE_URL — the managed Cloud proxy host would not match the issuer
@@ -17,7 +19,7 @@ export default defineMcp({
   title: "CloseSync AI",
   version: "0.1.0",
   instructions:
-    "Tools for CloseSync AI, a proposal, contract and client pipeline app. Every tool acts as the signed-in CloseSync user and only ever sees that user's own data. Use `pipeline_summary` for an overview, `list_clients` / `list_leads` for people, `list_proposals` and `get_proposal` for proposal detail, `list_contracts` for signature status, and `create_client` to add a new client or lead.",
+    "Tools for CloseSync AI, a proposal, contract and client pipeline app. Every tool acts as the signed-in CloseSync user and only ever sees that user's own data. Use `pipeline_summary` for an overview, `list_clients` / `list_leads` for people, `list_proposals` and `get_proposal` for proposal detail, `list_contracts` for signature status, and `create_client` to add a new client or lead. Use `list_connected_apps` to show which external apps the user has authorised, and `revoke_connected_app` to revoke one (destructive — always confirm first).",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated",
@@ -30,5 +32,7 @@ export default defineMcp({
     getProposalTool,
     listContractsTool,
     listLeadsTool,
+    listConnectedAppsTool,
+    revokeConnectedAppTool,
   ],
 });
