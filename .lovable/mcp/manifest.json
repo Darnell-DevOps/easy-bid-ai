@@ -1,0 +1,240 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.1",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://avtogztwdoemxuffnwyv.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "closesync-ai",
+      "version": "0.1.0",
+      "title": "CloseSync AI"
+    },
+    "tools": [
+      {
+        "name": "pipeline_summary",
+        "title": "Pipeline summary",
+        "description": "Summarise the signed-in user's pipeline: proposal counts by status, accepted and paid value, contracts awaiting signature or countersignature, and onboarding forms still outstanding.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_clients",
+        "title": "List clients",
+        "description": "List the signed-in user's clients and leads, newest first. Optionally filter by status or search by name, company or email.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "search": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Match against name, company or email."
+            },
+            "status": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Filter by client status, e.g. lead or client."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_client",
+        "title": "Create client",
+        "description": "Create a new client or lead record for the signed-in user.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Contact name."
+            },
+            "email": {
+              "type": "string",
+              "format": "email"
+            },
+            "company": {
+              "type": "string",
+              "minLength": 1
+            },
+            "phone": {
+              "type": "string",
+              "minLength": 1
+            },
+            "service_requested": {
+              "type": "string",
+              "minLength": 1
+            },
+            "project_description": {
+              "type": "string",
+              "minLength": 1
+            },
+            "budget": {
+              "type": "string",
+              "minLength": 1
+            },
+            "timeline": {
+              "type": "string",
+              "minLength": 1
+            },
+            "status": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Defaults to the table default when omitted."
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_proposals",
+        "title": "List proposals",
+        "description": "List the signed-in user's proposals, newest first. Optionally filter by status (draft, sent, viewed, accepted, rejected).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "minLength": 1
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_proposal",
+        "title": "Get proposal",
+        "description": "Fetch one of the signed-in user's proposals in full, including its written content and pricing breakdown.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "proposal_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The proposal id."
+            }
+          },
+          "required": [
+            "proposal_id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_contracts",
+        "title": "List contracts",
+        "description": "List the signed-in user's contracts, newest first. Optionally filter by status (draft, sent, viewed, signed, executed).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "minLength": 1
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_leads",
+        "title": "List inbound leads",
+        "description": "List inbound leads captured by the signed-in user's lead forms and inbox, newest first, with AI qualification scores when available.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "minLength": 1
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
