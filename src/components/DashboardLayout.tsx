@@ -315,7 +315,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <TooltipTrigger asChild>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center justify-center w-full h-9 rounded-md text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/40 transition"
+                    disabled={loggingOut}
+                    aria-label="Log out"
+                    className="flex items-center justify-center w-full h-9 rounded-md border border-sidebar-border/60 text-sidebar-foreground/75 hover:text-sidebar-foreground hover:bg-destructive/15 hover:border-destructive/40 disabled:opacity-60 transition"
                   >
                     <LogOut className="w-4 h-4" />
                   </button>
@@ -325,10 +327,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             ) : (
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-semibold leading-5 text-sidebar-foreground/65 hover:text-sidebar-foreground hover:bg-sidebar-accent/40 w-full transition"
+                disabled={loggingOut}
+                aria-label="Log out"
+                className="flex items-center gap-3 px-3 py-2 rounded-md border border-sidebar-border/60 text-sm font-semibold leading-5 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-destructive/15 hover:border-destructive/40 disabled:opacity-60 w-full transition"
               >
                 <LogOut className="w-4 h-4" />
-                Log out
+                {loggingOut ? "Logging out…" : "Log out"}
               </button>
             )}
           </div>
