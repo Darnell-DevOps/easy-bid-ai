@@ -1,3 +1,4 @@
+import PageMeta from "@/components/PageMeta";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -97,6 +98,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
+      <PageMeta title="Sign in | CloseSync AI" description="Sign in to your CloseSync AI account to manage proposals, contracts and clients." path="/login" noIndex />
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <Link to="/" className="text-xl font-semibold text-foreground tracking-tight">

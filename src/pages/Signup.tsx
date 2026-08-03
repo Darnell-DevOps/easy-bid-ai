@@ -1,3 +1,4 @@
+import PageMeta from "@/components/PageMeta";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -108,6 +109,7 @@ export default function Signup() {
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2 bg-background">
+      <PageMeta title="Create your CloseSync AI account" description="Start closing clients faster with AI proposals, contracts, payments and retainers." path="/signup" noIndex />
       {/* Left: form panel */}
       <div className="flex flex-col bg-muted/30 px-6 py-10 lg:px-16 lg:py-14">
         <Link to="/" className="text-xl font-semibold text-foreground tracking-tight">

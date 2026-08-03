@@ -1,3 +1,4 @@
+import PageMeta from "@/components/PageMeta";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -543,6 +544,7 @@ export default function Index() {
 
   return (
     <div className="landing-shell min-h-screen bg-background relative overflow-x-clip">
+      <PageMeta title="CloseSync AI — Close Clients on Autopilot" description="Proposals, contracts, payments, retainers and bookings in one AI platform for freelancers and agencies." path="/" />
       {/* Nav with scroll progress */}
       <nav className="fixed top-0 inset-x-0 z-50 border-b border-[#172033]/10 bg-[#f5f1e8]/90 backdrop-blur-xl">
         <div className="container flex items-center justify-between h-[72px] px-4 md:px-8">
