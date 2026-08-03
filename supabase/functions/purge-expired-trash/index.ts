@@ -29,6 +29,9 @@ function parseMany(raw: unknown): FilePayload[] {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  if (!isCronAuthorized(req)) return cronUnauthorized();
+
+
   const svc = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
