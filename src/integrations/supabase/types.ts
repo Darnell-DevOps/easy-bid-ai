@@ -2855,6 +2855,8 @@ export type Database = {
       user_profiles: {
         Row: {
           business_name: string | null
+          contact_email: string | null
+          contact_email_normalized: string | null
           created_at: string
           default_currency: string
           first_name: string | null
@@ -2874,6 +2876,8 @@ export type Database = {
         }
         Insert: {
           business_name?: string | null
+          contact_email?: string | null
+          contact_email_normalized?: string | null
           created_at?: string
           default_currency?: string
           first_name?: string | null
@@ -2893,6 +2897,8 @@ export type Database = {
         }
         Update: {
           business_name?: string | null
+          contact_email?: string | null
+          contact_email_normalized?: string | null
           created_at?: string
           default_currency?: string
           first_name?: string | null
@@ -3233,6 +3239,7 @@ export type Database = {
         Args: { _proposal_id: string; _txn_id: string }
         Returns: undefined
       }
+      normalize_email: { Args: { _email: string }; Returns: string }
       onboarding_mark_reviewed: {
         Args: { _form_id: string }
         Returns: undefined

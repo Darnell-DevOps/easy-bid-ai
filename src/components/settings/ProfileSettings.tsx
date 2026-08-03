@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/use-theme";
 import { z } from "zod";
+import { isAppleRelayEmail } from "@/lib/apple-relay";
 
 const CURRENCIES = [
   { code: "USD", label: "USD — US Dollar" },
@@ -75,7 +76,16 @@ const TIMEZONES = [
 const profileSchema = z.object({
   first_name: z.string().trim().max(60, "Too long").optional().or(z.literal("")),
   last_name: z.string().trim().max(60, "Too long").optional().or(z.literal("")),
+  contact_email: z
+    .string()
+    .trim()
+    .max(255, "Too long")
+    .refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), "Invalid email address")
+    .refine((v) => !isAppleRelayEmail(v), "Use a real inbox, not an Apple relay address")
+    .optional()
+    .or(z.literal("")),
   business_name: z.string().trim().max(120, "Too long").optional().or(z.literal("")),
+
   phone: z
     .string()
     .trim()
@@ -103,6 +113,7 @@ type ProfileForm = z.infer<typeof profileSchema>;
 const EMPTY: ProfileForm = {
   first_name: "",
   last_name: "",
+  contact_email: "",
   business_name: "",
   phone: "",
   website: "",
@@ -123,6 +134,8 @@ export default function ProfileSettings() {
   const [initial, setInitial] = useState<ProfileForm>(EMPTY);
   const [form, setForm] = useState<ProfileForm>(EMPTY);
   const [errors, setErrors] = useState<Partial<Record<keyof ProfileForm, string>>>({});
+
+  const relay = useMemo(() => isAppleRelayEmail(email), [email]);
 
   useEffect(() => {
     const load = async () => {
@@ -145,6 +158,7 @@ export default function ProfileSettings() {
         ? {
             first_name: data.first_name || "",
             last_name: data.last_name || "",
+            contact_email: data.contact_email || "",
             business_name: data.business_name || "",
             phone: data.phone || "",
             website: data.website || "",
@@ -164,6 +178,7 @@ export default function ProfileSettings() {
     () => JSON.stringify(form) !== JSON.stringify(initial),
     [form, initial],
   );
+
 
   useEffect(() => {
     if (!dirty) return;
@@ -209,6 +224,7 @@ export default function ProfileSettings() {
       user_id: user.id,
       first_name: form.first_name || null,
       last_name: form.last_name || null,
+      contact_email: form.contact_email?.trim() || null,
       business_name: form.business_name || null,
       phone: form.phone || null,
       website: form.website || null,
@@ -224,6 +240,32 @@ export default function ProfileSettings() {
     setSaving(false);
 
     if (error) {
+      const msg = error.message || "";
+      if (msg.includes("user_profiles_contact_email_normalized_uidx")) {
+        setErrors((e) => ({
+          ...e,
+          contact_email: "Another account already uses this email address.",
+        }));
+        toast({
+          title: "Duplicate contact email",
+          description:
+            "That address is already linked to a different account. Sign in to that account or use another email.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (msg.includes("apple_relay_contact_email_not_allowed")) {
+        setErrors((e) => ({
+          ...e,
+          contact_email: "Use a real inbox, not an Apple relay address.",
+        }));
+        toast({
+          title: "Apple relay address rejected",
+          description: "Enter the inbox you actually read so we can reach you.",
+          variant: "destructive",
+        });
+        return;
+      }
       toast({
         title: "Couldn't save profile",
         description: error.message,
@@ -231,6 +273,7 @@ export default function ProfileSettings() {
       });
       return;
     }
+
 
     setInitial(form);
     toast({
@@ -269,7 +312,41 @@ export default function ProfileSettings() {
             </p>
           </div>
 
+          {relay && (
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-foreground">
+                    You signed in with Apple's Hide My Email
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    That address is a private relay — it changes if you revoke access and
+                    can't be matched to your real inbox. Add a contact email below so
+                    notifications, receipts and duplicate-account checks work correctly.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div>
+            <Field
+              label="Contact email"
+              value={form.contact_email || ""}
+              onChange={(v) => set("contact_email", v)}
+              error={errors.contact_email}
+              placeholder="you@yourbusiness.com"
+              hint={
+                relay
+                  ? "Where we'll actually reach you instead of the Apple relay address"
+                  : "Optional — used instead of your sign-in email for app notifications"
+              }
+            />
+          </div>
+
           <Separator />
+
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field

@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { isAppleRelayEmail } from "@/lib/apple-relay";
 import {
   Eye,
   EyeOff,
@@ -451,6 +452,17 @@ export default function SecuritySettings() {
               ? `Last sign-in ${new Date(lastSignInAt).toLocaleString()}.`
               : ""}
           </p>
+          {isAppleRelayEmail(email) && (
+            <div className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+              <p className="text-xs text-muted-foreground">
+                This is an Apple private relay address. It forwards to your real inbox but
+                changes if you revoke access, so add a contact email in{" "}
+                <span className="text-foreground">Profile</span> to keep notifications and
+                account matching reliable.
+              </p>
+            </div>
+          )}
+
         </CardContent>
       </Card>
 
