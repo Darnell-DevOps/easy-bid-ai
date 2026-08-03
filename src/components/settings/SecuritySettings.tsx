@@ -148,7 +148,13 @@ export default function SecuritySettings() {
       if (user) {
         setEmail(user.email || "");
         setUserCreatedAt(user.created_at || null);
+        const ids = (user.identities || []).map((i) => i.provider);
+        const primary = (user.app_metadata as { provider?: string } | undefined)?.provider;
+        const all = Array.from(new Set([...(primary ? [primary] : []), ...ids]));
+        setProviders(all.length ? all : ["email"]);
+        setLastSignInAt(user.last_sign_in_at || null);
       }
+
       try {
         const raw = localStorage.getItem("security_alert_prefs");
         if (raw) setAlerts({ ...DEFAULT_ALERTS, ...JSON.parse(raw) });
