@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { clearSignedInMarker } from "@/lib/session-expiry";
 
 /**
  * Fully clear the current session, regardless of which provider signed the
@@ -12,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
  * 4. Hard-navigate so all in-memory React/query state is discarded.
  */
 export async function performSignOut(redirectTo = "/login") {
+  clearSignedInMarker();
   try {
     const { error } = await supabase.auth.signOut({ scope: "global" });
     if (error) await supabase.auth.signOut({ scope: "local" });

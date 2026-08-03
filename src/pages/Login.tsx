@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,7 +7,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { markOAuthRedirect } from "@/lib/oauth-return";
+import { consumeReturnPath } from "@/lib/session-expiry";
 import { useToast } from "@/hooks/use-toast";
+import { Clock } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -17,10 +19,27 @@ export default function Login() {
   const [appleLoading, setAppleLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const expired = searchParams.get("expired") === "1";
+  const returnTo = useRef<string>("/dashboard");
+
+  useEffect(() => {
+    const saved = consumeReturnPath();
+    if (saved) returnTo.current = saved;
+  }, []);
+
+  useEffect(() => {
+    if (!expired) return;
+    toast({
+      title: "Session expired",
+      description: "You were signed out for your security. Please sign in again.",
+    });
+  }, [expired, toast]);
+
 
   const handleGoogle = async () => {
     setGoogleLoading(true);
-    markOAuthRedirect("/dashboard");
+    markOAuthRedirect(returnTo.current);
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
     });
@@ -30,12 +49,12 @@ export default function Login() {
       return;
     }
     if (result.redirected) return;
-    navigate("/dashboard");
+    navigate(returnTo.current);
   };
 
   const handleApple = async () => {
     setAppleLoading(true);
-    markOAuthRedirect("/dashboard");
+    markOAuthRedirect(returnTo.current);
     const result = await lovable.auth.signInWithOAuth("apple", {
       redirect_uri: window.location.origin,
     });
@@ -45,7 +64,7 @@ export default function Login() {
       return;
     }
     if (result.redirected) return;
-    navigate("/dashboard");
+    navigate(returnTo.current);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -56,7 +75,7 @@ export default function Login() {
     if (error) {
       toast({ title: "Login failed", description: error.message, variant: "destructive" });
     } else {
-      navigate("/dashboard");
+      navigate(returnTo.current);
     }
   };
 
@@ -69,6 +88,19 @@ export default function Login() {
           </Link>
           <p className="text-muted-foreground text-sm mt-2">Sign in to your account</p>
         </div>
+        {expired && (
+          <div
+            role="status"
+            className="mb-4 flex items-start gap-2.5 rounded-lg border border-accent/40 bg-accent/10 px-3.5 py-3 text-sm text-foreground"
+          >
+            <Clock className="w-4 h-4 mt-0.5 flex-shrink-0 text-accent" />
+            <span>
+              Your session expired and you were signed out for security. Sign in again to pick up where
+              you left off.
+            </span>
+          </div>
+        )}
+
         <Card className="border-border">
           <CardContent className="p-6">
             <button
