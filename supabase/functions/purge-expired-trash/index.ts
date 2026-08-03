@@ -2,6 +2,7 @@
 // than that user's configured trash_retention_days (default 30). Cascades to
 // proposals, onboarding_forms (including uploaded files in storage), and deadlines.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { cronUnauthorized, isCronAuthorized } from "../_shared/cron-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
