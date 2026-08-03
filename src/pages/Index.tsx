@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +27,7 @@ import { AnimateIn } from "@/hooks/use-scroll-animation";
 import AiRetainersScroller from "@/components/landing/AiRetainersScroller";
 import ClientPortalShowcase from "@/components/landing/ClientPortalShowcase";
 import { track } from "@/lib/landing-analytics";
+import { consumeOAuthRedirect } from "@/lib/oauth-return";
 
 /* ------------------------------------------------------------------ */
 /* Data                                                                */
@@ -524,10 +525,16 @@ function WorkflowOverview() {
 export default function Index() {
   const scrollY = useScrollY();
   const [docProgress, setDocProgress] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     track("landing_view");
   }, []);
+
+  // Land signed-in users on the dashboard after a full-page OAuth round-trip.
+  useEffect(() => {
+    return consumeOAuthRedirect((path) => navigate(path, { replace: true }));
+  }, [navigate]);
 
   useEffect(() => {
     const total = document.documentElement.scrollHeight - window.innerHeight;

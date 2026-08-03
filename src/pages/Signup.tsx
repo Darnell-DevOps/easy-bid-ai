@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { markOAuthRedirect } from "@/lib/oauth-return";
 import { useToast } from "@/hooks/use-toast";
 import { track } from "@/lib/landing-analytics";
 import { sendEmail } from "@/lib/email";
@@ -40,6 +41,7 @@ export default function Signup() {
 
   const handleGoogle = async () => {
     setGoogleLoading(true);
+    markOAuthRedirect("/dashboard");
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
     });
@@ -54,6 +56,7 @@ export default function Signup() {
 
   const handleApple = async () => {
     setAppleLoading(true);
+    markOAuthRedirect("/dashboard");
     const result = await lovable.auth.signInWithOAuth("apple", {
       redirect_uri: window.location.origin,
     });
