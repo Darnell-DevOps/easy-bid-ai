@@ -7,22 +7,30 @@
  * friendly message plus the path they were on so we can return them there.
  */
 
-const DELIBERATE_KEY = "cs.auth.deliberate_signout";
+const WAS_SIGNED_IN_KEY = "cs.auth.was_signed_in";
 const RETURN_KEY = "cs.auth.return_to";
 
-export function markDeliberateSignOut() {
+export function markSignedIn() {
   try {
-    window.sessionStorage.setItem(DELIBERATE_KEY, "1");
+    window.localStorage.setItem(WAS_SIGNED_IN_KEY, "1");
   } catch {
     /* storage unavailable */
   }
 }
 
-function consumeDeliberateSignOut(): boolean {
+/** Called on deliberate logout so the next /login visit shows no expiry notice. */
+export function clearSignedInMarker() {
   try {
-    const v = window.sessionStorage.getItem(DELIBERATE_KEY);
-    window.sessionStorage.removeItem(DELIBERATE_KEY);
-    return v === "1";
+    window.localStorage.removeItem(WAS_SIGNED_IN_KEY);
+    window.sessionStorage.removeItem(RETURN_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+function wasSignedIn(): boolean {
+  try {
+    return window.localStorage.getItem(WAS_SIGNED_IN_KEY) === "1";
   } catch {
     return false;
   }
@@ -40,31 +48,35 @@ export function consumeReturnPath(): string | null {
 
 let redirecting = false;
 
-/** Send the user to /login with the "session expired" notice. */
-export function redirectToLoginExpired() {
+/**
+ * Handle a protected route losing its session.
+ * If the user had an active session before, treat it as an expiry: remember the
+ * current path and send them to /login?expired=1. Otherwise just go to /login.
+ */
+export function handleLostSession(navigate?: (to: string, opts?: { replace?: boolean }) => void) {
   if (redirecting) return;
   redirecting = true;
 
+  const expired = wasSignedIn();
+  clearSignedInMarker();
+
   const path = window.location.pathname + window.location.search;
-  try {
-    if (!path.startsWith("/login")) window.sessionStorage.setItem(RETURN_KEY, path);
-  } catch {
-    /* ignore */
+  if (expired && !path.startsWith("/login")) {
+    try {
+      window.sessionStorage.setItem(RETURN_KEY, path);
+    } catch {
+      /* ignore */
+    }
   }
 
-  if (window.location.pathname === "/login") {
-    window.location.replace("/login?expired=1");
+  const target = expired ? "/login?expired=1" : "/login";
+  if (navigate) {
+    navigate(target, { replace: true });
+    // allow future redirects after this navigation settles
+    setTimeout(() => {
+      redirecting = false;
+    }, 500);
   } else {
-    window.location.replace("/login?expired=1");
+    window.location.replace(target);
   }
-}
-
-/**
- * Decide what to do when the client reports no session on a protected route.
- * Returns true when the redirect was treated as an expiry.
- */
-export function handleLostSession(): boolean {
-  if (consumeDeliberateSignOut()) return false;
-  redirectToLoginExpired();
-  return true;
 }
