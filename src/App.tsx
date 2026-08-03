@@ -122,7 +122,10 @@ const App = () => (
             <Route path="/dashboard/lead-forms/:id" element={<AuthGuard><LeadFormEditor /></AuthGuard>} />
             <Route path="/dashboard/lead-inbox" element={<AuthGuard><LeadInbox /></AuthGuard>} />
             <Route path="/admin" element={<AuthGuard><SuperAdminGuard><AdminDashboard /></SuperAdminGuard></AuthGuard>} />
+            {/* Any other /dashboard/* path still requires a valid session */}
+            <Route path="/dashboard/*" element={<AuthGuard><NotFound /></AuthGuard>} />
             <Route path="*" element={<NotFound />} />
+
           </Routes>
         </PageTransition>
       </BrowserRouter>
