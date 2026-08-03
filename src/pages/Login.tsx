@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { markOAuthRedirect } from "@/lib/oauth-return";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Login() {
@@ -19,6 +20,7 @@ export default function Login() {
 
   const handleGoogle = async () => {
     setGoogleLoading(true);
+    markOAuthRedirect("/dashboard");
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
     });
@@ -33,6 +35,7 @@ export default function Login() {
 
   const handleApple = async () => {
     setAppleLoading(true);
+    markOAuthRedirect("/dashboard");
     const result = await lovable.auth.signInWithOAuth("apple", {
       redirect_uri: window.location.origin,
     });
