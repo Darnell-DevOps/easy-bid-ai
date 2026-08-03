@@ -48,6 +48,6 @@ export function resolvePublicClientConfig(
 }
 
 export const publicClientConfig = resolvePublicClientConfig(
-  import.meta.env,
+  import.meta.env as PublicClientEnvironment,
   DEFAULT_PAYMENTS_CLIENT_TOKEN,
 );

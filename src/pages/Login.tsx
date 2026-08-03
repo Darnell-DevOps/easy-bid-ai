@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Login() {
@@ -17,14 +18,16 @@ export default function Login() {
 
   const handleGoogle = async () => {
     setGoogleLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/dashboard` },
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
     });
-    if (error) {
+    if (result.error) {
       setGoogleLoading(false);
-      toast({ title: "Google sign-in failed", description: error.message, variant: "destructive" });
+      toast({ title: "Google sign-in failed", description: result.error.message, variant: "destructive" });
+      return;
     }
+    if (result.redirected) return;
+    navigate("/dashboard");
   };
 
   const handleLogin = async (e: React.FormEvent) => {
