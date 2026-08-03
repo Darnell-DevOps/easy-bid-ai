@@ -6,6 +6,8 @@ import getProposalTool from "./tools/get-proposal";
 import listContractsTool from "./tools/list-contracts";
 import listLeadsTool from "./tools/list-leads";
 import pipelineSummaryTool from "./tools/pipeline-summary";
+import listConnectedAppsTool from "./tools/list-connected-apps";
+import revokeConnectedAppTool from "./tools/revoke-connected-app";
 
 // Build the OAuth issuer from the project ref (inlined at build time), never
 // from SUPABASE_URL — the managed Cloud proxy host would not match the issuer
