@@ -26,9 +26,15 @@ export default function Login() {
   const returnTo = useRef<string>("/dashboard");
 
   useEffect(() => {
+    // An explicit ?next= (e.g. the OAuth consent screen) wins over a saved path.
+    const next = searchParams.get("next");
+    if (next && next.startsWith("/") && !next.startsWith("//")) {
+      returnTo.current = next;
+      return;
+    }
     const saved = consumeReturnPath();
     if (saved) returnTo.current = saved;
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     if (!expired) return;
