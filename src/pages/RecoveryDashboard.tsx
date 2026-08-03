@@ -358,7 +358,7 @@ export default function RecoveryDashboard() {
       <div className="space-y-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Recovery</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Recovery</h1>
             <p className="text-sm text-muted-foreground mt-1">
               Track invoices, recover failed payments, predict cash flow, and
               send polite reminders — automatically.

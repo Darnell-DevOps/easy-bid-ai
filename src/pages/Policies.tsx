@@ -182,7 +182,7 @@ export default function Policies() {
               <Shield className="w-3.5 h-3.5" />
               Business protection
             </div>
-            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
+            <h1 className="type-page-title">
               Protect your revenue with professional policies
             </h1>
             <p className="text-muted-foreground mt-2 text-base">
@@ -231,7 +231,7 @@ export default function Policies() {
         <CardContent className="p-5">
           <div className="flex items-center gap-2 mb-4">
             <AlertTriangle className="w-4 h-4 text-amber-500" />
-            <h3 className="font-semibold text-sm text-foreground">Before you send proposals…</h3>
+            <h3 className="font-semibold text-base text-foreground">Before you send proposals…</h3>
           </div>
           <div className="grid sm:grid-cols-3 gap-3">
             {ESSENTIAL_POLICIES.map((p) => {

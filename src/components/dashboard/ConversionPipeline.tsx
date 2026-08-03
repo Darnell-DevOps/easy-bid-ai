@@ -85,7 +85,7 @@ export default function ConversionPipeline({ proposals, clients, proposalClientI
   return (
     <section aria-labelledby="pipeline-heading" className="space-y-3">
       <div>
-        <h2 id="pipeline-heading" className="text-lg font-semibold text-foreground">
+        <h2 id="pipeline-heading" className="text-xl font-semibold text-foreground">
           Conversion pipeline
         </h2>
         <p className="text-xs text-muted-foreground mt-0.5">

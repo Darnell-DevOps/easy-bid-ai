@@ -88,7 +88,7 @@ export default function NewPolicy() {
         <ArrowLeft className="w-4 h-4 mr-2" /> Back to policies
       </Button>
 
-      <h1 className="text-3xl font-semibold tracking-tight mb-2">
+      <h1 className="type-page-title mb-2">
         Generate {form.policy_type || "policy"} in seconds
       </h1>
       <p className="text-muted-foreground mb-6">
@@ -105,7 +105,7 @@ export default function NewPolicy() {
       <div className="grid gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">The essentials</CardTitle>
+            <CardTitle className="text-base">The essentials</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4">
             {!searchParams.get("type") && (
@@ -164,7 +164,7 @@ export default function NewPolicy() {
         {showAdvanced && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Optional details</CardTitle>
+              <CardTitle className="text-base">Optional details</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4">
               <div className="grid gap-4 md:grid-cols-2">

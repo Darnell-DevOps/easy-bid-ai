@@ -38,7 +38,7 @@ export default function TestimonialWallPage() {
     <div className="min-h-screen bg-background">
       <div className="max-w-5xl mx-auto px-6 py-16 md:py-24">
         <header className="text-center space-y-4 mb-12">
-          <h1 className="text-3xl md:text-5xl font-semibold tracking-tight">{data.headline || "What clients say"}</h1>
+          <h1 className="type-marketing-hero">{data.headline || "What clients say"}</h1>
           {data.intro && <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">{data.intro}</p>}
           {items.length > 0 && (
             <div className="flex items-center justify-center gap-2 pt-2">

@@ -196,7 +196,7 @@ export default function TemplatesPanel() {
           <CardContent className="p-6 space-y-4">
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <div>
-                <h3 className="text-lg font-semibold">{def.label}</h3>
+                <h3 className="text-base font-semibold">{def.label}</h3>
                 <p className="text-xs text-muted-foreground">{def.description}</p>
               </div>
               <div className="flex items-center gap-2">

@@ -96,7 +96,7 @@ export default function Signup() {
         <div className="flex-1 flex items-center justify-center">
           <div className="w-full max-w-md">
             <div className="rounded-2xl border border-border bg-card shadow-sm p-7">
-              <h1 className="text-xl font-semibold text-foreground mb-5">Create account</h1>
+              <h1 className="type-card-title text-foreground mb-5">Create account</h1>
 
               <button
                 type="button"

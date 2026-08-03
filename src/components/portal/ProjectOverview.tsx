@@ -125,7 +125,7 @@ export default function ProjectOverview({
               <Sparkles className="w-3 h-3" />
               Project Hub · {stageLabel}
             </p>
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-1">
+            <h1 className="type-page-title text-foreground mb-1">
               Welcome back, <span className="bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent">{firstName}</span>
             </h1>
             <p className="text-sm text-muted-foreground truncate">{projectName}</p>
@@ -160,7 +160,7 @@ export default function ProjectOverview({
                 <span className="absolute inset-0 rounded-xl border border-accent/40 animate-ping opacity-60" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1">
+                <h3 className="text-base font-semibold leading-6 tracking-[-0.01em] text-foreground mb-1">
                   {nextAction.title}
                 </h3>
                 <p className="text-sm text-muted-foreground mb-4">{nextAction.description}</p>
@@ -192,7 +192,7 @@ export default function ProjectOverview({
                 <Rocket className="w-5 h-5 text-emerald-400" />
               </div>
               <div className="flex-1">
-                <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1">
+                <h3 className="text-base font-semibold leading-6 tracking-[-0.01em] text-foreground mb-1">
                   You're all set
                 </h3>
                 <p className="text-sm text-muted-foreground">

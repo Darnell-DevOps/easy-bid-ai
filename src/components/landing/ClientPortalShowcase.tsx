@@ -69,10 +69,10 @@ export default function ClientPortalShowcase() {
             <ShieldCheck className="w-3.5 h-3.5 text-accent" />
             <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">Client Portal</span>
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
+          <h2 className="type-marketing-section mb-4">
             A portal your clients <span className="text-gradient-sync">actually trust</span>
           </h2>
-          <p className="text-lg text-muted-foreground">
+          <p className="type-marketing-body text-muted-foreground max-w-[70ch] mx-auto">
             One branded workspace where every proposal, signature, payment and milestone updates in real time — no more chasing email threads.
           </p>
         </AnimateIn>
@@ -202,7 +202,7 @@ export default function ClientPortalShowcase() {
               <div className="rounded-2xl border border-border/60 bg-card/70 backdrop-blur-xl p-6">
                 <div className="flex items-center gap-2 mb-4">
                   <Sparkles className="w-4 h-4 text-accent" />
-                  <h3 className="font-semibold">Why clients love it</h3>
+                  <h3 className="text-base font-semibold leading-6 tracking-[-0.01em]">Why clients love it</h3>
                 </div>
                 <ul className="space-y-3 text-sm">
                   {[
@@ -253,7 +253,7 @@ export default function ClientPortalShowcase() {
                   { label: "On-time pay", value: "98%" },
                 ].map((s) => (
                   <div key={s.label} className="rounded-xl border border-border/60 bg-card/60 backdrop-blur-xl p-4 text-center">
-                    <div className="text-xl font-bold text-gradient-sync">{s.value}</div>
+                    <div className="text-2xl font-bold leading-9 tabular-nums text-gradient-sync">{s.value}</div>
                     <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">{s.label}</div>
                   </div>
                 ))}

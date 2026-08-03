@@ -42,7 +42,7 @@ export default function ProposalPayNow({
         <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/15 mb-3">
           <CheckCircle2 className="w-6 h-6 text-emerald-500" />
         </div>
-        <h3 className="text-lg font-semibold text-foreground mb-1">Payment received</h3>
+        <h3 className="text-base font-semibold leading-6 tracking-[-0.01em] text-foreground mb-1">Payment received</h3>
         <p className="text-sm text-muted-foreground">
           Thank you — your payment was processed successfully.
         </p>

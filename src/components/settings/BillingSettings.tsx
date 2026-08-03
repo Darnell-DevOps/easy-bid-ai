@@ -12,7 +12,7 @@ export default function BillingSettings() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">Billing &amp; subscription</h2>
+        <h2 className="text-xl font-semibold text-foreground">Billing &amp; subscription</h2>
         <p className="text-sm text-muted-foreground mt-1">
           View your current plan or securely change it through Paddle.
         </p>

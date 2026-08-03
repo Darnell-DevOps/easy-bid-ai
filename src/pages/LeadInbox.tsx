@@ -164,7 +164,7 @@ export default function LeadInbox() {
         ) : leads.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-card/30 p-12 text-center">
             <Inbox className="w-10 h-10 mx-auto text-muted-foreground/60 mb-3" />
-            <h2 className="text-base font-semibold text-foreground">No leads yet</h2>
+            <h2 className="text-xl font-semibold text-foreground">No leads yet</h2>
             <p className="text-sm text-muted-foreground mt-1 mb-4">Share a lead form to start collecting submissions.</p>
             <Button asChild><Link to="/dashboard/lead-forms">Create a form</Link></Button>
           </div>

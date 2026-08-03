@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -147,11 +145,26 @@
   }
 
   body {
-    @apply text-foreground font-sans antialiased;
+    @apply text-sm font-normal text-foreground font-sans antialiased;
+    font-optical-sizing: auto;
+    font-feature-settings: "tnum" 1, "cv02" 1, "cv03" 1, "cv04" 1;
     background-color: hsl(var(--background));
     background-image: radial-gradient(ellipse 80% 50% at 50% -10%, hsl(215 82% 55% / 0.06), transparent 70%);
     background-repeat: no-repeat;
     min-height: 100vh;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font-family: inherit;
+    font-optical-sizing: inherit;
+    font-feature-settings: inherit;
+  }
+
+  button {
+    font-weight: 600;
   }
 
   .light body {
@@ -211,6 +224,123 @@
   .btn-gradient:hover {
     background: hsl(215 82% 60%);
   }
+}
+
+/* CloseSync marketing surface: editorial studio meets client operating system. */
+.landing-shell {
+  --background: 42 33% 94%;
+  --foreground: 222 38% 15%;
+  --card: 42 38% 98%;
+  --card-foreground: 222 38% 15%;
+  --popover: 42 38% 98%;
+  --popover-foreground: 222 38% 15%;
+  --primary: 222 38% 15%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 40 24% 89%;
+  --secondary-foreground: 222 38% 15%;
+  --muted: 40 24% 89%;
+  --muted-foreground: 218 13% 42%;
+  --accent: 226 65% 51%;
+  --accent-foreground: 0 0% 100%;
+  --border: 222 20% 82%;
+  --input: 222 20% 82%;
+  --ring: 226 65% 51%;
+  --success: 153 65% 38%;
+  --purple: 226 65% 51%;
+  background-color: #f5f1e8;
+}
+
+.landing-display {
+  font-family: "Inter", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.landing-shell {
+  font-family: "Inter", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.landing-shell .font-mono {
+  font-family: inherit;
+}
+
+@layer components {
+  .type-page-title {
+    @apply text-2xl font-bold;
+  }
+
+  .type-page-subtitle,
+  .type-body {
+    @apply text-sm font-normal;
+  }
+
+  .type-section-title {
+    @apply text-xl font-semibold;
+  }
+
+  .type-card-title {
+    @apply text-base font-semibold;
+    letter-spacing: -0.01em;
+  }
+
+  .type-supporting {
+    @apply text-xs font-normal;
+  }
+
+  .type-metric {
+    @apply text-2xl font-bold tabular-nums;
+  }
+
+  .type-metric-label {
+    @apply text-xs font-medium;
+  }
+
+  .type-marketing-hero {
+    @apply text-4xl font-bold sm:text-5xl lg:text-6xl;
+    line-height: 1.08;
+    letter-spacing: -0.035em;
+  }
+
+  .type-marketing-section {
+    @apply text-3xl font-bold md:text-4xl;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+  }
+
+  .type-marketing-body {
+    @apply text-base font-normal sm:text-lg;
+    line-height: 1.6;
+  }
+
+  .type-marketing-eyebrow {
+    @apply text-xs font-semibold uppercase;
+    letter-spacing: 0.12em;
+  }
+}
+
+/* Legacy micro-labels are raised to the 12–13px floor without changing layout. */
+.text-\[9px\],
+.text-\[10px\] {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.text-\[11px\],
+.text-\[0\.8rem\] {
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
+}
+
+.landing-paper-grid {
+  background-color: #f5f1e8;
+  background-image:
+    linear-gradient(rgba(23, 32, 51, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(23, 32, 51, 0.055) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: linear-gradient(to bottom, black 0%, black 72%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 72%, transparent 100%);
+}
+
+.landing-shell .text-gradient-sync {
+  background-image: linear-gradient(120deg, #3157d5, #6247aa);
 }
 
 @keyframes hero-fade-in {

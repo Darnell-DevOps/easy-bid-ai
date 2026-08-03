@@ -173,7 +173,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <Link
         to={item.href}
         onClick={() => setMobileOpen(false)}
-        className={`group relative flex items-center gap-3 rounded-md text-sm transition-all duration-200 ${
+        className={`group relative flex items-center gap-3 rounded-md text-sm leading-5 transition-all duration-200 ${
           showCompact ? "justify-center px-0 py-2.5 mx-2" : "px-3 py-2"
         } ${
           active
@@ -261,7 +261,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Link
                 to="/dashboard/new"
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center justify-center gap-2 w-full h-9 rounded-lg bg-accent text-accent-foreground text-sm font-medium hover:bg-accent/90 transition-colors"
+                className="flex items-center justify-center gap-2 w-full h-9 rounded-lg bg-accent text-accent-foreground text-sm font-semibold leading-5 hover:bg-accent/90 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 New Proposal
@@ -322,7 +322,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             ) : (
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-sidebar-foreground/65 hover:text-sidebar-foreground hover:bg-sidebar-accent/40 w-full transition"
+                className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-semibold leading-5 text-sidebar-foreground/65 hover:text-sidebar-foreground hover:bg-sidebar-accent/40 w-full transition"
               >
                 <LogOut className="w-4 h-4" />
                 Log out

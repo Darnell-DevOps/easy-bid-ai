@@ -745,7 +745,7 @@ export default function ClientDetail() {
         {/* Proposals list — moved higher */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold text-foreground">Proposals</h2>
+            <h2 className="text-xl font-semibold text-foreground">Proposals</h2>
             <Button size="sm" variant="ghost" onClick={generateProposal} className="gap-2 text-xs text-muted-foreground hover:text-foreground h-8 px-2.5">
               <Plus className="w-3.5 h-3.5" /> New Proposal
             </Button>
@@ -1206,7 +1206,7 @@ function ClientSection({
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+        <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
           <Icon className="w-4 h-4 text-accent" /> {title}
         </h2>
         {actionLabel && onAction && (

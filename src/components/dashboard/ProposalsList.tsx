@@ -140,7 +140,7 @@ export default function ProposalsList({ proposals, loading, onRefresh }: Proposa
             <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mb-6">
               <FileText className="w-8 h-8 text-accent" />
             </div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">No proposals yet</h3>
+            <h3 className="text-base font-semibold text-foreground mb-2">No proposals yet</h3>
             <p className="text-sm text-muted-foreground mb-8 max-w-sm">Create your first proposal in under 2 minutes.</p>
             <Link to="/dashboard/new">
               <Button className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2 px-8 h-12 text-base">
@@ -168,7 +168,7 @@ export default function ProposalsList({ proposals, loading, onRefresh }: Proposa
                     <FileText className="w-4 h-4 text-accent" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-medium text-foreground text-sm truncate">{p.client_name}</h3>
+                    <h3 className="font-medium text-foreground text-base truncate">{p.client_name}</h3>
                     <p className="text-xs text-muted-foreground truncate">{p.company_name} · {p.service_type}</p>
                   </div>
                 </div>

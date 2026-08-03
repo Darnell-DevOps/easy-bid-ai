@@ -314,7 +314,7 @@ export default function NotificationsSettings() {
                     <Icon className="w-4 h-4 text-accent" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground">{cat.label}</h3>
+                    <h3 className="text-base font-semibold text-foreground">{cat.label}</h3>
                     <p className="text-xs text-muted-foreground">{cat.events.length} event types</p>
                   </div>
                 </div>
@@ -374,7 +374,7 @@ export default function NotificationsSettings() {
         <CardContent className="p-5">
           <div className="flex items-center gap-2 mb-4">
             <Bell className="w-4 h-4 text-accent" />
-            <h3 className="text-sm font-semibold text-foreground">Notification Centre Preview</h3>
+            <h3 className="text-base font-semibold text-foreground">Notification Centre Preview</h3>
           </div>
           <p className="text-xs text-muted-foreground mb-4">
             Examples of how notifications appear in CloseSync.

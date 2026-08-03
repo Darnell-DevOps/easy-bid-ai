@@ -190,7 +190,7 @@ export default function PriorityActions({ proposals, clients, proposalClientName
     <div className="space-y-3">
       <div className="flex items-end justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
             <Bell className="w-4 h-4 text-amber-500" />
             Priority Actions
             <span className="text-sm font-normal text-muted-foreground">({items.length})</span>

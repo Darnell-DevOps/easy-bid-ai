@@ -511,7 +511,7 @@ export default function CalendarPage() {
             <CardContent className="p-5">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-base font-semibold text-foreground">
+                  <h2 className="text-xl font-semibold text-foreground">
                     {selectedDate.toLocaleDateString(undefined, {
                       weekday: "long",
                       month: "long",
@@ -585,7 +585,7 @@ export default function CalendarPage() {
         {/* Upcoming list */}
         <Card>
           <CardContent className="p-6">
-            <h2 className="text-lg font-semibold text-foreground mb-4">Upcoming meetings</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-4">Upcoming meetings</h2>
             {loading ? (
               <p className="text-sm text-muted-foreground">Loading…</p>
             ) : upcoming.length === 0 ? (
@@ -632,7 +632,7 @@ export default function CalendarPage() {
         {/* Booking links */}
         <Card>
           <CardContent className="p-6">
-            <h2 className="text-lg font-semibold text-foreground mb-4">Your booking links</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-4">Your booking links</h2>
             {loading ? (
               <p className="text-sm text-muted-foreground">Loading…</p>
             ) : links.length === 0 ? (
@@ -706,7 +706,7 @@ export default function CalendarPage() {
         {past.length > 0 && (
           <Card>
             <CardContent className="p-6">
-              <h2 className="text-lg font-semibold text-foreground mb-4">Past meetings</h2>
+              <h2 className="text-xl font-semibold text-foreground mb-4">Past meetings</h2>
               <div className="divide-y divide-border">
                 {past.slice(0, 10).map((b) => (
                   <div key={b.id} className="py-2.5 flex items-center justify-between gap-3 opacity-70">

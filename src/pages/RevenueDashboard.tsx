@@ -973,7 +973,7 @@ export default function RevenueDashboard() {
             <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-lg font-semibold text-foreground">Revenue Over Time</h2>
+                  <h2 className="text-xl font-semibold text-foreground">Revenue Over Time</h2>
                   <p className="text-xs text-muted-foreground mt-0.5">Trends and growth across the selected window</p>
                 </div>
                 <span className="text-xs text-muted-foreground">{filterLabel}</span>
@@ -1013,7 +1013,7 @@ export default function RevenueDashboard() {
             <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-lg font-semibold text-foreground">Breakdown</h2>
+                  <h2 className="text-xl font-semibold text-foreground">Breakdown</h2>
                   <p className="text-xs text-muted-foreground mt-0.5">Revenue by source</p>
                 </div>
               </div>
@@ -1092,7 +1092,7 @@ export default function RevenueDashboard() {
                     <Users className="w-4 h-4 text-primary" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-semibold text-foreground">Top Clients</h2>
+                    <h2 className="text-xl font-semibold text-foreground">Top Clients</h2>
                     <p className="text-xs text-muted-foreground">Highest revenue generators</p>
                   </div>
                 </div>
@@ -1159,7 +1159,7 @@ export default function RevenueDashboard() {
                     <CalendarClock className="w-4 h-4 text-purple-400" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-semibold text-foreground">Upcoming Renewals</h2>
+                    <h2 className="text-xl font-semibold text-foreground">Upcoming Renewals</h2>
                     <p className="text-xs text-muted-foreground">Active retainer billing schedule</p>
                   </div>
                 </div>
@@ -1226,7 +1226,7 @@ export default function RevenueDashboard() {
                     <Activity className="w-4 h-4 text-accent" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-semibold text-foreground">Recent Revenue Activity</h2>
+                    <h2 className="text-xl font-semibold text-foreground">Recent Revenue Activity</h2>
                     <p className="text-xs text-muted-foreground">Live feed of payments, renewals & alerts</p>
                   </div>
                 </div>
@@ -1300,7 +1300,7 @@ export default function RevenueDashboard() {
                     <FileCheck className="w-4 h-4 text-emerald-400" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-semibold text-foreground">Paid Proposals</h2>
+                    <h2 className="text-xl font-semibold text-foreground">Paid Proposals</h2>
                     <p className="text-xs text-muted-foreground">Most recent wins</p>
                   </div>
                 </div>

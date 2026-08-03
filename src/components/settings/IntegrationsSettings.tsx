@@ -207,7 +207,7 @@ export default function IntegrationsSettings() {
         <CardContent className="p-5 flex items-start gap-3">
           <Wrench className="w-4 h-4 text-accent mt-0.5 flex-shrink-0" />
           <div>
-            <h3 className="text-sm font-semibold text-foreground">How connections work</h3>
+            <h3 className="text-base font-semibold text-foreground">How connections work</h3>
             <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
               Email delivery and payments are managed by CloseSync. Their cards do not claim provider health or offer simulated connect, sync, or disconnect actions. User-managed providers are marked coming soon until a real connection is available.
             </p>
@@ -223,7 +223,7 @@ export default function IntegrationsSettings() {
       {CATEGORIES.map((category) => (
         <section key={category.id} className="space-y-3">
           <div>
-            <h3 className="text-sm font-semibold text-foreground">{category.label}</h3>
+            <h3 className="text-base font-semibold text-foreground">{category.label}</h3>
             <p className="text-xs text-muted-foreground mt-0.5">{category.description}</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

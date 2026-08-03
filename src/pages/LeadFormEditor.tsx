@@ -96,7 +96,7 @@ export default function LeadFormEditor() {
     return (
       <DashboardLayout>
         <div className="text-center py-20">
-          <h1 className="text-xl font-semibold text-foreground">Form not found</h1>
+          <h1 className="type-page-title text-foreground">Form not found</h1>
           <Button asChild variant="outline" className="mt-4"><Link to="/dashboard/lead-forms">Back</Link></Button>
         </div>
       </DashboardLayout>
@@ -110,7 +110,7 @@ export default function LeadFormEditor() {
           <div className="flex items-center gap-3 min-w-0">
             <Button asChild size="icon" variant="ghost"><Link to="/dashboard/lead-forms"><ArrowLeft className="w-4 h-4" /></Link></Button>
             <div className="min-w-0">
-              <h1 className="text-xl font-bold text-foreground truncate">{form.name}</h1>
+              <h1 className="type-section-title text-foreground truncate">{form.name}</h1>
               <div className="text-xs text-muted-foreground flex items-center gap-2">
                 <span>/f/{form.slug}</span>
                 <Badge variant={form.is_active ? "default" : "secondary"} className="text-[10px]">{form.is_active ? "Live" : "Off"}</Badge>

@@ -18,7 +18,7 @@ export default function SuperAdminGuard({ children }: { children: React.ReactNod
     <div className="min-h-screen flex items-center justify-center p-6">
       <div className="max-w-md text-center space-y-4">
         <Shield className="w-10 h-10 mx-auto text-muted-foreground" />
-        <h1 className="text-xl font-semibold">Founder access required</h1>
+        <h1 className="type-page-title">Founder access required</h1>
         <p className="text-sm text-muted-foreground">
           You don't have permission to view this page.
         </p>

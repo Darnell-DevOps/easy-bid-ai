@@ -264,7 +264,7 @@ export default function LeadAssistantSettings() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-sm font-semibold text-foreground">Auto-send rules</h3>
+                <h3 className="text-base font-semibold text-foreground">Auto-send rules</h3>
                 <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-500 gap-1">
                   <Lock className="w-3 h-3" /> Preview · Disabled by default
                 </Badge>
@@ -377,7 +377,7 @@ function Section({
             <Icon className="w-4 h-4 text-accent" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+            <h3 className="text-base font-semibold text-foreground">{title}</h3>
             <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{description}</p>
           </div>
         </div>

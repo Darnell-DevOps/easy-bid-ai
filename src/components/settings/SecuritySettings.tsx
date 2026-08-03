@@ -395,7 +395,7 @@ export default function SecuritySettings() {
                 <ShieldCheck className="w-5 h-5 text-accent" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-foreground">Security Score</h3>
+                <h3 className="text-base font-semibold text-foreground">Security Score</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">How protected your account is</p>
               </div>
             </div>
@@ -424,7 +424,7 @@ export default function SecuritySettings() {
         <CardContent className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <KeyRound className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-sm font-semibold text-foreground">Password</h3>
+            <h3 className="text-base font-semibold text-foreground">Password</h3>
           </div>
 
           <div className="space-y-4">
@@ -490,7 +490,7 @@ export default function SecuritySettings() {
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-muted-foreground" />
               <div>
-                <h3 className="text-sm font-semibold text-foreground">Two-factor authentication</h3>
+                <h3 className="text-base font-semibold text-foreground">Two-factor authentication</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   Add a one-time code from your authenticator app on sign in
                 </p>
@@ -553,7 +553,7 @@ export default function SecuritySettings() {
         <CardContent className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <Monitor className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-sm font-semibold text-foreground">Active sessions</h3>
+            <h3 className="text-base font-semibold text-foreground">Active sessions</h3>
           </div>
 
           <div className="space-y-3">
@@ -597,7 +597,7 @@ export default function SecuritySettings() {
         <CardContent className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <History className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-sm font-semibold text-foreground">Recent login activity</h3>
+            <h3 className="text-base font-semibold text-foreground">Recent login activity</h3>
           </div>
           <div className="divide-y divide-border">
             {loginHistory.map((l, i) => (
@@ -630,7 +630,7 @@ export default function SecuritySettings() {
         <CardContent className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <Bell className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-sm font-semibold text-foreground">Security alerts</h3>
+            <h3 className="text-base font-semibold text-foreground">Security alerts</h3>
           </div>
 
           <div className="space-y-3">
@@ -685,7 +685,7 @@ export default function SecuritySettings() {
         <CardContent className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <ShieldAlert className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-sm font-semibold text-foreground">Privacy</h3>
+            <h3 className="text-base font-semibold text-foreground">Privacy</h3>
           </div>
           <div className="space-y-3">
             <div className="flex items-center justify-between text-sm">
@@ -719,7 +719,7 @@ export default function SecuritySettings() {
                 <Trash2 className="w-4 h-4 text-destructive" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-foreground">Delete account</h3>
+                <h3 className="text-base font-semibold text-foreground">Delete account</h3>
                 <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                   Deleting your account will permanently remove all your clients, proposals, contracts and billing history. This cannot be undone.
                 </p>

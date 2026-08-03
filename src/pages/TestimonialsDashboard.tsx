@@ -123,7 +123,7 @@ export default function TestimonialsDashboard() {
       <div className="space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Testimonials & Reputation</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Testimonials & Reputation</h1>
             <p className="text-sm text-muted-foreground">Collect, manage and showcase client reviews automatically.</p>
           </div>
           <div className="flex gap-2">
@@ -177,7 +177,7 @@ export default function TestimonialsDashboard() {
 
           <TabsContent value="settings" className="space-y-6 mt-6">
             <Card>
-              <CardHeader><CardTitle className="text-lg">Sender</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base">Sender</CardTitle></CardHeader>
               <CardContent className="space-y-3">
                 <Field label="From name (used in emails)">
                   <Input value={settings.from_name || ""} onChange={e => setSettings({ ...settings, from_name: e.target.value })} placeholder="Your name or studio" />
@@ -189,7 +189,7 @@ export default function TestimonialsDashboard() {
             </Card>
 
             <Card>
-              <CardHeader><CardTitle className="text-lg">Automation</CardTitle><CardDescription>Auto-send review requests after key milestones.</CardDescription></CardHeader>
+              <CardHeader><CardTitle className="text-base">Automation</CardTitle><CardDescription>Auto-send review requests after key milestones.</CardDescription></CardHeader>
               <CardContent className="space-y-4">
                 <ToggleRow label="When a contract is signed" checked={!!settings.auto_request_on_contract_signed}
                   onChange={v => setSettings({ ...settings, auto_request_on_contract_signed: v })} />
@@ -209,7 +209,7 @@ export default function TestimonialsDashboard() {
             </Card>
 
             <Card>
-              <CardHeader><CardTitle className="text-lg">Reputation channels</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base">Reputation channels</CardTitle></CardHeader>
               <CardContent className="space-y-3">
                 <Field label="Google review link">
                   <Input value={settings.google_review_url || ""} onChange={e => setSettings({ ...settings, google_review_url: e.target.value })}
@@ -220,7 +220,7 @@ export default function TestimonialsDashboard() {
             </Card>
 
             <Card>
-              <CardHeader><CardTitle className="text-lg">Public wall</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base">Public wall</CardTitle></CardHeader>
               <CardContent className="space-y-3">
                 <Field label="Headline">
                   <Input value={settings.wall_headline || ""} onChange={e => setSettings({ ...settings, wall_headline: e.target.value })} />
@@ -236,7 +236,7 @@ export default function TestimonialsDashboard() {
 
           <TabsContent value="share" className="space-y-4 mt-6">
             <Card>
-              <CardHeader><CardTitle className="text-lg">Your testimonial wall</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base">Your testimonial wall</CardTitle></CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex gap-2">
                   <Input readOnly value={wallUrl} />

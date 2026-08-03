@@ -285,7 +285,7 @@ export default function ReschedulePage() {
 
             {/* Calendar */}
             <div className="p-6 lg:p-8">
-              <h2 className="text-base font-semibold text-foreground mb-5">Pick a new date & time</h2>
+              <h2 className="text-xl font-semibold text-foreground mb-5">Pick a new date & time</h2>
 
               <div className="flex items-center justify-between mb-3">
                 <Button

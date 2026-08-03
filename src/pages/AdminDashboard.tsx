@@ -13,7 +13,7 @@ import {
   BarChart, Bar,
 } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
-import { Shield, Users, DollarSign, Activity, RefreshCw, MoreHorizontal, History } from "lucide-react";
+import { Shield, Users, DollarSign, Activity, RefreshCw, MoreHorizontal, History, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
@@ -75,6 +75,14 @@ type ErrorReportRow = {
   occurred_at: string;
   user_id: string | null;
 };
+type SecurityEventSummaryRow = {
+  event_type: string;
+  source: string;
+  severity: string;
+  event_count: number;
+  unique_request_fingerprints: number;
+  last_seen_at: string;
+};
 type PaddleMetrics = {
   revenue: any; mrr: any; subscribers: any; window: { from: string; to: string };
 } | null;
@@ -113,6 +121,7 @@ export default function AdminDashboard() {
   const [loadingLog, setLoadingLog] = useState(false);
   const [automationJobs, setAutomationJobs] = useState<AutomationJobRow[]>([]);
   const [errorReports, setErrorReports] = useState<ErrorReportRow[]>([]);
+  const [securityEvents, setSecurityEvents] = useState<SecurityEventSummaryRow[]>([]);
   const [recoveryBusy, setRecoveryBusy] = useState<string | null>(null);
 
   const [editUser, setEditUser] = useState<UserRow | null>(null);
@@ -283,6 +292,18 @@ export default function AdminDashboard() {
     setErrorReports((data as unknown as ErrorReportRow[]) || []);
   };
 
+  const loadSecurityEvents = async () => {
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { data, error } = await supabase.rpc("admin_security_event_summary", {
+      _since: since,
+    });
+    if (error) {
+      toast({ title: "Security activity unavailable", description: error.message, variant: "destructive" });
+      return;
+    }
+    setSecurityEvents((data as SecurityEventSummaryRow[]) || []);
+  };
+
   const retryAutomation = async (jobName: string) => {
     setRecoveryBusy(`job:${jobName}`);
     const { error } = await supabase.rpc("admin_retry_automation_job", {
@@ -317,6 +338,7 @@ export default function AdminDashboard() {
     loadLog();
     loadAutomationHealth();
     loadErrorReports();
+    loadSecurityEvents();
   }, []);
 
   const signupChart = useMemo(
@@ -343,12 +365,12 @@ export default function AdminDashboard() {
       <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-8">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-2xl font-semibold flex items-center gap-2">
+            <h1 className="text-2xl font-bold flex items-center gap-2">
               <Shield className="w-6 h-6" /> Founder Dashboard
             </h1>
             <p className="text-sm text-muted-foreground mt-1">Platform-wide stats. Only visible to super admins.</p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => { loadAll(); loadPaddle(); loadUsers(search); loadLog(); loadAutomationHealth(); loadErrorReports(); }}>
+          <Button variant="outline" size="sm" onClick={() => { loadAll(); loadPaddle(); loadUsers(search); loadLog(); loadAutomationHealth(); loadErrorReports(); loadSecurityEvents(); }}>
             <RefreshCw className="w-4 h-4 mr-2" /> Refresh
           </Button>
         </div>
@@ -367,7 +389,7 @@ export default function AdminDashboard() {
             <Stat label="Active 30d" value={userStats?.active_30d} />
           </div>
           <Card className="mt-4">
-            <CardHeader><CardTitle className="text-sm font-medium">Signups · last 90 days</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base font-semibold">Signups · last 90 days</CardTitle></CardHeader>
             <CardContent>
               <div className="h-56">
                 {signupChart.length === 0 ? (
@@ -395,7 +417,7 @@ export default function AdminDashboard() {
           <div className="grid md:grid-cols-2 gap-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium">From your database</CardTitle>
+                <CardTitle className="text-base font-semibold">From your database</CardTitle>
                 <p className="text-xs text-muted-foreground">Recorded in your app (proposals + retainer invoices marked paid)</p>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -423,7 +445,7 @@ export default function AdminDashboard() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium flex items-center justify-between">
+                <CardTitle className="text-base font-semibold flex items-center justify-between">
                   <span>From Paddle (live)</span>
                   <Button variant="ghost" size="sm" onClick={loadPaddle} disabled={paddleLoading}>
                     <RefreshCw className={`w-3.5 h-3.5 ${paddleLoading ? "animate-spin" : ""}`} />
@@ -527,6 +549,56 @@ export default function AdminDashboard() {
                       </TableRow>
                     );
                   })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Security activity */}
+        <section>
+          <h2 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4" /> Security activity - last 24 hours
+          </h2>
+          <Card>
+            <CardHeader className="pb-2">
+              <p className="text-xs text-muted-foreground">
+                Aggregate blocked and invalid traffic only. Request identifiers, payloads, and personal data are not shown.
+              </p>
+            </CardHeader>
+            <CardContent className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Last seen</TableHead>
+                    <TableHead>Event</TableHead>
+                    <TableHead>Source</TableHead>
+                    <TableHead>Severity</TableHead>
+                    <TableHead className="text-right">Events</TableHead>
+                    <TableHead className="text-right">Unique request sources</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {securityEvents.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                        No security events recorded in the last 24 hours.
+                      </TableCell>
+                    </TableRow>
+                  ) : securityEvents.map((event) => (
+                    <TableRow key={[event.event_type, event.source, event.severity].join(":")}>
+                      <TableCell className="whitespace-nowrap">{fmtDateTime(event.last_seen_at)}</TableCell>
+                      <TableCell className="font-medium">{event.event_type.replaceAll("_", " ")}</TableCell>
+                      <TableCell className="font-mono text-xs">{event.source}</TableCell>
+                      <TableCell>
+                        <Badge variant={event.severity === "critical" || event.severity === "error" ? "destructive" : "outline"}>
+                          {event.severity}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">{Number(event.event_count).toLocaleString()}</TableCell>
+                      <TableCell className="text-right">{Number(event.unique_request_fingerprints).toLocaleString()}</TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </CardContent>

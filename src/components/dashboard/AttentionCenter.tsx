@@ -579,7 +579,7 @@ export default function AttentionCenter({ proposals, clients, proposalClientIds 
     <section aria-labelledby="attention-heading" className="space-y-3">
       <div className="flex items-end justify-between gap-3 flex-wrap">
         <div>
-          <h2 id="attention-heading" className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <h2 id="attention-heading" className="text-xl font-semibold text-foreground flex items-center gap-2">
             <Bell className="w-4 h-4 text-amber-400" />
             Needs your attention
             <span className="text-sm font-normal text-muted-foreground">({items.length})</span>

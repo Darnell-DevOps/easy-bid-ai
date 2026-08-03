@@ -249,7 +249,7 @@ export default function AutomationsSettings() {
         <CardContent className="p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-semibold text-foreground">Active automations</h3>
+              <h3 className="text-base font-semibold text-foreground">Active automations</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
                 What CloseSync is doing for you right now.
               </p>
@@ -296,7 +296,7 @@ export default function AutomationsSettings() {
                 <Plug className="w-4 h-4 text-accent" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-foreground">Send automations elsewhere</h3>
+                <h3 className="text-base font-semibold text-foreground">Send automations elsewhere</h3>
                 <p className="text-xs text-muted-foreground mt-0.5 max-w-md">
                   Soon you'll be able to route any automation through external tools and channels.
                 </p>
@@ -332,7 +332,7 @@ export default function AutomationsSettings() {
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-semibold text-foreground">{cat.label}</h3>
+                      <h3 className="text-base font-semibold text-foreground">{cat.label}</h3>
                       <Badge variant="secondary" className="text-[10px]">{onCount}/{cat.items.length} on</Badge>
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">{cat.description}</p>

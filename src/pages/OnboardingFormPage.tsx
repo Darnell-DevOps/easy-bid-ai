@@ -237,7 +237,7 @@ export default function OnboardingFormPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs uppercase tracking-[0.2em] text-purple font-semibold">Project summary</p>
-                  <h2 className="text-lg font-semibold text-foreground mt-1">Here's what we already have on file</h2>
+                  <h2 className="text-xl font-semibold text-foreground mt-1">Here's what we already have on file</h2>
                 </div>
               </div>
               <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">

@@ -129,7 +129,7 @@ export default function TimeSavedDashboard() {
             {/* Comparison */}
             <Card>
               <CardContent className="p-6 space-y-4">
-                <h2 className="text-lg font-semibold text-foreground">Time Comparison</h2>
+                <h2 className="text-xl font-semibold text-foreground">Time Comparison</h2>
                 <div className="space-y-3">
                   <div>
                     <div className="flex justify-between text-sm mb-1">

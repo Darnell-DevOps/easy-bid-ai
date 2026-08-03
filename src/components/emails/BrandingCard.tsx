@@ -116,7 +116,7 @@ export default function BrandingCard({ onSaved }: { onSaved?: (b: Branding) => v
       <CardContent className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold flex items-center gap-2"><Palette className="w-4 h-4 text-accent" /> Business branding</h3>
+            <h3 className="text-base font-semibold flex items-center gap-2"><Palette className="w-4 h-4 text-accent" /> Business branding</h3>
             <p className="text-xs text-muted-foreground mt-1">Used across all client-facing emails sent on your behalf.</p>
           </div>
           <Button size="sm" onClick={saveBranding} disabled={saving} className="gap-2">

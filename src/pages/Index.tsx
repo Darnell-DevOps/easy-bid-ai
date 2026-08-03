@@ -44,6 +44,37 @@ const journey = [
 ];
 
 
+const workflowPhases = [
+  {
+    number: "01",
+    icon: Inbox,
+    title: "Capture the enquiry",
+    detail: "Lead capture and qualification",
+    description: "New enquiries enter one structured client record, ready to review and respond to.",
+  },
+  {
+    number: "02",
+    icon: FileText,
+    title: "Agree the work",
+    detail: "Proposal, contract and deposit",
+    description: "Send a clear offer, collect an e-signature and take payment without changing tools.",
+  },
+  {
+    number: "03",
+    icon: LayoutDashboard,
+    title: "Start with context",
+    detail: "Onboarding and client portal",
+    description: "Collect the information your team needs and give the client one place to follow progress.",
+  },
+  {
+    number: "04",
+    icon: Repeat,
+    title: "Manage the relationship",
+    detail: "Follow-ups, bookings and retainers",
+    description: "Keep commitments, recurring work and the next client action visible after the first project.",
+  },
+];
+
 const terminalLog = [
   { t: "09:41:02", text: "inbound lead received — sarah@acme.co", tag: "LEAD" },
   { t: "09:41:04", text: "ai reply sent · lead scored 87/100", tag: "AI" },
@@ -156,7 +187,7 @@ function usePinnedProgress() {
 
 function MonoTag({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-accent">
+    <span className="type-marketing-eyebrow inline-flex items-center gap-2 text-accent">
       <span className="w-1.5 h-1.5 rounded-full bg-accent" />
       {children}
     </span>
@@ -219,6 +250,94 @@ function HeroTerminal() {
   );
 }
 
+const heroFlowSteps = [
+  { time: "09:41", label: "Enquiry", detail: "Brand refresh enquiry received", icon: Inbox },
+  { time: "09:52", label: "Proposal", detail: "\u00A34,800 proposal approved", icon: FileText },
+  { time: "11:03", label: "Contract", detail: "Signed by Sarah Chen", icon: PenLine },
+  { time: "11:04", label: "Payment", detail: "\u00A32,400 deposit collected", icon: HandCoins, paid: true },
+];
+
+function ClientFlowPreview() {
+  return (
+    <div className="relative mx-auto w-full max-w-[590px] px-2 pb-8 sm:px-5 sm:pb-10">
+      <div aria-hidden className="absolute inset-x-10 bottom-0 top-10 rotate-[2.5deg] rounded-[2rem] bg-[#d7ff63]" />
+      <div className="relative overflow-hidden rounded-[1.75rem] border-2 border-[#172033] bg-white text-[#172033] shadow-[0_28px_80px_rgba(23,32,51,0.18)]">
+        <div className="flex items-center justify-between border-b-2 border-[#172033] px-5 py-4 sm:px-7">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.16em]">Live client file</p>
+            <p className="mt-0.5 text-[11px] text-[#657083]">Acme Studio &middot; Brand refresh</p>
+          </div>
+          <span className="rounded-full border border-[#172033]/20 bg-[#f4f1e8] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em]">
+            CS-024
+          </span>
+        </div>
+
+        <div className="grid gap-6 p-5 sm:grid-cols-[1fr_auto] sm:p-7">
+          <div>
+            <div className="flex items-end gap-3">
+              <p className="text-3xl font-bold leading-9 tracking-[-0.02em] tabular-nums">&pound;4,800</p>
+              <span className="mb-1 rounded-full bg-[#e8edff] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#3157d5]">
+                Won today
+              </span>
+            </div>
+            <p className="mt-3 max-w-xs text-sm leading-relaxed text-[#657083]">
+              One enquiry moved from first reply to paid deposit in 83 minutes.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 sm:flex-col sm:items-end sm:justify-center">
+            <span className="h-2 w-2 rounded-full bg-[#22a06b]" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#657083]">Flow active</span>
+          </div>
+        </div>
+
+        <div className="border-y border-[#172033]/12 bg-[#fbfaf6] px-5 py-2 sm:px-7">
+          {heroFlowSteps.map((step, index) => {
+            const Icon = step.icon;
+            return (
+              <div key={step.label} className="relative grid grid-cols-[46px_36px_1fr_auto] items-center gap-3 py-3.5">
+                {index < heroFlowSteps.length - 1 && (
+                  <span aria-hidden className="absolute bottom-[-10px] left-[63px] top-[42px] w-px bg-[#172033]/18" />
+                )}
+                <span className="text-[10px] font-semibold tabular-nums text-[#8a93a3]">{step.time}</span>
+                <span
+                  className={
+                    "relative z-10 flex h-9 w-9 items-center justify-center rounded-full border " +
+                    (step.paid ? "border-[#172033] bg-[#d7ff63]" : "border-[#172033]/20 bg-white")
+                  }
+                >
+                  <Icon className="h-4 w-4" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-xs font-bold uppercase tracking-[0.08em]">{step.label}</span>
+                  <span className="mt-0.5 block truncate text-xs text-[#657083]">{step.detail}</span>
+                </span>
+                <CheckCircle className={"h-4 w-4 " + (step.paid ? "text-[#172033]" : "text-[#3157d5]")} />
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="flex flex-col gap-3 bg-[#3157d5] px-5 py-4 text-white sm:flex-row sm:items-center sm:justify-between sm:px-7">
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15">
+              <Send className="h-4 w-4" />
+            </span>
+            <span>
+              <span className="block text-xs font-bold">Onboarding sent automatically</span>
+              <span className="mt-0.5 block text-[10px] text-white/70">The next step is already moving.</span>
+            </span>
+          </div>
+          <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#d7ff63]">0 chasers needed</span>
+        </div>
+      </div>
+
+      <div className="absolute -bottom-1 right-0 rotate-[-3deg] rounded-full border-2 border-[#172033] bg-[#172033] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-white shadow-lg sm:right-3">
+        Lead &rarr; paid &rarr; onboarded
+      </div>
+    </div>
+  );
+}
+
 function CapabilityMarquee() {
   const items = [...marqueeItems, ...marqueeItems];
   return (
@@ -253,7 +372,7 @@ function ScrollJourney() {
         <div className="container max-w-6xl">
           <div className="text-center mb-10 md:mb-14">
             <MonoTag>The full client journey</MonoTag>
-            <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight mt-4 text-balance">
+            <h2 className="type-marketing-section text-foreground mt-4 text-balance">
               From first hello to <span className="text-gradient-sync">lifetime client</span>
             </h2>
           </div>
@@ -268,7 +387,7 @@ function ScrollJourney() {
                 {String(active + 1).padStart(2, "0")}
               </p>
               <div className="-mt-8 md:-mt-12">
-                <h3 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight">{stage.title}</h3>
+                <h3 className="text-2xl font-semibold text-foreground">{stage.title}</h3>
                 <p className="font-mono text-xs text-accent mt-2 uppercase tracking-widest">{stage.sub}</p>
                 <p className="text-muted-foreground mt-4 max-w-sm mx-auto lg:mx-0 leading-relaxed">{stage.desc}</p>
               </div>
@@ -344,6 +463,60 @@ function ScrollJourney() {
   );
 }
 
+function WorkflowOverview() {
+  return (
+    <section id="workflow" className="scroll-mt-20 border-y border-[#172033]/10 bg-white/55 px-4 py-24 md:py-28">
+      <div className="container max-w-6xl">
+        <div className="grid gap-8 border-b border-[#172033]/12 pb-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#3157d5]">How CloseSync works</p>
+            <h2 className="mt-4 max-w-xl type-marketing-section text-[#172033]">
+              One client record, from first enquiry to ongoing work.
+            </h2>
+          </div>
+          <p className="max-w-xl text-base leading-relaxed text-[#5e6878] lg:justify-self-end lg:text-lg">
+            CloseSync keeps the commercial steps of a client relationship in one place, so your team and your client always know what happens next.
+          </p>
+        </div>
+
+        <div className="mt-10 grid gap-px overflow-hidden rounded-[1.25rem] border border-[#172033]/12 bg-[#172033]/12 md:grid-cols-2 xl:grid-cols-4">
+          {workflowPhases.map((phase) => {
+            const Icon = phase.icon;
+            return (
+              <article key={phase.number} className="bg-[#fbfaf6] px-6 py-8 xl:min-h-[300px] xl:px-7 xl:py-9">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold tracking-[0.16em] text-[#8a93a3]">{phase.number}</span>
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full border border-[#172033]/15 bg-white text-[#172033]">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                </div>
+                <h3 className="mt-8 text-xl font-semibold tracking-[-0.02em] text-[#172033]">{phase.title}</h3>
+                <p className="mt-2 text-xs font-bold uppercase tracking-[0.11em] text-[#3157d5]">{phase.detail}</p>
+                <p className="mt-5 text-sm leading-relaxed text-[#657083]">{phase.description}</p>
+              </article>
+            );
+          })}
+        </div>
+
+        <div className="mt-8 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <p className="flex items-center gap-2 text-sm font-medium text-[#3d485a]">
+            <CheckCircle className="h-4 w-4 text-[#3157d5]" />
+            Every step stays attached to the same client record.
+          </p>
+          <Link
+            to="/sample"
+            className="group inline-flex items-center gap-2 text-sm font-semibold text-[#172033]"
+            onClick={() => track("sample_view")}
+          >
+            See a real proposal
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /* Page                                                                */
 /* ------------------------------------------------------------------ */
@@ -351,7 +524,6 @@ function ScrollJourney() {
 export default function Index() {
   const scrollY = useScrollY();
   const [docProgress, setDocProgress] = useState(0);
-  const showStickyCta = scrollY > 700;
 
   useEffect(() => {
     track("landing_view");
@@ -363,31 +535,30 @@ export default function Index() {
   }, [scrollY]);
 
   return (
-    <div className="min-h-screen bg-background relative overflow-x-clip">
+    <div className="landing-shell min-h-screen bg-background relative overflow-x-clip">
       {/* Nav with scroll progress */}
-      <nav className="fixed top-0 inset-x-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-        <div className="container flex items-center justify-between h-16 px-4 md:px-8">
-          <div className="flex items-baseline gap-3">
-            <span className="text-lg font-semibold text-foreground tracking-tight">
-              Close<span className="text-gradient-sync">Sync</span> AI
+      <nav className="fixed top-0 inset-x-0 z-50 border-b border-[#172033]/10 bg-[#f5f1e8]/90 backdrop-blur-xl">
+        <div className="container flex items-center justify-between h-[72px] px-4 md:px-8">
+          <div className="flex items-center gap-3">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#172033] text-[11px] font-bold tracking-tight text-white">
+              CS
             </span>
-            <span className="hidden lg:inline font-mono text-[9px] uppercase tracking-[0.25em] text-muted-foreground">
-              SYS.ONLINE
+            <span className="text-lg font-semibold text-[#172033] tracking-tight">
+              Close<span className="text-[#3157d5]">Sync</span>
             </span>
           </div>
-          <div className="hidden md:flex items-center gap-7 text-sm text-muted-foreground">
-            <a href="#ai" className="hover:text-foreground transition-colors">AI</a>
-            
-            <a href="#workflow" className="hover:text-foreground transition-colors">Workflow</a>
-            <a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a>
-            <Link to="/login" className="hover:text-foreground transition-colors">Login</Link>
+          <div className="hidden md:flex items-center gap-7 text-sm font-medium leading-5 text-[#657083]">
+            <a href="#workflow" className="hover:text-[#172033] transition-colors">How it works</a>
+            <a href="#ai" className="hover:text-[#172033] transition-colors">AI assistant</a>
+            <a href="#pricing" className="hover:text-[#172033] transition-colors">Pricing</a>
+            <Link to="/login" className="hover:text-[#172033] transition-colors">Sign in</Link>
           </div>
           <div className="flex items-center gap-3">
             <Link to="/login" className="md:hidden">
-              <Button variant="ghost" size="sm">Log in</Button>
+              <Button variant="ghost" size="sm" className="text-[#172033] hover:bg-[#172033]/5">Sign in</Button>
             </Link>
             <Link to="/signup" onClick={() => track("cta_click", { location: "nav" })}>
-              <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90 transition-colors h-9">
+              <Button size="sm" className="h-10 rounded-full bg-[#172033] px-5 text-white hover:bg-[#3157d5] transition-colors">
                 Start free
               </Button>
             </Link>
@@ -395,12 +566,73 @@ export default function Index() {
         </div>
         {/* Scroll progress bar */}
         <div aria-hidden className="absolute bottom-0 left-0 h-px w-full bg-transparent">
-          <div className="h-full bg-accent origin-left transition-transform duration-150 ease-out" style={{ transform: `scaleX(${docProgress})` }} />
+          <div className="h-full bg-[#3157d5] origin-left transition-transform duration-150 ease-out" style={{ transform: `scaleX(${docProgress})` }} />
         </div>
       </nav>
 
       {/* ============ Hero ============ */}
-      <section className="relative min-h-screen flex items-center pt-28 pb-20 px-4 overflow-hidden">
+      <section className="relative flex min-h-[720px] items-start overflow-hidden px-4 pb-16 pt-28 sm:pt-32 lg:min-h-[760px]">
+        <div aria-hidden className="landing-paper-grid absolute inset-0 -z-10 opacity-55" />
+        <div aria-hidden className="absolute -left-28 top-28 -z-10 h-64 w-64 rounded-full bg-[#d7ff63]/45 blur-3xl" />
+        <div aria-hidden className="absolute -right-24 bottom-16 -z-10 h-72 w-72 rounded-full bg-[#3157d5]/10 blur-3xl" />
+
+        <div className="container grid max-w-7xl items-center gap-14 lg:grid-cols-[0.92fr_1.08fr] lg:gap-16">
+          <div className="text-center lg:text-left">
+            <div className="animate-hero-fade-up mb-6">
+              <span className="type-marketing-eyebrow inline-flex items-center gap-2 rounded-full border border-[#172033]/15 bg-white/70 px-3.5 py-2 text-[#3d485a] shadow-sm">
+                <span className="h-2 w-2 rounded-full bg-[#3157d5]" />
+                Client operations for independent agencies
+              </span>
+            </div>
+            <h1
+              className="type-marketing-hero animate-hero-fade-up mb-7 text-[#172033]"
+              style={{ animationDelay: "0.1s" }}
+            >
+              Turn every new enquiry into a{" "}
+              <span className="block pt-2 text-[#3157d5] sm:pt-3">
+                paid, onboarded client.
+              </span>
+            </h1>
+            <p
+              className="type-marketing-body animate-hero-fade-up mx-auto mb-8 max-w-[70ch] text-[#5e6878] lg:mx-0"
+              style={{ animationDelay: "0.2s" }}
+            >
+              CloseSync&apos;s AI writes the proposal, gets the contract signed, collects payment and starts onboarding&mdash;so every enquiry keeps moving while you do the work.
+            </p>
+            <div
+              className="animate-hero-fade-up flex flex-col items-center justify-center gap-4 sm:flex-row lg:justify-start"
+              style={{ animationDelay: "0.3s" }}
+            >
+              <Link to="/signup" className="w-full sm:w-auto" onClick={() => track("cta_click", { location: "hero" })}>
+                <Button size="lg" className="h-14 w-full rounded-full bg-[#172033] px-8 text-base font-semibold text-white shadow-[0_10px_30px_rgba(23,32,51,0.16)] hover:bg-[#3157d5] sm:w-auto">
+                  Start closing free
+                  <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              </Link>
+              <Link
+                to="/sample"
+                className="group inline-flex items-center gap-2 py-3 text-sm font-semibold text-[#172033]"
+                onClick={() => track("sample_view")}
+              >
+                View a live proposal
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </div>
+            <div className="animate-hero-fade-up mt-7 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs font-medium text-[#657083] lg:justify-start">
+              <span className="flex items-center gap-1.5"><CheckCircle className="h-3.5 w-3.5 text-[#3157d5]" /> No card required</span>
+              <span className="flex items-center gap-1.5"><CheckCircle className="h-3.5 w-3.5 text-[#3157d5]" /> 7-day Pro trial</span>
+              <span className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-[#3157d5]" /> Payments by Paddle</span>
+            </div>
+          </div>
+
+          <div className="animate-hero-fade-up" style={{ animationDelay: "0.25s" }}>
+            <ClientFlowPreview />
+          </div>
+        </div>
+      </section>
+
+      {false && (
+      <section className="hidden">
         {/* Grid + beam backdrop with subtle parallax */}
         <div aria-hidden className="absolute inset-0 -z-10" style={{ transform: `translateY(${scrollY * 0.12}px)` }}>
           <div
@@ -477,12 +709,13 @@ export default function Index() {
           <span className="w-px h-8 bg-gradient-to-b from-muted-foreground/60 to-transparent" />
         </div>
       </section>
+      )}
 
       {/* ============ Capability marquee ============ */}
       <CapabilityMarquee />
 
-      {/* ============ Scroll-pinned journey ============ */}
-      <ScrollJourney />
+      {/* ============ Client workflow ============ */}
+      <WorkflowOverview />
 
       {/* ============ AI Assistant + Retainers (pinned horizontal scroll) ============ */}
       <AiRetainersScroller />
@@ -517,7 +750,7 @@ export default function Index() {
         <div className="container max-w-4xl">
           <AnimateIn className="text-center mb-14">
             <MonoTag>Pricing</MonoTag>
-            <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight mt-4">Simple, transparent pricing</h2>
+            <h2 className="type-marketing-section text-foreground mt-4">Simple, transparent pricing</h2>
             <p className="text-muted-foreground text-lg mt-3">No hidden fees. Cancel anytime.</p>
           </AnimateIn>
           <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto items-stretch">
@@ -593,10 +826,10 @@ export default function Index() {
         </div>
         <AnimateIn className="container max-w-3xl text-center">
           <MonoTag>Ready when you are</MonoTag>
-          <h2 className="text-4xl md:text-6xl font-bold text-foreground tracking-tighter mt-6 mb-6 text-balance">
+          <h2 className="type-marketing-section text-foreground mt-6 mb-6 text-balance">
             Stop running your business in 8 tabs.
           </h2>
-          <p className="text-muted-foreground text-lg mb-10 max-w-xl mx-auto leading-relaxed">
+          <p className="type-marketing-body text-muted-foreground mb-10 max-w-[70ch] mx-auto">
             Join the agencies and consultants closing more, churning less, and shipping client work without the busywork.
           </p>
           <Link to="/signup" onClick={() => track("cta_click", { location: "final" })}>
@@ -623,24 +856,6 @@ export default function Index() {
         </div>
       </footer>
 
-      {/* ============ Sticky CTA ============ */}
-      <div
-        className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 w-full max-w-2xl transition-all duration-500 ease-out ${
-          showStickyCta ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-6 pointer-events-none"
-        }`}
-        style={{ willChange: "opacity, transform" }}
-      >
-        <div className="flex items-center justify-between gap-4 px-5 py-3 rounded-full border border-border bg-card/90 backdrop-blur-md shadow-2xl shadow-black/40">
-          <p className="text-sm text-foreground font-medium hidden sm:block">Ready to close more &amp; operate less?</p>
-          <p className="text-sm text-foreground font-medium sm:hidden">Close &amp; operate</p>
-          <Link to="/signup" onClick={() => track("cta_click", { location: "sticky" })}>
-            <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90 transition-colors h-9 px-5 gap-2">
-              Start free
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Button>
-          </Link>
-        </div>
-      </div>
     </div>
   );
 }

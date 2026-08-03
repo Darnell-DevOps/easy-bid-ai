@@ -18,7 +18,7 @@ export default function ProposalWatermark() {
               {Array.from({ length: 4 }).map((_, col) => (
                 <span
                   key={col}
-                  className="text-foreground text-3xl sm:text-5xl font-extrabold tracking-tight"
+                  className="text-foreground text-3xl sm:text-5xl font-bold tracking-tight"
                 >
                   CloseSync · Free Plan
                 </span>

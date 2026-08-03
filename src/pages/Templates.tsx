@@ -361,7 +361,7 @@ export default function Templates() {
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="font-semibold text-foreground text-base leading-tight">
+                  <h2 className="font-semibold text-foreground text-xl leading-tight">
                     Generate Proposal with AI
                   </h2>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -582,7 +582,7 @@ function TemplateGrid({
                   <Icon className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-foreground text-sm leading-tight">{t.name}</h3>
+                  <h3 className="font-semibold text-foreground text-base leading-tight">{t.name}</h3>
                   <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed line-clamp-3">
                     {t.description}
                   </p>

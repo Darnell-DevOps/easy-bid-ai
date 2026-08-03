@@ -51,7 +51,7 @@ export default function ContractsWidget() {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <FileSignature className="w-4 h-4 text-accent" />
-            <h3 className="text-sm font-semibold text-foreground">Contracts</h3>
+            <h3 className="text-base font-semibold text-foreground">Contracts</h3>
           </div>
           <Link to="/dashboard/contracts" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
             View all <ArrowRight className="w-3 h-3" />

@@ -325,7 +325,7 @@ export default function DataExportsSettings() {
               <Database className="w-4 h-4 text-accent" />
             </div>
             <div>
-              <h3 className="font-semibold text-foreground text-sm">Your data at a glance</h3>
+              <h3 className="font-semibold text-foreground text-base">Your data at a glance</h3>
               <p className="text-xs text-muted-foreground">Everything stored in your CloseSync account</p>
             </div>
           </div>
@@ -356,7 +356,7 @@ export default function DataExportsSettings() {
               <Download className="w-4 h-4 text-accent" />
             </div>
             <div>
-              <h3 className="font-semibold text-foreground text-sm">Export data</h3>
+              <h3 className="font-semibold text-foreground text-base">Export data</h3>
               <p className="text-xs text-muted-foreground">Download individual datasets in your preferred format</p>
             </div>
           </div>
@@ -408,7 +408,7 @@ export default function DataExportsSettings() {
               <Package className="w-4 h-4 text-accent" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-foreground text-sm">Download my data</h3>
+              <h3 className="font-semibold text-foreground text-base">Download my data</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
                 A single archive with everything — clients, proposals, contracts, invoices, retainers, bookings,
                 onboarding forms and email history.
@@ -443,7 +443,7 @@ export default function DataExportsSettings() {
               <Clock className="w-4 h-4 text-accent" />
             </div>
             <div>
-              <h3 className="font-semibold text-foreground text-sm">Scheduled backups</h3>
+              <h3 className="font-semibold text-foreground text-base">Scheduled backups</h3>
               <p className="text-xs text-muted-foreground">Automatically generate and store regular exports</p>
             </div>
           </div>
@@ -500,7 +500,7 @@ export default function DataExportsSettings() {
               <HardDrive className="w-4 h-4 text-accent" />
             </div>
             <div>
-              <h3 className="font-semibold text-foreground text-sm">File storage</h3>
+              <h3 className="font-semibold text-foreground text-base">File storage</h3>
               <p className="text-xs text-muted-foreground">Uploaded files, attachments and generated documents</p>
             </div>
           </div>
@@ -531,7 +531,7 @@ export default function DataExportsSettings() {
               <History className="w-4 h-4 text-accent" />
             </div>
             <div>
-              <h3 className="font-semibold text-foreground text-sm">Data retention</h3>
+              <h3 className="font-semibold text-foreground text-base">Data retention</h3>
               <p className="text-xs text-muted-foreground">How long deleted items remain recoverable</p>
             </div>
           </div>
@@ -564,7 +564,7 @@ export default function DataExportsSettings() {
               <ShieldCheck className="w-4 h-4 text-accent" />
             </div>
             <div>
-              <h3 className="font-semibold text-foreground text-sm">Privacy & compliance</h3>
+              <h3 className="font-semibold text-foreground text-base">Privacy & compliance</h3>
               <p className="text-xs text-muted-foreground">GDPR-friendly controls for your personal data</p>
             </div>
           </div>
@@ -590,7 +590,7 @@ export default function DataExportsSettings() {
               <AlertTriangle className="w-4 h-4 text-destructive" />
             </div>
             <div>
-              <h3 className="font-semibold text-destructive text-sm">Danger zone</h3>
+              <h3 className="font-semibold text-destructive text-base">Danger zone</h3>
               <p className="text-xs text-muted-foreground">Irreversible actions. Proceed with care.</p>
             </div>
           </div>

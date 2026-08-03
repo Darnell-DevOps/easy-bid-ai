@@ -332,7 +332,7 @@ function Grid({ items, onUse, onEdit, onDuplicate, onSetDefault, onResetBuiltin,
                   <Icon className="w-4 h-4 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-sm font-semibold text-foreground leading-tight">{t.name}</h3>
+                  <h3 className="text-base font-semibold leading-6 tracking-[-0.01em] text-foreground">{t.name}</h3>
                   <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed line-clamp-2">{t.description}</p>
                   {t.best_for && (
                     <div className="mt-2 inline-flex items-center gap-1 text-[10px] text-muted-foreground">

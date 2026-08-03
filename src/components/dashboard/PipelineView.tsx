@@ -38,7 +38,7 @@ export default function PipelineView({ proposals, clients }: PipelineViewProps) 
     <div>
       <div className="flex items-end justify-between mb-3">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">Pipeline</h2>
+          <h2 className="text-xl font-semibold text-foreground">Pipeline</h2>
           <p className="text-xs text-muted-foreground mt-0.5">Where your deals stand right now.</p>
         </div>
       </div>

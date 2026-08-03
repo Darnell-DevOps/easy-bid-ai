@@ -72,7 +72,7 @@ export default function RetainerRecoverPage() {
       <div className="min-h-screen flex items-center justify-center px-4">
         <Card className="max-w-md w-full">
           <CardContent className="p-8 text-center space-y-2">
-            <h1 className="text-lg font-semibold">Link not found</h1>
+            <h1 className="type-page-title">Link not found</h1>
             <p className="text-sm text-muted-foreground">
               This recovery link is invalid or has expired.
             </p>
@@ -95,7 +95,7 @@ export default function RetainerRecoverPage() {
                 <CheckCircle2 className="w-6 h-6 text-emerald-500" />
               </div>
               <div>
-                <h1 className="text-xl font-semibold">You're all set</h1>
+                <h1 className="type-page-title">You're all set</h1>
                 <p className="text-sm text-muted-foreground mt-1">
                   Hi {retainer.client_name}, your payment for{" "}
                   <span className="font-medium text-foreground">
@@ -111,7 +111,7 @@ export default function RetainerRecoverPage() {
                 <AlertTriangle className="w-6 h-6 text-rose-500" />
               </div>
               <div>
-                <h1 className="text-xl font-semibold">
+                <h1 className="type-page-title">
                   Update your payment method
                 </h1>
                 <p className="text-sm text-muted-foreground mt-1">

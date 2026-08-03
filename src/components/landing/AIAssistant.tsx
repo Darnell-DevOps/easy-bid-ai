@@ -94,10 +94,10 @@ function AIAssistant({ embedded = false }: { embedded?: boolean } = {}) {
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/30 bg-accent/10 text-xs text-accent mb-4">
             <Sparkles className="w-3 h-3 animate-pulse" /> Built-in AI · always working
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h2 className="type-marketing-section text-foreground mb-4">
             AI that helps you <span className="text-shimmer-gradient">close clients faster</span>
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          <p className="type-marketing-body text-muted-foreground max-w-[70ch] mx-auto">
             CloseSync’s AI doesn’t just sit in a chat box. It writes your proposals, drafts your replies, generates your contracts, runs your onboarding and follows up while you sleep.
           </p>
         </AnimateIn>
@@ -121,7 +121,7 @@ function AIAssistant({ embedded = false }: { embedded?: boolean } = {}) {
                       <c.icon className="w-5 h-5 text-accent" />
                     </div>
                     <div className="min-w-0">
-                      <h3 className="text-sm font-semibold text-foreground mb-1">{c.title}</h3>
+                      <h3 className="text-base font-semibold leading-6 tracking-[-0.01em] text-foreground mb-1">{c.title}</h3>
                       <p className="text-xs text-muted-foreground leading-relaxed">{c.desc}</p>
                     </div>
                   </div>

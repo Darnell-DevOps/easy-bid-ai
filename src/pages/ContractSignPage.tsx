@@ -535,7 +535,7 @@ export default function ContractSignPage() {
           <section className="rounded-xl border border-border bg-card p-6 lg:p-8">
             <div className="flex items-center gap-2 mb-4">
               <Sparkles className="w-5 h-5 text-purple" />
-              <h2 className="text-lg font-semibold text-foreground">Sign this agreement</h2>
+              <h2 className="text-xl font-semibold text-foreground">Sign this agreement</h2>
             </div>
             <p className="text-sm text-muted-foreground mb-5">
               Your typed name or drawn signature, your IP address, and the timestamp will be recorded as your electronic signature.

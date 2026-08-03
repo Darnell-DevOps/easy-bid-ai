@@ -47,7 +47,7 @@ export default function TestimonialSubmitPage() {
   };
 
   if (loading) return <CenterShell><p className="text-sm text-muted-foreground">Loading…</p></CenterShell>;
-  if (!info) return <CenterShell><h1 className="text-xl font-semibold">Link not found</h1><p className="text-sm text-muted-foreground mt-2">This review link is invalid or has expired.</p></CenterShell>;
+  if (!info) return <CenterShell><h1 className="type-page-title">Link not found</h1><p className="text-sm text-muted-foreground mt-2">This review link is invalid or has expired.</p></CenterShell>;
 
   if (submitted) {
     return (
@@ -56,7 +56,7 @@ export default function TestimonialSubmitPage() {
           <div className="w-14 h-14 rounded-full bg-green-500/10 mx-auto flex items-center justify-center">
             <Check className="w-7 h-7 text-green-500" />
           </div>
-          <h1 className="text-2xl font-semibold">Thank you</h1>
+          <h1 className="text-2xl font-bold">Thank you</h1>
           <p className="text-sm text-muted-foreground">Your feedback means a lot{info.from_name ? ` to ${info.from_name}` : ""}.</p>
           {info.google_review_url && (
             <Button asChild variant="outline">
@@ -74,7 +74,7 @@ export default function TestimonialSubmitPage() {
     <CenterShell>
       <div className="space-y-6">
         <div className="text-center space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">Leave a review</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Leave a review</h1>
           <p className="text-sm text-muted-foreground">{info.from_name ? `${info.from_name} would love your feedback.` : "Your feedback helps."}</p>
           {info.custom_message && <p className="text-sm text-foreground/80 mt-3 italic">"{info.custom_message}"</p>}
         </div>

@@ -405,7 +405,7 @@ function SectionHeader({ icon: Icon, title, description }: { icon: any; title: s
         <Icon className="w-4 h-4 text-accent" />
       </div>
       <div>
-        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+        <h3 className="text-base font-semibold text-foreground">{title}</h3>
         <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
       </div>
     </div>

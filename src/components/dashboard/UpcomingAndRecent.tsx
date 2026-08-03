@@ -98,7 +98,7 @@ export default function UpcomingAndRecent({ proposals }: Props) {
     <section aria-labelledby="upcoming-heading" className="space-y-3">
       <div className="flex items-end justify-between">
         <div>
-          <h2 id="upcoming-heading" className="text-lg font-semibold text-foreground">
+          <h2 id="upcoming-heading" className="text-xl font-semibold text-foreground">
             {showBookings && showActivity ? "Upcoming & recent" : showBookings ? "Upcoming" : "Recent activity"}
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">Your next meetings and latest client moves.</p>

@@ -331,7 +331,7 @@ export default function SettingsPage() {
                     <LifeBuoy className="w-4 h-4 text-accent" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-foreground text-sm">Need a hand?</h3>
+                    <h3 className="font-semibold text-foreground text-base">Need a hand?</h3>
                     <p className="text-xs text-muted-foreground">We usually reply within a few hours</p>
                   </div>
                 </div>
@@ -408,7 +408,7 @@ function ComingSoonCard({
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+              <h3 className="text-base font-semibold text-foreground">{title}</h3>
               <Badge variant="outline" className="text-[10px] border-accent/30 text-accent">
                 Coming soon
               </Badge>

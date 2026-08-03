@@ -72,7 +72,7 @@ export default function BusinessPulse({ proposals }: Props) {
   return (
     <section aria-labelledby="pulse-heading" className="space-y-3">
       <div>
-        <h2 id="pulse-heading" className="text-lg font-semibold text-foreground">
+        <h2 id="pulse-heading" className="text-xl font-semibold text-foreground">
           Business pulse
         </h2>
         <p className="text-xs text-muted-foreground mt-0.5">Where the money is right now.</p>

@@ -68,10 +68,10 @@ function RetainersSection({ embedded = false }: { embedded?: boolean } = {}) {
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/30 bg-accent/10 text-xs text-accent mb-4">
             <Sparkles className="w-3 h-3" /> Recurring revenue, on autopilot
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h2 className="type-marketing-section text-foreground mb-4">
             Turn one-time projects into <span className="text-shimmer-gradient">recurring revenue</span>
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          <p className="type-marketing-body text-muted-foreground max-w-[70ch] mx-auto">
             Convert delivered projects into monthly retainers that auto-charge, auto-renew and recover failed payments — without you lifting a finger.
           </p>
         </AnimateIn>
@@ -87,7 +87,7 @@ function RetainersSection({ embedded = false }: { embedded?: boolean } = {}) {
                     <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">
                       Monthly recurring revenue
                     </p>
-                    <p className="text-4xl md:text-5xl font-bold text-foreground tabular-nums">
+                    <p className="text-3xl font-bold text-foreground tabular-nums">
                       £{mrr.toLocaleString()}
                     </p>
                     <p className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-400 mt-2">

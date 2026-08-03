@@ -77,7 +77,7 @@ export default function ClientBriefCard({ clientId }: ClientBriefCardProps) {
     <Card className="glass-card border-accent/30 bg-gradient-to-br from-accent/[0.06] to-transparent">
       <CardContent className="p-5 space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
+          <h3 className="text-base font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
             <Brain className="w-4 h-4 text-accent" /> AI Client Brief
           </h3>
           <Button

@@ -278,7 +278,7 @@ export default function OnboardingResponseDetail() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
-                <CardTitle className="text-xl">{form.client_name || "Client"}</CardTitle>
+                <CardTitle className="text-base">{form.client_name || "Client"}</CardTitle>
                 {!form.client_id && form.client_name && (
                   <Badge variant="outline" className="text-[10px] text-muted-foreground border-muted/60 font-normal mt-1">
                     Client deleted
@@ -317,7 +317,7 @@ export default function OnboardingResponseDetail() {
         {grouped.map((g) => (
           <Card key={g.group}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold text-foreground">{g.group}</CardTitle>
+              <CardTitle className="text-base font-semibold text-foreground">{g.group}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {g.fields.map((field) => {

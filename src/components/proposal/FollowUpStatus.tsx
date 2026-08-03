@@ -182,7 +182,7 @@ export default function FollowUpStatus({ proposalId, proposal, clientEmail, clie
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-accent" />
-            <h3 className="text-sm font-semibold text-foreground">Follow-up status</h3>
+            <h3 className="text-base font-semibold leading-6 tracking-[-0.01em] text-foreground">Follow-up status</h3>
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-[10px] uppercase tracking-wider">

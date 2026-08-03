@@ -356,7 +356,7 @@ export default function BrandingSettings() {
             <CardContent className="p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold">Live preview</h3>
+                  <h3 className="text-base font-semibold">Live preview</h3>
                   <p className="text-xs text-muted-foreground mt-1">How your branding appears to clients.</p>
                 </div>
                 <Badge variant="outline" className="text-[10px]">Real-time</Badge>
@@ -393,7 +393,7 @@ function SectionHeader({ icon, title, subtitle, action, compact }: {
   return (
     <div className="flex items-start justify-between gap-3">
       <div>
-        <h3 className={compact ? "text-sm font-semibold flex items-center gap-2" : "text-lg font-semibold flex items-center gap-2"}>
+        <h3 className={compact ? "text-base font-semibold leading-6 tracking-[-0.01em] flex items-center gap-2" : "text-base font-semibold leading-6 tracking-[-0.01em] flex items-center gap-2"}>
           {icon} {title}
         </h3>
         {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}

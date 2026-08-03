@@ -358,7 +358,7 @@ export default function PublicBookingPage() {
             {/* Calendar */}
             <div className={`p-6 lg:p-8 ${showBookingForm ? "hidden lg:block" : ""}`}>
               <div className="flex items-center justify-between mb-5">
-                <h2 className="text-base font-semibold text-foreground">Select a date & time</h2>
+                <h2 className="text-xl font-semibold text-foreground">Select a date & time</h2>
               </div>
 
               <div className="flex items-center justify-between mb-3">

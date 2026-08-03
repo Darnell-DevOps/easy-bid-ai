@@ -186,7 +186,7 @@ export default function KickoffDashboard() {
       ) : bundles.length === 0 ? (
         <div className="rounded-xl border border-border bg-card p-10 text-center">
           <Rocket className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-          <h2 className="text-lg font-semibold mb-1">No clients waiting for kickoff</h2>
+          <h2 className="text-xl font-semibold mb-1">No clients waiting for kickoff</h2>
           <p className="text-sm text-muted-foreground">
             Clients appear here automatically once their contract is signed, onboarding is complete, and payment is settled.
           </p>
@@ -205,7 +205,7 @@ export default function KickoffDashboard() {
                 <div>
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <h3 className="text-lg font-semibold">{b.client.company || b.client.name || "Client"}</h3>
+                      <h3 className="text-base font-semibold">{b.client.company || b.client.name || "Client"}</h3>
                       {b.client.company && b.client.name && (
                         <div className="text-xs text-muted-foreground">{b.client.name}</div>
                       )}

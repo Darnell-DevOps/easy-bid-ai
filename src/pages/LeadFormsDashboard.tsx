@@ -239,7 +239,7 @@ export default function LeadFormsDashboard() {
         ) : forms.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-card/30 p-12 text-center">
             <ClipboardList className="w-10 h-10 mx-auto text-muted-foreground/60 mb-3" />
-            <h2 className="text-base font-semibold text-foreground">No lead forms yet</h2>
+            <h2 className="text-xl font-semibold text-foreground">No lead forms yet</h2>
             <p className="text-sm text-muted-foreground mt-1 mb-4">Create your first form, share the link, and watch leads roll in.</p>
             <Button onClick={create} className="gap-2"><Plus className="w-4 h-4" />Create your first form</Button>
           </div>

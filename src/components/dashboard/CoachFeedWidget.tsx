@@ -46,7 +46,7 @@ export default function CoachFeedWidget() {
               <Sparkles className="w-4 h-4 text-primary" />
             </div>
             <div>
-              <h2 className="text-base font-semibold flex items-center gap-2">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
                 AI Sales Coach
                 {actions.length > 0 && (
                   <span className="text-xs font-normal text-muted-foreground">

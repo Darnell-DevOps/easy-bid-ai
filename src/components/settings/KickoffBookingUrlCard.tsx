@@ -45,7 +45,7 @@ export function KickoffBookingUrlCard() {
 
   return (
     <div className="rounded-xl border border-border bg-card p-6">
-      <h2 className="text-lg font-semibold mb-1">Calendar defaults</h2>
+      <h2 className="text-xl font-semibold mb-1">Calendar defaults</h2>
       <p className="text-sm text-muted-foreground mb-5">
         Configure the scheduling link clients use to book their kickoff call.
       </p>

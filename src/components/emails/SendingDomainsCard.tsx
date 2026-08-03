@@ -111,7 +111,7 @@ export default function SendingDomainsCard() {
     <Card>
       <CardContent className="p-6 space-y-5">
         <div>
-          <h3 className="text-lg font-semibold flex items-center gap-2">
+          <h3 className="text-base font-semibold flex items-center gap-2">
             <Globe className="w-4 h-4 text-accent" /> Custom sending domain
           </h3>
           <p className="text-xs text-muted-foreground mt-1">

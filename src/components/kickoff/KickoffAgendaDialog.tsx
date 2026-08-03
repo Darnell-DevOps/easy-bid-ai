@@ -149,7 +149,7 @@ export function KickoffAgendaDialog({
         <div className="space-y-5 mt-2">
           {sections.map((s) => (
             <div key={s.title}>
-              <h3 className="text-sm font-semibold text-foreground mb-1.5">{s.title}</h3>
+              <h3 className="text-base font-semibold text-foreground mb-1.5">{s.title}</h3>
               {s.body}
             </div>
           ))}

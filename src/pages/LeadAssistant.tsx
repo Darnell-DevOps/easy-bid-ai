@@ -471,7 +471,7 @@ export default function LeadAssistant() {
             <Sparkles className="w-4 h-4 text-primary" />
             AI Sales Assistant
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight leading-tight">
+          <h1 className="type-page-title">
             Turn cold leads into paying clients — instantly
           </h1>
           <p className="text-muted-foreground text-base sm:text-lg max-w-2xl">

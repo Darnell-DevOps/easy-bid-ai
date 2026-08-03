@@ -26,6 +26,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { hasConfiguredInboundSecret, isInboundSecretValid } from "../_shared/inbound-auth.ts";
 import { logLeadActivity } from "../_shared/lead-activity.ts";
+import { logSecurityEvent } from "../_shared/security-telemetry.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -279,6 +280,12 @@ Deno.serve(async (req) => {
     .maybeSingle();
   if (aliasErr || !alias) {
     console.warn("No alias for slug", slug);
+    await logSecurityEvent(svc, req, {
+      eventType: "unknown_inbound_alias",
+      source: "inbound-email-webhook",
+      statusCode: 404,
+      metadata: { reason: "alias_not_found" },
+    });
     return jsonResponse({ error: "Unknown inbound alias" }, 404);
   }
 
@@ -287,12 +294,28 @@ Deno.serve(async (req) => {
   // from turning the public endpoint into open ingest.
   if (!hasConfiguredInboundSecret(alias.inbound_secret)) {
     console.error("Inbound alias has no valid shared secret configured");
+    await logSecurityEvent(svc, req, {
+      eventType: "security_configuration_error",
+      source: "inbound-email-webhook",
+      severity: "critical",
+      outcome: "failed",
+      statusCode: 503,
+      userId: alias.user_id,
+      metadata: { reason: "inbound_secret_unavailable" },
+    });
     return jsonResponse({ error: "Inbound webhook authentication unavailable" }, 503);
   }
 
   const providedSecret = req.headers.get("x-inbound-secret") ??
     (typeof body.secret === "string" ? body.secret : null);
   if (!(await isInboundSecretValid(alias.inbound_secret, providedSecret))) {
+    await logSecurityEvent(svc, req, {
+      eventType: "authentication_failure",
+      source: "inbound-email-webhook",
+      statusCode: 401,
+      userId: alias.user_id,
+      metadata: { reason: "invalid_inbound_secret" },
+    });
     return jsonResponse({ error: "Invalid secret" }, 401);
   }
 
@@ -304,6 +327,13 @@ Deno.serve(async (req) => {
   const windowActive = windowStart && (now - windowStart) < RATE_WINDOW_MS;
   const currentCount = windowActive ? (alias.rate_window_count || 0) : 0;
   if (windowActive && currentCount >= RATE_LIMIT_MAX) {
+    await logSecurityEvent(svc, req, {
+      eventType: "rate_limit_exceeded",
+      source: "inbound-email-webhook",
+      statusCode: 429,
+      userId: alias.user_id,
+      metadata: { limit: RATE_LIMIT_MAX, window_seconds: RATE_WINDOW_MS / 1000 },
+    });
     return jsonResponse({ error: "Rate limit exceeded for this inbound alias" }, 429);
   }
   await svc

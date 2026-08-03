@@ -31,7 +31,7 @@ export default function ProposalAuditPanel({ proposalId }: ProposalAuditPanelPro
               <Sparkles className="w-4 h-4 text-primary" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold">AI Proposal Audit</h3>
+              <h3 className="text-base font-semibold">AI Proposal Audit</h3>
               <p className="text-xs text-muted-foreground">
                 Pricing verdict, scope clarity, and rewrite tips
               </p>

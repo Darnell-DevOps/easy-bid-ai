@@ -841,7 +841,7 @@ export default function ClientPortal() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs uppercase tracking-wider text-purple font-semibold mb-1">Proposal</p>
-              <h3 className="text-lg font-semibold text-foreground mb-1">{proposal.service_type}</h3>
+              <h3 className="text-base font-semibold text-foreground mb-1">{proposal.service_type}</h3>
               <p className="text-sm text-muted-foreground">
                 Prepared for {proposal.company_name || proposal.client_name} ·{" "}
                 {new Date(proposal.created_at).toLocaleDateString(undefined, { dateStyle: "long" })}
@@ -1019,7 +1019,7 @@ export default function ClientPortal() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs uppercase tracking-wider text-purple font-semibold mb-1">Agreement</p>
-                <h3 className="text-lg font-semibold text-foreground mb-1">{contract.title}</h3>
+                <h3 className="text-base font-semibold text-foreground mb-1">{contract.title}</h3>
                 <p className="text-sm text-muted-foreground mb-4">
                   {contract.status === "signed"
                     ? `Signed ${contract.signed_at ? new Date(contract.signed_at).toLocaleDateString() : ""}.`
@@ -1053,7 +1053,7 @@ export default function ClientPortal() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs uppercase tracking-wider text-purple font-semibold mb-1">Agreement</p>
-                <h3 className="text-lg font-semibold text-foreground mb-1">
+                <h3 className="text-base font-semibold text-foreground mb-1">
                   Your proposal has been accepted
                 </h3>
                 <p className="text-sm text-muted-foreground">
@@ -1090,7 +1090,7 @@ export default function ClientPortal() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1">Next step</p>
-                <h3 className="text-lg font-semibold text-foreground mb-1">Payment received</h3>
+                <h3 className="text-base font-semibold text-foreground mb-1">Payment received</h3>
                 <p className="text-sm text-muted-foreground max-w-md">
                   Your onboarding is being prepared — we'll let you know when it's ready.
                 </p>
@@ -1108,7 +1108,7 @@ export default function ClientPortal() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs uppercase tracking-wider text-purple font-semibold mb-1">Next step</p>
-                <h3 className="text-lg font-semibold text-foreground mb-1">
+                <h3 className="text-base font-semibold text-foreground mb-1">
                   {onboardingStarted ? "Continue your onboarding" : "Complete Your Onboarding"}
                 </h3>
                 <p className="text-sm text-muted-foreground mb-4 max-w-md">
@@ -1140,7 +1140,7 @@ export default function ClientPortal() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1">In review</p>
-                <h3 className="text-lg font-semibold text-foreground mb-1">Onboarding submitted</h3>
+                <h3 className="text-base font-semibold text-foreground mb-1">Onboarding submitted</h3>
                 <p className="text-sm text-muted-foreground">
                   Your information has been sent for review. We'll let you know when the next step is ready.
                 </p>

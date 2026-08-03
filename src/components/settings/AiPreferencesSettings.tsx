@@ -377,7 +377,7 @@ export default function AiPreferencesSettings() {
                 <Sparkles className="w-4 h-4 text-accent" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-foreground">AI Preview</h3>
+                <h3 className="text-base font-semibold text-foreground">AI Preview</h3>
                 <p className="text-xs text-muted-foreground mt-0.5 max-w-md">
                   See how the assistant writes with your current settings. Save first for the most accurate results.
                 </p>
@@ -429,7 +429,7 @@ function SettingsSection({
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+              <h3 className="text-base font-semibold text-foreground">{title}</h3>
               {highlight && (
                 <Badge variant="outline" className="text-[10px] border-accent/40 text-accent">Powers all AI</Badge>
               )}

@@ -160,7 +160,7 @@ export default function PolicyView() {
 
       <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">{policy.business_name}</h1>
+          <h1 className="type-page-title">{policy.business_name}</h1>
           <div className="flex gap-2 mt-2">
             <Badge variant="secondary">{policy.policy_type}</Badge>
             <Badge variant="outline">{policy.country}</Badge>

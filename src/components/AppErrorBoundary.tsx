@@ -24,7 +24,7 @@ export default class AppErrorBoundary extends Component<Props, State> {
       <main className="min-h-screen bg-background text-foreground flex items-center justify-center p-6">
         <section className="w-full max-w-md rounded-xl border border-border bg-card p-7 text-center shadow-lg">
           <p className="text-xs uppercase tracking-wider text-muted-foreground">CloseSync</p>
-          <h1 className="text-xl font-semibold mt-3">Something went wrong</h1>
+          <h1 className="type-page-title mt-3">Something went wrong</h1>
           <p className="text-sm text-muted-foreground mt-2">
             The problem has been recorded. Your saved work is still in your account.
           </p>

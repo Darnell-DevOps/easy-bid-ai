@@ -223,7 +223,7 @@ export default function OpportunitiesToRevenue({ proposals }: Props) {
     <section aria-labelledby="revenue-heading" className="space-y-3">
       <div className="flex items-end justify-between gap-3 flex-wrap">
         <div>
-          <h2 id="revenue-heading" className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <h2 id="revenue-heading" className="text-xl font-semibold text-foreground flex items-center gap-2">
             <Target className="w-4 h-4 text-emerald-400" />
             Opportunities closest to revenue
             <span className="text-sm font-normal text-muted-foreground">({opportunities.length})</span>
