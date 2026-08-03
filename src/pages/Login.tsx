@@ -13,6 +13,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -24,6 +25,20 @@ export default function Login() {
     if (result.error) {
       setGoogleLoading(false);
       toast({ title: "Google sign-in failed", description: result.error.message, variant: "destructive" });
+      return;
+    }
+    if (result.redirected) return;
+    navigate("/dashboard");
+  };
+
+  const handleApple = async () => {
+    setAppleLoading(true);
+    const result = await lovable.auth.signInWithOAuth("apple", {
+      redirect_uri: window.location.origin,
+    });
+    if (result.error) {
+      setAppleLoading(false);
+      toast({ title: "Apple sign-in failed", description: result.error.message, variant: "destructive" });
       return;
     }
     if (result.redirected) return;
@@ -67,6 +82,19 @@ export default function Login() {
               </svg>
               Continue with Google
             </button>
+
+            <button
+              type="button"
+              onClick={handleApple}
+              disabled={appleLoading}
+              className="w-full h-11 mt-3 rounded-lg border border-border bg-background hover:bg-muted/60 transition flex items-center justify-center gap-2.5 text-sm font-medium text-foreground disabled:opacity-60"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M16.36 12.78c.02 2.6 2.28 3.47 2.31 3.48-.02.06-.36 1.24-1.19 2.45-.72 1.05-1.47 2.1-2.65 2.12-1.16.02-1.53-.69-2.85-.69-1.32 0-1.74.67-2.83.71-1.14.04-2.01-1.13-2.73-2.18-1.48-2.15-2.62-6.08-1.09-8.73.76-1.32 2.11-2.15 3.58-2.17 1.12-.02 2.17.75 2.85.75.68 0 1.96-.93 3.3-.79.56.02 2.14.23 3.15 1.71-.08.05-1.88 1.1-1.86 3.34M14.2 4.6c.6-.73 1.01-1.74.9-2.75-.87.04-1.92.58-2.54 1.3-.56.64-1.05 1.67-.92 2.66.97.07 1.96-.49 2.56-1.21"/>
+              </svg>
+              Continue with Apple
+            </button>
+
 
             <div className="flex items-center gap-3 my-5">
               <div className="h-px flex-1 bg-border" />
