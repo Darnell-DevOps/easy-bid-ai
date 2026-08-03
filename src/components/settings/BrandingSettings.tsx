@@ -437,7 +437,7 @@ function AssetUpload({
       <Label className="text-xs">{label}</Label>
       <div className="mt-2 flex items-center gap-3">
         <div className={`${square ? "h-14 w-14" : "h-16 w-16"} rounded-lg border border-border bg-muted/30 flex items-center justify-center overflow-hidden shrink-0`}>
-          {value ? <img src={value} alt={label} className="max-h-full max-w-full object-contain" />
+          {value ? <img src={value} alt={`${label} brand image preview`} className="max-h-full max-w-full object-contain" />
             : <ImageIcon className="w-5 h-5 text-muted-foreground" />}
         </div>
         <div className="flex-1 space-y-1.5 min-w-0">
@@ -474,7 +474,7 @@ function PreviewTab({ value, icon, label }: { value: string; icon: React.ReactNo
 /* ---------------- Previews ---------------- */
 
 function LogoMark({ b, size = 36 }: { b: BrandingState; size?: number }) {
-  if (b.logo_url) return <img src={b.logo_url} alt="logo" style={{ height: size, maxWidth: size * 3, objectFit: "contain" }} />;
+  if (b.logo_url) return <img src={b.logo_url} alt="Company brand logo preview" style={{ height: size, maxWidth: size * 3, objectFit: "contain" }} />;
   const initials = (b.business_name || "Your Brand").split(/\s+/).map((s) => s[0]).slice(0, 2).join("").toUpperCase();
   return (
     <div style={{

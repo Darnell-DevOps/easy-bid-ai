@@ -366,6 +366,7 @@ export default function PublicBookingPage() {
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8"
+                  aria-label="Show previous month"
                   onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}
                   disabled={month <= startOfMonth(today)}
                 >
@@ -376,6 +377,7 @@ export default function PublicBookingPage() {
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8"
+                  aria-label="Show next month"
                   onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}
                 >
                   <ChevronRight className="w-4 h-4" />

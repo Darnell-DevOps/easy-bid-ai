@@ -397,7 +397,7 @@ export default function ContractDetail() {
                         {s.ip_address ? ` · IP ${s.ip_address}` : ""}
                       </p>
                       {s.method === "drawn" && s.signature_data.startsWith("data:image") ? (
-                        <img src={s.signature_data} alt="signature" className="mt-2 max-h-16 rounded bg-white p-1" />
+                        <img src={s.signature_data} alt={`Handwritten contract signature of ${s.signer_name || "signatory"}`} className="mt-2 max-h-16 rounded bg-white p-1" />
                       ) : (
                         <p className="mt-2 text-lg italic text-foreground" style={{ fontFamily: "'Caveat', 'Brush Script MT', cursive" }}>
                           {s.signature_data}

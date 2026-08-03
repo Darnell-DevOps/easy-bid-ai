@@ -1,0 +1,10 @@
+# CloseSync AI
+
+> AI platform for closing clients and running client operations — proposals, contracts, payments, retainers, bookings and insights in one place.
+
+CloseSync AI helps freelancers and agencies generate proposals, send contracts for e-signature, collect payments, run retainers, and automate client onboarding.
+
+## Pages
+
+- [Home](/): What CloseSync AI does, features and pricing.
+- [Sample proposal](/sample): An example AI-generated client proposal.

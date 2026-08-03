@@ -102,6 +102,7 @@ export default function Login() {
           <Link to="/" className="text-xl font-semibold text-foreground tracking-tight">
             Close<span className="text-gradient-sync">Sync</span> <span className="text-foreground">AI</span>
           </Link>
+          <h1 className="text-2xl font-semibold text-foreground mt-4">Sign in to CloseSync AI</h1>
           <p className="text-muted-foreground text-sm mt-2">Sign in to your account</p>
         </div>
         {expired && (

@@ -35,7 +35,8 @@ export default function ForgotPassword() {
           <Link to="/" className="text-xl font-semibold text-foreground tracking-tight">
             Close<span className="text-gradient-sync">Sync</span> <span className="text-foreground">AI</span>
           </Link>
-          <p className="text-muted-foreground text-sm mt-2">Reset your password</p>
+          <h1 className="text-2xl font-semibold text-foreground mt-4">Reset your CloseSync AI password</h1>
+          <p className="text-muted-foreground text-sm mt-2">We'll email you a secure reset link</p>
         </div>
         <Card className="border-border">
           <CardContent className="p-6">
