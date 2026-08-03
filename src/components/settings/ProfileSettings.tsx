@@ -224,6 +224,7 @@ export default function ProfileSettings() {
       user_id: user.id,
       first_name: form.first_name || null,
       last_name: form.last_name || null,
+      contact_email: form.contact_email?.trim() || null,
       business_name: form.business_name || null,
       phone: form.phone || null,
       website: form.website || null,
@@ -239,6 +240,32 @@ export default function ProfileSettings() {
     setSaving(false);
 
     if (error) {
+      const msg = error.message || "";
+      if (msg.includes("user_profiles_contact_email_normalized_uidx")) {
+        setErrors((e) => ({
+          ...e,
+          contact_email: "Another account already uses this email address.",
+        }));
+        toast({
+          title: "Duplicate contact email",
+          description:
+            "That address is already linked to a different account. Sign in to that account or use another email.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (msg.includes("apple_relay_contact_email_not_allowed")) {
+        setErrors((e) => ({
+          ...e,
+          contact_email: "Use a real inbox, not an Apple relay address.",
+        }));
+        toast({
+          title: "Apple relay address rejected",
+          description: "Enter the inbox you actually read so we can reach you.",
+          variant: "destructive",
+        });
+        return;
+      }
       toast({
         title: "Couldn't save profile",
         description: error.message,
@@ -246,6 +273,7 @@ export default function ProfileSettings() {
       });
       return;
     }
+
 
     setInitial(form);
     toast({
