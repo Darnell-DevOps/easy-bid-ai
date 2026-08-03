@@ -1,3 +1,4 @@
+import PageMeta from "@/components/PageMeta";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,6 +31,7 @@ const pricing = [
 export default function SampleProposal() {
   return (
     <div className="min-h-screen bg-background">
+      <PageMeta title="Sample AI Proposal | CloseSync AI" description="See an example of an AI-generated client proposal built with CloseSync AI." path="/sample" />
       {/* Nav */}
       <nav className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container flex items-center justify-between h-16 px-4 md:px-8">
