@@ -113,6 +113,7 @@ type ProfileForm = z.infer<typeof profileSchema>;
 const EMPTY: ProfileForm = {
   first_name: "",
   last_name: "",
+  contact_email: "",
   business_name: "",
   phone: "",
   website: "",
@@ -133,6 +134,8 @@ export default function ProfileSettings() {
   const [initial, setInitial] = useState<ProfileForm>(EMPTY);
   const [form, setForm] = useState<ProfileForm>(EMPTY);
   const [errors, setErrors] = useState<Partial<Record<keyof ProfileForm, string>>>({});
+
+  const relay = useMemo(() => isAppleRelayEmail(email), [email]);
 
   useEffect(() => {
     const load = async () => {
@@ -155,6 +158,7 @@ export default function ProfileSettings() {
         ? {
             first_name: data.first_name || "",
             last_name: data.last_name || "",
+            contact_email: data.contact_email || "",
             business_name: data.business_name || "",
             phone: data.phone || "",
             website: data.website || "",
@@ -174,6 +178,7 @@ export default function ProfileSettings() {
     () => JSON.stringify(form) !== JSON.stringify(initial),
     [form, initial],
   );
+
 
   useEffect(() => {
     if (!dirty) return;
