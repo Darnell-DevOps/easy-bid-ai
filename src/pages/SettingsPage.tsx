@@ -19,6 +19,7 @@ import AiPreferencesSettings from "@/components/settings/AiPreferencesSettings";
 import LeadAssistantSettings from "@/components/settings/LeadAssistantSettings";
 import IntegrationsSettings from "@/components/settings/IntegrationsSettings";
 import SecuritySettings from "@/components/settings/SecuritySettings";
+import ConnectedAppsSettings from "@/components/settings/ConnectedAppsSettings";
 import BillingSettings from "@/components/settings/BillingSettings";
 import DataExportsSettings from "@/components/settings/DataExportsSettings";
 import BusinessInformationSettings from "@/components/settings/BusinessInformationSettings";
@@ -70,7 +71,8 @@ type SectionId =
   | "security"
   | "billing"
   | "data"
-  | "domains";
+  | "domains"
+  | "connected-apps";
 
 type SectionGroup = {
   label: string;
@@ -113,6 +115,7 @@ const SECTION_GROUPS: SectionGroup[] = [
       { id: "ai", label: "AI Preferences", icon: Sparkles, description: "Tone, model and assistant behaviour" },
       { id: "lead-assistant", label: "Lead Assistant", icon: Inbox, description: "Voice, signature, booking link and auto-send rules" },
       { id: "integrations", label: "Integrations", icon: Plug, description: "Third-party connections" },
+      { id: "connected-apps", label: "Connected Apps", icon: KeyRound, description: "AI assistants authorised to access your account" },
       { id: "data", label: "Data & Exports", icon: Database, description: "Export, import and delete your data" },
     ],
   },
@@ -281,6 +284,8 @@ export default function SettingsPage() {
             {active === "profile" && <ProfileSettings />}
 
             {active === "security" && <SecuritySettings />}
+
+            {active === "connected-apps" && <ConnectedAppsSettings />}
 
             {active === "billing" && <BillingSettings />}
 
