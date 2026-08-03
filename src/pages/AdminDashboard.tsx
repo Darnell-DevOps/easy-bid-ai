@@ -294,7 +294,7 @@ export default function AdminDashboard() {
 
   const loadSecurityEvents = async () => {
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const { data, error } = await supabase.rpc("admin_security_event_summary", {
+    const { data, error } = await (supabase.rpc as any)("admin_security_event_summary", {
       _since: since,
     });
     if (error) {
