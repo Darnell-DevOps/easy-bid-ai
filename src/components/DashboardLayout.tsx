@@ -154,8 +154,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [navigate]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/login");
+    if (loggingOut) return;
+    setLoggingOut(true);
+    await performSignOut("/login");
   };
 
   const badges = useMemo<Record<string, number>>(() => ({
