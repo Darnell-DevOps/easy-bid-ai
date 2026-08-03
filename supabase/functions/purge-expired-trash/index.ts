@@ -2,6 +2,7 @@
 // than that user's configured trash_retention_days (default 30). Cascades to
 // proposals, onboarding_forms (including uploaded files in storage), and deadlines.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { cronUnauthorized, isCronAuthorized } from "../_shared/cron-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,6 +28,9 @@ function parseMany(raw: unknown): FilePayload[] {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  if (!isCronAuthorized(req)) return cronUnauthorized();
+
 
   const svc = createClient(
     Deno.env.get("SUPABASE_URL")!,
