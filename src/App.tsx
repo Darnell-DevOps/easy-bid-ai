@@ -57,6 +57,7 @@ import LeadInbox from "./pages/LeadInbox";
 import Trash from "./pages/Trash";
 import KickoffDashboard from "./pages/KickoffDashboard";
 import NotFound from "./pages/NotFound";
+import OAuthConsent from "./pages/OAuthConsent";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { PageTransition } from "@/components/PageTransition";
 
@@ -72,6 +73,7 @@ const App = () => (
         <PageTransition>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
