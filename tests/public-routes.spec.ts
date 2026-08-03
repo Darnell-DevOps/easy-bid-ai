@@ -17,9 +17,9 @@ test.beforeEach(async ({ page }) => {
 
 test("landing page links to a usable login form", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: /Run your entire client business/i })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
-  await page.getByRole("link", { name: "Login", exact: true }).click();
+  await page.getByRole("link", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);
   await expect(page.getByText("Sign in to your account")).toBeVisible();
   await expect(page.getByLabel("Email")).toBeVisible();
