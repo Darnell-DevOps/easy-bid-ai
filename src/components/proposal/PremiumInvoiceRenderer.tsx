@@ -229,20 +229,26 @@ export default function PremiumInvoiceRenderer({
           <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground mb-4">
             Items
           </h3>
-          <div className="overflow-x-auto rounded-lg border border-border">
+          <div
+            role="region"
+            aria-label="Invoice items table"
+            tabIndex={0}
+            className="overflow-x-auto rounded-lg border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
             <table className="w-full text-sm">
+              <caption className="sr-only">Invoice line items, quantities, unit prices, and totals.</caption>
               <thead className="bg-secondary/60">
                 <tr>
-                  <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <th scope="col" className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Description
                   </th>
-                  <th className="px-5 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-20">
+                  <th scope="col" className="px-5 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-20">
                     Qty
                   </th>
-                  <th className="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-32">
+                  <th scope="col" className="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-32">
                     Unit price
                   </th>
-                  <th className="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-32">
+                  <th scope="col" className="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-32">
                     Total
                   </th>
                 </tr>

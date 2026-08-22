@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { processAcceptanceContract } from "../_shared/process-acceptance-contract.ts";
+import { enforcePublicRateLimit } from "../_shared/abuse-rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,6 +31,13 @@ Deno.serve(async (req) => {
     if (evidence != null && JSON.stringify(evidence).length > 100_000) {
       return json({ error: "Acceptance evidence is too large" }, 400);
     }
+    const limited = await enforcePublicRateLimit(req, {
+      source: "client-portal-accept",
+      resource: proposalId,
+      ipLimit: { maxRequests: 30, windowSeconds: 10 * 60 },
+      resourceLimit: { maxRequests: 10, windowSeconds: 10 * 60 },
+    });
+    if (limited) return limited;
 
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,

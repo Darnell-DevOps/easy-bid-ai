@@ -2,6 +2,7 @@
 // method without logging in. Resolves retainer by access_token.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getPaddleClient, type PaddleEnv } from "../_shared/paddle.ts";
+import { enforcePublicRateLimit } from "../_shared/abuse-rate-limit.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -19,14 +20,32 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: cors });
   }
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: cors,
+    });
+  }
   try {
     const { token } = await req.json();
-    if (!token || typeof token !== "string" || token.length < 16) {
+    if (
+      typeof token !== "string" ||
+      token.length < 16 ||
+      token.length > 128 ||
+      !/^[a-zA-Z0-9_-]+$/.test(token)
+    ) {
       return new Response(JSON.stringify({ error: "Invalid token" }), {
         status: 400,
         headers: cors,
       });
     }
+    const limited = await enforcePublicRateLimit(req, {
+      source: "retainer-recover-portal",
+      resource: token,
+      ipLimit: { maxRequests: 30, windowSeconds: 10 * 60 },
+      resourceLimit: { maxRequests: 10, windowSeconds: 10 * 60 },
+    });
+    if (limited) return limited;
 
     const { data: retainer, error } = await supabase
       .from("retainers")

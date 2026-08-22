@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { sendEmail } from "@/lib/email";
 import DynamicFavicon from "@/components/branding/DynamicFavicon";
 import {
   Calendar as CalendarIcon,
@@ -26,9 +25,6 @@ import {
   buildSlotsForDate,
   formatTime,
   locationLabel,
-  buildIcs,
-  icsToBase64,
-  resolveMeetingUrl,
   type BookingLinkRow,
 } from "@/lib/bookings";
 
@@ -158,116 +154,52 @@ export default function PublicBookingPage() {
       return;
     }
     setSubmitting(true);
-    const bookingId = crypto.randomUUID();
-    const meetingUrl = resolveMeetingUrl({
-      locationType: link.location_type,
-      customLocation: link.custom_location,
-      linkMeetingUrl: link.meeting_url,
-      bookingId,
-    });
-    const { error } = await supabase.from("bookings").insert({
-      id: bookingId,
-      user_id: link.user_id,
-      booking_link_id: link.id,
-      proposal_id: proposalId,
-      client_name: name.trim().slice(0, 200),
-      client_email: email.trim().slice(0, 200),
-      meeting_name: link.name,
-      duration_minutes: link.duration_minutes,
-      scheduled_at: selectedSlot.toISOString(),
-      location_type: link.location_type,
-      location_details: link.custom_location,
-      meeting_url: meetingUrl || null,
-      client_message: message.trim().slice(0, 1000) || null,
-      status: "confirmed",
-    });
-    setSubmitting(false);
-    if (error) {
-      toast({ title: "Couldn't book", description: error.message, variant: "destructive" });
-      return;
-    }
-
-    // Fetch the auto-generated reschedule_token via public RPC
-    const { data: tokRows } = (await supabase.rpc(
-      "public_get_booking_reschedule_token" as never,
-      { _booking_id: bookingId } as never,
-    )) as { data: any };
-    const rescheduleToken =
-      (Array.isArray(tokRows) && tokRows.length > 0 ? tokRows[0]?.reschedule_token : null) || null;
-    const rescheduleUrl = rescheduleToken
-      ? `${window.location.origin}/reschedule/${rescheduleToken}`
-      : undefined;
-
-    const locationDisplay = meetingUrl || locationLabel(link.location_type, link.custom_location);
-
-    // Build .ics calendar invite for both parties
-    const ics = buildIcs({
-      uid: bookingId,
-      title: link.name,
-      description: link.description || message || "",
-      start: selectedSlot,
-      durationMinutes: link.duration_minutes,
-      location: locationLabel(link.location_type, link.custom_location),
-      url: meetingUrl || undefined,
-      organizerName: hostName || "Host",
-      attendeeName: name.trim(),
-      attendeeEmail: email.trim(),
-    });
-    const icsAttachment = {
-      filename: "invite.ics",
-      content: icsToBase64(ics),
-      content_type: "text/calendar",
-    };
-
-    void sendEmail({
-      templateName: "booking-confirmation",
-      recipientEmail: email.trim(),
-      userId: link.user_id,
-      idempotencyKey: `booking-${bookingId}`,
-      attachments: [icsAttachment],
-      data: {
-        name: name.trim(),
-        title: link.name,
-        when: selectedSlot.toLocaleString(undefined, {
-          weekday: "long", month: "long", day: "numeric",
-          hour: "numeric", minute: "2-digit",
-        }),
-        location: locationDisplay,
-        meeting_url: meetingUrl || undefined,
-        reschedule_url: rescheduleUrl,
+    const { data: created, error } = await supabase.functions.invoke("create-public-booking", {
+      body: {
+        slug,
+        proposalId,
+        clientName: name.trim().slice(0, 200),
+        clientEmail: email.trim().slice(0, 200),
+        clientMessage: message.trim().slice(0, 1000) || null,
+        scheduledAt: selectedSlot.toISOString(),
+        clientTimeZone: tz,
       },
     });
-
-    // Notify the host (looks up host email server-side)
-    void supabase.functions.invoke("notify-booking-host", {
-      body: { booking_id: bookingId },
-    });
-
+    setSubmitting(false);
+    if (error || !created?.bookingId) {
+      toast({
+        title: "Couldn't book",
+        description: error?.message || "Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
     setConfirmed({ when: selectedSlot, meetingName: link.name });
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
+      <main className="min-h-screen flex items-center justify-center bg-background" aria-busy="true">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" aria-hidden="true" />
+        <span className="sr-only">Loading booking page</span>
+      </main>
     );
   }
 
   if (notFound || !link) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background px-6">
+      <main className="min-h-screen flex items-center justify-center bg-background px-6">
         <div className="text-center max-w-md">
           <h1 className="text-2xl font-bold text-foreground mb-2">Booking link not found</h1>
           <p className="text-muted-foreground text-sm">This link may be inactive or invalid.</p>
         </div>
-      </div>
+      </main>
     );
   }
 
   if (confirmed) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-6 py-12">
+      <main className="min-h-screen bg-background flex items-center justify-center px-6 py-12" aria-live="polite">
         <div className="max-w-md w-full text-center space-y-5">
           <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15">
             <CheckCircle2 className="w-8 h-8 text-emerald-500" />
@@ -301,7 +233,7 @@ export default function PublicBookingPage() {
             </Button>
           )}
         </div>
-      </div>
+      </main>
     );
   }
 
@@ -317,7 +249,7 @@ export default function PublicBookingPage() {
           <span className="text-sm font-semibold text-foreground">CloseSync AI</span>
         </header>
 
-        <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-xl">
+        <main className="rounded-2xl border border-border bg-card overflow-hidden shadow-xl">
           <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] lg:grid-cols-[300px_1fr_320px]">
             {/* Left brand panel */}
             <div className="p-6 lg:p-8 border-b md:border-b-0 md:border-r border-border bg-card">
@@ -363,6 +295,7 @@ export default function PublicBookingPage() {
 
               <div className="flex items-center justify-between mb-3">
                 <Button
+                  type="button"
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8"
@@ -372,8 +305,9 @@ export default function PublicBookingPage() {
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
-                <span className="text-sm font-medium text-foreground">{monthLabel}</span>
+                <span className="text-sm font-medium text-foreground" aria-live="polite">{monthLabel}</span>
                 <Button
+                  type="button"
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8"
@@ -384,7 +318,7 @@ export default function PublicBookingPage() {
                 </Button>
               </div>
 
-              <div className="grid grid-cols-7 gap-1 text-[11px] text-muted-foreground text-center mb-1 font-medium uppercase tracking-wider">
+              <div className="grid grid-cols-7 gap-1 text-[11px] text-muted-foreground text-center mb-1 font-medium uppercase tracking-wider" aria-hidden="true">
                 {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d, i) => (
                   <div key={i} className="py-1.5">{d}</div>
                 ))}
@@ -398,7 +332,16 @@ export default function PublicBookingPage() {
                   return (
                     <button
                       key={i}
+                      type="button"
                       disabled={!selectable}
+                      aria-label={d.toLocaleDateString(undefined, {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                      aria-pressed={!!selected}
+                      aria-current={isToday ? "date" : undefined}
                       onClick={() => {
                         setSelectedDate(d);
                         setSelectedSlot(null);
@@ -440,13 +383,18 @@ export default function PublicBookingPage() {
                           return (
                             <div key={s.toISOString()} className="grid grid-cols-2 gap-2">
                               <button
+                                type="button"
                                 onClick={() => setPendingSlot(null)}
+                                aria-label={`Cancel ${formatTime(s)} selection`}
+                                aria-pressed="true"
                                 className="py-2.5 rounded-lg border border-border bg-foreground/90 text-sm font-semibold text-background"
                               >
                                 {formatTime(s)}
                               </button>
                               <button
+                                type="button"
                                 onClick={() => setSelectedSlot(s)}
+                                aria-label={`Confirm ${formatTime(s)} booking time`}
                                 className="py-2.5 rounded-lg bg-purple text-sm font-semibold text-white hover:bg-purple/90 transition"
                               >
                                 Confirm
@@ -457,7 +405,9 @@ export default function PublicBookingPage() {
                         return (
                           <button
                             key={s.toISOString()}
+                            type="button"
                             onClick={() => setPendingSlot(s)}
+                            aria-label={`Select ${formatTime(s)} booking time`}
                             className="py-2.5 rounded-lg border border-purple/30 bg-background text-sm font-semibold text-purple hover:border-purple hover:bg-purple/5 transition"
                           >
                             {formatTime(s)}
@@ -468,32 +418,66 @@ export default function PublicBookingPage() {
                   )}
                 </>
               ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                <form
+                  className="space-y-4"
+                  aria-labelledby="booking-details-heading"
+                  aria-busy={submitting}
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void submit();
+                  }}
+                >
+                  <h2 id="booking-details-heading" className="sr-only">Your booking details</h2>
+                  <div className="flex items-center justify-between" aria-live="polite">
                     <div>
                       <p className="text-xs text-muted-foreground">Selected time</p>
                       <p className="text-sm font-semibold text-foreground">
                         {selectedSlot!.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })} · {formatTime(selectedSlot!)}
                       </p>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => { setSelectedSlot(null); setPendingSlot(null); }}>
+                    <Button type="button" variant="ghost" size="sm" onClick={() => { setSelectedSlot(null); setPendingSlot(null); }}>
                       Change
                     </Button>
                   </div>
                   <div>
-                    <Label>Your name</Label>
-                    <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={200} />
+                    <Label htmlFor="booking-name">Your name</Label>
+                    <Input
+                      id="booking-name"
+                      name="name"
+                      autoComplete="name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      maxLength={200}
+                      required
+                    />
                   </div>
                   <div>
-                    <Label>Email</Label>
-                    <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={200} />
+                    <Label htmlFor="booking-email">Email</Label>
+                    <Input
+                      id="booking-email"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      maxLength={200}
+                      required
+                    />
                   </div>
                   <div>
-                    <Label>Message (optional)</Label>
-                    <Textarea value={message} onChange={(e) => setMessage(e.target.value)} maxLength={1000} rows={3} />
+                    <Label htmlFor="booking-message">Message (optional)</Label>
+                    <Textarea
+                      id="booking-message"
+                      name="message"
+                      autoComplete="off"
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      maxLength={1000}
+                      rows={3}
+                    />
                   </div>
                   <Button
-                    onClick={submit}
+                    type="submit"
                     disabled={submitting}
                     className="w-full gap-2 bg-accent text-accent-foreground"
                   >
@@ -503,11 +487,11 @@ export default function PublicBookingPage() {
                   <p className="text-xs text-muted-foreground text-center">
                     A calendar invite (.ics) will be emailed to you instantly.
                   </p>
-                </div>
+                </form>
               )}
             </div>
           </div>
-        </div>
+        </main>
       </div>
     </div>
   );

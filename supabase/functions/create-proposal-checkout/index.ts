@@ -1,8 +1,9 @@
 // Creates a Paddle transaction with a custom amount for a specific proposal,
 // then returns the transaction ID. Frontend opens checkout with this ID.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { getPaddleClient, gatewayFetch, type PaddleEnv } from "../_shared/paddle.ts";
+import { getPaddleClient, gatewayFetch, getServerPaddleEnv } from "../_shared/paddle.ts";
 import { calculateCommercialTotals } from "../_shared/commercial-calc.ts";
+import { enforcePublicRateLimit } from "../_shared/abuse-rate-limit.ts";
 import {
   getUserPlan,
   planHasFeature,
@@ -25,15 +26,32 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: cors });
   }
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: cors,
+    });
+  }
   try {
-    const { proposalId, environment } = await req.json();
-    if (!proposalId) {
-      return new Response(JSON.stringify({ error: "proposalId required" }), {
+    const { proposalId } = await req.json();
+    if (
+      typeof proposalId !== "string" ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(proposalId)
+    ) {
+      return new Response(JSON.stringify({ error: "Invalid proposal" }), {
         status: 400,
         headers: cors,
       });
     }
-    const env = (environment || "sandbox") as PaddleEnv;
+    const limited = await enforcePublicRateLimit(req, {
+      source: "create-proposal-checkout",
+      resource: proposalId,
+      ipLimit: { maxRequests: 30, windowSeconds: 10 * 60 },
+      resourceLimit: { maxRequests: 10, windowSeconds: 10 * 60 },
+    });
+    if (limited) return limited;
+
+    const env = getServerPaddleEnv();
 
     // Fetch proposal (service role bypasses RLS — safe; only id needed publicly)
     const { data: proposal, error: pErr } = await supabase

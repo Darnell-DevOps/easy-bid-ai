@@ -128,20 +128,25 @@ export default function DomainSettings() {
           <Separator />
 
           <div>
-            <Label className="text-xs uppercase tracking-wide text-muted-foreground">Add a new domain</Label>
+            <Label htmlFor="custom-domain" className="text-xs uppercase tracking-wide text-muted-foreground">Add a new domain</Label>
             <div className="flex gap-2 mt-2">
               <Input
+                id="custom-domain"
                 placeholder="portal.yourcompany.com"
                 value={newDomain}
                 onChange={(e) => setNewDomain(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") addDomain(); }}
+                aria-describedby="custom-domain-help"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
               />
-              <Button onClick={addDomain} disabled={adding || !newDomain.trim()} className="gap-2">
+              <Button onClick={addDomain} disabled={adding || !newDomain.trim()} aria-busy={adding} className="gap-2">
                 {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                 Add
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
+            <p id="custom-domain-help" className="text-xs text-muted-foreground mt-2">
               Subdomains work best (e.g. <code>portal.acme.com</code>, <code>app.acme.com</code>). Apex domains may require ALIAS/ANAME support at your DNS provider.
             </p>
           </div>
@@ -149,9 +154,9 @@ export default function DomainSettings() {
       </Card>
 
       {loading ? (
-        <Card><CardContent className="p-8 text-center text-sm text-muted-foreground">Loading domains…</CardContent></Card>
+        <Card><CardContent role="status" aria-live="polite" className="p-8 text-center text-sm text-muted-foreground">Loading domains…</CardContent></Card>
       ) : rows.length === 0 ? (
-        <Card><CardContent className="p-8 text-center text-sm text-muted-foreground">No custom domains yet.</CardContent></Card>
+        <Card><CardContent role="status" className="p-8 text-center text-sm text-muted-foreground">No custom domains yet.</CardContent></Card>
       ) : (
         rows.map((row) => {
           const txtHost = `_closesync.${row.domain}`;
@@ -176,7 +181,7 @@ export default function DomainSettings() {
                       )}
                     </div>
                     {row.last_check_error && (
-                      <p className="text-xs text-destructive mt-1">{row.last_check_error}</p>
+                      <p role="alert" className="text-xs text-destructive mt-1">{row.last_check_error}</p>
                     )}
                     {row.verified_at && (
                       <p className="text-xs text-muted-foreground mt-1">
@@ -185,16 +190,24 @@ export default function DomainSettings() {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button size="sm" variant="outline" className="gap-2" onClick={() => verify(row.id)} disabled={verifyingId === row.id}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-2"
+                      onClick={() => verify(row.id)}
+                      disabled={verifyingId === row.id}
+                      aria-label={`${row.verified ? "Re-check" : "Verify"} ${row.domain}`}
+                      aria-busy={verifyingId === row.id}
+                    >
                       {verifyingId === row.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
                       {row.verified ? "Re-check" : "Verify"}
                     </Button>
                     {row.verified && !row.is_primary && (
-                      <Button size="sm" variant="outline" className="gap-2" onClick={() => setPrimary(row.id)}>
+                      <Button size="sm" variant="outline" className="gap-2" onClick={() => setPrimary(row.id)} aria-label={`Make ${row.domain} primary`}>
                         <Star className="w-3.5 h-3.5" /> Make primary
                       </Button>
                     )}
-                    <Button size="sm" variant="ghost" onClick={() => remove(row.id)} className="text-destructive hover:text-destructive">
+                    <Button size="sm" variant="ghost" onClick={() => remove(row.id)} aria-label={`Remove ${row.domain}`} className="text-destructive hover:text-destructive">
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   </div>
@@ -211,10 +224,10 @@ export default function DomainSettings() {
                       <span />
                       <span className="text-muted-foreground">Host</span>
                       <code className="text-foreground break-all">{row.domain}</code>
-                      <Button size="sm" variant="ghost" onClick={() => copy(row.domain, "Host")}><Copy className="w-3 h-3" /></Button>
+                      <Button size="sm" variant="ghost" onClick={() => copy(row.domain, "Host")} aria-label={`Copy CNAME host for ${row.domain}`}><Copy className="w-3 h-3" /></Button>
                       <span className="text-muted-foreground">Points to</span>
                       <code className="text-foreground break-all">{APP_HOST}</code>
-                      <Button size="sm" variant="ghost" onClick={() => copy(APP_HOST, "Target")}><Copy className="w-3 h-3" /></Button>
+                      <Button size="sm" variant="ghost" onClick={() => copy(APP_HOST, "Target")} aria-label={`Copy CNAME target for ${row.domain}`}><Copy className="w-3 h-3" /></Button>
                     </div>
                   </div>
                   <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-3 text-xs">
@@ -225,10 +238,10 @@ export default function DomainSettings() {
                       <span />
                       <span className="text-muted-foreground">Host</span>
                       <code className="text-foreground break-all">{txtHost}</code>
-                      <Button size="sm" variant="ghost" onClick={() => copy(txtHost, "TXT host")}><Copy className="w-3 h-3" /></Button>
+                      <Button size="sm" variant="ghost" onClick={() => copy(txtHost, "TXT host")} aria-label={`Copy TXT host for ${row.domain}`}><Copy className="w-3 h-3" /></Button>
                       <span className="text-muted-foreground">Value</span>
                       <code className="text-foreground break-all">{row.verification_token}</code>
-                      <Button size="sm" variant="ghost" onClick={() => copy(row.verification_token, "TXT value")}><Copy className="w-3 h-3" /></Button>
+                      <Button size="sm" variant="ghost" onClick={() => copy(row.verification_token, "TXT value")} aria-label={`Copy TXT value for ${row.domain}`}><Copy className="w-3 h-3" /></Button>
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -241,14 +254,14 @@ export default function DomainSettings() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <label className="flex items-start gap-3 p-3 rounded-lg border border-border">
-                    <Switch checked={row.use_for_portal} onCheckedChange={(v) => toggle(row.id, "use_for_portal", v)} />
+                    <Switch checked={row.use_for_portal} onCheckedChange={(v) => toggle(row.id, "use_for_portal", v)} aria-label={`Use ${row.domain} for the client portal`} />
                     <div>
                       <p className="text-sm font-medium text-foreground">Client portal</p>
                       <p className="text-xs text-muted-foreground">Use this domain for proposal & portal links.</p>
                     </div>
                   </label>
                   <label className="flex items-start gap-3 p-3 rounded-lg border border-border">
-                    <Switch checked={row.use_for_forms} onCheckedChange={(v) => toggle(row.id, "use_for_forms", v)} />
+                    <Switch checked={row.use_for_forms} onCheckedChange={(v) => toggle(row.id, "use_for_forms", v)} aria-label={`Use ${row.domain} for lead forms`} />
                     <div>
                       <p className="text-sm font-medium text-foreground">Lead forms</p>
                       <p className="text-xs text-muted-foreground">Use this domain for public form URLs.</p>

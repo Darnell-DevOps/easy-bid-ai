@@ -29,6 +29,14 @@ interface Props {
   value: string | string[] | boolean | undefined;
   onChange: (v: string | string[] | boolean) => void;
   formContext?: FormContext;
+  /** ID of the visible field label, when the caller renders one. */
+  labelId?: string;
+  /** ID of supporting help text, when present. */
+  descriptionId?: string;
+  /** Whether the field currently fails validation. */
+  invalid?: boolean;
+  /** ID of the field-specific validation message. */
+  errorId?: string;
 }
 
 function formatBytes(n: number): string {
@@ -42,12 +50,15 @@ function formatBytes(n: number): string {
 
 const MULTI_CAP = 5;
 
-function FileFieldInput({ field, value, onChange, formContext }: Props) {
+function FileFieldInput({ field, value, onChange, formContext, labelId, descriptionId, invalid, errorId }: Props) {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const maxBytes = (field.maxSizeMb || 20) * 1024 * 1024;
   const isMulti = !!field.multiple;
+  const statusId = `${field.id}-upload-status`;
+  const describedBy = [descriptionId, invalid ? errorId : undefined].filter(Boolean).join(" ") || undefined;
 
   const existingSingle: FilePayload | null = isMulti ? null : parseFilePayload(value);
   const existingList: FilePayload[] = isMulti ? parseFilePayloads(value) : [];
@@ -103,15 +114,21 @@ function FileFieldInput({ field, value, onChange, formContext }: Props) {
 
   const handleFile = async (file: File) => {
     setUploading(true);
+    setUploadStatus(`Uploading ${file.name}.`);
     try {
       const final = await uploadOne(file);
-      if (!final) return;
+      if (!final) {
+        setUploadStatus(`${file.name} was not uploaded.`);
+        return;
+      }
       if (isMulti) {
         onChange(serializeFilePayloads([...existingList, final]));
       } else {
         onChange(serializeFilePayload(final));
       }
+      setUploadStatus(`${file.name} uploaded.`);
     } catch (e: any) {
+      setUploadStatus(`Upload failed for ${file.name}.`);
       toast({
         title: "Upload failed",
         description: e?.message || String(e),
@@ -123,18 +140,29 @@ function FileFieldInput({ field, value, onChange, formContext }: Props) {
     }
   };
 
-  const clear = () => onChange("");
+  const clear = () => {
+    if (existingSingle) setUploadStatus(`${existingSingle.name} removed.`);
+    onChange("");
+  };
   const removeAt = (idx: number) => {
+    const removed = existingList[idx];
     const next = existingList.filter((_, i) => i !== idx);
     onChange(serializeFilePayloads(next));
+    if (removed) setUploadStatus(`${removed.name} removed.`);
   };
 
   const hiddenInput = (
     <input
       ref={inputRef}
+      id={field.id}
+      name={field.id}
       type="file"
       accept={field.accept}
       className="hidden"
+      aria-labelledby={labelId}
+      aria-label={labelId ? undefined : field.label}
+      aria-describedby={describedBy}
+      aria-invalid={invalid || undefined}
       onChange={(e) => {
         const f = e.target.files?.[0];
         if (f) handleFile(f);
@@ -145,50 +173,99 @@ function FileFieldInput({ field, value, onChange, formContext }: Props) {
   if (isMulti) {
     const atCap = existingList.length >= MULTI_CAP;
     return (
-      <div className="space-y-2">
+      <div
+        className="space-y-2"
+        role="group"
+        aria-labelledby={labelId}
+        aria-label={labelId ? undefined : field.label}
+        aria-describedby={describedBy}
+        aria-invalid={invalid || undefined}
+      >
         {hiddenInput}
-        {existingList.map((p, idx) => (
-          <div key={`${p.path}-${idx}`} className="flex items-center gap-2 rounded-md border border-border bg-muted/30 p-2.5">
-            <FileText className="w-4 h-4 text-purple shrink-0" />
-            <div className="flex-1 min-w-0">
-              <div className="text-sm text-foreground truncate">{p.name}</div>
-              <div className="text-[11px] text-muted-foreground">{formatBytes(p.size)}</div>
-            </div>
-            <Button type="button" size="icon" variant="ghost" onClick={() => removeAt(idx)} disabled={uploading} className="h-7 w-7">
-              <X className="w-3.5 h-3.5" />
-            </Button>
+        {existingList.length > 0 && (
+          <div role="list" aria-label={`${field.label} files`} className="space-y-2">
+            {existingList.map((p, idx) => (
+              <div key={`${p.path}-${idx}`} role="listitem" className="flex items-center gap-2 rounded-md border border-border bg-muted/30 p-2.5">
+                <FileText aria-hidden="true" className="w-4 h-4 text-purple shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm text-foreground truncate">{p.name}</div>
+                  <div className="text-[11px] text-muted-foreground">{formatBytes(p.size)}</div>
+                </div>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => removeAt(idx)}
+                  disabled={uploading}
+                  className="h-7 w-7"
+                  aria-label={`Remove ${p.name}`}
+                >
+                  <X aria-hidden="true" className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            ))}
           </div>
-        ))}
+        )}
         <Button
           type="button"
           variant="outline"
           onClick={pick}
           disabled={uploading || atCap}
           className="w-full justify-start gap-2 h-10"
+          aria-label={
+            uploading
+              ? `Uploading a file for ${field.label}`
+              : atCap
+                ? `Maximum number of files reached for ${field.label}`
+                : `Upload a file for ${field.label}${field.required ? " (required)" : ""}`
+          }
         >
-          {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
+          {uploading ? <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" /> : <Paperclip aria-hidden="true" className="w-4 h-4" />}
           {uploading ? "Uploading…" : atCap ? "Maximum reached" : (existingList.length === 0 ? (field.placeholder || "Add a file") : "Add another file")}
         </Button>
         <p className="text-[11px] text-muted-foreground">Up to {MULTI_CAP} files.</p>
+        <p id={statusId} className="sr-only" aria-live="polite" aria-atomic="true">{uploadStatus}</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-2">
+    <div
+      className="space-y-2"
+      role="group"
+      aria-labelledby={labelId}
+      aria-label={labelId ? undefined : field.label}
+      aria-describedby={describedBy}
+      aria-invalid={invalid || undefined}
+    >
       {hiddenInput}
       {existingSingle ? (
         <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 p-2.5">
-          <FileText className="w-4 h-4 text-purple shrink-0" />
+          <FileText aria-hidden="true" className="w-4 h-4 text-purple shrink-0" />
           <div className="flex-1 min-w-0">
             <div className="text-sm text-foreground truncate">{existingSingle.name}</div>
             <div className="text-[11px] text-muted-foreground">{formatBytes(existingSingle.size)}</div>
           </div>
-          <Button type="button" size="sm" variant="ghost" onClick={pick} disabled={uploading}>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={pick}
+            disabled={uploading}
+            aria-label={`Replace ${existingSingle.name}`}
+          >
             Replace
           </Button>
-          <Button type="button" size="icon" variant="ghost" onClick={clear} disabled={uploading} className="h-7 w-7">
-            <X className="w-3.5 h-3.5" />
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            onClick={clear}
+            disabled={uploading}
+            className="h-7 w-7"
+            aria-label={`Remove ${existingSingle.name}`}
+          >
+            <X aria-hidden="true" className="w-3.5 h-3.5" />
           </Button>
         </div>
       ) : (
@@ -198,34 +275,62 @@ function FileFieldInput({ field, value, onChange, formContext }: Props) {
           onClick={pick}
           disabled={uploading}
           className="w-full justify-start gap-2 h-10"
+          aria-label={`${uploading ? "Uploading" : "Upload"} a file for ${field.label}${field.required ? " (required)" : ""}`}
         >
-          {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
+          {uploading ? <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" /> : <Paperclip aria-hidden="true" className="w-4 h-4" />}
           {uploading ? "Uploading…" : field.placeholder || "Choose a file"}
         </Button>
       )}
+      <p id={statusId} className="sr-only" aria-live="polite" aria-atomic="true">{uploadStatus}</p>
     </div>
   );
 }
 
-export default function SmartFieldRenderer({ field, value, onChange, formContext }: Props) {
+export default function SmartFieldRenderer({
+  field,
+  value,
+  onChange,
+  formContext,
+  labelId,
+  descriptionId,
+  invalid,
+  errorId,
+}: Props) {
   const id = field.id;
   const opts = field.options || [];
+  const accessibleLabel = labelId ? undefined : field.label;
+  const describedBy = [descriptionId, invalid ? errorId : undefined].filter(Boolean).join(" ") || undefined;
 
   switch (field.type) {
     case "long_text":
       return (
         <Textarea
           id={id}
+          name={id}
           placeholder={field.placeholder}
           value={(value as string) || ""}
           onChange={(e) => onChange(e.target.value)}
           className="min-h-[90px]"
+          aria-labelledby={labelId}
+          aria-label={accessibleLabel}
+          aria-describedby={describedBy}
+          aria-required={field.required || undefined}
+          aria-invalid={invalid || undefined}
         />
       );
     case "select":
       return (
-        <Select value={(value as string) || ""} onValueChange={onChange as (v: string) => void}>
-          <SelectTrigger><SelectValue placeholder={field.placeholder || "Select…"} /></SelectTrigger>
+        <Select name={id} value={(value as string) || ""} onValueChange={onChange as (v: string) => void}>
+          <SelectTrigger
+            id={id}
+            aria-labelledby={labelId}
+            aria-label={accessibleLabel}
+            aria-describedby={describedBy}
+            aria-required={field.required || undefined}
+            aria-invalid={invalid || undefined}
+          >
+            <SelectValue placeholder={field.placeholder || "Select…"} />
+          </SelectTrigger>
           <SelectContent>
             {opts.map((o) => (
               <SelectItem key={o} value={o}>{o}</SelectItem>
@@ -236,13 +341,19 @@ export default function SmartFieldRenderer({ field, value, onChange, formContext
     case "radio":
       return (
         <RadioGroup
+          name={id}
           value={(value as string) || ""}
           onValueChange={onChange as (v: string) => void}
           className="space-y-2"
+          aria-labelledby={labelId}
+          aria-label={accessibleLabel}
+          aria-describedby={describedBy}
+          aria-required={field.required || undefined}
+          aria-invalid={invalid || undefined}
         >
           {opts.map((o) => (
             <div key={o} className="flex items-center gap-2">
-              <RadioGroupItem value={o} id={`${id}-${o}`} />
+              <RadioGroupItem value={o} id={`${id}-${o}`} className="h-6 w-6" />
               <Label htmlFor={`${id}-${o}`} className="font-normal cursor-pointer">{o}</Label>
             </div>
           ))}
@@ -251,14 +362,23 @@ export default function SmartFieldRenderer({ field, value, onChange, formContext
     case "multi_select": {
       const arr = Array.isArray(value) ? (value as string[]) : [];
       return (
-        <div className="space-y-2">
+        <div
+          className="space-y-2"
+          role="group"
+          aria-labelledby={labelId}
+          aria-label={accessibleLabel}
+          aria-describedby={describedBy}
+          aria-invalid={invalid || undefined}
+        >
           {opts.map((o) => {
             const checked = arr.includes(o);
             return (
               <div key={o} className="flex items-center gap-2">
                 <Checkbox
                   id={`${id}-${o}`}
+                  name={`${id}[]`}
                   checked={checked}
+                  className="h-6 w-6"
                   onCheckedChange={(c) => {
                     const next = c ? [...arr, o] : arr.filter((x) => x !== o);
                     onChange(next);
@@ -273,19 +393,41 @@ export default function SmartFieldRenderer({ field, value, onChange, formContext
     }
     case "checkbox":
       return (
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id={id}
-            checked={value === true || value === "yes"}
-            onCheckedChange={(c) => onChange(c === true)}
-          />
-          <Label htmlFor={id} className="font-normal cursor-pointer">
-            {field.placeholder || field.label}
-          </Label>
+        <div
+          role="group"
+          aria-labelledby={labelId}
+          aria-label={accessibleLabel}
+          aria-describedby={describedBy}
+          aria-invalid={invalid || undefined}
+        >
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id={id}
+              name={id}
+              checked={value === true || value === "yes"}
+              onCheckedChange={(c) => onChange(c === true)}
+              className="h-6 w-6"
+              aria-required={field.required || undefined}
+            />
+            <Label htmlFor={id} className="font-normal cursor-pointer">
+              {field.placeholder || field.label}
+            </Label>
+          </div>
         </div>
       );
     case "file":
-      return <FileFieldInput field={field} value={value} onChange={onChange} formContext={formContext} />;
+      return (
+        <FileFieldInput
+          field={field}
+          value={value}
+          onChange={onChange}
+          formContext={formContext}
+          labelId={labelId}
+          descriptionId={descriptionId}
+          invalid={invalid}
+          errorId={errorId}
+        />
+      );
     default: {
       const inputType =
         field.type === "email" ? "email" :
@@ -296,10 +438,16 @@ export default function SmartFieldRenderer({ field, value, onChange, formContext
       return (
         <Input
           id={id}
+          name={id}
           type={inputType}
           placeholder={field.placeholder}
           value={(value as string) || ""}
           onChange={(e) => onChange(e.target.value)}
+          aria-labelledby={labelId}
+          aria-label={accessibleLabel}
+          aria-describedby={describedBy}
+          aria-required={field.required || undefined}
+          aria-invalid={invalid || undefined}
         />
       );
     }

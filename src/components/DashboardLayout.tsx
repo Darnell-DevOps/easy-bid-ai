@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { performSignOut } from "@/lib/logout";
 import {
-  FileText, Plus, Settings, LogOut, Menu, X, LayoutTemplate, Users, Sparkles,
+  FileText, Plus, Settings, LogOut, Menu, LayoutTemplate, Users, Sparkles,
   ScrollText, Calendar, FileSignature, ClipboardList, Repeat, LifeBuoy, Mail,
   Shield, Star, ChevronLeft, ChevronRight, CreditCard, TrendingUp, Eye, Trash2, Rocket,
 } from "lucide-react";
@@ -113,17 +114,17 @@ function QuickStatus({ collapsed }: { collapsed: boolean }) {
   return (
     <div className="mx-3 mb-2 p-3 rounded-lg bg-sidebar-accent/60 border border-sidebar-border">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] uppercase tracking-wider text-sidebar-foreground/50 font-semibold">Current Plan</span>
+        <span className="text-[10px] uppercase tracking-wider text-sidebar-foreground/70 font-semibold">Current Plan</span>
         <CreditCard className="w-3 h-3 text-sidebar-foreground/40" />
       </div>
       <div className="text-sm font-semibold text-sidebar-foreground mb-2">{stats?.plan ?? "—"}</div>
       <div className="grid grid-cols-2 gap-2 text-[11px]">
         <div>
-          <div className="text-sidebar-foreground/50">Clients</div>
+          <div className="text-sidebar-foreground/70">Clients</div>
           <div className="text-sidebar-foreground font-medium">{stats?.clients ?? "—"}</div>
         </div>
         <div>
-          <div className="text-sidebar-foreground/50">MRR</div>
+          <div className="text-sidebar-foreground/70">MRR</div>
           <div className="text-sidebar-foreground font-medium">
             {stats ? `£${(stats.mrr / 1000).toFixed(1)}k` : "—"}
           </div>
@@ -137,6 +138,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const mobileNavigationRouteClose = useRef(false);
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem(COLLAPSE_KEY) === "1";
@@ -167,6 +169,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     emails: 0,
   }), [unreadLeads]);
 
+  const closeMobileNavigationForRoute = (href: string) => {
+    mobileNavigationRouteClose.current = href !== location.pathname;
+    setMobileOpen(false);
+  };
+
   const NavItemRow = ({ item, isMobile = false }: { item: NavItem; isMobile?: boolean }) => {
     const active = location.pathname === item.href;
     const badge = item.badgeKey ? badges[item.badgeKey] : 0;
@@ -175,7 +182,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const row = (
       <Link
         to={item.href}
-        onClick={() => setMobileOpen(false)}
+        onClick={isMobile ? () => closeMobileNavigationForRoute(item.href) : undefined}
         className={`group relative flex items-center gap-3 rounded-md text-sm leading-5 transition-all duration-200 ${
           showCompact ? "justify-center px-0 py-2.5 mx-2" : "px-3 py-2"
         } ${
@@ -228,7 +235,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <>
         {/* Header */}
         <div className={`${showCompact ? "px-2 pt-5 pb-4" : "px-5 pt-5 pb-4"}`}>
-          <Link to="/dashboard" className="block">
+          <Link
+            to="/dashboard"
+            onClick={isMobile ? () => closeMobileNavigationForRoute("/dashboard") : undefined}
+            className="block"
+          >
             {showCompact ? (
               <div className="w-9 h-9 mx-auto rounded-lg bg-accent flex items-center justify-center text-accent-foreground font-bold text-sm">
                 C
@@ -238,7 +249,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <div className="text-base font-semibold text-sidebar-foreground tracking-tight leading-tight">
                   Close<span className="text-gradient-sync">Sync</span> <span className="text-sidebar-foreground/90">AI</span>
                 </div>
-                <div className="text-[10px] uppercase tracking-[0.15em] text-sidebar-foreground/40 mt-1 font-medium">
+                <div className="text-[10px] uppercase tracking-[0.15em] text-sidebar-foreground/70 mt-1 font-medium">
                   by StriveSync
                 </div>
               </>
@@ -252,7 +263,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <TooltipTrigger asChild>
                   <Link
                     to="/dashboard/new"
-                    onClick={() => setMobileOpen(false)}
+                    onClick={isMobile ? () => closeMobileNavigationForRoute("/dashboard/new") : undefined}
                     className="flex items-center justify-center w-9 h-9 mx-auto rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
                   >
                     <Plus className="w-4 h-4" />
@@ -263,7 +274,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             ) : (
               <Link
                 to="/dashboard/new"
-                onClick={() => setMobileOpen(false)}
+                onClick={isMobile ? () => closeMobileNavigationForRoute("/dashboard/new") : undefined}
                 className="flex items-center justify-center gap-2 w-full h-9 rounded-lg bg-accent text-accent-foreground text-sm font-semibold leading-5 hover:bg-accent/90 transition-colors"
               >
                 <Plus className="w-4 h-4" />
@@ -274,11 +285,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         {/* Nav groups */}
-        <nav className={`flex-1 overflow-y-auto ${showCompact ? "px-0 pb-2" : "px-2 pb-2"} space-y-4`}>
+        <nav
+          aria-label={isMobile ? "Dashboard navigation" : "Primary dashboard navigation"}
+          className={`flex-1 overflow-y-auto ${showCompact ? "px-0 pb-2" : "px-2 pb-2"} space-y-4`}
+        >
           {navGroups.map((group) => (
             <div key={group.label}>
               {!showCompact && (
-                <div className="px-3 pt-1 pb-1.5 text-[10px] uppercase tracking-[0.12em] text-sidebar-foreground/40 font-semibold">
+                <div className="px-3 pt-1 pb-1.5 text-[10px] uppercase tracking-[0.12em] text-sidebar-foreground/70 font-semibold">
                   {group.label}
                 </div>
               )}
@@ -294,7 +308,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {isAdmin && (
             <div>
               {!showCompact && (
-                <div className="px-3 pt-1 pb-1.5 text-[10px] uppercase tracking-[0.12em] text-sidebar-foreground/40 font-semibold">
+                <div className="px-3 pt-1 pb-1.5 text-[10px] uppercase tracking-[0.12em] text-sidebar-foreground/70 font-semibold">
                   Admin
                 </div>
               )}
@@ -367,23 +381,46 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <span className="text-base font-semibold text-sidebar-foreground tracking-tight">
             Close<span className="text-gradient-sync">Sync</span> <span className="text-sidebar-foreground">AI</span>
           </span>
-          <Button variant="ghost" size="sm" onClick={() => setMobileOpen(!mobileOpen)} className="text-sidebar-foreground">
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </Button>
+          <Sheet
+            open={mobileOpen}
+            onOpenChange={(open) => {
+              if (open) mobileNavigationRouteClose.current = false;
+              setMobileOpen(open);
+            }}
+          >
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-sidebar-foreground"
+                aria-label="Open dashboard navigation"
+              >
+                <Menu aria-hidden="true" className="w-5 h-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent
+              id="dashboard-mobile-navigation"
+              side="left"
+              className="top-14 bottom-0 h-auto w-64 bg-sidebar p-0 text-sidebar-foreground"
+              onCloseAutoFocus={(event) => {
+                if (!mobileNavigationRouteClose.current) return;
+                event.preventDefault();
+                mobileNavigationRouteClose.current = false;
+              }}
+            >
+              <SheetTitle className="sr-only">Dashboard navigation</SheetTitle>
+              <SheetDescription className="sr-only">
+                Choose a CloseSync dashboard area.
+              </SheetDescription>
+              <div className="flex h-full flex-col">
+                <NavContent isMobile />
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
 
-        {/* Mobile drawer */}
-        {mobileOpen && (
-          <div className="md:hidden fixed inset-0 z-40">
-            <div className="absolute inset-0 bg-background/70 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-            <aside className="absolute top-14 left-0 bottom-0 w-64 bg-sidebar flex flex-col border-r border-sidebar-border">
-              <NavContent isMobile />
-            </aside>
-          </div>
-        )}
-
         {/* Main content */}
-        <main className="flex-1 min-w-0 md:pt-0 pt-14 overflow-auto">
+        <main id="dashboard-main" tabIndex={-1} className="flex-1 min-w-0 md:pt-0 pt-14 overflow-auto">
           <div className="px-4 sm:px-6 md:px-10 py-5 md:py-8 max-w-[1600px] mx-auto content-glow">{children}</div>
         </main>
       </div>

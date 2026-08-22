@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { Star, Copy, Send, Check, X, ExternalLink, Plus, Trash2 } from "lucide-react";
 
@@ -128,11 +128,11 @@ export default function TestimonialsDashboard() {
           </div>
           <div className="flex gap-2">
             <Dialog open={manualOpen} onOpenChange={setManualOpen}>
-              <DialogTrigger asChild><Button variant="outline" size="sm"><Plus className="w-4 h-4" /> Add manually</Button></DialogTrigger>
+              <DialogTrigger asChild><Button variant="outline" size="sm"><Plus aria-hidden="true" className="w-4 h-4" /> Add manually</Button></DialogTrigger>
               <ManualTestimonialDialog onClose={() => { setManualOpen(false); load(); }} />
             </Dialog>
             <Dialog open={requestOpen} onOpenChange={setRequestOpen}>
-              <DialogTrigger asChild><Button size="sm"><Send className="w-4 h-4" /> Request review</Button></DialogTrigger>
+              <DialogTrigger asChild><Button size="sm"><Send aria-hidden="true" className="w-4 h-4" /> Request review</Button></DialogTrigger>
               <RequestDialog onClose={() => { setRequestOpen(false); load(); }} />
             </Dialog>
           </div>
@@ -147,7 +147,7 @@ export default function TestimonialsDashboard() {
         </div>
 
         <Tabs defaultValue="wall">
-          <TabsList>
+          <TabsList aria-label="Testimonial dashboard sections">
             <TabsTrigger value="wall">Testimonials</TabsTrigger>
             <TabsTrigger value="requests">Requests</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -155,7 +155,7 @@ export default function TestimonialsDashboard() {
           </TabsList>
 
           <TabsContent value="wall" className="space-y-4 mt-6">
-            {loading ? <p className="text-sm text-muted-foreground">Loading…</p> :
+            {loading ? <p role="status" aria-live="polite" className="text-sm text-muted-foreground">Loading…</p> :
              testimonials.length === 0 ? (
               <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">
                 No testimonials yet. Send a review request or add one manually.
@@ -179,11 +179,11 @@ export default function TestimonialsDashboard() {
             <Card>
               <CardHeader><CardTitle className="text-base">Sender</CardTitle></CardHeader>
               <CardContent className="space-y-3">
-                <Field label="From name (used in emails)">
-                  <Input value={settings.from_name || ""} onChange={e => setSettings({ ...settings, from_name: e.target.value })} placeholder="Your name or studio" />
+                <Field id="testimonial-from-name" label="From name (used in emails)">
+                  <Input id="testimonial-from-name" value={settings.from_name || ""} onChange={e => setSettings({ ...settings, from_name: e.target.value })} placeholder="Your name or studio" />
                 </Field>
-                <Field label="Personal message (optional)">
-                  <Textarea rows={3} value={settings.custom_message || ""} onChange={e => setSettings({ ...settings, custom_message: e.target.value })} placeholder="Add a sentence clients will see in the request email." />
+                <Field id="testimonial-personal-message" label="Personal message (optional)">
+                  <Textarea id="testimonial-personal-message" rows={3} value={settings.custom_message || ""} onChange={e => setSettings({ ...settings, custom_message: e.target.value })} placeholder="Add a sentence clients will see in the request email." />
                 </Field>
               </CardContent>
             </Card>
@@ -191,17 +191,17 @@ export default function TestimonialsDashboard() {
             <Card>
               <CardHeader><CardTitle className="text-base">Automation</CardTitle><CardDescription>Auto-send review requests after key milestones.</CardDescription></CardHeader>
               <CardContent className="space-y-4">
-                <ToggleRow label="When a contract is signed" checked={!!settings.auto_request_on_contract_signed}
+                <ToggleRow id="testimonial-auto-contract" label="When a contract is signed" checked={!!settings.auto_request_on_contract_signed}
                   onChange={v => setSettings({ ...settings, auto_request_on_contract_signed: v })} />
-                <ToggleRow label="When a proposal is paid" checked={!!settings.auto_request_on_proposal_paid}
+                <ToggleRow id="testimonial-auto-payment" label="When a proposal is paid" checked={!!settings.auto_request_on_proposal_paid}
                   onChange={v => setSettings({ ...settings, auto_request_on_proposal_paid: v })} />
                 <div className="grid grid-cols-2 gap-3">
-                  <Field label="Follow-up after (days)">
-                    <Input type="number" min={1} max={30} value={settings.follow_up_days || 4}
+                  <Field id="testimonial-follow-up-days" label="Follow-up after (days)">
+                    <Input id="testimonial-follow-up-days" type="number" min={1} max={30} value={settings.follow_up_days || 4}
                       onChange={e => setSettings({ ...settings, follow_up_days: Number(e.target.value) })} />
                   </Field>
-                  <Field label="Max reminders">
-                    <Input type="number" min={0} max={5} value={settings.max_reminders ?? 2}
+                  <Field id="testimonial-max-reminders" label="Max reminders">
+                    <Input id="testimonial-max-reminders" type="number" min={0} max={5} value={settings.max_reminders ?? 2}
                       onChange={e => setSettings({ ...settings, max_reminders: Number(e.target.value) })} />
                   </Field>
                 </div>
@@ -211,10 +211,10 @@ export default function TestimonialsDashboard() {
             <Card>
               <CardHeader><CardTitle className="text-base">Reputation channels</CardTitle></CardHeader>
               <CardContent className="space-y-3">
-                <Field label="Google review link">
-                  <Input value={settings.google_review_url || ""} onChange={e => setSettings({ ...settings, google_review_url: e.target.value })}
+                <Field id="testimonial-google-review-url" label="Google review link">
+                  <Input id="testimonial-google-review-url" aria-describedby="testimonial-google-review-help" value={settings.google_review_url || ""} onChange={e => setSettings({ ...settings, google_review_url: e.target.value })}
                     placeholder="https://g.page/r/..." />
-                  <p className="text-xs text-muted-foreground mt-1">Shown in review emails and on your wall. Get yours from your Google Business profile.</p>
+                  <p id="testimonial-google-review-help" className="text-xs text-muted-foreground mt-1">Shown in review emails and on your wall. Get yours from your Google Business profile.</p>
                 </Field>
               </CardContent>
             </Card>
@@ -222,11 +222,11 @@ export default function TestimonialsDashboard() {
             <Card>
               <CardHeader><CardTitle className="text-base">Public wall</CardTitle></CardHeader>
               <CardContent className="space-y-3">
-                <Field label="Headline">
-                  <Input value={settings.wall_headline || ""} onChange={e => setSettings({ ...settings, wall_headline: e.target.value })} />
+                <Field id="testimonial-wall-headline" label="Headline">
+                  <Input id="testimonial-wall-headline" value={settings.wall_headline || ""} onChange={e => setSettings({ ...settings, wall_headline: e.target.value })} />
                 </Field>
-                <Field label="Intro (optional)">
-                  <Textarea rows={2} value={settings.wall_intro || ""} onChange={e => setSettings({ ...settings, wall_intro: e.target.value })} />
+                <Field id="testimonial-wall-intro" label="Intro (optional)">
+                  <Textarea id="testimonial-wall-intro" rows={2} value={settings.wall_intro || ""} onChange={e => setSettings({ ...settings, wall_intro: e.target.value })} />
                 </Field>
               </CardContent>
             </Card>
@@ -239,12 +239,13 @@ export default function TestimonialsDashboard() {
               <CardHeader><CardTitle className="text-base">Your testimonial wall</CardTitle></CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex gap-2">
-                  <Input readOnly value={wallUrl} />
-                  <Button variant="outline" onClick={() => { navigator.clipboard.writeText(wallUrl); toast({ title: "Copied" }); }}>
-                    <Copy className="w-4 h-4" />
+                  <Label htmlFor="testimonial-wall-url" className="sr-only">Testimonial wall URL</Label>
+                  <Input id="testimonial-wall-url" readOnly value={wallUrl} />
+                  <Button aria-label="Copy testimonial wall URL" variant="outline" onClick={() => { navigator.clipboard.writeText(wallUrl); toast({ title: "Copied" }); }}>
+                    <Copy aria-hidden="true" className="w-4 h-4" />
                   </Button>
                   <Button variant="outline" asChild>
-                    <a href={wallUrl} target="_blank" rel="noreferrer"><ExternalLink className="w-4 h-4" /></a>
+                    <a href={wallUrl} target="_blank" rel="noreferrer" aria-label="Open testimonial wall in a new tab"><ExternalLink aria-hidden="true" className="w-4 h-4" /></a>
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">Share this link anywhere — it shows your published testimonials and Google review button.</p>
@@ -257,11 +258,38 @@ export default function TestimonialsDashboard() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><Label className="mb-2 block">{label}</Label>{children}</div>;
+function Field({
+  id,
+  label,
+  children,
+  required = false,
+  group = false,
+}: {
+  id: string;
+  label: string;
+  children: React.ReactNode;
+  required?: boolean;
+  group?: boolean;
+}) {
+  const labelContent = <>{label}{required && <span className="sr-only"> (required)</span>}</>;
+  return (
+    <div>
+      {group ? (
+        <p id={`${id}-label`} className="mb-2 block text-sm font-medium">{labelContent}</p>
+      ) : (
+        <Label htmlFor={id} className="mb-2 block">{labelContent}</Label>
+      )}
+      {children}
+    </div>
+  );
 }
-function ToggleRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
-  return <div className="flex items-center justify-between"><span className="text-sm">{label}</span><Switch checked={checked} onCheckedChange={onChange} /></div>;
+function ToggleRow({ id, label, checked, onChange }: { id: string; label: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <div className="flex items-center justify-between">
+      <Label htmlFor={id} className="text-sm font-normal cursor-pointer">{label}</Label>
+      <Switch id={id} checked={checked} onCheckedChange={onChange} aria-label={label} />
+    </div>
+  );
 }
 function StatCard({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
   return (
@@ -287,9 +315,9 @@ function TestimonialCard({ t, onChanged }: { t: Testimonial; onChanged: () => vo
     <Card>
       <CardContent className="p-5 space-y-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1" role="img" aria-label={`${t.rating || 0} out of 5 stars`}>
             {[1,2,3,4,5].map(i => (
-              <Star key={i} className={`w-4 h-4 ${(t.rating || 0) >= i ? "fill-amber-500 text-amber-500" : "text-muted-foreground/30"}`} />
+              <Star aria-hidden="true" key={i} className={`w-4 h-4 ${(t.rating || 0) >= i ? "fill-amber-500 text-amber-500" : "text-muted-foreground/30"}`} />
             ))}
           </div>
           <Badge variant={t.is_published ? "default" : "secondary"}>{t.is_published ? "Published" : "Hidden"}</Badge>
@@ -302,14 +330,26 @@ function TestimonialCard({ t, onChanged }: { t: Testimonial; onChanged: () => vo
         </div>
         <div className="flex items-center justify-between pt-2 border-t">
           <div className="flex items-center gap-3 text-xs">
-            <label className="flex items-center gap-1 cursor-pointer">
-              <Switch checked={t.is_published} onCheckedChange={v => toggle("is_published", v)} /> Published
-            </label>
-            <label className="flex items-center gap-1 cursor-pointer">
-              <Switch checked={t.is_featured} onCheckedChange={v => toggle("is_featured", v)} /> Featured
-            </label>
+            <div className="flex items-center gap-1">
+              <Switch
+                id={`testimonial-${t.id}-published`}
+                checked={t.is_published}
+                onCheckedChange={v => toggle("is_published", v)}
+                aria-label={`Publish testimonial from ${t.client_name}`}
+              />
+              <Label htmlFor={`testimonial-${t.id}-published`} className="text-xs font-normal cursor-pointer">Published</Label>
+            </div>
+            <div className="flex items-center gap-1">
+              <Switch
+                id={`testimonial-${t.id}-featured`}
+                checked={t.is_featured}
+                onCheckedChange={v => toggle("is_featured", v)}
+                aria-label={`Feature testimonial from ${t.client_name}`}
+              />
+              <Label htmlFor={`testimonial-${t.id}-featured`} className="text-xs font-normal cursor-pointer">Featured</Label>
+            </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={remove}><Trash2 className="w-4 h-4" /></Button>
+          <Button aria-label={`Delete testimonial from ${t.client_name}`} variant="ghost" size="sm" onClick={remove}><Trash2 aria-hidden="true" className="w-4 h-4" /></Button>
         </div>
       </CardContent>
     </Card>
@@ -338,8 +378,8 @@ function RequestRow({ r, onChanged }: { r: ReviewRequest; onChanged: () => void 
       </div>
       <div className="flex items-center gap-2">
         <Badge variant={statusColor[r.status] as any}>{r.status}</Badge>
-        <Button variant="ghost" size="sm" onClick={copyLink}><Copy className="w-4 h-4" /></Button>
-        <Button variant="ghost" size="sm" onClick={remove}><Trash2 className="w-4 h-4" /></Button>
+        <Button aria-label={`Copy review link for ${r.client_name || r.client_email}`} variant="ghost" size="sm" onClick={copyLink}><Copy aria-hidden="true" className="w-4 h-4" /></Button>
+        <Button aria-label={`Delete review request for ${r.client_name || r.client_email}`} variant="ghost" size="sm" onClick={remove}><Trash2 aria-hidden="true" className="w-4 h-4" /></Button>
       </div>
     </CardContent></Card>
   );
@@ -363,12 +403,19 @@ function RequestDialog({ onClose }: { onClose: () => void }) {
   };
   return (
     <DialogContent>
-      <DialogHeader><DialogTitle>Request a review</DialogTitle></DialogHeader>
+      <DialogHeader>
+        <DialogTitle>Request a review</DialogTitle>
+        <DialogDescription>Create a review request for a client using their name and email address.</DialogDescription>
+      </DialogHeader>
       <div className="space-y-3">
-        <Field label="Client name"><Input value={name} onChange={e => setName(e.target.value)} /></Field>
-        <Field label="Client email"><Input type="email" value={email} onChange={e => setEmail(e.target.value)} /></Field>
+        <Field id="review-request-name" label="Client name" required>
+          <Input id="review-request-name" autoComplete="name" aria-required="true" value={name} onChange={e => setName(e.target.value)} />
+        </Field>
+        <Field id="review-request-email" label="Client email" required>
+          <Input id="review-request-email" type="email" autoComplete="email" aria-required="true" value={email} onChange={e => setEmail(e.target.value)} />
+        </Field>
       </div>
-      <DialogFooter><Button onClick={submit} disabled={busy}>{busy ? "Creating…" : "Create request"}</Button></DialogFooter>
+      <DialogFooter><Button onClick={submit} disabled={busy} aria-busy={busy}>{busy ? "Creating…" : "Create request"}</Button></DialogFooter>
     </DialogContent>
   );
 }
@@ -389,25 +436,35 @@ function ManualTestimonialDialog({ onClose }: { onClose: () => void }) {
   };
   return (
     <DialogContent>
-      <DialogHeader><DialogTitle>Add testimonial</DialogTitle></DialogHeader>
+      <DialogHeader>
+        <DialogTitle>Add testimonial</DialogTitle>
+        <DialogDescription>Add a testimonial collected outside CloseSync.</DialogDescription>
+      </DialogHeader>
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Client name"><Input value={form.client_name} onChange={e => setForm({ ...form, client_name: e.target.value })} /></Field>
-          <Field label="Company"><Input value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} /></Field>
+          <Field id="manual-testimonial-name" label="Client name" required><Input id="manual-testimonial-name" autoComplete="name" aria-required="true" value={form.client_name} onChange={e => setForm({ ...form, client_name: e.target.value })} /></Field>
+          <Field id="manual-testimonial-company" label="Company"><Input id="manual-testimonial-company" autoComplete="organization" value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} /></Field>
         </div>
-        <Field label="Role / title"><Input value={form.role_title} onChange={e => setForm({ ...form, role_title: e.target.value })} /></Field>
-        <Field label="Rating">
-          <div className="flex items-center gap-1">
+        <Field id="manual-testimonial-role" label="Role / title"><Input id="manual-testimonial-role" value={form.role_title} onChange={e => setForm({ ...form, role_title: e.target.value })} /></Field>
+        <Field id="manual-testimonial-rating" label="Rating" group>
+          <div className="flex items-center gap-1" role="group" aria-labelledby="manual-testimonial-rating-label">
             {[1,2,3,4,5].map(i => (
-              <button key={i} type="button" onClick={() => setForm({ ...form, rating: i })}>
-                <Star className={`w-6 h-6 ${form.rating >= i ? "fill-amber-500 text-amber-500" : "text-muted-foreground/30"}`} />
+              <button
+                key={i}
+                type="button"
+                aria-label={`${i} star${i === 1 ? "" : "s"}`}
+                aria-pressed={form.rating === i}
+                onClick={() => setForm({ ...form, rating: i })}
+                className="rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <Star aria-hidden="true" className={`w-6 h-6 ${form.rating >= i ? "fill-amber-500 text-amber-500" : "text-muted-foreground/30"}`} />
               </button>
             ))}
           </div>
         </Field>
-        <Field label="Testimonial"><Textarea rows={4} value={form.content} onChange={e => setForm({ ...form, content: e.target.value })} /></Field>
+        <Field id="manual-testimonial-content" label="Testimonial" required><Textarea id="manual-testimonial-content" rows={4} aria-required="true" value={form.content} onChange={e => setForm({ ...form, content: e.target.value })} /></Field>
       </div>
-      <DialogFooter><Button onClick={submit} disabled={busy}>{busy ? "Saving…" : "Add testimonial"}</Button></DialogFooter>
+      <DialogFooter><Button onClick={submit} disabled={busy} aria-busy={busy}>{busy ? "Saving…" : "Add testimonial"}</Button></DialogFooter>
     </DialogContent>
   );
 }

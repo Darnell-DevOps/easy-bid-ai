@@ -212,6 +212,7 @@ export default function NewClient() {
                 <div>
                   <Label htmlFor="timeline">Timeline / Deadline</Label>
                   <TimelineInput
+                    id="timeline"
                     value={form.timeline}
                     onChange={(v) => update("timeline", v)}
                   />

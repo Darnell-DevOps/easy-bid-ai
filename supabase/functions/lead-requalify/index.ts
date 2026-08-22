@@ -2,6 +2,7 @@
 // Accepts either { leadId } (leads table) or { clientId } (clients table).
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { qualifyClientById, qualifyCorsHeaders, qualifyLeadById } from "../_shared/lead-qualify.ts";
+import { enforceAiRateLimit } from "../_shared/abuse-rate-limit.ts";
 
 function jsonResponse(body: unknown, status: number) {
   return new Response(JSON.stringify(body), {
@@ -42,6 +43,8 @@ Deno.serve(async (req) => {
   if ((!leadId && !clientId) || (leadId && clientId)) {
     return jsonResponse({ error: "Provide exactly one of leadId or clientId" }, 400);
   }
+  const rateLimited = await enforceAiRateLimit(req, userId, { source: "lead-requalify" });
+  if (rateLimited) return rateLimited;
 
   if (leadId) {
     const { data: lead, error: leadErr } = await supabase

@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, CreditCard, CheckCircle2, Settings, AlertTriangle, Repeat, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { initializePaddle, isPaymentsConfigured, isTestMode } from "@/lib/paddle";
+import { initializePaddle, isPaymentsConfigured } from "@/lib/paddle";
 import { formatMoney, intervalLabel, statusBadgeClasses } from "@/lib/retainers";
 import DynamicFavicon from "@/components/branding/DynamicFavicon";
 
@@ -62,10 +62,9 @@ export default function RetainerSubscribePage() {
     }
     setWorking(true);
     try {
-      const env = isTestMode() ? "sandbox" : "live";
       const { data, error } = await supabase.functions.invoke(
         "create-retainer-subscription",
-        { body: { retainerId: retainer.id, environment: env } },
+        { body: { token: retainer.access_token } },
       );
       if (error || !data?.transactionId) {
         throw new Error(error?.message || data?.error || "Could not start checkout");

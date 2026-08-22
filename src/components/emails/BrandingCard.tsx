@@ -105,8 +105,9 @@ export default function BrandingCard({ onSaved }: { onSaved?: (b: Branding) => v
 
   if (loading) {
     return (
-      <Card><CardContent className="p-8 flex justify-center">
-        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+      <Card><CardContent className="p-8 flex justify-center" role="status" aria-live="polite">
+        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" aria-hidden="true" />
+        <span className="sr-only">Loading email branding</span>
       </CardContent></Card>
     );
   }
@@ -116,49 +117,53 @@ export default function BrandingCard({ onSaved }: { onSaved?: (b: Branding) => v
       <CardContent className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-base font-semibold flex items-center gap-2"><Palette className="w-4 h-4 text-accent" /> Business branding</h3>
+            <h3 className="text-base font-semibold flex items-center gap-2"><Palette className="w-4 h-4 text-accent" aria-hidden="true" /> Business branding</h3>
             <p className="text-xs text-muted-foreground mt-1">Used across all client-facing emails sent on your behalf.</p>
           </div>
-          <Button size="sm" onClick={saveBranding} disabled={saving} className="gap-2">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save
+          <Button size="sm" onClick={saveBranding} disabled={saving} aria-busy={saving} className="gap-2">
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Save className="w-4 h-4" aria-hidden="true" />} Save
           </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="Business name" v={branding.business_name} on={(v) => setBranding({ ...branding, business_name: v })} placeholder="Acme Studio" />
-          <Field label="Sender display name" v={branding.default_sender_name} on={(v) => setBranding({ ...branding, default_sender_name: v })} placeholder="Alex from Acme" />
-          <Field label="Logo URL" v={branding.logo_url} on={(v) => setBranding({ ...branding, logo_url: v })} placeholder="https://..." />
-          <div>
-            <Label className="text-xs">Brand colour</Label>
+          <Field id="branding-business-name" label="Business name" v={branding.business_name} on={(v) => setBranding({ ...branding, business_name: v })} placeholder="Acme Studio" />
+          <Field id="branding-sender-name" label="Sender display name" v={branding.default_sender_name} on={(v) => setBranding({ ...branding, default_sender_name: v })} placeholder="Alex from Acme" />
+          <Field id="branding-logo-url" label="Logo URL" v={branding.logo_url} on={(v) => setBranding({ ...branding, logo_url: v })} placeholder="https://..." />
+          <div role="group" aria-labelledby="branding-colour-label">
+            <span id="branding-colour-label" className="text-xs font-medium">Brand colour</span>
             <div className="flex items-center gap-2 mt-1.5">
               <input
+                id="branding-colour-picker"
                 type="color"
+                aria-label="Choose brand colour"
                 value={branding.brand_color}
                 onChange={(e) => setBranding({ ...branding, brand_color: e.target.value })}
                 className="h-9 w-12 rounded border border-border bg-transparent cursor-pointer"
               />
-              <Input value={branding.brand_color} onChange={(e) => setBranding({ ...branding, brand_color: e.target.value })} />
+              <Input id="branding-colour-value" aria-label="Brand colour hex value" value={branding.brand_color} onChange={(e) => setBranding({ ...branding, brand_color: e.target.value })} />
             </div>
           </div>
-          <Field label="Default sign-off" v={branding.default_sign_off} on={(v) => setBranding({ ...branding, default_sign_off: v })} placeholder="Talk soon," />
+          <Field id="branding-sign-off" label="Default sign-off" v={branding.default_sign_off} on={(v) => setBranding({ ...branding, default_sign_off: v })} placeholder="Talk soon," />
         </div>
 
         {/* Reply-to verification block */}
         <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
           <div className="flex items-start gap-3">
-            <Mail className="w-4 h-4 text-accent mt-0.5" />
+            <Mail className="w-4 h-4 text-accent mt-0.5" aria-hidden="true" />
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <h4 className="text-sm font-semibold">Reply-to email</h4>
-                {verifiedEmail ? (
-                  <Badge variant="secondary" className="gap-1 text-[10px]"><ShieldCheck className="w-3 h-3" /> Verified</Badge>
-                ) : pendingEmail ? (
-                  <Badge variant="outline" className="text-[10px]">Pending verification</Badge>
-                ) : (
-                  <Badge variant="outline" className="text-[10px]">Not set</Badge>
-                )}
+                <div role="status" aria-live="polite">
+                  {verifiedEmail ? (
+                    <Badge variant="secondary" className="gap-1 text-[10px]"><ShieldCheck className="w-3 h-3" aria-hidden="true" /> Verified</Badge>
+                  ) : pendingEmail ? (
+                    <Badge variant="outline" className="text-[10px]">Pending verification</Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-[10px]">Not set</Badge>
+                  )}
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p id="branding-reply-to-help" className="text-xs text-muted-foreground mt-1">
                 Emails are sent from <code className="text-foreground">notify@closesync.io</code> — when a client hits Reply, the message lands in your verified inbox below.
               </p>
             </div>
@@ -170,14 +175,18 @@ export default function BrandingCard({ onSaved }: { onSaved?: (b: Branding) => v
             <p className="text-xs"><span className="text-muted-foreground">Awaiting confirmation at:</span> <span className="font-medium">{pendingEmail}</span></p>
           )}
           <div className="flex gap-2">
+            <Label htmlFor="branding-reply-to" className="sr-only">Reply-to email address</Label>
             <Input
+              id="branding-reply-to"
               type="email"
+              autoComplete="email"
+              aria-describedby="branding-reply-to-help"
               placeholder="you@business.com"
               value={replyToInput}
               onChange={(e) => setReplyToInput(e.target.value)}
             />
-            <Button onClick={requestVerification} disabled={verifying} className="gap-2 shrink-0">
-              {verifying ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+            <Button onClick={requestVerification} disabled={verifying} aria-busy={verifying} className="gap-2 shrink-0">
+              {verifying ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <ShieldCheck className="w-4 h-4" aria-hidden="true" />}
               {verifiedEmail && replyToInput.trim().toLowerCase() === verifiedEmail ? "Resend" : "Send verification"}
             </Button>
           </div>
@@ -187,11 +196,11 @@ export default function BrandingCard({ onSaved }: { onSaved?: (b: Branding) => v
   );
 }
 
-function Field({ label, v, on, placeholder }: { label: string; v: string; on: (s: string) => void; placeholder?: string }) {
+function Field({ id, label, v, on, placeholder }: { id: string; label: string; v: string; on: (s: string) => void; placeholder?: string }) {
   return (
     <div>
-      <Label className="text-xs">{label}</Label>
-      <Input className="mt-1.5" value={v} onChange={(e) => on(e.target.value)} placeholder={placeholder} />
+      <Label htmlFor={id} className="text-xs">{label}</Label>
+      <Input id={id} className="mt-1.5" value={v} onChange={(e) => on(e.target.value)} placeholder={placeholder} />
     </div>
   );
 }

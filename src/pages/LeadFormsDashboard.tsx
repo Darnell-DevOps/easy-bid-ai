@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ClipboardList, Copy, ExternalLink, Loader2, Plus, Trash2 } from "lucide-react";
+import { AccessibleLoadingState } from "@/components/ui/accessible-loading-state";
 
 interface LeadForm {
   id: string;
@@ -227,15 +228,15 @@ export default function LeadFormsDashboard() {
             <Button asChild variant="outline">
               <Link to="/dashboard/lead-inbox">View Lead Inbox</Link>
             </Button>
-            <Button onClick={create} disabled={creating} className="gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
-              {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+            <Button onClick={create} disabled={creating} aria-busy={creating} className="gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
+              {creating ? <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
               New form
             </Button>
           </div>
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-12"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+          <AccessibleLoadingState label="Loading lead forms" className="py-12" />
         ) : forms.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-card/30 p-12 text-center">
             <ClipboardList className="w-10 h-10 mx-auto text-muted-foreground/60 mb-3" />
@@ -265,15 +266,38 @@ export default function LeadFormsDashboard() {
                   </Badge>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Switch checked={f.is_active} onCheckedChange={(v) => toggleActive(f.id, v)} />
-                  <Button size="icon" variant="ghost" onClick={() => copyLink(f.slug)} title="Copy link">
-                    <Copy className="w-3.5 h-3.5" />
+                  <Switch
+                    checked={f.is_active}
+                    onCheckedChange={(v) => toggleActive(f.id, v)}
+                    aria-label={`${f.is_active ? "Disable" : "Enable"} lead form: ${f.name}`}
+                  />
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => copyLink(f.slug)}
+                    title="Copy link"
+                    aria-label={`Copy link for ${f.name}`}
+                  >
+                    <Copy aria-hidden="true" className="w-3.5 h-3.5" />
                   </Button>
-                  <Button size="icon" variant="ghost" onClick={() => window.open(`/f/${f.slug}`, "_blank")} title="Open">
-                    <ExternalLink className="w-3.5 h-3.5" />
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => window.open(`/f/${f.slug}`, "_blank")}
+                    title="Open"
+                    aria-label={`Open ${f.name}`}
+                  >
+                    <ExternalLink aria-hidden="true" className="w-3.5 h-3.5" />
                   </Button>
-                  <Button size="icon" variant="ghost" onClick={() => remove(f.id)} title="Delete" className="text-rose-500 hover:text-rose-600">
-                    <Trash2 className="w-3.5 h-3.5" />
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => remove(f.id)}
+                    title="Delete"
+                    className="text-rose-500 hover:text-rose-600"
+                    aria-label={`Delete ${f.name}`}
+                  >
+                    <Trash2 aria-hidden="true" className="w-3.5 h-3.5" />
                   </Button>
                 </div>
               </div>

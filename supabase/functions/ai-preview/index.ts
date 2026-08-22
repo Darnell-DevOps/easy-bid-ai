@@ -1,5 +1,6 @@
 // AI Preview — generates short sample outputs based on user's AI preferences.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { enforceAiRateLimit } from "../_shared/abuse-rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -44,6 +45,8 @@ Deno.serve(async (req) => {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const rateLimited = await enforceAiRateLimit(req, u.user.id, { source: "ai-preview" });
+    if (rateLimited) return rateLimited;
 
     const { prefs } = (await req.json()) as { prefs: Prefs };
 

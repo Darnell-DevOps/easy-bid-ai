@@ -1,6 +1,7 @@
 import { memo, useEffect, useState } from "react";
 import { AnimateIn } from "@/hooks/use-scroll-animation";
-import { Sparkles, FileText, Inbox, PenLine, LayoutDashboard, Send, Brain, CheckCircle, Loader2 } from "lucide-react";
+import { Sparkles, FileText, Inbox, PenLine, LayoutDashboard, Send, Brain, CheckCircle, Pause, Play } from "lucide-react";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 
 const capabilities = [
   {
@@ -47,9 +48,14 @@ const feedScript: FeedItem[] = [
   { icon: Brain, text: "Churn risk flagged on Globex retainer", meta: "Last login · 14 days ago", tone: "live" },
 ];
 
-function useTypewriter(text: string, key: number, speed = 22) {
+function useTypewriter(text: string, key: number, paused: boolean, speed = 22) {
   const [out, setOut] = useState("");
   useEffect(() => {
+    if (paused) {
+      setOut(text);
+      return;
+    }
+
     setOut("");
     let i = 0;
     const id = setInterval(() => {
@@ -58,17 +64,21 @@ function useTypewriter(text: string, key: number, speed = 22) {
       if (i >= text.length) clearInterval(id);
     }, speed);
     return () => clearInterval(id);
-  }, [text, key, speed]);
+  }, [text, key, paused, speed]);
   return out;
 }
 
 function AIAssistant({ embedded = false }: { embedded?: boolean } = {}) {
   const [tick, setTick] = useState(0);
+  const [userPlaying, setUserPlaying] = useState<boolean | null>(null);
+  const reducedMotion = useReducedMotion();
+  const paused = userPlaying === null ? reducedMotion : !userPlaying;
 
   useEffect(() => {
+    if (paused) return;
     const id = setInterval(() => setTick((t) => t + 1), 2400);
     return () => clearInterval(id);
-  }, []);
+  }, [paused]);
 
   // Rolling window of 4 visible items with newest on top
   const visible: FeedItem[] = Array.from({ length: 4 }).map((_, i) => {
@@ -76,10 +86,11 @@ function AIAssistant({ embedded = false }: { embedded?: boolean } = {}) {
     return feedScript[idx];
   });
   const latest = visible[0];
-  const typed = useTypewriter(latest.text, tick, 22);
+  const typed = useTypewriter(latest.text, tick, paused, 22);
+  const motionControlLabel = paused ? "Play automatic AI activity" : "Pause automatic AI activity";
 
   return (
-    <section id="ai" className={`${embedded ? "py-10 md:py-14" : "py-24"} px-4 relative overflow-hidden scroll-mt-20 w-full`}>
+    <section id="ai" className={`${paused ? "motion-paused " : ""}${embedded ? "py-10 md:py-14" : "py-24"} px-4 relative overflow-hidden scroll-mt-20 w-full`}>
       {!embedded && (
         <div aria-hidden className="absolute inset-0 -z-10 pointer-events-none">
           <div
@@ -145,15 +156,23 @@ function AIAssistant({ embedded = false }: { embedded?: boolean } = {}) {
                       <p className="text-xs font-semibold text-foreground">CloseSync AI · activity</p>
                       <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        Working live across your accounts
+                        {paused ? "Demo paused" : "Working live across your accounts"}
                       </p>
                     </div>
                   </div>
-                  <Loader2 className="w-3.5 h-3.5 text-accent animate-spin" />
+                  <button
+                    type="button"
+                    aria-label={motionControlLabel}
+                    title={motionControlLabel}
+                    onClick={() => setUserPlaying(paused)}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-md text-accent hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    {paused ? <Play aria-hidden="true" className="h-3.5 w-3.5" /> : <Pause aria-hidden="true" className="h-3.5 w-3.5" />}
+                  </button>
                 </div>
 
                 {/* Feed */}
-                <div className="p-5 space-y-2.5 min-h-[340px]">
+                <div role="region" aria-label="Example AI activity" className="p-5 space-y-2.5 min-h-[340px]">
                   {visible.map((item, i) => {
                     const isLatest = i === 0;
                     const Icon = item.icon;

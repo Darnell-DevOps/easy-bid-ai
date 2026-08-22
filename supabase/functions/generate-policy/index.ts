@@ -5,6 +5,7 @@ import {
   planHasFeature,
   planUpgradeRequired,
 } from "../_shared/plan-entitlements.ts";
+import { enforceAiRateLimit } from "../_shared/abuse-rate-limit.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -37,6 +38,8 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const rateLimited = await enforceAiRateLimit(req, userData.user.id, { source: "generate-policy" });
+    if (rateLimited) return rateLimited;
 
     const {
       business_name,

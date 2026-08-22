@@ -158,8 +158,9 @@ export default function LeadAssistantSettings() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+      <div role="status" aria-live="polite" className="flex items-center justify-center py-12">
+        <Loader2 aria-hidden="true" className="w-5 h-5 animate-spin text-muted-foreground" />
+        <span className="sr-only">Loading Lead Assistant settings</span>
       </div>
     );
   }
@@ -171,7 +172,7 @@ export default function LeadAssistantSettings() {
           <p className="text-sm text-foreground">Unsaved Lead Assistant changes.</p>
           <div className="flex gap-2">
             <Button variant="ghost" size="sm" onClick={() => setPrefs(original)} disabled={saving}>Discard</Button>
-            <Button size="sm" onClick={save} disabled={saving}>
+            <Button size="sm" onClick={save} disabled={saving} aria-label="Save Lead Assistant changes" aria-busy={saving}>
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
             </Button>
           </div>
@@ -181,6 +182,7 @@ export default function LeadAssistantSettings() {
       <Section icon={Building2} title="Business profile" description="Shown to AI when drafting replies on your behalf.">
         <div className="space-y-4">
           <Field
+            id="lead-assistant-business-name"
             label="Business name"
             placeholder="e.g. Northbound Studio"
             value={prefs.business_name}
@@ -188,6 +190,7 @@ export default function LeadAssistantSettings() {
             max={120}
           />
           <Field
+            id="lead-assistant-services"
             label="Services offered"
             placeholder="e.g. Brand identity, websites, retainer creative direction."
             value={prefs.business_services}
@@ -196,6 +199,7 @@ export default function LeadAssistantSettings() {
             multiline
           />
           <Field
+            id="lead-assistant-ideal-client"
             label="Ideal client"
             placeholder="e.g. Series A SaaS founders needing a rebrand; established coaches launching a course."
             value={prefs.business_ideal_client}
@@ -205,6 +209,7 @@ export default function LeadAssistantSettings() {
             helper="Who you do your best work for — used by AI to score how well an inbound lead fits."
           />
           <Field
+            id="lead-assistant-target-audience"
             label="Who this isn't for / target audience"
             placeholder="e.g. Not a fit for pre-launch bootstrappers under $5k or one-off logo tweaks."
             value={prefs.business_target_audience}
@@ -214,44 +219,46 @@ export default function LeadAssistantSettings() {
             helper="Helps AI mark leads as Cold when they clearly don't match."
           />
           <Field
+            id="lead-assistant-booking-link"
             label="Booking link"
             placeholder="https://cal.com/yourname/intro"
             value={prefs.booking_link}
             onChange={(v) => set("booking_link", v)}
             max={300}
+            helper="The booking link is offered as a CTA when AI suggests a call."
           />
-          <p className="text-[11px] text-muted-foreground">
-            The booking link is offered as a CTA when AI suggests a call.
-          </p>
         </div>
       </Section>
 
       <Section icon={MessageSquareQuote} title="Voice & style" description="Controls how the assistant writes your replies.">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <Label className="text-xs text-muted-foreground mb-1.5 block">Tone of voice</Label>
-            <SelectField value={prefs.lead_reply_tone} onChange={(v) => set("lead_reply_tone", v)} options={TONES} />
+            <Label htmlFor="lead-assistant-tone" className="text-xs text-muted-foreground mb-1.5 block">Tone of voice</Label>
+            <SelectField id="lead-assistant-tone" value={prefs.lead_reply_tone} onChange={(v) => set("lead_reply_tone", v)} options={TONES} />
           </div>
           <div>
-            <Label className="text-xs text-muted-foreground mb-1.5 block">Default reply style</Label>
-            <SelectField value={prefs.lead_reply_style} onChange={(v) => set("lead_reply_style", v)} options={STYLES} />
+            <Label htmlFor="lead-assistant-reply-style" className="text-xs text-muted-foreground mb-1.5 block">Default reply style</Label>
+            <SelectField id="lead-assistant-reply-style" value={prefs.lead_reply_style} onChange={(v) => set("lead_reply_style", v)} options={STYLES} />
           </div>
           <div>
-            <Label className="text-xs text-muted-foreground mb-1.5 block">Length</Label>
-            <SelectField value={prefs.lead_reply_length} onChange={(v) => set("lead_reply_length", v)} options={LENGTHS} />
+            <Label htmlFor="lead-assistant-reply-length" className="text-xs text-muted-foreground mb-1.5 block">Length</Label>
+            <SelectField id="lead-assistant-reply-length" value={prefs.lead_reply_length} onChange={(v) => set("lead_reply_length", v)} options={LENGTHS} />
           </div>
         </div>
       </Section>
 
       <Section icon={PenLine} title="Signature" description="Appended to every drafted reply.">
+        <Label htmlFor="lead-assistant-email-signature" className="sr-only">Email signature</Label>
         <Textarea
+          id="lead-assistant-email-signature"
           value={prefs.email_signature}
           onChange={(e) => set("email_signature", e.target.value.slice(0, 600))}
           placeholder={"Best,\nYour name\nNorthbound Studio · northbound.studio"}
           rows={4}
+          aria-describedby="lead-assistant-email-signature-count"
           className="font-mono text-xs"
         />
-        <p className="text-[10px] text-muted-foreground mt-1.5 text-right">
+        <p id="lead-assistant-email-signature-count" className="text-[10px] text-muted-foreground mt-1.5 text-right">
           {prefs.email_signature.length} / 600
         </p>
       </Section>
@@ -286,8 +293,9 @@ export default function LeadAssistantSettings() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
             <div>
-              <Label className="text-xs text-muted-foreground mb-1.5 block">Minimum AI confidence</Label>
+              <Label htmlFor="lead-assistant-min-confidence" className="text-xs text-muted-foreground mb-1.5 block">Minimum AI confidence</Label>
               <SelectField
+                id="lead-assistant-min-confidence"
                 value={prefs.lead_auto_send_min_confidence}
                 onChange={(v) => set("lead_auto_send_min_confidence", v)}
                 options={CONFIDENCE}
@@ -303,17 +311,19 @@ export default function LeadAssistantSettings() {
           />
 
           <div className="mt-4">
-            <Label className="text-xs text-muted-foreground mb-1.5 block">Block-list keywords</Label>
-            <p className="text-[11px] text-muted-foreground mb-2">
+            <Label htmlFor="lead-assistant-block-keyword" className="text-xs text-muted-foreground mb-1.5 block">Block-list keywords</Label>
+            <p id="lead-assistant-block-keyword-help" className="text-[11px] text-muted-foreground mb-2">
               If any of these words appear in the subject or body, the message will never be auto-sent —
               it will land in your review queue instead.
             </p>
             <div className="flex gap-2 mb-2">
               <Input
+                id="lead-assistant-block-keyword"
                 value={keywordDraft}
                 onChange={(e) => setKeywordDraft(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addKeyword(); } }}
                 placeholder="Add a keyword and press Enter"
+                aria-describedby="lead-assistant-block-keyword-help"
                 className="h-9"
               />
               <Button type="button" variant="outline" size="sm" onClick={addKeyword}>Add</Button>
@@ -323,15 +333,21 @@ export default function LeadAssistantSettings() {
                 <p className="text-[11px] text-muted-foreground italic">No keywords — anything could match.</p>
               )}
               {prefs.lead_auto_send_block_keywords.map((k) => (
-                <Badge
+                <button
                   key={k}
-                  variant="outline"
-                  className="text-[11px] gap-1 cursor-pointer hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
+                  type="button"
                   onClick={() => removeKeyword(k)}
-                  title="Click to remove"
+                  aria-label={`Remove ${k} from block list`}
+                  className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
-                  {k} ×
-                </Badge>
+                  <Badge
+                    variant="outline"
+                    className="text-[11px] gap-1 cursor-pointer hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
+                    aria-hidden="true"
+                  >
+                    {k} ×
+                  </Badge>
+                </button>
               ))}
             </div>
           </div>
@@ -350,7 +366,7 @@ export default function LeadAssistantSettings() {
         <p className="text-xs text-muted-foreground flex items-center gap-1.5">
           <CalendarClock className="w-3.5 h-3.5" /> Changes apply to drafts created from now on.
         </p>
-        <Button onClick={save} disabled={!dirty || saving}>
+        <Button onClick={save} disabled={!dirty || saving} aria-label="Save Lead Assistant changes" aria-busy={saving}>
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
         </Button>
       </div>
@@ -388,17 +404,19 @@ function Section({
 }
 
 function SelectField({
+  id,
   value,
   onChange,
   options,
 }: {
+  id: string;
   value: string;
   onChange: (v: string) => void;
   options: { value: string; label: string }[];
 }) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+      <SelectTrigger id={id} className="h-9"><SelectValue /></SelectTrigger>
       <SelectContent>
         {options.map((o) => (
           <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
@@ -425,12 +443,13 @@ function ToggleRow({
         <p className="text-sm text-foreground">{label}</p>
         {sublabel && <p className="text-[11px] text-muted-foreground mt-0.5">{sublabel}</p>}
       </div>
-      <Switch checked={checked} onCheckedChange={onChange} />
+      <Switch checked={checked} onCheckedChange={onChange} aria-label={label} />
     </div>
   );
 }
 
 function Field({
+  id,
   label,
   value,
   onChange,
@@ -439,6 +458,7 @@ function Field({
   multiline,
   helper,
 }: {
+  id: string;
   label: string;
   value: string;
   onChange: (v: string) => void;
@@ -449,23 +469,27 @@ function Field({
 }) {
   return (
     <div>
-      <Label className="text-xs text-muted-foreground mb-1.5 block">{label}</Label>
+      <Label htmlFor={id} className="text-xs text-muted-foreground mb-1.5 block">{label}</Label>
       {multiline ? (
         <Textarea
+          id={id}
           value={value}
           onChange={(e) => onChange(max ? e.target.value.slice(0, max) : e.target.value)}
           placeholder={placeholder}
           rows={3}
+          aria-describedby={helper ? `${id}-help` : undefined}
         />
       ) : (
         <Input
+          id={id}
           value={value}
           onChange={(e) => onChange(max ? e.target.value.slice(0, max) : e.target.value)}
           placeholder={placeholder}
+          aria-describedby={helper ? `${id}-help` : undefined}
           className="h-9"
         />
       )}
-      {helper && <p className="text-[11px] text-muted-foreground mt-1">{helper}</p>}
+      {helper && <p id={`${id}-help`} className="text-[11px] text-muted-foreground mt-1">{helper}</p>}
     </div>
   );
 }

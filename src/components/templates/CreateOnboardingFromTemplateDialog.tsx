@@ -194,9 +194,9 @@ export default function CreateOnboardingFromTemplateDialog({
         {!createdToken ? (
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Client</Label>
+              <Label htmlFor="onboarding-template-client">Client</Label>
               <Select value={clientId} onValueChange={onPickClient}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="onboarding-template-client"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__new__">+ New client</SelectItem>
                   {clients.map((c) => (
@@ -208,20 +208,25 @@ export default function CreateOnboardingFromTemplateDialog({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Client name</Label>
+              <Label htmlFor="onboarding-template-client-name">Client name</Label>
               <Input
+                id="onboarding-template-client-name"
                 value={clientName}
                 onChange={(e) => setClientName(e.target.value)}
                 placeholder="Sarah Johnson"
+                autoComplete="name"
+                required
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Client email (optional)</Label>
+              <Label htmlFor="onboarding-template-client-email">Client email (optional)</Label>
               <Input
+                id="onboarding-template-client-email"
                 type="email"
                 value={clientEmail}
                 onChange={(e) => setClientEmail(e.target.value)}
                 placeholder="sarah@acme.com"
+                autoComplete="email"
               />
             </div>
             {prefillCount > 0 && (
@@ -229,10 +234,15 @@ export default function CreateOnboardingFromTemplateDialog({
                 <Sparkles className="w-4 h-4 text-purple shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <Label className="text-sm font-medium">Pre-fill from lead intake</Label>
-                    <Switch checked={usePrefill} onCheckedChange={setUsePrefill} />
+                    <p className="text-sm font-medium">Pre-fill from lead intake</p>
+                    <Switch
+                      checked={usePrefill}
+                      onCheckedChange={setUsePrefill}
+                      aria-label="Pre-fill onboarding from lead intake"
+                      aria-describedby="onboarding-template-prefill-help"
+                    />
                   </div>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                  <p id="onboarding-template-prefill-help" className="text-[11px] text-muted-foreground mt-0.5">
                     {prefillCount} answer{prefillCount > 1 ? "s" : ""} from this client's lead form
                     {usePrefill ? " will be pre-filled." : " will be skipped."}
                   </p>
@@ -242,18 +252,25 @@ export default function CreateOnboardingFromTemplateDialog({
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3">
+            <div role="status" className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3">
               <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
               <p className="text-xs text-foreground">
                 {clientName}'s onboarding is ready. The link below works without a login.
               </p>
             </div>
             <div className="space-y-1.5">
-              <Label>Share this link</Label>
+              <Label htmlFor="onboarding-template-share-link">Share this link</Label>
               <div className="flex gap-2">
-                <Input value={link} readOnly className="font-mono text-xs" />
-                <Button size="icon" variant="outline" onClick={copyLink}>
-                  <Copy className="w-4 h-4" />
+                <Input
+                  id="onboarding-template-share-link"
+                  value={link}
+                  readOnly
+                  autoComplete="off"
+                  spellCheck={false}
+                  className="font-mono text-xs"
+                />
+                <Button size="icon" variant="outline" onClick={copyLink} aria-label="Copy onboarding link">
+                  <Copy aria-hidden="true" className="w-4 h-4" />
                 </Button>
               </div>
             </div>
@@ -266,8 +283,8 @@ export default function CreateOnboardingFromTemplateDialog({
               <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={submitting}>
                 Cancel
               </Button>
-              <Button onClick={handleCreate} disabled={submitting}>
-                {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              <Button onClick={handleCreate} disabled={submitting} aria-busy={submitting}>
+                {submitting ? <Loader2 aria-hidden="true" className="w-4 h-4 mr-2 animate-spin" /> : null}
                 Create onboarding
               </Button>
             </>

@@ -267,17 +267,20 @@ function Grid({ items, onUse, onEdit, onDuplicate, onSetDefault, onResetBuiltin,
         return (
           <Card
             key={t.rowId || t.id}
-            role="button"
-            tabIndex={0}
+            data-keyboard-proxy="true"
             onClick={() => onUse(t)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                onUse(t);
-              }
-            }}
-            className="group relative cursor-pointer hover:shadow-lg hover:border-accent/40 hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="group relative cursor-pointer hover:shadow-lg hover:border-accent/40 hover:-translate-y-0.5 transition-all duration-200"
           >
+            <button
+              type="button"
+              data-keyboard-proxy="true"
+              aria-label={`Use ${t.name} template`}
+              className="absolute inset-0 pointer-events-none rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+              onClick={(event) => {
+                event.stopPropagation();
+                onUse(t);
+              }}
+            />
             <div className="absolute top-2 right-2 z-10 flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
               {t.isDefault && (
                 <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 text-[10px] px-1.5 py-0 gap-1 h-5">
@@ -292,8 +295,8 @@ function Grid({ items, onUse, onEdit, onDuplicate, onSetDefault, onResetBuiltin,
               )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-6 w-6">
-                    <MoreVertical className="w-3.5 h-3.5" />
+                  <Button variant="ghost" size="icon" className="h-6 w-6" aria-label={`More actions for ${t.name}`}>
+                    <MoreVertical aria-hidden="true" className="w-3.5 h-3.5" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">

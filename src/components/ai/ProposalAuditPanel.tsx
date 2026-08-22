@@ -24,7 +24,7 @@ export default function ProposalAuditPanel({ proposalId }: ProposalAuditPanelPro
 
   return (
     <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-      <CardContent className="p-5 space-y-4">
+      <CardContent className="p-5 space-y-4" aria-busy={generating || loading}>
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center">
@@ -41,6 +41,7 @@ export default function ProposalAuditPanel({ proposalId }: ProposalAuditPanelPro
             size="sm"
             onClick={refresh}
             disabled={generating || loading}
+            aria-busy={generating}
             className="gap-1.5"
           >
             {generating ? (
@@ -60,10 +61,13 @@ export default function ProposalAuditPanel({ proposalId }: ProposalAuditPanelPro
         </div>
 
         {error && (
-          <div className="text-xs text-rose-500 bg-rose-500/10 border border-rose-500/20 rounded p-2">
+          <div role="alert" aria-atomic="true" className="text-xs text-rose-500 bg-rose-500/10 border border-rose-500/20 rounded p-2">
             {error}
           </div>
         )}
+        <p role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+          {generating ? "Proposal audit in progress." : hasResult ? "Proposal audit results ready." : ""}
+        </p>
 
         {hasResult && (
           <div className="space-y-4">

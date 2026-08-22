@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Table,
   TableBody,
+  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -24,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { Users, Plus, Search, Sparkles, Lightbulb, Activity, ArrowRight, Eye, UserCheck } from "lucide-react";
 import { WhatsAppButton } from "@/components/whatsapp/WhatsAppButton";
+import { AccessibleLoadingState } from "@/components/ui/accessible-loading-state";
 
 interface Client {
   id: string;
@@ -251,11 +253,14 @@ export default function Clients() {
 
         {/* Table */}
         {loading ? (
-          <div className="space-y-2">
-            {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-14 w-full rounded-lg" />
-            ))}
-          </div>
+          <>
+            <AccessibleLoadingState label="Loading clients" className="sr-only" />
+            <div className="space-y-2" aria-hidden="true">
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-14 w-full rounded-lg" />
+              ))}
+            </div>
+          </>
         ) : clients.length === 0 ? (
           <Card className="border-dashed">
             <CardContent className="p-12 text-center">
@@ -286,7 +291,8 @@ export default function Clients() {
         ) : (
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
-              <Table>
+              <Table scrollLabel="Clients table">
+                <TableCaption className="sr-only">Clients matching the current search and status filters.</TableCaption>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
                     <TableHead>Client</TableHead>

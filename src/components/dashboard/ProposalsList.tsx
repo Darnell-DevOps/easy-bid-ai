@@ -161,7 +161,22 @@ export default function ProposalsList({ proposals, loading, onRefresh }: Proposa
       ) : (
         <div className="space-y-2">
           {filtered.map((p) => (
-            <Card key={p.id} className="hover:shadow-md hover:border-accent/20 transition-all cursor-pointer group" onClick={() => navigate(`/dashboard/proposal/${p.id}`)}>
+            <Card
+              key={p.id}
+              data-keyboard-proxy="true"
+              className="relative hover:shadow-md hover:border-accent/20 transition-all cursor-pointer group"
+              onClick={() => navigate(`/dashboard/proposal/${p.id}`)}
+            >
+              <button
+                type="button"
+                data-keyboard-proxy="true"
+                aria-label={`Open proposal for ${p.client_name}`}
+                className="absolute inset-0 pointer-events-none rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  navigate(`/dashboard/proposal/${p.id}`);
+                }}
+              />
               <CardContent className="flex items-center justify-between p-4">
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
@@ -189,8 +204,13 @@ export default function ProposalsList({ proposals, loading, onRefresh }: Proposa
                   <span className="text-xs text-muted-foreground hidden md:block">{new Date(p.created_at).toLocaleDateString()}</span>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <MoreVertical className="w-4 h-4" />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                        aria-label={`More actions for ${p.client_name}`}
+                      >
+                        <MoreVertical aria-hidden="true" className="w-4 h-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>

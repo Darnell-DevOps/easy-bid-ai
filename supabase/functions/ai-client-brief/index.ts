@@ -1,5 +1,6 @@
 // AI Client Brief — "Explain this client" — 4-line snapshot for the user.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { enforceAiRateLimit } from "../_shared/abuse-rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -40,6 +41,8 @@ Deno.serve(async (req) => {
       });
     }
     const userId = u.user.id;
+    const rateLimited = await enforceAiRateLimit(req, userId, { source: "ai-client-brief" });
+    if (rateLimited) return rateLimited;
 
     const svc = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 

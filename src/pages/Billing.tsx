@@ -120,7 +120,12 @@ export default function Billing() {
             </div>
             {!isUnlimited && (
               <div className="mt-4">
-                <Progress value={usagePct} className="h-1.5" />
+                <Progress
+                  value={usagePct}
+                  aria-label="Monthly proposal usage"
+                  aria-valuetext={`${countThisMonth} of ${limit} proposals used this month`}
+                  className="h-1.5"
+                />
                 <p className="text-xs text-muted-foreground mt-2">
                   {remaining === 0
                     ? `You've used all ${limit} proposals this month.`

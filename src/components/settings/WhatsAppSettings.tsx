@@ -206,6 +206,7 @@ export default function WhatsAppSettings() {
             checked={settings.enabled}
             onCheckedChange={(v) => setSettings({ ...settings, enabled: v })}
             disabled={!configured && !settings.enabled}
+            aria-label="Enable WhatsApp sending"
           />
         </div>
 
@@ -227,6 +228,7 @@ export default function WhatsAppSettings() {
                 checked={(settings as any)[row.key]}
                 onCheckedChange={(v) => setSettings({ ...settings, [row.key]: v } as Settings)}
                 disabled={!settings.enabled}
+                aria-label={row.label}
               />
             </div>
           ))}

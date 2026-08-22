@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
   LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip,
@@ -22,6 +22,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { ChartDataTable } from "@/components/ui/chart-data-table";
 
 type UserStats = {
   total_users: number;
@@ -395,14 +396,24 @@ export default function AdminDashboard() {
                 {signupChart.length === 0 ? (
                   <div className="h-full flex items-center justify-center text-sm text-muted-foreground">No signups yet</div>
                 ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={signupChart}>
-                      <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} allowDecimals={false} />
-                      <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                      <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
-                    </LineChart>
-                  </ResponsiveContainer>
+                  <>
+                    <div aria-hidden="true" className="h-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={signupChart}>
+                          <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                          <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} allowDecimals={false} />
+                          <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                          <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <ChartDataTable
+                      caption="Daily signups during the last 90 days."
+                      labelHeader="Day"
+                      valueHeader="Signups"
+                      rows={signupChart.map((entry) => ({ label: entry.day, value: entry.count.toLocaleString() }))}
+                    />
+                  </>
                 )}
               </div>
             </CardContent>
@@ -430,14 +441,24 @@ export default function AdminDashboard() {
                   {monthlyRevChart.length === 0 ? (
                     <div className="h-full flex items-center justify-center text-xs text-muted-foreground">No paid revenue yet</div>
                   ) : (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={monthlyRevChart}>
-                        <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                        <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                        <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} formatter={(v: any) => `$${v}`} />
-                        <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
+                    <>
+                      <div aria-hidden="true" className="h-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={monthlyRevChart}>
+                            <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                            <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                            <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} formatter={(v: any) => `$${v}`} />
+                            <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <ChartDataTable
+                        caption="Monthly paid revenue recorded in the application."
+                        labelHeader="Month"
+                        valueHeader="Revenue"
+                        rows={monthlyRevChart.map((entry) => ({ label: entry.month, value: `$${entry.revenue.toLocaleString()}` }))}
+                      />
+                    </>
                   )}
                 </div>
               </CardContent>
@@ -495,7 +516,8 @@ export default function AdminDashboard() {
           </h2>
           <Card>
             <CardContent className="pt-6 overflow-x-auto">
-              <Table>
+              <Table scrollLabel="Scheduled automation health table">
+                <TableCaption className="sr-only">Scheduled automation jobs, timing, status, and recovery actions.</TableCaption>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Job</TableHead>
@@ -567,7 +589,8 @@ export default function AdminDashboard() {
               </p>
             </CardHeader>
             <CardContent className="overflow-x-auto">
-              <Table>
+              <Table scrollLabel="Security activity table">
+                <TableCaption className="sr-only">Blocked and invalid traffic recorded during the last 24 hours.</TableCaption>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Last seen</TableHead>
@@ -612,7 +635,8 @@ export default function AdminDashboard() {
           </h2>
           <Card>
             <CardContent className="pt-6 overflow-x-auto">
-              <Table>
+              <Table scrollLabel="Unresolved client incidents table">
+                <TableCaption className="sr-only">Unresolved browser incidents and available resolution actions.</TableCaption>
                 <TableHeader>
                   <TableRow>
                     <TableHead>When</TableHead>
@@ -662,16 +686,19 @@ export default function AdminDashboard() {
             <CardContent className="pt-6">
               <div className="flex gap-2 mb-4">
                 <Input
+                  type="search"
+                  aria-label="Search users by email"
                   placeholder="Search by email…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && loadUsers(search)}
                   className="max-w-sm"
                 />
-                <Button onClick={() => loadUsers(search)} disabled={loadingUsers}>Search</Button>
+                <Button onClick={() => loadUsers(search)} disabled={loadingUsers} aria-busy={loadingUsers}>Search</Button>
               </div>
               <div className="overflow-x-auto">
-                <Table>
+                <Table scrollLabel="Per-user account breakdown table">
+                  <TableCaption className="sr-only">User accounts, activity, product usage, revenue, and administrative actions.</TableCaption>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Email</TableHead>
@@ -755,7 +782,8 @@ export default function AdminDashboard() {
           <Card>
             <CardContent className="pt-6">
               <div className="overflow-x-auto">
-                <Table>
+                <Table scrollLabel="Recent administrative activity table">
+                  <TableCaption className="sr-only">Recent administrative actions and their affected accounts.</TableCaption>
                   <TableHeader>
                     <TableRow>
                       <TableHead>When</TableHead>
@@ -800,21 +828,38 @@ export default function AdminDashboard() {
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label>Email</Label>
-              <Input value={editEmail} onChange={(e) => setEditEmail(e.target.value)} />
+              <Label htmlFor="admin-edit-email">Email</Label>
+              <Input
+                id="admin-edit-email"
+                type="email"
+                autoComplete="email"
+                value={editEmail}
+                onChange={(e) => setEditEmail(e.target.value)}
+              />
             </div>
             <div className="space-y-1.5">
-              <Label>Full name</Label>
-              <Input value={editFullName} onChange={(e) => setEditFullName(e.target.value)} />
+              <Label htmlFor="admin-edit-full-name">Full name</Label>
+              <Input
+                id="admin-edit-full-name"
+                autoComplete="name"
+                value={editFullName}
+                onChange={(e) => setEditFullName(e.target.value)}
+              />
             </div>
             <div className="space-y-1.5">
-              <Label>Business name (optional)</Label>
-              <Input value={editBusinessName} onChange={(e) => setEditBusinessName(e.target.value)} placeholder="Leave blank to skip" />
+              <Label htmlFor="admin-edit-business-name">Business name (optional)</Label>
+              <Input
+                id="admin-edit-business-name"
+                autoComplete="organization"
+                value={editBusinessName}
+                onChange={(e) => setEditBusinessName(e.target.value)}
+                placeholder="Leave blank to skip"
+              />
             </div>
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setEditUser(null)} disabled={editBusy}>Cancel</Button>
-            <Button onClick={submitEdit} disabled={editBusy}>{editBusy ? "Saving…" : "Save changes"}</Button>
+            <Button onClick={submitEdit} disabled={editBusy} aria-busy={editBusy}>{editBusy ? "Saving…" : "Save changes"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -829,8 +874,10 @@ export default function AdminDashboard() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-1.5">
-            <Label>Type email to confirm</Label>
+            <Label htmlFor="admin-delete-confirm-email">Type email to confirm</Label>
             <Input
+              id="admin-delete-confirm-email"
+              type="email"
               value={deleteConfirm}
               onChange={(e) => setDeleteConfirm(e.target.value)}
               placeholder={deleteUser?.email ?? ""}
@@ -843,6 +890,7 @@ export default function AdminDashboard() {
               variant="destructive"
               onClick={submitDelete}
               disabled={deleteBusy || !deleteUser || deleteConfirm.trim() !== (deleteUser?.email ?? "").trim()}
+              aria-busy={deleteBusy}
             >
               {deleteBusy ? "Deleting…" : "Delete permanently"}
             </Button>

@@ -1,7 +1,6 @@
-// Sends a meeting notification + .ics invite to the host (logged-in user)
-// of a booking. Looks up the host's email from auth.users via service role,
-// so this can be invoked from public (anon) booking flows safely without
-// leaking the host email back to the client.
+// Sends a meeting notification + .ics invite to the host of a booking.
+// Calls are restricted to the service role or the authenticated booking owner;
+// public booking creation invokes this function internally after insertion.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -65,8 +64,52 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "method_not_allowed" }), {
+      status: 405,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !serviceKey) {
+    console.error("notify-booking-host is missing server configuration");
+    return new Response(JSON.stringify({ error: "temporarily_unavailable" }), {
+      status: 503,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   try {
+    const authHeader =
+      req.headers.get("Authorization") || req.headers.get("authorization") || "";
+    const bearer = authHeader.startsWith("Bearer ")
+      ? authHeader.slice(7).trim()
+      : "";
+    const isInternal = bearer === serviceKey;
+    let callerUserId: string | null = null;
+
+    if (!isInternal) {
+      const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+      if (!bearer || !anonKey) {
+        return new Response(JSON.stringify({ error: "unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const userClient = createClient(supabaseUrl, anonKey);
+      const { data: authData, error: authError } =
+        await userClient.auth.getUser(bearer);
+      if (authError || !authData.user) {
+        return new Response(JSON.stringify({ error: "unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      callerUserId = authData.user.id;
+    }
+
     const { booking_id } = await req.json();
     if (!booking_id || typeof booking_id !== "string") {
       return new Response(JSON.stringify({ error: "booking_id required" }), {
@@ -75,8 +118,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const admin = createClient(supabaseUrl, serviceKey);
 
     const { data: booking, error: bErr } = await admin
@@ -87,6 +128,12 @@ Deno.serve(async (req) => {
     if (bErr || !booking) {
       return new Response(JSON.stringify({ error: "booking not found" }), {
         status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!isInternal && booking.user_id !== callerUserId) {
+      return new Response(JSON.stringify({ error: "forbidden" }), {
+        status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

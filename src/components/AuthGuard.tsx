@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
 import { handleLostSession, markSignedIn } from "@/lib/session-expiry";
+import { AccessibleLoadingState } from "@/components/ui/accessible-loading-state";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
@@ -48,9 +48,11 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
+      <AccessibleLoadingState
+        label="Checking your session"
+        className="min-h-screen bg-background"
+        spinnerClassName="h-6 w-6"
+      />
     );
   }
 

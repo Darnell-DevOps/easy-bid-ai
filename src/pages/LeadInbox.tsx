@@ -12,6 +12,7 @@ import { Inbox, Loader2, UserPlus, Archive, FileDown, Sparkles, Copy, Check } fr
 import type { SmartField } from "@/lib/form-fields";
 import LeadScoreBadge from "@/components/ai/LeadScoreBadge";
 import { scoreTone, scoreLabel } from "@/lib/leadScore";
+import { AccessibleLoadingState } from "@/components/ui/accessible-loading-state";
 
 function parseFileValue(v: string): { path: string; name: string; size?: number; type?: string } | null {
   if (!v || typeof v !== "string") return null;
@@ -160,7 +161,7 @@ export default function LeadInbox() {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-12"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+          <AccessibleLoadingState label="Loading lead inbox" className="py-12" />
         ) : leads.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-card/30 p-12 text-center">
             <Inbox className="w-10 h-10 mx-auto text-muted-foreground/60 mb-3" />
@@ -169,22 +170,46 @@ export default function LeadInbox() {
             <Button asChild><Link to="/dashboard/lead-forms">Create a form</Link></Button>
           </div>
         ) : (
-          <div className="rounded-xl border border-border bg-card overflow-hidden">
+          <div
+            role="region"
+            aria-label="Lead inbox table"
+            tabIndex={0}
+            className="rounded-xl border border-border bg-card overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
             <table className="w-full text-sm">
+              <caption className="sr-only">Leads received from public forms and manual entry.</caption>
               <thead className="bg-muted/30 text-xs uppercase tracking-wider text-muted-foreground">
                 <tr>
-                  <th className="text-left px-4 py-2.5 font-medium">Name</th>
-                  <th className="text-left px-4 py-2.5 font-medium hidden md:table-cell">Email</th>
-                  <th className="text-left px-4 py-2.5 font-medium hidden lg:table-cell">Form</th>
-                  <th className="text-left px-4 py-2.5 font-medium">Status</th>
-                  <th className="text-left px-4 py-2.5 font-medium hidden md:table-cell">Score</th>
-                  <th className="text-left px-4 py-2.5 font-medium hidden sm:table-cell">Received</th>
+                  <th scope="col" className="text-left px-4 py-2.5 font-medium">Name</th>
+                  <th scope="col" className="text-left px-4 py-2.5 font-medium hidden md:table-cell">Email</th>
+                  <th scope="col" className="text-left px-4 py-2.5 font-medium hidden lg:table-cell">Form</th>
+                  <th scope="col" className="text-left px-4 py-2.5 font-medium">Status</th>
+                  <th scope="col" className="text-left px-4 py-2.5 font-medium hidden md:table-cell">Score</th>
+                  <th scope="col" className="text-left px-4 py-2.5 font-medium hidden sm:table-cell">Received</th>
                 </tr>
               </thead>
               <tbody>
                 {leads.map((l) => (
-                  <tr key={l.id} className="border-t border-border hover:bg-muted/20 cursor-pointer" onClick={() => setSelected(l)}>
-                    <td className="px-4 py-3 font-medium text-foreground">{l.name || <span className="text-muted-foreground">Anonymous</span>}</td>
+                  <tr
+                    key={l.id}
+                    data-keyboard-proxy="true"
+                    className="border-t border-border hover:bg-muted/20 cursor-pointer"
+                    onClick={() => setSelected(l)}
+                  >
+                    <td className="px-4 py-3 font-medium text-foreground">
+                      <button
+                        type="button"
+                        data-keyboard-proxy="true"
+                        aria-label={`Open lead ${l.name || l.email || "Anonymous"}`}
+                        className="w-full rounded-sm text-left font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setSelected(l);
+                        }}
+                      >
+                        {l.name || <span className="text-muted-foreground">Anonymous</span>}
+                      </button>
+                    </td>
                     <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{l.email || "—"}</td>
                     <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">{l.form_id ? forms[l.form_id]?.name || "Form" : "Manual"}</td>
                     <td className="px-4 py-3">
@@ -353,8 +378,8 @@ export default function LeadInbox() {
                   ) : (
                     <Button className="gap-2" onClick={() => convert(selected)}><UserPlus className="w-4 h-4" />Convert to client</Button>
                   )}
-                  <Button variant="outline" className="gap-2" onClick={() => requalify(selected)} disabled={requalifying}>
-                    {requalifying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  <Button variant="outline" className="gap-2" onClick={() => requalify(selected)} disabled={requalifying} aria-busy={requalifying}>
+                    {requalifying ? <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                     {selected.qualified_at ? "Re-qualify" : "Qualify with AI"}
                   </Button>
                   {selected.status !== "archived" && (

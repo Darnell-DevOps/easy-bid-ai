@@ -188,8 +188,8 @@ export default function ReschedulePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      <div className="min-h-screen flex items-center justify-center bg-background" role="status" aria-live="polite" aria-label="Loading reschedule details">
+        <Loader2 aria-hidden="true" className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -197,7 +197,7 @@ export default function ReschedulePage() {
   if (error || !data || !linkSpec) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-6">
-        <div className="text-center max-w-md">
+        <div className="text-center max-w-md" role="alert">
           <h1 className="text-2xl font-bold text-foreground mb-2">Link unavailable</h1>
           <p className="text-muted-foreground text-sm">{error || "This reschedule link is no longer valid."}</p>
         </div>
@@ -208,7 +208,7 @@ export default function ReschedulePage() {
   if (done) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-6 py-12">
-        <div className="max-w-md w-full text-center space-y-5">
+        <div className="max-w-md w-full text-center space-y-5" role="status" aria-live="polite">
           <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15">
             <CheckCircle2 className="w-8 h-8 text-emerald-500" />
           </div>
@@ -292,15 +292,17 @@ export default function ReschedulePage() {
                   variant="ghost" size="icon" className="h-8 w-8"
                   onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}
                   disabled={month <= startOfMonth(today)}
+                  aria-label="Show previous month"
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft aria-hidden="true" className="w-4 h-4" />
                 </Button>
                 <span className="text-sm font-medium text-foreground">{monthLabel}</span>
                 <Button
                   variant="ghost" size="icon" className="h-8 w-8"
                   onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}
+                  aria-label="Show next month"
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight aria-hidden="true" className="w-4 h-4" />
                 </Button>
               </div>
 
@@ -362,13 +364,18 @@ export default function ReschedulePage() {
                                 {formatTime(s)}
                               </button>
                               <button
+                                type="button"
                                 onClick={confirm}
                                 disabled={submitting}
+                                aria-busy={submitting}
                                 className="py-2.5 rounded-lg bg-purple text-sm font-semibold text-white hover:bg-purple/90 transition flex items-center justify-center gap-2"
                               >
-                                {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                                {submitting && <Loader2 aria-hidden="true" className="w-3.5 h-3.5 animate-spin" />}
                                 Confirm
                               </button>
+                              <span role="status" aria-live="polite" className="sr-only">
+                                {submitting ? "Rescheduling booking." : ""}
+                              </span>
                             </div>
                           );
                         }

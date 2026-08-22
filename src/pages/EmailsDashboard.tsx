@@ -9,16 +9,17 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Send, Loader2, AlertCircle, CheckCircle2, Ban, Clock, FileText, List } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import TemplatesPanel from "@/components/emails/TemplatesPanel";
+import { AccessibleLoadingState } from "@/components/ui/accessible-loading-state";
 
 type Range = "24h" | "7d" | "30d";
 
@@ -165,7 +166,7 @@ export default function EmailsDashboard() {
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Mail className="w-6 h-6 text-accent" /> Emails
+              <Mail className="w-6 h-6 text-accent" aria-hidden="true" /> Emails
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
               Delivery log for transactional emails sent from your workspace.
@@ -175,9 +176,9 @@ export default function EmailsDashboard() {
         </div>
 
         <Tabs defaultValue="logs" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="logs" className="gap-1.5"><List className="w-4 h-4" /> Logs</TabsTrigger>
-            <TabsTrigger value="templates" className="gap-1.5"><FileText className="w-4 h-4" /> Templates</TabsTrigger>
+          <TabsList aria-label="Email dashboard sections">
+            <TabsTrigger value="logs" className="gap-1.5"><List className="w-4 h-4" aria-hidden="true" /> Logs</TabsTrigger>
+            <TabsTrigger value="templates" className="gap-1.5"><FileText className="w-4 h-4" aria-hidden="true" /> Templates</TabsTrigger>
           </TabsList>
 
           <TabsContent value="logs" className="space-y-6">
@@ -185,37 +186,44 @@ export default function EmailsDashboard() {
         {/* Filters */}
         <Card>
           <CardContent className="p-4 flex flex-wrap items-center gap-3">
-            <div className="flex gap-1">
+            <div className="flex gap-1" role="group" aria-label="Email activity date range">
               {(["24h", "7d", "30d"] as Range[]).map((r) => (
                 <Button
                   key={r}
                   size="sm"
                   variant={range === r ? "default" : "outline"}
                   onClick={() => setRange(r)}
+                  aria-pressed={range === r}
                 >
                   {r === "24h" ? "Last 24h" : r === "7d" ? "Last 7 days" : "Last 30 days"}
                 </Button>
               ))}
             </div>
-            <Select value={tplFilter} onValueChange={setTplFilter}>
-              <SelectTrigger className="w-56"><SelectValue placeholder="Template" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All templates</SelectItem>
-                {TEMPLATE_NAMES.map((t) => (
-                  <SelectItem key={t} value={t}>{t}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-40"><SelectValue placeholder="Status" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="sent">Sent</SelectItem>
-                <SelectItem value="failed">Failed</SelectItem>
-                <SelectItem value="suppressed">Suppressed</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-              </SelectContent>
-            </Select>
+            <div>
+              <Label htmlFor="email-template-filter" className="sr-only">Filter by template</Label>
+              <Select value={tplFilter} onValueChange={setTplFilter}>
+                <SelectTrigger id="email-template-filter" className="w-56"><SelectValue placeholder="Template" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All templates</SelectItem>
+                  {TEMPLATE_NAMES.map((t) => (
+                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="email-status-filter" className="sr-only">Filter by delivery status</Label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger id="email-status-filter" className="w-40"><SelectValue placeholder="Status" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="sent">Sent</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
+                  <SelectItem value="suppressed">Suppressed</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </CardContent>
         </Card>
 
@@ -231,15 +239,14 @@ export default function EmailsDashboard() {
         <Card>
           <CardContent className="p-0">
             {loading ? (
-              <div className="p-12 flex justify-center">
-                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-              </div>
+              <AccessibleLoadingState label="Loading email activity" className="p-12" />
             ) : rows.length === 0 ? (
               <div className="p-12 text-center text-sm text-muted-foreground">
                 No emails in this range yet. Try the "Send test email" button above.
               </div>
             ) : (
-              <Table>
+              <Table scrollLabel="Email activity table">
+                <TableCaption className="sr-only">Email delivery activity for the selected date range.</TableCaption>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Time</TableHead>
@@ -264,13 +271,31 @@ export default function EmailsDashboard() {
                           <TableCell className="text-sm font-medium text-foreground">{r.template}</TableCell>
                           <TableCell className="text-sm text-muted-foreground">{r.recipient}</TableCell>
                           <TableCell>
-                            <Badge className={meta.cls}>
-                              <meta.Icon className="w-3 h-3 mr-1" /> {meta.label}
-                            </Badge>
+                            {r.error ? (
+                              <button
+                                type="button"
+                                aria-expanded={isOpen}
+                                aria-controls={`email-error-${r.id}`}
+                                aria-label={`${isOpen ? "Hide" : "Show"} error details for ${r.recipient}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setExpanded(isOpen ? null : r.id);
+                                }}
+                                className="rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                              >
+                                <Badge className={meta.cls}>
+                                  <meta.Icon className="w-3 h-3 mr-1" aria-hidden="true" /> {meta.label}
+                                </Badge>
+                              </button>
+                            ) : (
+                              <Badge className={meta.cls}>
+                                <meta.Icon className="w-3 h-3 mr-1" aria-hidden="true" /> {meta.label}
+                              </Badge>
+                            )}
                           </TableCell>
                         </TableRow>
                         {isOpen && r.error && (
-                          <TableRow>
+                          <TableRow id={`email-error-${r.id}`}>
                             <TableCell colSpan={4} className="bg-muted/40 text-xs text-red-400 font-mono">
                               {r.error}
                             </TableCell>
@@ -286,15 +311,15 @@ export default function EmailsDashboard() {
         </Card>
 
         {/* Pagination */}
-        <div className="flex items-center justify-end gap-2">
+        <nav className="flex items-center justify-end gap-2" aria-label="Email log pagination">
           <Button size="sm" variant="outline" disabled={page === 0} onClick={() => setPage(page - 1)}>
             Previous
           </Button>
-          <span className="text-xs text-muted-foreground">Page {page + 1}</span>
+          <span className="text-xs text-muted-foreground" aria-live="polite">Page {page + 1}</span>
           <Button size="sm" variant="outline" disabled={rows.length < PAGE_SIZE} onClick={() => setPage(page + 1)}>
             Next
           </Button>
-        </div>
+        </nav>
           </TabsContent>
 
           <TabsContent value="templates">
@@ -383,18 +408,21 @@ function SendTestEmailButton({ onSent }: { onSent: () => void }) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="sm" className="gap-2">
-          <Send className="w-4 h-4" /> Send test email
+          <Send className="w-4 h-4" aria-hidden="true" /> Send test email
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Send a test email</DialogTitle>
+          <DialogDescription>
+            Sends realistic sample data through the live Resend connection.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label>Template</Label>
+            <Label htmlFor="test-email-template">Template</Label>
             <Select value={template} onValueChange={setTemplate}>
-              <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+              <SelectTrigger id="test-email-template" className="mt-1.5"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {TEMPLATE_NAMES.map((t) => (
                   <SelectItem key={t} value={t}>{t}</SelectItem>
@@ -403,23 +431,23 @@ function SendTestEmailButton({ onSent }: { onSent: () => void }) {
             </Select>
           </div>
           <div>
-            <Label>Recipient</Label>
+            <Label htmlFor="test-email-recipient">Recipient</Label>
             <Input
+              id="test-email-recipient"
               type="email"
+              autoComplete="email"
+              required
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
               placeholder="you@example.com"
               className="mt-1.5"
             />
           </div>
-          <p className="text-xs text-muted-foreground">
-            Sends realistic sample data through the live Resend connection.
-          </p>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={send} disabled={sending || !recipient}>
-            {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send"}
+          <Button onClick={send} disabled={sending || !recipient} aria-busy={sending}>
+            {sending ? <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" /> : "Send"}
           </Button>
         </DialogFooter>
       </DialogContent>

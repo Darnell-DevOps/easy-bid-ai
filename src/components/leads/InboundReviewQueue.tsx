@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,15 +28,26 @@ export default function InboundReviewQueue() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [showIgnored, setShowIgnored] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionStatus, setActionStatus] = useState("");
+  const errorRef = useRef<HTMLDivElement>(null);
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase
+    setLoadError(null);
+    setActionError(null);
+    const { data, error } = await supabase
       .from("inbound_messages")
       .select("id, from_email, from_name, subject, body_text, received_at, classification, classification_reason, client_id")
       .in("classification", ["needs_review", "ignored"])
       .order("received_at", { ascending: false })
       .limit(50);
+    if (error) {
+      setLoadError(`Could not load the inbound review queue. ${error.message}`);
+      setLoading(false);
+      return;
+    }
     const rows = (data ?? []) as Msg[];
     setReview(rows.filter((r) => r.classification === "needs_review"));
     setIgnored(rows.filter((r) => r.classification === "ignored").slice(0, 20));
@@ -45,35 +56,76 @@ export default function InboundReviewQueue() {
 
   useEffect(() => { void load(); }, []);
 
+  useEffect(() => {
+    if (loadError || actionError) {
+      errorRef.current?.focus();
+    }
+  }, [actionError, loadError]);
+
   const promote = async (id: string) => {
+    setActionError(null);
+    setActionStatus("");
     setBusyId(id);
     const { data, error } = await supabase.rpc("inbound_message_promote", { _id: id });
     setBusyId(null);
     if (error) {
+      setActionError(`Could not convert this message. ${error.message}`);
       toast({ title: "Could not convert", description: error.message, variant: "destructive" });
       return;
     }
+    setActionStatus("Message converted to a lead.");
     toast({ title: "Converted to lead" });
     await load();
     if (data) navigate(`/dashboard/clients/${data}`);
   };
 
   const ignore = async (id: string) => {
+    setActionError(null);
+    setActionStatus("");
     setBusyId(id);
     const { error } = await supabase.rpc("inbound_message_ignore", { _id: id });
     setBusyId(null);
     if (error) {
+      setActionError(`Could not ignore this message. ${error.message}`);
       toast({ title: "Could not ignore", description: error.message, variant: "destructive" });
       return;
     }
     await load();
+    setActionStatus("Message ignored.");
   };
 
   if (loading) {
     return (
+      <Card aria-busy="true">
+        <CardContent
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          className="p-6 flex items-center gap-2 text-sm text-muted-foreground"
+        >
+          <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" /> Loading inbound queue…
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (loadError && review.length === 0 && ignored.length === 0) {
+    return (
       <Card>
-        <CardContent className="p-6 flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="w-4 h-4 animate-spin" /> Loading inbound queue…
+        <CardContent className="p-6">
+          <div
+            ref={errorRef}
+            role="alert"
+            aria-live="assertive"
+            aria-atomic="true"
+            tabIndex={-1}
+            className="space-y-3 rounded-lg border border-destructive/60 bg-destructive/10 p-4 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            <p>{loadError}</p>
+            <Button type="button" size="sm" variant="outline" onClick={() => void load()}>
+              Retry loading queue
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );
@@ -103,7 +155,7 @@ export default function InboundReviewQueue() {
             type="button"
             className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] hover:bg-muted/40 ${toneClass}`}
           >
-            {tone === "amber" ? <AlertTriangle className="w-3 h-3" /> : <Info className="w-3 h-3" />}
+            {tone === "amber" ? <AlertTriangle aria-hidden="true" className="w-3 h-3" /> : <Info aria-hidden="true" className="w-3 h-3" />}
             <span className="truncate max-w-[200px]">{headline || "Why?"}</span>
           </button>
         </PopoverTrigger>
@@ -127,10 +179,10 @@ export default function InboundReviewQueue() {
   };
 
   return (
-    <Card>
+    <Card aria-busy={busyId !== null}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <Inbox className="w-4 h-4 text-amber-500" />
+          <Inbox aria-hidden="true" className="w-4 h-4 text-amber-500" />
           Inbound review queue
           {review.length > 0 && (
             <Badge variant="outline" className="border-amber-500/40 text-amber-600 ml-1">
@@ -143,6 +195,26 @@ export default function InboundReviewQueue() {
         </p>
       </CardHeader>
       <CardContent className="space-y-3">
+        {(loadError || actionError) && (
+          <div
+            ref={errorRef}
+            role="alert"
+            aria-live="assertive"
+            aria-atomic="true"
+            tabIndex={-1}
+            className="space-y-3 rounded-lg border border-destructive/60 bg-destructive/10 p-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            <p>{loadError ?? actionError}</p>
+            {loadError && (
+              <Button type="button" size="sm" variant="outline" onClick={() => void load()}>
+                Retry loading queue
+              </Button>
+            )}
+          </div>
+        )}
+        <p role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+          {actionStatus}
+        </p>
         {review.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nothing waiting for review.</p>
         ) : (
@@ -166,12 +238,12 @@ export default function InboundReviewQueue() {
                 </p>
               )}
               <div className="flex gap-2">
-                <Button size="sm" disabled={busyId === m.id} onClick={() => promote(m.id)} className="gap-1">
-                  {busyId === m.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                <Button size="sm" disabled={busyId === m.id} aria-busy={busyId === m.id} onClick={() => promote(m.id)} className="gap-1">
+                  {busyId === m.id ? <Loader2 aria-hidden="true" className="w-3 h-3 animate-spin" /> : <Check aria-hidden="true" className="w-3 h-3" />}
                   Convert to lead
                 </Button>
                 <Button size="sm" variant="outline" disabled={busyId === m.id} onClick={() => ignore(m.id)} className="gap-1">
-                  <X className="w-3 h-3" /> Ignore
+                  <X aria-hidden="true" className="w-3 h-3" /> Ignore
                 </Button>
               </div>
             </div>
@@ -183,13 +255,15 @@ export default function InboundReviewQueue() {
             <button
               type="button"
               onClick={() => setShowIgnored((v) => !v)}
+              aria-expanded={showIgnored}
+              aria-controls="inbound-ignored-list"
               className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
             >
-              {showIgnored ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-              <Archive className="w-3 h-3" /> Ignored ({ignored.length})
+              {showIgnored ? <ChevronUp aria-hidden="true" className="w-3 h-3" /> : <ChevronDown aria-hidden="true" className="w-3 h-3" />}
+              <Archive aria-hidden="true" className="w-3 h-3" /> Ignored ({ignored.length})
             </button>
             {showIgnored && (
-              <div className="mt-2 space-y-1.5">
+              <div id="inbound-ignored-list" className="mt-2 space-y-1.5">
                 {ignored.map((m) => (
                   <div key={m.id} className="text-xs text-muted-foreground flex items-center justify-between gap-2 border border-border/60 rounded px-2 py-1.5">
                     <span className="truncate min-w-0 flex-1">

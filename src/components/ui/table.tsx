@@ -2,9 +2,18 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
-  ({ className, ...props }, ref) => (
-    <div className="relative w-full overflow-auto">
+type TableProps = React.HTMLAttributes<HTMLTableElement> & {
+  scrollLabel: string;
+};
+
+const Table = React.forwardRef<HTMLTableElement, TableProps>(
+  ({ className, scrollLabel, ...props }, ref) => (
+    <div
+      role="region"
+      aria-label={scrollLabel}
+      tabIndex={0}
+      className="relative w-full overflow-auto rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+    >
       <table ref={ref} className={cn("w-full caption-bottom text-sm leading-5", className)} {...props} />
     </div>
   ),
@@ -42,9 +51,10 @@ const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTML
 TableRow.displayName = "TableRow";
 
 const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttributes<HTMLTableCellElement>>(
-  ({ className, ...props }, ref) => (
+  ({ className, scope = "col", ...props }, ref) => (
     <th
       ref={ref}
+      scope={scope}
       className={cn(
         "h-12 px-4 text-left align-middle text-micro font-semibold leading-4 text-muted-foreground [&:has([role=checkbox])]:pr-0",
         className,

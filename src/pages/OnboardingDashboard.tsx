@@ -9,6 +9,7 @@ import { ClipboardList, Copy, ArrowRight, Loader2, ExternalLink, Send, Clock, Ch
 import { useToast } from "@/hooks/use-toast";
 import { onboardingProgress, type OnboardingFormRow } from "@/lib/onboarding";
 import { getPrimaryCustomDomain, buildPublicUrl } from "@/lib/customDomain";
+import { AccessibleLoadingState } from "@/components/ui/accessible-loading-state";
 
 export default function OnboardingDashboard() {
   const [forms, setForms] = useState<OnboardingFormRow[]>([]);
@@ -108,9 +109,7 @@ export default function OnboardingDashboard() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-          </div>
+          <AccessibleLoadingState label="Loading client onboarding" className="py-20" spinnerClassName="h-6 w-6" />
         ) : forms.length === 0 ? (
           <Card className="border-dashed border-border/60">
             <CardContent className="p-10 text-center space-y-3">
@@ -163,7 +162,15 @@ export default function OnboardingDashboard() {
                       <p className="text-xs text-muted-foreground mt-0.5 truncate">
                         {f.service_type || "Project"} · created {new Date(f.created_at).toLocaleDateString()}
                       </p>
-                      <div className="mt-2 h-1 w-full max-w-sm rounded-full bg-muted/40 overflow-hidden">
+                      <div
+                        role="progressbar"
+                        aria-label={`${f.client_name || "Client"} onboarding completion`}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={progress}
+                        aria-valuetext={`${progress}% complete`}
+                        className="mt-2 h-1 w-full max-w-sm rounded-full bg-muted/40 overflow-hidden"
+                      >
                         <div
                           className="h-full bg-accent"
                           style={{ width: `${progress}%` }}
@@ -190,9 +197,10 @@ export default function OnboardingDashboard() {
                           className="gap-1.5 bg-amber-500 text-white hover:bg-amber-500/90"
                           onClick={() => sendReminder(f)}
                           disabled={remindingId === f.id}
+                          aria-busy={remindingId === f.id}
                         >
                           {remindingId === f.id
-                            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ? <Loader2 aria-hidden="true" className="w-3.5 h-3.5 animate-spin" />
                             : <Send className="w-3.5 h-3.5" />}
                           Send reminder
                         </Button>

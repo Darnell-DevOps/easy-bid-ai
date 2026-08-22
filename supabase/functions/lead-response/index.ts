@@ -14,6 +14,7 @@ import {
   planHasFeature,
   planUpgradeRequired,
 } from "../_shared/plan-entitlements.ts";
+import { enforceAiRateLimit } from "../_shared/abuse-rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -54,6 +55,8 @@ Deno.serve(async (req) => {
     if (!planHasFeature(plan, "aiLeadResponse")) {
       return json(planUpgradeRequired(plan, "aiLeadResponse"), 403);
     }
+    const rateLimited = await enforceAiRateLimit(req, userId, { source: "lead-response" });
+    if (rateLimited) return rateLimited;
 
     const { leadName, leadEmail, message } = await req.json();
     if (!message || typeof message !== "string" || message.trim().length < 5) {

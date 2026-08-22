@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Clock, FileText, Zap, Plus, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { AccessibleLoadingState } from "@/components/ui/accessible-loading-state";
 
 const MANUAL_MINUTES = 60;
 const APP_MINUTES = 5;
@@ -42,9 +43,11 @@ export default function TimeSavedDashboard() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-        </div>
+        <AccessibleLoadingState
+          label="Loading time-saved data"
+          className="h-64"
+          spinnerClassName="h-8 w-8 text-primary"
+        />
       </DashboardLayout>
     );
   }

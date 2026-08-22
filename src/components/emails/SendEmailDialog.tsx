@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -114,46 +114,52 @@ export default function SendEmailDialog(props: Props) {
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Send: {def.label}</DialogTitle>
+          <DialogDescription>
+            Review the recipient and message before sending this email.
+          </DialogDescription>
         </DialogHeader>
 
         {loading ? (
-          <div className="p-8 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+          <div className="p-8 flex justify-center" role="status" aria-live="polite">
+            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" aria-hidden="true" />
+            <span className="sr-only">Loading email settings</span>
+          </div>
         ) : (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="flex rounded-md border border-border p-0.5">
-                <Button size="sm" variant={mode === "edit" ? "default" : "ghost"} onClick={() => setMode("edit")} className="h-7 gap-1.5">
-                  <Pencil className="w-3.5 h-3.5" /> Edit
+              <div className="flex rounded-md border border-border p-0.5" role="group" aria-label="Email view mode">
+                <Button size="sm" variant={mode === "edit" ? "default" : "ghost"} onClick={() => setMode("edit")} aria-pressed={mode === "edit"} className="h-7 gap-1.5">
+                  <Pencil className="w-3.5 h-3.5" aria-hidden="true" /> Edit
                 </Button>
-                <Button size="sm" variant={mode === "preview" ? "default" : "ghost"} onClick={() => setMode("preview")} className="h-7 gap-1.5">
-                  <Eye className="w-3.5 h-3.5" /> Preview
+                <Button size="sm" variant={mode === "preview" ? "default" : "ghost"} onClick={() => setMode("preview")} aria-pressed={mode === "preview"} className="h-7 gap-1.5">
+                  <Eye className="w-3.5 h-3.5" aria-hidden="true" /> Preview
                 </Button>
               </div>
             </div>
 
             <div>
-              <Label className="text-xs">Recipient</Label>
-              <Input className="mt-1.5" value={recipient} onChange={(e) => setRecipient(e.target.value)} type="email" />
+              <Label htmlFor="send-email-recipient" className="text-xs">Recipient</Label>
+              <Input id="send-email-recipient" className="mt-1.5" value={recipient} onChange={(e) => setRecipient(e.target.value)} type="email" autoComplete="email" required />
             </div>
 
             {mode === "edit" ? (
               <>
                 <div>
-                  <Label className="text-xs">Subject</Label>
-                  <Input className="mt-1.5" value={subject} onChange={(e) => setSubject(e.target.value)} />
+                  <Label htmlFor="send-email-subject" className="text-xs">Subject</Label>
+                  <Input id="send-email-subject" className="mt-1.5" value={subject} onChange={(e) => setSubject(e.target.value)} />
                 </div>
                 <div>
-                  <Label className="text-xs">Body</Label>
-                  <Textarea rows={10} className="mt-1.5 font-mono text-sm" value={body} onChange={(e) => setBody(e.target.value)} />
+                  <Label htmlFor="send-email-body" className="text-xs">Body</Label>
+                  <Textarea id="send-email-body" rows={10} className="mt-1.5 font-mono text-sm" value={body} onChange={(e) => setBody(e.target.value)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-xs">CTA text</Label>
-                    <Input className="mt-1.5" value={ctaText} onChange={(e) => setCtaText(e.target.value)} />
+                    <Label htmlFor="send-email-cta" className="text-xs">CTA text</Label>
+                    <Input id="send-email-cta" className="mt-1.5" value={ctaText} onChange={(e) => setCtaText(e.target.value)} />
                   </div>
                   <div>
-                    <Label className="text-xs">Sign-off</Label>
-                    <Input className="mt-1.5" value={signOff} onChange={(e) => setSignOff(e.target.value)} />
+                    <Label htmlFor="send-email-sign-off" className="text-xs">Sign-off</Label>
+                    <Input id="send-email-sign-off" className="mt-1.5" value={signOff} onChange={(e) => setSignOff(e.target.value)} />
                   </div>
                 </div>
               </>
@@ -169,10 +175,10 @@ export default function SendEmailDialog(props: Props) {
         )}
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={copy} className="gap-1.5"><Copy className="w-4 h-4" /> Copy HTML</Button>
+          <Button variant="outline" onClick={copy} className="gap-1.5"><Copy className="w-4 h-4" aria-hidden="true" /> Copy HTML</Button>
           <Button variant="outline" onClick={() => props.onOpenChange(false)}>Cancel</Button>
-          <Button onClick={send} disabled={sending} className="gap-1.5">
-            {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />} Send
+          <Button onClick={send} disabled={sending} aria-busy={sending} className="gap-1.5">
+            {sending ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Send className="w-4 h-4" aria-hidden="true" />} Send
           </Button>
         </DialogFooter>
       </DialogContent>

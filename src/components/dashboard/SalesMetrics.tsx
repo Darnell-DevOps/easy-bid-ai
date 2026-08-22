@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Send, CheckCircle2, DollarSign, Hourglass } from "lucide-react";
+import { activateOnEnterOrSpace } from "@/lib/keyboard";
 
 interface SalesMetricsProps {
   proposalsSentThisMonth: number;
@@ -70,12 +71,16 @@ export default function SalesMetrics({
         return (
           <Card
             key={s.label}
-            className={`group transition-colors duration-200 cursor-pointer ${
+            role="link"
+            tabIndex={0}
+            aria-label={`View ${s.label}`}
+            className={`group transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
               isFeatured
                 ? "border-emerald-500/25 bg-emerald-500/[0.04] hover:border-emerald-500/40"
                 : "hover:border-accent/20"
             }`}
             onClick={() => navigate(s.link)}
+            onKeyDown={(event) => activateOnEnterOrSpace(event, () => navigate(s.link))}
           >
             <CardContent className="p-4 sm:p-5">
               <div className="flex items-center justify-between mb-2">

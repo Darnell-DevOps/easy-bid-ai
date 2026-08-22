@@ -10,12 +10,15 @@ import {
   jsonResponse,
   saveInsight,
 } from "../_shared/ai-coach.ts";
+import { enforceAiRateLimit } from "../_shared/abuse-rate-limit.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
     const userId = await getUserId(req);
     if (!userId) return errorResponse("Unauthorized", 401);
+    const rateLimited = await enforceAiRateLimit(req, userId, { source: "ai-deal-score" });
+    if (rateLimited) return rateLimited;
 
     const { proposalId } = await req.json();
     if (!proposalId) return errorResponse("proposalId is required", 400);

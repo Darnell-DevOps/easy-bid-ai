@@ -137,7 +137,15 @@ export default function ProjectOverview({
             </p>
           </div>
         </div>
-        <div className="relative mt-5 h-1.5 w-full rounded-full bg-muted/40 overflow-hidden">
+        <div
+          role="progressbar"
+          aria-label="Project completion"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={progressPct}
+          aria-valuetext={`${progressPct}% complete`}
+          className="relative mt-5 h-1.5 w-full rounded-full bg-muted/40 overflow-hidden"
+        >
           <div
             className="h-full bg-gradient-to-r from-accent via-purple to-accent rounded-full transition-all duration-700 ease-out shadow-[0_0_20px_hsl(var(--accent)/0.6)]"
             style={{ width: `${progressPct}%` }}

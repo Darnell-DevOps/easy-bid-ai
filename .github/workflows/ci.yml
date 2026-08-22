@@ -83,7 +83,7 @@ jobs:
       - run: npm ci
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
-      - name: Run browser smoke tests
+      - name: Run browser smoke and accessibility tests
         run: npm run test:e2e
       - name: Report credentialed sign-flow coverage
         if: env.TEST_USER_EMAIL == '' || env.TEST_USER_PASSWORD == ''

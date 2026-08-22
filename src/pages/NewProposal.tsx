@@ -1159,7 +1159,12 @@ export default function NewProposal() {
                 <p className="text-sm font-medium text-foreground animate-pulse">
                   {loadingSteps[loadingStep]}
                 </p>
-                <Progress value={progress} className="w-full max-w-xs h-2" />
+                <Progress
+                  value={progress}
+                  aria-label="Proposal generation progress"
+                  aria-valuetext={`${Math.round(progress)}%: ${loadingSteps[loadingStep]}`}
+                  className="w-full max-w-xs h-2"
+                />
               </div>
             ) : (
               <div className="pt-8 mt-4 border-t border-border/40">

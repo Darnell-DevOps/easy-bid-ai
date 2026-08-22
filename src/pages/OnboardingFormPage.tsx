@@ -65,6 +65,8 @@ export default function OnboardingFormPage() {
   const [submitting, setSubmitting] = useState(false);
   const [confirmedAccurate, setConfirmedAccurate] = useState(false);
   const [proposalSummary, setProposalSummary] = useState<ProposalSummary | null>(null);
+  const [formError, setFormError] = useState("");
+  const [invalidFieldIds, setInvalidFieldIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (!token) return;
@@ -108,6 +110,8 @@ export default function OnboardingFormPage() {
 
   const handleChange = (id: string, value: string | string[] | boolean) => {
     setResponses((prev) => ({ ...prev, [id]: value }));
+    setInvalidFieldIds((current) => current.filter((fieldId) => fieldId !== id));
+    setFormError("");
   };
 
   const handleSubmit = async (complete: boolean) => {
@@ -118,6 +122,12 @@ export default function OnboardingFormPage() {
         (f) => f.required && isFieldVisible(f, responses) && !(payload[f.id] || "").trim(),
       );
       if (missing.length) {
+        const missingLabels = missing.map((field) => field.label).join(", ");
+        setFormError(`Please complete the required fields: ${missingLabels}.`);
+        setInvalidFieldIds(missing.map((field) => field.id));
+        window.requestAnimationFrame(() => {
+          document.getElementById(`onboarding-${missing[0].id}-field-wrapper`)?.focus();
+        });
         toast({
           title: "Please fill the required fields",
           description: `${missing.length} field${missing.length > 1 ? "s" : ""} still need to be completed.`,
@@ -126,6 +136,8 @@ export default function OnboardingFormPage() {
         return;
       }
     }
+    setFormError("");
+    setInvalidFieldIds([]);
     setSubmitting(true);
     const { error } = await supabase.rpc("onboarding_submit", {
       _token: token,
@@ -266,7 +278,15 @@ export default function OnboardingFormPage() {
               </p>
             </div>
           </div>
-          <div className="mt-4 h-1.5 w-full rounded-full bg-muted/40 overflow-hidden">
+          <div
+            role="progressbar"
+            aria-label="Onboarding form completion"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={progress}
+            aria-valuetext={`${progress}% complete`}
+            className="mt-4 h-1.5 w-full rounded-full bg-muted/40 overflow-hidden"
+          >
             <div
               className="h-full bg-accent transition-all"
               style={{ width: `${progress}%` }}
@@ -274,29 +294,74 @@ export default function OnboardingFormPage() {
           </div>
         </section>
 
-        {groups.map((group) => {
+        {formError && (
+          <div role="alert" className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {formError}
+          </div>
+        )}
+
+        {groups.map((group, groupIndex) => {
           const visible = group.fields.filter((f) => isFieldVisible(f, responses));
           if (visible.length === 0) return null;
           return (
-            <section key={group.group} className="rounded-xl border border-border bg-card p-6 lg:p-8 space-y-5">
-              <p className="text-xs uppercase tracking-[0.2em] text-purple font-semibold">{group.group}</p>
-              {visible.map((field) => (
-                <div key={field.id} className="space-y-1.5">
-                  <Label htmlFor={field.id}>
+            <section
+              key={group.group}
+              aria-labelledby={`onboarding-section-${groupIndex}`}
+              className="rounded-xl border border-border bg-card p-6 lg:p-8 space-y-5"
+            >
+              <h2 id={`onboarding-section-${groupIndex}`} className="text-xs uppercase tracking-[0.2em] text-purple font-semibold">
+                {group.group}
+              </h2>
+              {visible.map((field) => {
+                const labelId = `onboarding-${field.id}-label`;
+                const descriptionId = field.helpText ? `onboarding-${field.id}-description` : undefined;
+                const errorId = `onboarding-${field.id}-error`;
+                const invalid = invalidFieldIds.includes(field.id);
+                const describedBy = [descriptionId, invalid ? errorId : undefined].filter(Boolean).join(" ") || undefined;
+                const usesGroupLabel = ["radio", "multi_select", "checkbox", "file"].includes(field.type);
+                const labelContent = (
+                  <>
                     {field.label}
-                    {field.required && <span className="text-rose-500 ml-1">*</span>}
-                  </Label>
-                  <SmartFieldRenderer
-                    field={field}
-                    value={responses[field.id]}
-                    onChange={(v) => handleChange(field.id, v)}
-                    formContext={{ token }}
-                  />
-                  {field.helpText && (
-                    <p className="text-[11px] text-muted-foreground">{field.helpText}</p>
-                  )}
-                </div>
-              ))}
+                    {field.required && (
+                      <>
+                        <span aria-hidden="true" className="text-rose-500 ml-1">*</span>
+                        {["multi_select", "file"].includes(field.type) && <span className="sr-only"> (required)</span>}
+                      </>
+                    )}
+                  </>
+                );
+
+                return (
+                  <div
+                    key={field.id}
+                    id={`onboarding-${field.id}-field-wrapper`}
+                    tabIndex={-1}
+                    aria-labelledby={labelId}
+                    aria-describedby={describedBy}
+                    className="space-y-1.5 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2"
+                  >
+                    {usesGroupLabel ? (
+                      <p id={labelId} className="text-sm font-medium text-foreground">{labelContent}</p>
+                    ) : (
+                      <Label id={labelId} htmlFor={field.id}>{labelContent}</Label>
+                    )}
+                    <SmartFieldRenderer
+                      field={field}
+                      value={responses[field.id]}
+                      onChange={(v) => handleChange(field.id, v)}
+                      formContext={{ token }}
+                      labelId={labelId}
+                      descriptionId={descriptionId}
+                      invalid={invalid}
+                      errorId={errorId}
+                    />
+                    {field.helpText && (
+                      <p id={descriptionId} className="text-[11px] text-muted-foreground">{field.helpText}</p>
+                    )}
+                    {invalid && <p id={errorId} className="text-xs text-destructive">This field is required.</p>}
+                  </div>
+                );
+              })}
             </section>
           );
         })}
@@ -320,17 +385,19 @@ export default function OnboardingFormPage() {
             size="lg"
             onClick={() => handleSubmit(true)}
             disabled={submitting || !confirmedAccurate}
+            aria-busy={submitting}
             className="flex-1 gap-2 bg-accent text-accent-foreground font-semibold hover:bg-accent/90 h-12 disabled:opacity-50"
           >
-            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+            {submitting ? <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" /> : <CheckCircle2 aria-hidden="true" className="w-4 h-4" />}
             Submit onboarding
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight aria-hidden="true" className="w-4 h-4" />
           </Button>
           <Button
             size="lg"
             variant="outline"
             onClick={() => handleSubmit(false)}
             disabled={submitting}
+            aria-busy={submitting}
             className="h-12"
           >
             Save progress

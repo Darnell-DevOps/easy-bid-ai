@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
+import { AccessibleLoadingState } from "@/components/ui/accessible-loading-state";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -496,13 +497,16 @@ function TemplateGrid({
 }: GridProps) {
   if (loading) {
     return (
-      <div className="grid sm:grid-cols-2 gap-4">
-        {[0, 1].map((i) => (
-          <Card key={i} className="animate-pulse">
-            <CardContent className="p-6 h-40" />
-          </Card>
-        ))}
-      </div>
+      <>
+        <AccessibleLoadingState label="Loading templates" className="sr-only" />
+        <div className="grid sm:grid-cols-2 gap-4" aria-hidden="true">
+          {[0, 1].map((i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6 h-40" />
+            </Card>
+          ))}
+        </div>
+      </>
     );
   }
 
@@ -515,16 +519,9 @@ function TemplateGrid({
         return (
           <Card
             key={t.rowId || t.id}
-            role="button"
-            tabIndex={0}
+            data-keyboard-proxy="true"
             onClick={() => onUse(t)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                onUse(t);
-              }
-            }}
-            className="group relative cursor-pointer hover:shadow-xl hover:border-accent/40 hover:-translate-y-1 transition-all duration-300 flex flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="group relative cursor-pointer hover:shadow-xl hover:border-accent/40 hover:-translate-y-1 transition-all duration-300 flex flex-col"
           >
             <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
               {t.isDefault && (
@@ -540,8 +537,8 @@ function TemplateGrid({
               )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7">
-                    <MoreVertical className="w-4 h-4" />
+                  <Button variant="ghost" size="icon" className="h-7 w-7" aria-label={`More actions for ${t.name}`}>
+                    <MoreVertical aria-hidden="true" className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -610,6 +607,8 @@ function TemplateGrid({
 
               <div className="mt-auto">
                 <Button
+                  data-keyboard-proxy="true"
+                  aria-label={`Start proposal with ${t.name}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     onUse(t);

@@ -85,21 +85,35 @@ export default function InboundEmailSettings() {
         </div>
 
         {loading ? (
-          <div className="h-20 rounded-md bg-muted/40 animate-pulse" />
+          <div role="status" aria-live="polite" className="h-20 rounded-md bg-muted/40 animate-pulse">
+            <span className="sr-only">Loading inbound email settings</span>
+          </div>
         ) : !slug ? (
-          <p className="text-sm text-muted-foreground">No inbound address yet. Refresh in a moment.</p>
+          <p role="status" className="text-sm text-muted-foreground">No inbound address yet. Refresh in a moment.</p>
         ) : (
           <div className="space-y-4">
             <div>
-              <Label className="text-xs text-muted-foreground">Your unique address</Label>
+              <Label htmlFor="inbound-email-address" className="text-xs text-muted-foreground">Your unique address</Label>
               <div className="mt-1.5 flex items-center gap-2">
-                <Input value={fullAddress} readOnly className="font-mono text-sm" />
-                <Button onClick={copy} variant="outline" size="sm" className="gap-2 shrink-0">
+                <Input
+                  id="inbound-email-address"
+                  value={fullAddress}
+                  readOnly
+                  aria-describedby="inbound-email-address-help"
+                  className="font-mono text-sm"
+                />
+                <Button
+                  onClick={copy}
+                  variant="outline"
+                  size="sm"
+                  aria-label={copied ? "Inbound address copied" : "Copy inbound address"}
+                  className="gap-2 shrink-0"
+                >
                   {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                   {copied ? "Copied" : "Copy"}
                 </Button>
               </div>
-              <p className="text-[11px] text-muted-foreground mt-2 flex items-start gap-1.5">
+              <p id="inbound-email-address-help" className="text-[11px] text-muted-foreground mt-2 flex items-start gap-1.5">
                 <Sparkles className="w-3 h-3 text-accent mt-0.5 shrink-0" />
                 Anything sent here becomes a new lead with an AI-drafted reply ready in your{" "}
                 <a href="/dashboard/leads" className="text-accent hover:underline">Lead Assistant</a>.
@@ -113,12 +127,20 @@ export default function InboundEmailSettings() {
                   Get a once-a-day summary of new leads emailed to your account address.
                 </p>
               </div>
-              <Switch checked={notify} onCheckedChange={toggleNotify} disabled={savingNotify} />
+              <Switch
+                checked={notify}
+                onCheckedChange={toggleNotify}
+                disabled={savingNotify}
+                aria-label="Email a daily digest of new leads"
+                aria-busy={savingNotify}
+              />
             </div>
 
             <button
               type="button"
               onClick={() => setShowAdvanced((v) => !v)}
+              aria-expanded={showAdvanced}
+              aria-controls="inbound-email-setup-instructions"
               className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
             >
               {showAdvanced ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
@@ -126,7 +148,7 @@ export default function InboundEmailSettings() {
             </button>
 
             {showAdvanced && (
-              <div className="rounded-lg border border-border bg-muted/20 p-4 text-xs text-muted-foreground space-y-3 leading-relaxed">
+              <div id="inbound-email-setup-instructions" className="rounded-lg border border-border bg-muted/20 p-4 text-xs text-muted-foreground space-y-3 leading-relaxed">
                 <p>
                   Inbound email needs an external service to receive mail and post it to our webhook.
                   We support any provider that can POST a parsed email payload (SendGrid Inbound Parse,

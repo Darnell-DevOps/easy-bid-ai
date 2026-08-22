@@ -1,5 +1,6 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { enforceAiRateLimit } from "../_shared/abuse-rate-limit.ts";
 
 const SYSTEM = `You design web forms. Output ONLY JSON matching this exact shape:
 {
@@ -46,6 +47,8 @@ Deno.serve(async (req) => {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const rateLimited = await enforceAiRateLimit(req, userData.user.id, { source: "ai-generate-form" });
+    if (rateLimited) return rateLimited;
 
     const key = Deno.env.get("LOVABLE_API_KEY");
     if (!key) {

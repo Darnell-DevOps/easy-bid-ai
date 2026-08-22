@@ -189,15 +189,23 @@ export default function PremiumProposalRenderer({ content }: PremiumProposalRend
                 <ReactMarkdown
                   components={{
                     table: ({ children }) => (
-                      <div className="overflow-hidden rounded-lg border border-border my-2">
-                        <table className="w-full text-sm">{children}</table>
+                      <div
+                        role="region"
+                        aria-label="Proposal pricing table"
+                        tabIndex={0}
+                        className="overflow-x-auto rounded-lg border border-border my-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      >
+                        <table className="w-full text-sm">
+                          <caption className="sr-only">Proposal pricing details.</caption>
+                          {children}
+                        </table>
                       </div>
                     ),
                     thead: ({ children }) => (
                       <thead className="bg-secondary/80">{children}</thead>
                     ),
                     th: ({ children }) => (
-                      <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-foreground">
+                      <th scope="col" className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-foreground">
                         {children}
                       </th>
                     ),

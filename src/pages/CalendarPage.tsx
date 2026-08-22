@@ -44,6 +44,7 @@ import {
 } from "lucide-react";
 import {
   DAY_NAMES,
+  DAY_NAMES_FULL,
   LOCATION_TYPES,
   generateSlug,
   locationLabel,
@@ -571,8 +572,9 @@ export default function CalendarPage() {
                         onClick={() => cancelBooking(b)}
                         className="h-7 w-7 flex-shrink-0"
                         title="Cancel meeting"
+                        aria-label={`Cancel ${b.meeting_name} with ${b.client_name}`}
                       >
-                        <X className="w-3.5 h-3.5 text-muted-foreground" />
+                        <X aria-hidden="true" className="w-3.5 h-3.5 text-muted-foreground" />
                       </Button>
                     </div>
                   ))}
@@ -655,8 +657,14 @@ export default function CalendarPage() {
                           <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{link.description}</p>
                         )}
                       </div>
-                      <Button variant="ghost" size="icon" onClick={() => deleteLink(link.id)} className="h-7 w-7">
-                        <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => deleteLink(link.id)}
+                        className="h-7 w-7"
+                        aria-label={`Delete booking link: ${link.name}`}
+                      >
+                        <Trash2 aria-hidden="true" className="w-3.5 h-3.5 text-muted-foreground" />
                       </Button>
                     </div>
                     <div className="flex flex-wrap gap-1.5 text-[11px]">
@@ -742,10 +750,13 @@ export default function CalendarPage() {
             <DialogTitle>Schedule a meeting</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <Label>Client name *</Label>
+                <Label htmlFor="schedule-client-name">Client name *</Label>
                 <Input
+                  id="schedule-client-name"
+                  required
+                  autoComplete="name"
                   value={scheduleForm.client_name}
                   onChange={(e) => setScheduleForm({ ...scheduleForm, client_name: e.target.value })}
                   placeholder="Jane Smith"
@@ -753,9 +764,12 @@ export default function CalendarPage() {
                 />
               </div>
               <div>
-                <Label>Client email *</Label>
+                <Label htmlFor="schedule-client-email">Client email *</Label>
                 <Input
+                  id="schedule-client-email"
                   type="email"
+                  required
+                  autoComplete="email"
                   value={scheduleForm.client_email}
                   onChange={(e) => setScheduleForm({ ...scheduleForm, client_email: e.target.value })}
                   placeholder="jane@company.com"
@@ -764,38 +778,41 @@ export default function CalendarPage() {
               </div>
             </div>
             <div>
-              <Label>Meeting name</Label>
+              <Label htmlFor="schedule-meeting-name">Meeting name</Label>
               <Input
+                id="schedule-meeting-name"
                 value={scheduleForm.meeting_name}
                 onChange={(e) => setScheduleForm({ ...scheduleForm, meeting_name: e.target.value })}
                 placeholder="Discovery Call"
                 maxLength={100}
               />
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div>
-                <Label>Date</Label>
+                <Label htmlFor="schedule-date">Date</Label>
                 <Input
+                  id="schedule-date"
                   type="date"
                   value={scheduleForm.date}
                   onChange={(e) => setScheduleForm({ ...scheduleForm, date: e.target.value })}
                 />
               </div>
               <div>
-                <Label>Time</Label>
+                <Label htmlFor="schedule-time">Time</Label>
                 <Input
+                  id="schedule-time"
                   type="time"
                   value={scheduleForm.time}
                   onChange={(e) => setScheduleForm({ ...scheduleForm, time: e.target.value })}
                 />
               </div>
               <div>
-                <Label>Duration</Label>
+                <Label htmlFor="schedule-duration">Duration</Label>
                 <Select
                   value={String(scheduleForm.duration_minutes)}
                   onValueChange={(v) => setScheduleForm({ ...scheduleForm, duration_minutes: Number(v) })}
                 >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="schedule-duration"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {[15, 30, 45, 60, 90, 120].map((m) => (
                       <SelectItem key={m} value={String(m)}>{m} min</SelectItem>
@@ -804,14 +821,14 @@ export default function CalendarPage() {
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <Label>Location</Label>
+                <Label htmlFor="schedule-location">Location</Label>
                 <Select
                   value={scheduleForm.location_type}
                   onValueChange={(v) => setScheduleForm({ ...scheduleForm, location_type: v })}
                 >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="schedule-location"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {LOCATION_TYPES.map((l) => (
                       <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
@@ -820,8 +837,9 @@ export default function CalendarPage() {
                 </Select>
               </div>
               <div>
-                <Label>Link / details</Label>
+                <Label htmlFor="schedule-location-details">Link / details</Label>
                 <Input
+                  id="schedule-location-details"
                   value={scheduleForm.location_details}
                   onChange={(e) => setScheduleForm({ ...scheduleForm, location_details: e.target.value })}
                   placeholder={scheduleForm.location_type === "phone" ? "+1 555 0100" : "https://..."}
@@ -829,8 +847,9 @@ export default function CalendarPage() {
               </div>
             </div>
             <div>
-              <Label>Notes (optional)</Label>
+              <Label htmlFor="schedule-notes">Notes (optional)</Label>
               <Textarea
+                id="schedule-notes"
                 value={scheduleForm.client_message}
                 onChange={(e) => setScheduleForm({ ...scheduleForm, client_message: e.target.value })}
                 placeholder="Agenda or context for the meeting"
@@ -843,7 +862,7 @@ export default function CalendarPage() {
                 type="checkbox"
                 checked={scheduleForm.send_invite}
                 onChange={(e) => setScheduleForm({ ...scheduleForm, send_invite: e.target.checked })}
-                className="rounded border-border"
+                className="h-6 w-6 shrink-0 rounded border-border"
               />
               Send confirmation email with calendar invite (.ics) to the client
             </label>
@@ -865,8 +884,9 @@ export default function CalendarPage() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Meeting name</Label>
+              <Label htmlFor="booking-link-name">Meeting name</Label>
               <Input
+                id="booking-link-name"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder="Discovery Call"
@@ -874,8 +894,9 @@ export default function CalendarPage() {
               />
             </div>
             <div>
-              <Label>Description (optional)</Label>
+              <Label htmlFor="booking-link-description">Description (optional)</Label>
               <Textarea
+                id="booking-link-description"
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 placeholder="A quick chat to understand your goals."
@@ -883,14 +904,14 @@ export default function CalendarPage() {
                 rows={2}
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <Label>Duration</Label>
+                <Label htmlFor="booking-link-duration">Duration</Label>
                 <Select
                   value={String(form.duration_minutes)}
                   onValueChange={(v) => setForm({ ...form, duration_minutes: Number(v) })}
                 >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="booking-link-duration"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {[15, 30, 45, 60, 90].map((m) => (
                       <SelectItem key={m} value={String(m)}>{m} minutes</SelectItem>
@@ -899,12 +920,12 @@ export default function CalendarPage() {
                 </Select>
               </div>
               <div>
-                <Label>Location</Label>
+                <Label htmlFor="booking-link-location">Location</Label>
                 <Select
                   value={form.location_type}
                   onValueChange={(v) => setForm({ ...form, location_type: v })}
                 >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="booking-link-location"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {LOCATION_TYPES.map((l) => (
                       <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
@@ -915,8 +936,9 @@ export default function CalendarPage() {
             </div>
             {form.location_type === "custom" && (
               <div>
-                <Label>Custom link or location</Label>
+                <Label htmlFor="booking-link-custom-location">Custom link or location</Label>
                 <Input
+                  id="booking-link-custom-location"
                   value={form.custom_location}
                   onChange={(e) => setForm({ ...form, custom_location: e.target.value })}
                   placeholder="https://..."
@@ -925,19 +947,21 @@ export default function CalendarPage() {
             )}
             {form.location_type !== "phone" && form.location_type !== "custom" && (
               <div>
-                <Label>Your meeting link <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                <Label htmlFor="booking-link-meeting-url">Your meeting link <span className="text-muted-foreground font-normal">(optional)</span></Label>
                 <Input
+                  id="booking-link-meeting-url"
+                  aria-describedby="booking-link-meeting-url-help"
                   value={form.meeting_url}
                   onChange={(e) => setForm({ ...form, meeting_url: e.target.value })}
                   placeholder="https://meet.google.com/abc-defg-hij or your Zoom personal room"
                 />
-                <p className="text-[11px] text-muted-foreground mt-1">
+                <p id="booking-link-meeting-url-help" className="text-[11px] text-muted-foreground mt-1">
                   Paste your Google Meet, Zoom, or Whereby link. If left blank, a free Jitsi Meet room is auto-generated for each booking.
                 </p>
               </div>
             )}
-            <div>
-              <Label>Available days</Label>
+            <fieldset>
+              <legend className="text-sm font-medium leading-none">Available days</legend>
               <div className="flex gap-1 mt-1.5">
                 {DAY_NAMES.map((name, i) => {
                   const active = form.available_days.includes(i);
@@ -946,6 +970,8 @@ export default function CalendarPage() {
                       key={i}
                       type="button"
                       onClick={() => toggleDay("form", i)}
+                      aria-label={DAY_NAMES_FULL[i]}
+                      aria-pressed={active}
                       className={`flex-1 py-2 rounded-md text-xs font-medium border transition ${
                         active
                           ? "bg-purple text-white border-purple"
@@ -957,15 +983,15 @@ export default function CalendarPage() {
                   );
                 })}
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
+            </fieldset>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <Label>Available from</Label>
-                <Input type="time" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} />
+                <Label htmlFor="booking-link-start-time">Available from</Label>
+                <Input id="booking-link-start-time" type="time" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} />
               </div>
               <div>
-                <Label>Available until</Label>
-                <Input type="time" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} />
+                <Label htmlFor="booking-link-end-time">Available until</Label>
+                <Input id="booking-link-end-time" type="time" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} />
               </div>
             </div>
           </div>
@@ -985,8 +1011,8 @@ export default function CalendarPage() {
             <DialogTitle>Availability settings</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
-              <Label>Working days</Label>
+            <fieldset>
+              <legend className="text-sm font-medium leading-none">Working days</legend>
               <div className="flex gap-1 mt-1.5">
                 {DAY_NAMES.map((name, i) => {
                   const active = availForm.working_days.includes(i);
@@ -995,6 +1021,8 @@ export default function CalendarPage() {
                       key={i}
                       type="button"
                       onClick={() => toggleDay("avail", i)}
+                      aria-label={DAY_NAMES_FULL[i]}
+                      aria-pressed={active}
                       className={`flex-1 py-2 rounded-md text-xs font-medium border transition ${
                         active
                           ? "bg-purple text-white border-purple"
@@ -1006,25 +1034,25 @@ export default function CalendarPage() {
                   );
                 })}
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
+            </fieldset>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <Label>Working start</Label>
-                <Input type="time" value={availForm.working_start} onChange={(e) => setAvailForm({ ...availForm, working_start: e.target.value })} />
+                <Label htmlFor="availability-working-start">Working start</Label>
+                <Input id="availability-working-start" type="time" value={availForm.working_start} onChange={(e) => setAvailForm({ ...availForm, working_start: e.target.value })} />
               </div>
               <div>
-                <Label>Working end</Label>
-                <Input type="time" value={availForm.working_end} onChange={(e) => setAvailForm({ ...availForm, working_end: e.target.value })} />
+                <Label htmlFor="availability-working-end">Working end</Label>
+                <Input id="availability-working-end" type="time" value={availForm.working_end} onChange={(e) => setAvailForm({ ...availForm, working_end: e.target.value })} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <Label>Buffer between meetings</Label>
+                <Label htmlFor="availability-buffer">Buffer between meetings</Label>
                 <Select
                   value={String(availForm.buffer_minutes)}
                   onValueChange={(v) => setAvailForm({ ...availForm, buffer_minutes: Number(v) })}
                 >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="availability-buffer"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {[0, 5, 10, 15, 30, 60].map((m) => (
                       <SelectItem key={m} value={String(m)}>{m === 0 ? "None" : `${m} minutes`}</SelectItem>
@@ -1033,12 +1061,12 @@ export default function CalendarPage() {
                 </Select>
               </div>
               <div>
-                <Label>Minimum notice</Label>
+                <Label htmlFor="availability-minimum-notice">Minimum notice</Label>
                 <Select
                   value={String(availForm.min_notice_hours)}
                   onValueChange={(v) => setAvailForm({ ...availForm, min_notice_hours: Number(v) })}
                 >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="availability-minimum-notice"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {[0, 1, 2, 4, 12, 24, 48].map((h) => (
                       <SelectItem key={h} value={String(h)}>{h === 0 ? "None" : `${h}h`}</SelectItem>

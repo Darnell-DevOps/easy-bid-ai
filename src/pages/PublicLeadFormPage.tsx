@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,8 @@ export default function PublicLeadFormPage() {
   const [responses, setResponses] = useState<FieldResponses>({});
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [invalidFieldIds, setInvalidFieldIds] = useState<string[]>([]);
   // Spam protection: honeypot field + min time-to-submit guard.
   const [honeypot, setHoneypot] = useState("");
   const [loadedAt] = useState(() => Date.now());
@@ -61,8 +63,11 @@ export default function PublicLeadFormPage() {
 
   const grouped = useMemo(() => (form ? groupSmartFields(form.fields || []) : []), [form]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     if (!form || !slug) return;
+    setFormError("");
+    setInvalidFieldIds([]);
 
     // Honeypot tripped — pretend success, don't call the RPC.
     if (honeypot.trim().length > 0) {
@@ -78,9 +83,15 @@ export default function PublicLeadFormPage() {
 
     const missing = missingRequired(form.fields, responses);
     if (missing.length) {
+      const missingLabels = missing.map((f) => f.label).join(", ");
+      setFormError(`Please complete the required fields: ${missingLabels}.`);
+      setInvalidFieldIds(missing.map((field) => field.id));
+      window.requestAnimationFrame(() => {
+        document.getElementById(`${missing[0].id}-field-wrapper`)?.focus();
+      });
       toast({
         title: "Please complete required fields",
-        description: missing.map((f) => f.label).join(", "),
+        description: missingLabels,
         variant: "destructive",
       });
       return;
@@ -108,6 +119,7 @@ export default function PublicLeadFormPage() {
     if (error) {
       const msg = String(error.message || "");
       if (msg.includes("rate_limited")) {
+        setFormError("Too many submissions. Please wait a few minutes before trying again.");
         // Don't expose technical spam messaging — show a calm, generic note.
         toast({
           title: "Too many submissions",
@@ -116,6 +128,7 @@ export default function PublicLeadFormPage() {
         });
         return;
       }
+      setFormError("Submission failed. Please check your details and try again.");
       toast({ title: "Submission failed", description: error.message, variant: "destructive" });
       return;
     }
@@ -132,28 +145,33 @@ export default function PublicLeadFormPage() {
   };
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-background" aria-busy="true">
+        <Loader2 aria-hidden="true" className="w-6 h-6 animate-spin text-muted-foreground" />
+        <span className="sr-only" role="status">Loading form.</span>
+      </main>
+    );
   }
   if (notFound || !form) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background px-6">
+      <main className="min-h-screen flex items-center justify-center bg-background px-6">
         <div className="text-center max-w-md">
           <h1 className="text-2xl font-bold text-foreground mb-2">Form unavailable</h1>
           <p className="text-muted-foreground text-sm">This form link is invalid or no longer accepting responses.</p>
         </div>
-      </div>
+      </main>
     );
   }
 
   if (done) {
     const { title: successTitle, body: successBody } = splitSuccessMessage(form.success_message);
     return (
-      <div className={`${embed ? "" : "min-h-screen"} bg-background flex items-center justify-center px-4 py-12`}>
-        <div className="relative max-w-lg w-full text-center rounded-2xl border border-border/60 bg-card/80 backdrop-blur p-10 overflow-hidden">
+      <main className={`${embed ? "" : "min-h-screen"} bg-background flex items-center justify-center px-4 py-12`}>
+        <div className="relative max-w-lg w-full text-center rounded-2xl border border-border/60 bg-card/80 backdrop-blur p-10 overflow-hidden" role="status" aria-live="polite">
           <div className="absolute inset-x-0 -top-24 h-48 bg-accent/10 blur-2xl pointer-events-none" />
           <div className="relative">
             <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/15 ring-1 ring-emerald-500/40 mb-5">
-              <CheckCircle2 className="w-7 h-7 text-emerald-400" />
+              <CheckCircle2 aria-hidden="true" className="w-7 h-7 text-emerald-400" />
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2 tracking-tight">
               {successTitle}
@@ -163,7 +181,7 @@ export default function PublicLeadFormPage() {
             </p>
           </div>
         </div>
-      </div>
+      </main>
     );
   }
 
@@ -188,35 +206,76 @@ export default function PublicLeadFormPage() {
             )}
           </header>
 
+          <form onSubmit={handleSubmit} noValidate aria-busy={submitting}>
           <div className="relative space-y-10">
             {grouped.map((g, gi) => (
-              <section key={g.group} className="space-y-5">
+              <section key={g.group} className="space-y-5" aria-labelledby={`lead-form-section-${gi}`}>
                 <div className="flex items-center gap-3">
                   <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-accent/15 text-accent text-[11px] font-semibold">
                     {gi + 1}
                   </span>
-                  <p className="text-[11px] uppercase tracking-[0.22em] text-foreground/80 font-semibold">
+                  <h2 id={`lead-form-section-${gi}`} className="text-[11px] uppercase tracking-[0.22em] text-foreground/80 font-semibold">
                     {g.group}
-                  </p>
+                  </h2>
                   <div className="flex-1 h-px bg-border/60" />
                 </div>
                 <div className="space-y-5">
-                  {g.fields.map((f) => isFieldVisible(f, responses) && (
-                    <div key={f.id} className="space-y-1.5">
-                      <Label htmlFor={f.id} className="text-sm font-medium text-foreground">
-                        {f.label}{f.required && <span className="text-rose-500 ml-1">*</span>}
-                      </Label>
-                      <div className="[&_input]:transition-all [&_textarea]:transition-all [&_input]:focus-visible:ring-2 [&_textarea]:focus-visible:ring-2 [&_input]:focus-visible:ring-accent/40 [&_textarea]:focus-visible:ring-accent/40">
-                        <SmartFieldRenderer
-                          field={f}
-                          value={responses[f.id]}
-                          onChange={(v) => setResponses((p) => ({ ...p, [f.id]: v }))}
-                          formContext={{ slug }}
-                        />
+                  {g.fields.map((f) => {
+                    if (!isFieldVisible(f, responses)) return null;
+                     const labelId = `${f.id}-label`;
+                      const descriptionId = f.helpText ? `${f.id}-description` : undefined;
+                      const errorId = `${f.id}-error`;
+                      const invalid = invalidFieldIds.includes(f.id);
+                    const usesGroupLabel = ["radio", "multi_select", "checkbox", "file"].includes(f.type);
+                    const labelContent = (
+                      <>
+                        {f.label}
+                        {f.required && (
+                          <>
+                            <span aria-hidden="true" className="text-rose-500 ml-1">*</span>
+                            {f.type === "multi_select" && <span className="sr-only"> (required)</span>}
+                          </>
+                        )}
+                      </>
+                    );
+
+                    return (
+                      <div
+                        key={f.id}
+                        id={`${f.id}-field-wrapper`}
+                        tabIndex={-1}
+                        aria-labelledby={labelId}
+                        aria-describedby={invalid ? errorId : descriptionId}
+                        className="space-y-1.5 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2"
+                      >
+                        {usesGroupLabel ? (
+                          <p id={labelId} className="text-sm font-medium text-foreground">{labelContent}</p>
+                        ) : (
+                          <Label id={labelId} htmlFor={f.id} className="text-sm font-medium text-foreground">
+                            {labelContent}
+                          </Label>
+                        )}
+                        <div className="[&_input]:transition-all [&_textarea]:transition-all [&_input]:focus-visible:ring-2 [&_textarea]:focus-visible:ring-2 [&_input]:focus-visible:ring-accent/40 [&_textarea]:focus-visible:ring-accent/40">
+                          <SmartFieldRenderer
+                            field={f}
+                            value={responses[f.id]}
+                            onChange={(v) => {
+                             setFormError("");
+                              setInvalidFieldIds((ids) => ids.filter((id) => id !== f.id));
+                              setResponses((p) => ({ ...p, [f.id]: v }));
+                            }}
+                            formContext={{ slug }}
+                            labelId={labelId}
+                            descriptionId={descriptionId}
+                            invalid={invalid}
+                            errorId={errorId}
+                          />
+                        </div>
+                        {f.helpText && <p id={descriptionId} className="text-[11px] text-muted-foreground">{f.helpText}</p>}
+                        {invalid && <p id={errorId} className="text-xs text-destructive">This field is required.</p>}
                       </div>
-                      {f.helpText && <p className="text-[11px] text-muted-foreground">{f.helpText}</p>}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </section>
             ))}
@@ -238,20 +297,27 @@ export default function PublicLeadFormPage() {
 
 
           <div className="relative mt-10 pt-6 border-t border-border/60 space-y-4">
-            <p className="text-xs text-muted-foreground flex items-center justify-center gap-2 text-center">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400/80 flex-shrink-0" />
+            {formError && (
+              <p role="alert" aria-atomic="true" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {formError}
+              </p>
+            )}
+            <p id="lead-form-submit-note" className="text-xs text-muted-foreground flex items-center justify-center gap-2 text-center">
+              <ShieldCheck aria-hidden="true" className="w-3.5 h-3.5 text-emerald-400/80 flex-shrink-0" />
               Submit your details and we'll prepare the next step for your project.
             </p>
             <Button
+              type="submit"
               size="lg"
-              onClick={handleSubmit}
               disabled={submitting}
+              aria-describedby="lead-form-submit-note"
               className="w-full gap-2 bg-accent text-accent-foreground font-semibold hover:bg-accent/90 h-12"
             >
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              {submitting ? <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" /> : <Send aria-hidden="true" className="w-4 h-4" />}
               {submitLabel}
             </Button>
           </div>
+          </form>
         </div>
       </main>
     </div>

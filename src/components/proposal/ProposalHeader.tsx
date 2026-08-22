@@ -98,9 +98,9 @@ export default function ProposalHeader({
       >
         Prepared for {companyName || clientName}
       </p>
-      <h1 className="text-3xl lg:text-5xl font-bold text-foreground tracking-tight leading-[1.1]">
+      <h2 className="text-3xl lg:text-5xl font-bold text-foreground tracking-tight leading-[1.1]">
         Proposal for {clientName}
-      </h1>
+      </h2>
       <p className="text-base lg:text-lg text-muted-foreground mt-4 max-w-2xl leading-relaxed">
         A clear plan to help you grow with{" "}
         <span className="text-foreground font-medium">{serviceType.toLowerCase()}</span> — built around your goals,

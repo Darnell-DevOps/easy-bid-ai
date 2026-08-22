@@ -328,11 +328,11 @@ export default function NewRetainerPage() {
         <Card>
           <CardContent className="p-6 space-y-5">
             <div>
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+              <Label htmlFor="retainer-client-select" className="text-xs uppercase tracking-wider text-muted-foreground">
                 Client
               </Label>
               <Select value={clientId} onValueChange={onPickClient}>
-                <SelectTrigger className="mt-1.5">
+                <SelectTrigger id="retainer-client-select" className="mt-1.5">
                   <SelectValue placeholder="Pick a client or add new" />
                 </SelectTrigger>
                 <SelectContent>
@@ -348,8 +348,11 @@ export default function NewRetainerPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label>Client name</Label>
+                <Label htmlFor="retainer-client-name">Client name</Label>
                 <Input
+                  id="retainer-client-name"
+                  required
+                  autoComplete="name"
                   value={clientName}
                   onChange={(e) => setClientName(e.target.value)}
                   className="mt-1.5"
@@ -357,9 +360,11 @@ export default function NewRetainerPage() {
                 />
               </div>
               <div>
-                <Label>Client email</Label>
+                <Label htmlFor="retainer-client-email">Client email</Label>
                 <Input
+                  id="retainer-client-email"
                   type="email"
+                  autoComplete="email"
                   value={clientEmail}
                   onChange={(e) => setClientEmail(e.target.value)}
                   className="mt-1.5"
@@ -367,8 +372,10 @@ export default function NewRetainerPage() {
                 />
               </div>
               <div className="sm:col-span-2">
-                <Label>Company</Label>
+                <Label htmlFor="retainer-client-company">Company</Label>
                 <Input
+                  id="retainer-client-company"
+                  autoComplete="organization"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   className="mt-1.5"
@@ -378,12 +385,13 @@ export default function NewRetainerPage() {
             </div>
 
             <div>
-              <Label>Retainer title</Label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1.5" />
+              <Label htmlFor="retainer-title">Retainer title</Label>
+              <Input id="retainer-title" value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1.5" />
             </div>
             <div>
-              <Label>Description</Label>
+              <Label htmlFor="retainer-description">Description</Label>
               <Textarea
+                id="retainer-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="mt-1.5"
@@ -393,10 +401,14 @@ export default function NewRetainerPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="sm:col-span-2">
-                <Label>Amount</Label>
+                <Label htmlFor="retainer-amount">Amount</Label>
                 <Input
+                  id="retainer-amount"
                   type="number"
                   inputMode="decimal"
+                  required
+                  min="0.01"
+                  step="0.01"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   className="mt-1.5"
@@ -404,9 +416,9 @@ export default function NewRetainerPage() {
                 />
               </div>
               <div>
-                <Label>Currency</Label>
+                <Label htmlFor="retainer-currency">Currency</Label>
                 <Select value={currency} onValueChange={setCurrency}>
-                  <SelectTrigger className="mt-1.5">
+                  <SelectTrigger id="retainer-currency" className="mt-1.5">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -422,9 +434,9 @@ export default function NewRetainerPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label>Tax mode</Label>
+                <Label htmlFor="retainer-tax-mode">Tax mode</Label>
                 <Select value={taxMode ?? "none"} onValueChange={(v) => setTaxMode(v as TaxMode)}>
-                  <SelectTrigger className="mt-1.5">
+                  <SelectTrigger id="retainer-tax-mode" className="mt-1.5">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -436,8 +448,9 @@ export default function NewRetainerPage() {
               </div>
               {taxMode !== "none" && (
                 <div>
-                  <Label>Tax rate (%)</Label>
+                  <Label htmlFor="retainer-tax-rate">Tax rate (%)</Label>
                   <Input
+                    id="retainer-tax-rate"
                     type="number"
                     inputMode="decimal"
                     value={taxRate}
@@ -468,12 +481,12 @@ export default function NewRetainerPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label>Billing frequency</Label>
+                <Label htmlFor="retainer-billing-frequency">Billing frequency</Label>
                 <Select
                   value={billingInterval}
                   onValueChange={(v) => setBillingInterval(v as any)}
                 >
-                  <SelectTrigger className="mt-1.5">
+                  <SelectTrigger id="retainer-billing-frequency" className="mt-1.5">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -486,13 +499,16 @@ export default function NewRetainerPage() {
               </div>
               {billingInterval === "custom" && (
                 <div>
-                  <Label>Every X days</Label>
+                  <Label htmlFor="retainer-custom-days">Every X days</Label>
                   <Input
+                    id="retainer-custom-days"
                     type="number"
+                    inputMode="numeric"
                     value={customDays}
                     onChange={(e) => setCustomDays(e.target.value)}
                     className="mt-1.5"
                     min={1}
+                    step={1}
                   />
                 </div>
               )}
@@ -500,8 +516,9 @@ export default function NewRetainerPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label>Start date</Label>
+                <Label htmlFor="retainer-start-date">Start date</Label>
                 <Input
+                  id="retainer-start-date"
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
@@ -509,8 +526,9 @@ export default function NewRetainerPage() {
                 />
               </div>
               <div>
-                <Label>End date (optional)</Label>
+                <Label htmlFor="retainer-end-date">End date (optional)</Label>
                 <Input
+                  id="retainer-end-date"
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
@@ -521,17 +539,24 @@ export default function NewRetainerPage() {
 
             <div className="flex items-center justify-between rounded-lg border border-border/60 p-3">
               <div>
-                <p className="text-sm font-medium text-foreground">Auto-renew</p>
-                <p className="text-xs text-muted-foreground">
+                <Label id="retainer-auto-renew-label" htmlFor="retainer-auto-renew" className="text-sm font-medium text-foreground">Auto-renew</Label>
+                <p id="retainer-auto-renew-help" className="text-xs text-muted-foreground">
                   Automatically continue billing after the end date.
                 </p>
               </div>
-              <Switch checked={autoRenew} onCheckedChange={setAutoRenew} />
+              <Switch
+                id="retainer-auto-renew"
+                checked={autoRenew}
+                onCheckedChange={setAutoRenew}
+                aria-labelledby="retainer-auto-renew-label"
+                aria-describedby="retainer-auto-renew-help"
+              />
             </div>
 
             <div>
-              <Label>Internal notes (optional)</Label>
+              <Label htmlFor="retainer-notes">Internal notes (optional)</Label>
               <Textarea
+                id="retainer-notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 className="mt-1.5"
