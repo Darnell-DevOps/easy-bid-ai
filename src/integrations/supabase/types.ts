@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      abuse_rate_limits: {
+        Row: {
+          bucket: string
+          request_count: number
+          subject_hash: string
+          updated_at: string
+          window_started_at: string
+        }
+        Insert: {
+          bucket: string
+          request_count?: number
+          subject_hash: string
+          updated_at?: string
+          window_started_at?: string
+        }
+        Update: {
+          bucket?: string
+          request_count?: number
+          subject_hash?: string
+          updated_at?: string
+          window_started_at?: string
+        }
+        Relationships: []
+      }
       admin_actions_log: {
         Row: {
           action_type: string
@@ -3151,6 +3175,20 @@ export type Database = {
           _proposal_id: string
         }
         Returns: Json
+      }
+      consume_abuse_rate_limit: {
+        Args: {
+          _bucket: string
+          _max_requests: number
+          _request_cost?: number
+          _subject_hash: string
+          _window_seconds: number
+        }
+        Returns: {
+          allowed: boolean
+          remaining: number
+          retry_after_seconds: number
+        }[]
       }
       contract_countersign: {
         Args: {
