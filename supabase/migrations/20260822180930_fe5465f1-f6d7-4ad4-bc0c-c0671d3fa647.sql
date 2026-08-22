@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.admin_security_event_summary(TIMESTAMPTZ) FROM anon;
