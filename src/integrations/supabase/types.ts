@@ -2603,6 +2603,45 @@ export type Database = {
         }
         Relationships: []
       }
+      security_events: {
+        Row: {
+          event_type: string
+          id: string
+          metadata: Json
+          occurred_at: string
+          outcome: string
+          request_fingerprint: string | null
+          severity: string
+          source: string
+          status_code: number | null
+          user_id: string | null
+        }
+        Insert: {
+          event_type: string
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          outcome?: string
+          request_fingerprint?: string | null
+          severity?: string
+          source: string
+          status_code?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          event_type?: string
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          outcome?: string
+          request_fingerprint?: string | null
+          severity?: string
+          source?: string
+          status_code?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       sending_domains: {
         Row: {
           created_at: string
@@ -3105,6 +3144,17 @@ export type Database = {
         Returns: undefined
       }
       admin_revenue_stats: { Args: never; Returns: Json }
+      admin_security_event_summary: {
+        Args: { _since?: string }
+        Returns: {
+          event_count: number
+          event_type: string
+          last_seen_at: string
+          severity: string
+          source: string
+          unique_request_fingerprints: number
+        }[]
+      }
       admin_usage_stats: { Args: never; Returns: Json }
       admin_user_list: {
         Args: { _limit?: number; _offset?: number; _search?: string }
