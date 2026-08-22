@@ -1,5 +1,5 @@
 import PageMeta from "@/components/PageMeta";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,9 @@ import { markOAuthRedirect } from "@/lib/oauth-return";
 import { useToast } from "@/hooks/use-toast";
 import { track } from "@/lib/landing-analytics";
 import { sendEmail } from "@/lib/email";
+import AuthCaptcha, { type AuthCaptchaHandle } from "@/components/auth/AuthCaptcha";
+import AuthFormError from "@/components/auth/AuthFormError";
+import { isAuthCaptchaConfigured } from "@/lib/auth-captcha";
 
 function getPasswordStrength(password: string) {
   const length = password.length;
@@ -32,6 +35,11 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<AuthCaptchaHandle>(null);
+  const authErrorRef = useRef<HTMLDivElement>(null);
+  const captchaConfigured = isAuthCaptchaConfigured();
   const passwordStrength = getPasswordStrength(password);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -40,7 +48,12 @@ export default function Signup() {
     track("signup_view");
   }, []);
 
+  useEffect(() => {
+    if (authError) authErrorRef.current?.focus();
+  }, [authError]);
+
   const handleGoogle = async () => {
+    setAuthError(null);
     setGoogleLoading(true);
     markOAuthRedirect("/dashboard");
     const result = await lovable.auth.signInWithOAuth("google", {
@@ -48,7 +61,7 @@ export default function Signup() {
     });
     if (result.error) {
       setGoogleLoading(false);
-      toast({ title: "Google sign-in failed", description: result.error.message, variant: "destructive" });
+      setAuthError(`Google sign-in failed. ${result.error.message}`);
       return;
     }
     if (result.redirected) return;
@@ -56,6 +69,7 @@ export default function Signup() {
   };
 
   const handleApple = async () => {
+    setAuthError(null);
     setAppleLoading(true);
     markOAuthRedirect("/dashboard");
     const result = await lovable.auth.signInWithOAuth("apple", {
@@ -63,7 +77,7 @@ export default function Signup() {
     });
     if (result.error) {
       setAppleLoading(false);
-      toast({ title: "Apple sign-in failed", description: result.error.message, variant: "destructive" });
+      setAuthError(`Apple sign-in failed. ${result.error.message}`);
       return;
     }
     if (result.redirected) return;
@@ -72,6 +86,11 @@ export default function Signup() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    setAuthError(null);
+    if (captchaConfigured && !captchaToken) {
+      setAuthError("Complete the security check. Please verify you are human before creating an account.");
+      return;
+    }
     setLoading(true);
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -79,11 +98,13 @@ export default function Signup() {
       options: {
         emailRedirectTo: `${window.location.origin}/dashboard`,
         data: { full_name: fullName },
+        captchaToken: captchaToken || undefined,
       },
     });
+    captchaRef.current?.reset();
     setLoading(false);
     if (error) {
-      toast({ title: "Signup failed", description: error.message, variant: "destructive" });
+      setAuthError(`Account creation failed. ${error.message}`);
     } else if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
       toast({
         title: "Account already exists",
@@ -111,8 +132,8 @@ export default function Signup() {
     <div className="min-h-screen grid lg:grid-cols-2 bg-background">
       <PageMeta title="Create your CloseSync AI account" description="Start closing clients faster with AI proposals, contracts, payments and retainers." path="/signup" noIndex />
       {/* Left: form panel */}
-      <div className="flex flex-col bg-muted/30 px-6 py-10 lg:px-16 lg:py-14">
-        <Link to="/" className="text-xl font-semibold text-foreground tracking-tight">
+      <main className="flex flex-col bg-muted/30 px-6 py-10 lg:px-16 lg:py-14">
+        <Link to="/" className="rounded-sm text-xl font-semibold text-foreground tracking-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
           Close<span className="text-gradient-sync">Sync</span> <span className="text-foreground">AI</span>
         </Link>
 
@@ -121,11 +142,13 @@ export default function Signup() {
             <div className="rounded-2xl border border-border bg-card shadow-sm p-7">
               <h1 className="type-card-title text-foreground mb-5">Create account</h1>
 
+              <AuthFormError ref={authErrorRef} id="signup-auth-error" message={authError} />
+
               <button
                 type="button"
                 onClick={handleGoogle}
                 disabled={googleLoading}
-                className="w-full h-11 rounded-lg border border-border bg-background hover:bg-muted/60 transition flex items-center justify-center gap-2.5 text-sm font-medium text-foreground disabled:opacity-60"
+                className="w-full h-11 rounded-lg border border-border bg-background hover:bg-muted/60 transition flex items-center justify-center gap-2.5 text-sm font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-60"
               >
                 <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
                   <path fill="#EA4335" d="M9 3.48c1.69 0 3.21.58 4.4 1.72l3.27-3.27C14.69.92 12.05 0 9 0 5.48 0 2.44 2.02.96 4.96l3.81 2.96C5.5 5.34 7.07 3.48 9 3.48z"/>
@@ -140,7 +163,7 @@ export default function Signup() {
                 type="button"
                 onClick={handleApple}
                 disabled={appleLoading}
-                className="w-full h-11 mt-3 rounded-lg border border-border bg-background hover:bg-muted/60 transition flex items-center justify-center gap-2.5 text-sm font-medium text-foreground disabled:opacity-60"
+                className="w-full h-11 mt-3 rounded-lg border border-border bg-background hover:bg-muted/60 transition flex items-center justify-center gap-2.5 text-sm font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-60"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M16.36 12.78c.02 2.6 2.28 3.47 2.31 3.48-.02.06-.36 1.24-1.19 2.45-.72 1.05-1.47 2.1-2.65 2.12-1.16.02-1.53-.69-2.85-.69-1.32 0-1.74.67-2.83.71-1.14.04-2.01-1.13-2.73-2.18-1.48-2.15-2.62-6.08-1.09-8.73.76-1.32 2.11-2.15 3.58-2.17 1.12-.02 2.17.75 2.85.75.68 0 1.96-.93 3.3-.79.56.02 2.14.23 3.15 1.71-.08.05-1.88 1.1-1.86 3.34M14.2 4.6c.6-.73 1.01-1.74.9-2.75-.87.04-1.92.58-2.54 1.3-.56.64-1.05 1.67-.92 2.66.97.07 1.96-.49 2.56-1.21"/>
@@ -156,13 +179,23 @@ export default function Signup() {
                 <div className="h-px flex-1 bg-border" />
               </div>
 
-              <form onSubmit={handleSignup} className="space-y-4">
+              <form
+                onSubmit={handleSignup}
+                aria-busy={loading}
+                aria-describedby={authError ? "signup-auth-error" : undefined}
+                className="space-y-4"
+              >
                 <div>
                   <Label htmlFor="fullName">Full name</Label>
                   <Input
                     id="fullName"
+                    name="name"
+                    autoComplete="name"
                     value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
+                    onChange={(e) => {
+                      setFullName(e.target.value);
+                      setAuthError(null);
+                    }}
                     placeholder="First and last name"
                     required
                     className="mt-1.5"
@@ -172,9 +205,14 @@ export default function Signup() {
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
+                    name="email"
                     type="email"
+                    autoComplete="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setAuthError(null);
+                    }}
                     placeholder="you@example.com"
                     required
                     className="mt-1.5"
@@ -185,27 +223,35 @@ export default function Signup() {
                   <div className="relative mt-1.5">
                     <Input
                       id="password"
+                      name="password"
                       type={showPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      aria-describedby="signup-password-requirements"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        setAuthError(null);
+                      }}
                       placeholder="Enter password"
                       required
                       minLength={8}
-                      className="pr-10"
+                      className="pr-12"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword((s) => !s)}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      className="absolute right-1.5 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       aria-label={showPassword ? "Hide password" : "Show password"}
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1.5">At least 8 characters</p>
+                  <p id="signup-password-requirements" className="text-xs text-muted-foreground mt-1.5">
+                    At least 8 characters
+                  </p>
                   {password.length > 0 && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                    <div className="mt-2 flex items-center gap-2" role="status" aria-live="polite">
+                      <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden" aria-hidden="true">
                         <div
                           className={`h-full rounded-full transition-all duration-200 ${
                             passwordStrength === "Strong"
@@ -233,13 +279,15 @@ export default function Signup() {
 
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   By clicking 'Create account', I agree to CloseSync's{" "}
-                  <a href="/terms" className="text-accent hover:underline">Terms of Service</a> and{" "}
-                  <a href="/privacy" className="text-accent hover:underline">Privacy Policy</a>.
+                  <a href="/terms" className="rounded-sm text-accent underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">Terms of Service</a> and{" "}
+                  <a href="/privacy" className="rounded-sm text-accent underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">Privacy Policy</a>.
                 </p>
+
+                <AuthCaptcha ref={captchaRef} action="signup" onTokenChange={setCaptchaToken} />
 
                 <Button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || (captchaConfigured && !captchaToken)}
                   className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
                 >
                   {loading ? "Creating account…" : "Create account"}
@@ -249,14 +297,14 @@ export default function Signup() {
 
             <p className="text-center text-sm text-muted-foreground mt-5">
               Already have an account?{" "}
-              <Link to="/login" className="text-accent hover:underline font-medium">Log in</Link>
+              <Link to="/login" className="rounded-sm text-accent hover:underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">Log in</Link>
             </p>
           </div>
         </div>
-      </div>
+      </main>
 
       {/* Right: dark preview panel */}
-      <div className="hidden lg:flex relative bg-[#0b0d12] items-center justify-center overflow-hidden">
+      <div aria-hidden="true" className="hidden lg:flex relative bg-[#0b0d12] items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--accent)/0.08),transparent_60%)]" />
 
         <div className="relative w-full max-w-md px-8">

@@ -141,9 +141,17 @@ test.describe("Contract sign → countersign → executed PDF", () => {
 
       await expect(clientPage.getByText("E2E Sign Flow Contract", { exact: false })).toBeVisible();
 
-      // Name is pre-filled from contract.client_name; just confirm it's there.
-      const nameInput = clientPage.getByPlaceholder("Jane Smith");
+      // The public signing form remains programmatically labelled and pre-filled.
+      const nameInput = clientPage.getByRole("textbox", { name: /Full legal name/i });
       await expect(nameInput).toHaveValue(/E2E Test Client/);
+      await expect(nameInput).toHaveAttribute("autocomplete", "name");
+      await expect(clientPage.getByRole("textbox", { name: "Email" })).toHaveAttribute("autocomplete", "email");
+      await expect(clientPage.getByRole("tablist", { name: "Signature method" })).toBeVisible();
+
+      const agreementBox = await clientPage.getByRole("checkbox").first().boundingBox();
+      expect(agreementBox).not.toBeNull();
+      expect(agreementBox!.width).toBeGreaterThanOrEqual(24);
+      expect(agreementBox!.height).toBeGreaterThanOrEqual(24);
 
       // "Type signature" tab is selected by default.
       await clientPage.getByRole("checkbox").first().check();

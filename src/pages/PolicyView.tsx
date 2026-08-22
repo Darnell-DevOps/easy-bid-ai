@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Copy, Download, RefreshCw, Save, AlertTriangle, Pencil, Eye } from "lucide-react";
 
 interface Policy {
@@ -67,6 +67,7 @@ function renderMarkdown(md: string) {
 export default function PolicyView() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [policy, setPolicy] = useState<Policy | null>(null);
   const [content, setContent] = useState("");
   const [editing, setEditing] = useState(false);
@@ -77,8 +78,14 @@ export default function PolicyView() {
     (async () => {
       if (!id) return;
       const { data, error } = await supabase.from("policies").select("*").eq("id", id).maybeSingle();
-      if (error) return toast.error(error.message);
-      if (!data) return toast.error("Policy not found");
+      if (error) {
+        toast({ title: error.message, variant: "destructive" });
+        return;
+      }
+      if (!data) {
+        toast({ title: "Policy not found", variant: "destructive" });
+        return;
+      }
       setPolicy(data as Policy);
       setContent(data.content);
     })();
@@ -89,15 +96,18 @@ export default function PolicyView() {
     setSaving(true);
     const { error } = await supabase.from("policies").update({ content }).eq("id", policy.id);
     setSaving(false);
-    if (error) return toast.error(error.message);
-    toast.success("Saved");
+    if (error) {
+      toast({ title: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Saved" });
     setEditing(false);
     setPolicy({ ...policy, content });
   };
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(content);
-    toast.success("Copied to clipboard");
+    toast({ title: "Copied to clipboard" });
   };
 
   const handleDownload = () => {
@@ -136,9 +146,12 @@ export default function PolicyView() {
       if (upErr) throw upErr;
       setContent(newContent);
       setPolicy({ ...policy, content: newContent });
-      toast.success("Policy regenerated");
+      toast({ title: "Policy regenerated" });
     } catch (e: any) {
-      toast.error(e?.message ?? "Regeneration failed");
+      toast({
+        title: e?.message ?? "Regeneration failed",
+        variant: "destructive",
+      });
     } finally {
       setRegenerating(false);
     }

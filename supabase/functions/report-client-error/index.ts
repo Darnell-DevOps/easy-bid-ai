@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { logSecurityEvent } from "../_shared/security-telemetry.ts";
+import { enforcePublicRateLimit } from "../_shared/abuse-rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,6 +24,11 @@ async function sha256(value: string): Promise<string> {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+  const limited = await enforcePublicRateLimit(req, {
+    source: "report-client-error",
+    ipLimit: { maxRequests: 20, windowSeconds: 5 * 60 },
+  });
+  if (limited) return limited;
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -66,22 +72,6 @@ Deno.serve(async (req) => {
     const forwarded = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
     const salt = Deno.env.get("ERROR_HASH_SALT") || serviceKey.slice(-16);
     const requestFingerprint = await sha256(`${salt}:${forwarded}`);
-    const since = new Date(Date.now() - 5 * 60_000).toISOString();
-    const { count } = await admin
-      .from("app_error_reports")
-      .select("id", { count: "exact", head: true })
-      .eq("request_fingerprint", requestFingerprint)
-      .gte("occurred_at", since);
-    if ((count || 0) >= 20) {
-      await logSecurityEvent(admin, req, {
-        eventType: "rate_limit_exceeded",
-        source: "report-client-error",
-        statusCode: 202,
-        userId,
-        metadata: { limit: 20, window_seconds: 300 },
-      });
-      return json({ accepted: false, rateLimited: true }, 202);
-    }
 
     const { data: inserted, error } = await admin
       .from("app_error_reports")

@@ -5,6 +5,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { buildBizContext, type LeadPrefs } from "../_shared/lead-reply-context.ts";
+import { enforceAiRateLimit } from "../_shared/abuse-rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -56,6 +57,8 @@ Deno.serve(async (req) => {
     });
   }
   const userId = userData.user.id;
+  const rateLimited = await enforceAiRateLimit(req, userId, { source: "lead-reply-regenerate" });
+  if (rateLimited) return rateLimited;
 
   let body: { client_id?: string; mode?: Mode };
   try { body = await req.json(); } catch {

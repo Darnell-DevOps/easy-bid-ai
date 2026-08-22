@@ -42,6 +42,8 @@ import {
 } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { monthlyEquivalentCents, formatMoney } from "@/lib/retainers";
+import { activateOnEnterOrSpace } from "@/lib/keyboard";
+import { ChartDataTable } from "@/components/ui/chart-data-table";
 
 type FilterPreset = "30d" | "90d" | "12m" | "custom";
 
@@ -760,8 +762,9 @@ export default function RevenueDashboard() {
               size="icon"
               onClick={() => navigate("/dashboard")}
               className="h-9 w-9"
+              aria-label="Back to dashboard"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft aria-hidden="true" className="w-4 h-4" />
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-foreground">Revenue</h1>
@@ -942,10 +945,16 @@ export default function RevenueDashboard() {
             {secondaryCards.map((s) => (
               <Card
                 key={s.label}
-                className={`group hover:shadow-lg hover:border-accent/20 transition-all duration-300 cursor-pointer ${
+                role="link"
+                tabIndex={0}
+                aria-label={`View ${s.label}`}
+                className={`group hover:shadow-lg hover:border-accent/20 transition-all duration-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
                   s.alert ? "border-rose-500/30" : ""
                 }`}
                 onClick={() => s.link && navigate(s.link)}
+                onKeyDown={(event) =>
+                  activateOnEnterOrSpace(event, () => navigate(s.link))
+                }
               >
                 <CardContent className="p-4 sm:p-5">
                   <div className="flex items-center justify-between mb-3">
@@ -981,29 +990,37 @@ export default function RevenueDashboard() {
               {loading ? (
                 <div className="h-72 bg-muted animate-pulse rounded-lg" />
               ) : (
-                <ChartContainer config={chartConfig} className="h-72 w-full">
-                  <BarChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
-                    <XAxis
-                      dataKey="name"
-                      className="text-xs"
-                      tick={{ fill: "hsl(var(--muted-foreground))" }}
-                    />
-                    <YAxis
-                      tick={{ fill: "hsl(var(--muted-foreground))" }}
-                      tickFormatter={(v) => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
-                      className="text-xs"
-                    />
-                    <ChartTooltip
-                      content={
-                        <ChartTooltipContent
-                          formatter={(value) => `$${Number(value).toLocaleString()}`}
-                        />
-                      }
-                    />
-                    <Bar dataKey="revenue" fill="var(--color-revenue)" radius={[6, 6, 0, 0]} />
-                  </BarChart>
-                </ChartContainer>
+                <>
+                  <ChartContainer aria-hidden="true" config={chartConfig} className="h-72 w-full">
+                    <BarChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                      <XAxis
+                        dataKey="name"
+                        className="text-xs"
+                        tick={{ fill: "hsl(var(--muted-foreground))" }}
+                      />
+                      <YAxis
+                        tick={{ fill: "hsl(var(--muted-foreground))" }}
+                        tickFormatter={(v) => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
+                        className="text-xs"
+                      />
+                      <ChartTooltip
+                        content={
+                          <ChartTooltipContent
+                            formatter={(value) => `$${Number(value).toLocaleString()}`}
+                          />
+                        }
+                      />
+                      <Bar dataKey="revenue" fill="var(--color-revenue)" radius={[6, 6, 0, 0]} />
+                    </BarChart>
+                  </ChartContainer>
+                  <ChartDataTable
+                    caption={`Revenue over time for ${filterLabel}.`}
+                    labelHeader="Period"
+                    valueHeader="Revenue"
+                    rows={chartData.map((entry) => ({ label: entry.name, value: `$${entry.revenue.toLocaleString()}` }))}
+                  />
+                </>
               )}
             </CardContent>
           </Card>
@@ -1023,7 +1040,7 @@ export default function RevenueDashboard() {
                 <RevenueEmptyState />
               ) : (
                 <div className="space-y-4">
-                  <div className="relative h-44">
+                  <div aria-hidden="true" className="relative h-44">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
@@ -1049,19 +1066,20 @@ export default function RevenueDashboard() {
                       <span className="text-xl font-bold text-foreground">{fmt(breakdownTotal)}</span>
                     </div>
                   </div>
-                  <div className="space-y-1.5">
+                  <ul aria-label="Revenue breakdown" className="space-y-1.5">
                     {breakdownData
                       .slice()
                       .sort((a, b) => b.value - a.value)
                       .map((b) => {
                         const pct = breakdownTotal > 0 ? (b.value / breakdownTotal) * 100 : 0;
                         return (
-                          <div
+                          <li
                             key={b.name}
                             className="flex items-center justify-between py-1.5"
                           >
                             <div className="flex items-center gap-2 min-w-0">
                               <span
+                                aria-hidden="true"
                                 className="w-2 h-2 rounded-full shrink-0"
                                 style={{ backgroundColor: b.color }}
                               />
@@ -1071,10 +1089,10 @@ export default function RevenueDashboard() {
                               <p className="text-xs font-semibold text-foreground">{fmt(b.value)}</p>
                               <p className="text-[10px] text-muted-foreground w-9 text-right">{pct.toFixed(0)}%</p>
                             </div>
-                          </div>
+                          </li>
                         );
                       })}
-                  </div>
+                  </ul>
                 </div>
               )}
             </CardContent>
@@ -1113,9 +1131,21 @@ export default function RevenueDashboard() {
                   {topClients.map((client, index) => (
                     <div
                       key={client.key}
-                      className="flex items-center gap-3 p-2.5 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors cursor-pointer group"
+                      role={client.clientId ? "link" : undefined}
+                      tabIndex={client.clientId ? 0 : undefined}
+                      aria-label={client.clientId ? `Open client ${client.displayName}` : undefined}
+                      className={`flex items-center gap-3 p-2.5 rounded-lg bg-secondary/30 transition-colors group ${
+                        client.clientId
+                          ? "hover:bg-secondary/50 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          : ""
+                      }`}
                       onClick={() => {
                         if (client.clientId) navigate(`/dashboard/clients/${client.clientId}`);
+                      }}
+                      onKeyDown={(event) => {
+                        if (client.clientId) {
+                          activateOnEnterOrSpace(event, () => navigate(`/dashboard/clients/${client.clientId}`));
+                        }
                       }}
                     >
                       <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-xs font-bold text-primary">
@@ -1140,7 +1170,7 @@ export default function RevenueDashboard() {
                       <div className="text-right shrink-0 flex items-center gap-2">
                         <p className="text-sm font-semibold text-foreground">{fmt(client.revenue)}</p>
                         {client.clientId && (
-                          <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <ExternalLink aria-hidden="true" className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity" />
                         )}
                       </div>
                     </div>
@@ -1182,8 +1212,14 @@ export default function RevenueDashboard() {
                     return (
                       <div
                         key={r.id}
-                        className={`flex items-center gap-3 p-2.5 rounded-lg border ${urgency.border} ${urgency.bg} hover:bg-muted/40 transition-colors cursor-pointer group`}
+                        role="link"
+                        tabIndex={0}
+                        aria-label={`Open retainer ${r.title} for ${r.client_name}`}
+                        className={`flex items-center gap-3 p-2.5 rounded-lg border ${urgency.border} ${urgency.bg} hover:bg-muted/40 transition-colors cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
                         onClick={() => navigate(`/dashboard/retainers/${r.id}`)}
+                        onKeyDown={(event) =>
+                          activateOnEnterOrSpace(event, () => navigate(`/dashboard/retainers/${r.id}`))
+                        }
                       >
                         <div className={`w-8 h-8 rounded-lg bg-background/50 flex items-center justify-center shrink-0`}>
                           <Repeat className={`w-4 h-4 ${urgency.color}`} />
@@ -1204,7 +1240,7 @@ export default function RevenueDashboard() {
                           <p className="text-sm font-semibold text-foreground">
                             {formatMoney(r.amount_cents, r.currency)}
                           </p>
-                          <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <ExternalLink aria-hidden="true" className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity" />
                         </div>
                       </div>
                     );
@@ -1315,8 +1351,14 @@ export default function RevenueDashboard() {
                   {[...paidProposals].reverse().slice(0, 8).map((p) => (
                     <div
                       key={p.id}
-                      className="flex items-center justify-between p-2.5 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors cursor-pointer"
+                      role="link"
+                      tabIndex={0}
+                      aria-label={`Open proposal for ${p.client_name}`}
+                      className="flex items-center justify-between p-2.5 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       onClick={() => navigate(`/dashboard/proposal/${p.id}`)}
+                      onKeyDown={(event) =>
+                        activateOnEnterOrSpace(event, () => navigate(`/dashboard/proposal/${p.id}`))
+                      }
                     >
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">{p.client_name}</p>

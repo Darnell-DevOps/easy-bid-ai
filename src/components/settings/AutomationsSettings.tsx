@@ -357,6 +357,7 @@ export default function AutomationsSettings() {
                       checked={!!prefs[item.id]}
                       onCheckedChange={(v) => toggle(item.id, v)}
                       className="mt-0.5 flex-shrink-0"
+                      aria-label={item.label}
                     />
                   </div>
                 ))}

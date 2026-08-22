@@ -39,7 +39,7 @@ import {
   MessageSquareText,
   Mail,
 } from "lucide-react";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { formatMoney, daysUntil } from "@/lib/retainers";
 import {
   buildRecoveryTemplate,
@@ -108,6 +108,7 @@ function formatLocalDate(value: string): string {
 }
 
 export default function RecoveryDashboard() {
+  const { toast } = useToast();
   const [rows, setRows] = useState<RetainerRow[]>([]);
   const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -307,7 +308,7 @@ export default function RecoveryDashboard() {
   const copyRecoveryLink = (token: string) => {
     const url = `${window.location.origin}/r/recover/${token}`;
     navigator.clipboard.writeText(url);
-    toast.success("Recovery link copied");
+    toast({ title: "Recovery link copied" });
   };
 
   const openMessage = (ctx: MessageContext) => {
@@ -318,7 +319,7 @@ export default function RecoveryDashboard() {
 
   const copyMessage = async () => {
     await navigator.clipboard.writeText(`Subject: ${msgSubject}\n\n${msgBody}`);
-    toast.success("Message copied — paste into your email client");
+    toast({ title: "Message copied — paste into your email client" });
   };
 
   const emailMessage = () => {
@@ -343,13 +344,13 @@ export default function RecoveryDashboard() {
       .update({ status: "resolved" })
       .eq("retainer_id", id)
       .in("kind", ["payment_failed", "payment_final"]);
-    toast.success("Marked as resolved");
+    toast({ title: "Marked as resolved" });
     load();
   };
 
   const runCron = async () => {
     await supabase.functions.invoke("retainer-recovery-cron");
-    toast.success("Recovery scan run — auto-reminders queued");
+    toast({ title: "Recovery scan run — auto-reminders queued" });
     load();
   };
 
@@ -890,12 +891,12 @@ export default function RecoveryDashboard() {
           </DialogHeader>
           <div className="space-y-3 pt-1">
             <div className="space-y-1.5">
-              <Label className="text-xs">Template</Label>
+              <Label htmlFor="rec-template" className="text-xs">Template</Label>
               <Select
                 value={msgKind}
                 onValueChange={(v) => setMsgKind(v as RecoveryTemplateKind)}
               >
-                <SelectTrigger>
+                <SelectTrigger id="rec-template">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -939,8 +940,9 @@ export default function RecoveryDashboard() {
                 onChange={(e) => setMsgBody(e.target.value)}
                 rows={10}
                 className="text-sm leading-relaxed"
+                aria-describedby="rec-body-help"
               />
-              <p className="text-[11px] text-muted-foreground">
+              <p id="rec-body-help" className="text-[11px] text-muted-foreground">
                 Edit freely — this is a starting point you can personalise.
               </p>
             </div>

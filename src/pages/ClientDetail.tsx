@@ -10,8 +10,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { TimelineInput } from "@/components/TimelineInput";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AccessibleLoadingState } from "@/components/ui/accessible-loading-state";
 import { contractTypeLabel, contractStatusLabel } from "@/lib/contracts";
 import { formatMoney, intervalLabel, statusBadgeClasses as retainerStatusBadge } from "@/lib/retainers";
+import { activateOnEnterOrSpace } from "@/lib/keyboard";
 import {
   Select,
   SelectContent,
@@ -566,7 +568,8 @@ export default function ClientDetail() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="space-y-4">
+        <AccessibleLoadingState label="Loading client details" className="sr-only" />
+        <div className="space-y-4" aria-hidden="true">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-32 w-full" />
           <Skeleton className="h-64 w-full" />
@@ -781,9 +784,20 @@ export default function ClientDetail() {
                 return (
                   <Card
                     key={p.id}
-                    className="group cursor-pointer transition-all duration-200 hover:border-accent/50 hover:shadow-xl hover:shadow-accent/15 hover:-translate-y-0.5 hover:bg-accent/[0.04]"
+                    data-keyboard-proxy="true"
+                    className="group relative cursor-pointer transition-all duration-200 hover:border-accent/50 hover:shadow-xl hover:shadow-accent/15 hover:-translate-y-0.5 hover:bg-accent/[0.04]"
                     onClick={() => navigate(`/dashboard/proposal/${p.id}`)}
                   >
+                    <button
+                      type="button"
+                      data-keyboard-proxy="true"
+                      aria-label={`Open ${p.service_type} proposal`}
+                      className="absolute inset-0 pointer-events-none rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        navigate(`/dashboard/proposal/${p.id}`);
+                      }}
+                    />
                     <CardContent className="p-4 flex items-center justify-between gap-6">
                       <div className="flex items-center gap-3.5 min-w-0 flex-1">
                         <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0 group-hover:bg-accent/20 transition-colors">
@@ -1002,15 +1016,15 @@ export default function ClientDetail() {
               </h2>
               {!editing ? (
                 <Button variant="outline" size="sm" onClick={startEdit} className="gap-2">
-                  <Pencil className="w-3.5 h-3.5" /> Edit
+                  <Pencil aria-hidden="true" className="w-3.5 h-3.5" /> Edit
                 </Button>
               ) : (
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={cancelEdit} className="gap-2">
-                    <X className="w-3.5 h-3.5" /> Cancel
+                    <X aria-hidden="true" className="w-3.5 h-3.5" /> Cancel
                   </Button>
-                  <Button size="sm" onClick={saveEdit} disabled={savingEdit} className="gap-2">
-                    <Save className="w-3.5 h-3.5" /> {savingEdit ? "Saving…" : "Save"}
+                  <Button size="sm" onClick={saveEdit} disabled={savingEdit} aria-busy={savingEdit} className="gap-2">
+                    <Save aria-hidden="true" className="w-3.5 h-3.5" /> {savingEdit ? "Saving…" : "Save"}
                   </Button>
                 </div>
               )}
@@ -1021,40 +1035,51 @@ export default function ClientDetail() {
               <div className="space-y-5">
                 <div className="grid md:grid-cols-2 gap-5">
                   <div>
-                    <Label>Client Name</Label>
+                    <Label htmlFor="client-edit-name">Client Name</Label>
                     <Input
+                      id="client-edit-name"
                       value={edit.name || ""}
                       onChange={(e) => setEdit({ ...edit, name: e.target.value })}
                       className="mt-2"
+                      autoComplete="name"
                     />
                   </div>
                   <div>
-                    <Label>Email</Label>
+                    <Label htmlFor="client-edit-email">Email</Label>
                     <Input
+                      id="client-edit-email"
+                      type="email"
                       value={edit.email || ""}
                       onChange={(e) => setEdit({ ...edit, email: e.target.value })}
                       className="mt-2"
+                      autoComplete="email"
                     />
                   </div>
                   <div>
-                    <Label>Phone</Label>
+                    <Label htmlFor="client-edit-phone">Phone</Label>
                     <Input
+                      id="client-edit-phone"
+                      type="tel"
                       value={edit.phone || ""}
                       onChange={(e) => setEdit({ ...edit, phone: e.target.value })}
                       className="mt-2"
+                      autoComplete="tel"
                     />
                   </div>
                   <div>
-                    <Label>Company</Label>
+                    <Label htmlFor="client-edit-company">Company</Label>
                     <Input
+                      id="client-edit-company"
                       value={edit.company || ""}
                       onChange={(e) => setEdit({ ...edit, company: e.target.value })}
                       className="mt-2"
+                      autoComplete="organization"
                     />
                   </div>
                   <div>
-                    <Label>Service Requested</Label>
+                    <Label htmlFor="client-edit-service">Service Requested</Label>
                     <Input
+                      id="client-edit-service"
                       value={edit.service_requested || ""}
                       onChange={(e) =>
                         setEdit({ ...edit, service_requested: e.target.value })
@@ -1063,16 +1088,18 @@ export default function ClientDetail() {
                     />
                   </div>
                   <div>
-                    <Label>Budget</Label>
+                    <Label htmlFor="client-edit-budget">Budget</Label>
                     <Input
+                      id="client-edit-budget"
                       value={edit.budget || ""}
                       onChange={(e) => setEdit({ ...edit, budget: e.target.value })}
                       className="mt-2"
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <Label>Timeline</Label>
+                    <Label htmlFor="client-edit-timeline">Timeline</Label>
                     <TimelineInput
+                      id="client-edit-timeline"
                       value={edit.timeline || ""}
                       onChange={(v) => setEdit({ ...edit, timeline: v })}
                       originalRaw={client.timeline}
@@ -1081,8 +1108,9 @@ export default function ClientDetail() {
 
                 </div>
                 <div>
-                  <Label>Project Description</Label>
+                  <Label htmlFor="client-edit-project-description">Project Description</Label>
                   <Textarea
+                    id="client-edit-project-description"
                     rows={4}
                     value={edit.project_description || ""}
                     onChange={(e) =>
@@ -1092,8 +1120,9 @@ export default function ClientDetail() {
                   />
                 </div>
                 <div>
-                  <Label>Goals</Label>
+                  <Label htmlFor="client-edit-goals">Goals</Label>
                   <Textarea
+                    id="client-edit-goals"
                     rows={4}
                     value={edit.goals || ""}
                     onChange={(e) => setEdit({ ...edit, goals: e.target.value })}
@@ -1241,7 +1270,7 @@ function RowCard({
   subtitle,
   badge,
 }: {
-  onClick?: () => void;
+  onClick: () => void;
   icon: any;
   title: string;
   subtitle: string;
@@ -1249,8 +1278,12 @@ function RowCard({
 }) {
   return (
     <Card
-      className="group cursor-pointer transition-all duration-200 hover:border-accent/50 hover:shadow-lg hover:shadow-accent/10 hover:-translate-y-0.5 hover:bg-accent/[0.04]"
+      role="link"
+      tabIndex={0}
+      aria-label={`Open ${title}`}
+      className="group cursor-pointer transition-all duration-200 hover:border-accent/50 hover:shadow-lg hover:shadow-accent/10 hover:-translate-y-0.5 hover:bg-accent/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       onClick={onClick}
+      onKeyDown={(event) => activateOnEnterOrSpace(event, onClick)}
     >
       <CardContent className="p-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3.5 min-w-0 flex-1">

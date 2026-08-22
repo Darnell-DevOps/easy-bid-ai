@@ -22,8 +22,8 @@
     --muted: 222 24% 12%;
     --muted-foreground: 215 14% 58%;
 
-    --accent: 215 82% 55%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 215 82% 60%;
+    --accent-foreground: 222 32% 5%;
 
     --destructive: 0 62% 42%;
     --destructive-foreground: 210 20% 94%;
@@ -36,8 +36,8 @@
 
     --sidebar-background: 222 32% 4%;
     --sidebar-foreground: 215 14% 72%;
-    --sidebar-primary: 215 82% 55%;
-    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-primary: 215 82% 60%;
+    --sidebar-primary-foreground: 222 32% 5%;
     --sidebar-accent: 222 26% 10%;
     --sidebar-accent-foreground: 215 14% 88%;
     --sidebar-border: 222 22% 11%;
@@ -71,8 +71,8 @@
     --muted: 222 24% 12%;
     --muted-foreground: 215 14% 58%;
 
-    --accent: 215 82% 55%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 215 82% 60%;
+    --accent-foreground: 222 32% 5%;
 
     --destructive: 0 62% 42%;
     --destructive-foreground: 210 20% 94%;
@@ -83,8 +83,8 @@
 
     --sidebar-background: 222 32% 4%;
     --sidebar-foreground: 215 14% 72%;
-    --sidebar-primary: 215 82% 55%;
-    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-primary: 215 82% 60%;
+    --sidebar-primary-foreground: 222 32% 5%;
     --sidebar-accent: 222 26% 10%;
     --sidebar-accent-foreground: 215 14% 88%;
     --sidebar-border: 222 22% 11%;
@@ -226,28 +226,29 @@
   }
 }
 
-/* CloseSync marketing surface: editorial studio meets client operating system. */
+/* CloseSync marketing surface: restrained, product-led and high contrast. */
 .landing-shell {
-  --background: 42 33% 94%;
-  --foreground: 222 38% 15%;
-  --card: 42 38% 98%;
-  --card-foreground: 222 38% 15%;
-  --popover: 42 38% 98%;
-  --popover-foreground: 222 38% 15%;
-  --primary: 222 38% 15%;
+  --background: 220 20% 98%;
+  --foreground: 219 40% 16%;
+  --card: 0 0% 100%;
+  --card-foreground: 219 40% 16%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 219 40% 16%;
+  --primary: 219 40% 16%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 40 24% 89%;
-  --secondary-foreground: 222 38% 15%;
-  --muted: 40 24% 89%;
-  --muted-foreground: 218 13% 42%;
-  --accent: 226 65% 51%;
+  --secondary: 220 21% 95%;
+  --secondary-foreground: 219 40% 16%;
+  --muted: 220 21% 95%;
+  --muted-foreground: 217 13% 44%;
+  --accent: 226 54% 48%;
   --accent-foreground: 0 0% 100%;
-  --border: 222 20% 82%;
-  --input: 222 20% 82%;
-  --ring: 226 65% 51%;
+  --border: 218 18% 87%;
+  --input: 218 18% 87%;
+  --ring: 226 54% 48%;
   --success: 153 65% 38%;
-  --purple: 226 65% 51%;
-  background-color: #f5f1e8;
+  --purple: 226 54% 48%;
+  background-color: #f7f8fa;
+  color: #182338;
 }
 
 .landing-display {
@@ -260,6 +261,31 @@
 
 .landing-shell .font-mono {
   font-family: inherit;
+}
+
+.landing-skip-link {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 100;
+  transform: translateY(-200%);
+  border-radius: 0.5rem;
+  background: #ffffff;
+  color: #182338;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgb(24 35 56 / 0.18);
+}
+
+.landing-skip-link:focus {
+  transform: translateY(0);
+}
+
+.landing-skip-link:focus-visible,
+.landing-shell :is(a, button):focus-visible {
+  outline: 3px solid #3858bd;
+  outline-offset: 3px;
 }
 
 @layer components {
@@ -459,5 +485,44 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+.motion-paused *,
+.motion-paused *::before,
+.motion-paused *::after {
+  animation-play-state: paused !important;
+}
+
+@media (forced-colors: active) {
+  :where(
+    a[href],
+    button:not(:disabled),
+    input:not(:disabled),
+    select:not(:disabled),
+    textarea:not(:disabled),
+    summary,
+    [role="button"],
+    [role="link"],
+    [role="checkbox"],
+    [role="radio"],
+    [role="switch"],
+    [role="tab"],
+    [role="menuitem"],
+    [role="option"],
+    [role="slider"],
+    [tabindex]:not([tabindex="-1"])
+  ):focus-visible {
+    outline: 2px solid Highlight !important;
+    outline-offset: 2px !important;
+    box-shadow: none !important;
+  }
+
+  .text-gradient-sync,
+  .text-shimmer-gradient,
+  .proposal-preview :is(h1, h2, h3) {
+    background-image: none !important;
+    color: CanvasText !important;
+    -webkit-text-fill-color: CanvasText !important;
   }
 }

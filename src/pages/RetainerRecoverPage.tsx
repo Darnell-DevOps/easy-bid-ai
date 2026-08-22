@@ -61,8 +61,8 @@ export default function RetainerRecoverPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      <div className="min-h-screen flex items-center justify-center" role="status" aria-live="polite" aria-label="Loading payment recovery details">
+        <Loader2 aria-hidden="true" className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -71,7 +71,7 @@ export default function RetainerRecoverPage() {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
         <Card className="max-w-md w-full">
-          <CardContent className="p-8 text-center space-y-2">
+          <CardContent className="p-8 text-center space-y-2" role="alert">
             <h1 className="type-page-title">Link not found</h1>
             <p className="text-sm text-muted-foreground">
               This recovery link is invalid or has expired.
@@ -90,7 +90,7 @@ export default function RetainerRecoverPage() {
       <Card className="max-w-lg w-full border-border/60">
         <CardContent className="p-8 space-y-6">
           {resolved ? (
-            <>
+            <div role="status" aria-live="polite" className="space-y-6">
               <div className="w-12 h-12 rounded-full bg-emerald-500/15 flex items-center justify-center">
                 <CheckCircle2 className="w-6 h-6 text-emerald-500" />
               </div>
@@ -104,7 +104,7 @@ export default function RetainerRecoverPage() {
                   is up to date. No action needed.
                 </p>
               </div>
-            </>
+            </div>
           ) : (
             <>
               <div className="w-12 h-12 rounded-full bg-rose-500/15 flex items-center justify-center">
@@ -134,6 +134,8 @@ export default function RetainerRecoverPage() {
                 disabled={opening}
                 size="lg"
                 className="w-full"
+                aria-busy={opening}
+                aria-describedby={error ? "retainer-recovery-error" : "retainer-recovery-note"}
               >
                 {opening ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -144,10 +146,10 @@ export default function RetainerRecoverPage() {
               </Button>
 
               {error && (
-                <p className="text-xs text-rose-500 text-center">{error}</p>
+                <p id="retainer-recovery-error" role="alert" aria-atomic="true" className="text-xs text-rose-500 text-center">{error}</p>
               )}
 
-              <p className="text-[11px] text-muted-foreground text-center">
+              <p id="retainer-recovery-note" className="text-[11px] text-muted-foreground text-center">
                 You'll be redirected to a secure payment page.
               </p>
             </>

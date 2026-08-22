@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -22,6 +22,7 @@ import {
 import { parseFilePayload, parseFilePayloads, type FilePayload, type SmartField } from "@/lib/form-fields";
 import { useToast } from "@/hooks/use-toast";
 import { getPrimaryCustomDomain, buildPublicUrl } from "@/lib/customDomain";
+import { AccessibleLoadingState } from "@/components/ui/accessible-loading-state";
 
 function formatBytes(n: number): string {
   if (!n) return "0 B";
@@ -178,9 +179,8 @@ export default function OnboardingResponseDetail() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-        </div>
+        <h1 className="sr-only">Onboarding response</h1>
+        <AccessibleLoadingState label="Loading onboarding response" className="py-20" spinnerClassName="h-6 w-6" />
       </DashboardLayout>
     );
   }
@@ -192,7 +192,11 @@ export default function OnboardingResponseDetail() {
           <Button asChild variant="ghost" size="sm" className="gap-1.5">
             <Link to="/dashboard/onboarding"><ArrowLeft className="w-3.5 h-3.5" /> Back to onboarding</Link>
           </Button>
-          <Card><CardContent className="p-8 text-center text-sm text-muted-foreground">Onboarding form not found.</CardContent></Card>
+          <Card>
+            <CardContent className="p-8 text-center">
+              <h1 className="text-base font-semibold text-foreground">Onboarding form not found</h1>
+            </CardContent>
+          </Card>
         </div>
       </DashboardLayout>
     );
@@ -278,7 +282,10 @@ export default function OnboardingResponseDetail() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
-                <CardTitle className="text-base">{form.client_name || "Client"}</CardTitle>
+                <h1 className="text-base font-semibold leading-6 tracking-[-0.01em]">
+                  <span className="sr-only">Onboarding response for </span>
+                  {form.client_name || "Client"}
+                </h1>
                 {!form.client_id && form.client_name && (
                   <Badge variant="outline" className="text-[10px] text-muted-foreground border-muted/60 font-normal mt-1">
                     Client deleted
@@ -300,7 +307,15 @@ export default function OnboardingResponseDetail() {
                 <span>Progress</span>
                 <span>{progress}%</span>
               </div>
-              <div className="h-1.5 w-full rounded-full bg-muted/40 overflow-hidden">
+              <div
+                role="progressbar"
+                aria-label="Onboarding response completion"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={progress}
+                aria-valuetext={`${progress}% complete`}
+                className="h-1.5 w-full rounded-full bg-muted/40 overflow-hidden"
+              >
                 <div className="h-full bg-accent" style={{ width: `${progress}%` }} />
               </div>
             </div>
@@ -317,7 +332,7 @@ export default function OnboardingResponseDetail() {
         {grouped.map((g) => (
           <Card key={g.group}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold text-foreground">{g.group}</CardTitle>
+              <h2 className="text-base font-semibold leading-6 tracking-[-0.01em] text-foreground">{g.group}</h2>
             </CardHeader>
             <CardContent className="space-y-4">
               {g.fields.map((field) => {

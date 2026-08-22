@@ -223,8 +223,8 @@ export default function AiPreferencesSettings() {
         description="The base writing voice used everywhere unless a section overrides it."
       >
         <div className="max-w-xs">
-          <Label className="text-xs text-muted-foreground mb-1.5 block">Tone</Label>
-          <SelectField value={prefs.default_tone} onChange={(v) => set("default_tone", v)} options={TONES} />
+          <Label htmlFor="ai-default-tone" className="text-xs text-muted-foreground mb-1.5 block">Tone</Label>
+          <SelectField id="ai-default-tone" value={prefs.default_tone} onChange={(v) => set("default_tone", v)} options={TONES} />
         </div>
       </SettingsSection>
 
@@ -236,12 +236,12 @@ export default function AiPreferencesSettings() {
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <Label className="text-xs text-muted-foreground mb-1.5 block">Length</Label>
-            <SelectField value={prefs.proposal_length} onChange={(v) => set("proposal_length", v)} options={LENGTHS} />
+            <Label htmlFor="ai-proposal-length" className="text-xs text-muted-foreground mb-1.5 block">Length</Label>
+            <SelectField id="ai-proposal-length" value={prefs.proposal_length} onChange={(v) => set("proposal_length", v)} options={LENGTHS} />
           </div>
           <div>
-            <Label className="text-xs text-muted-foreground mb-1.5 block">Style</Label>
-            <SelectField value={prefs.proposal_style} onChange={(v) => set("proposal_style", v)} options={PROPOSAL_STYLES} />
+            <Label htmlFor="ai-proposal-style" className="text-xs text-muted-foreground mb-1.5 block">Style</Label>
+            <SelectField id="ai-proposal-style" value={prefs.proposal_style} onChange={(v) => set("proposal_style", v)} options={PROPOSAL_STYLES} />
           </div>
         </div>
       </SettingsSection>
@@ -253,8 +253,8 @@ export default function AiPreferencesSettings() {
         description="Defaults applied to AI-generated contracts."
       >
         <div className="max-w-xs mb-4">
-          <Label className="text-xs text-muted-foreground mb-1.5 block">Detail level</Label>
-          <SelectField value={prefs.contract_detail} onChange={(v) => set("contract_detail", v)} options={CONTRACT_DETAILS} />
+          <Label htmlFor="ai-contract-detail" className="text-xs text-muted-foreground mb-1.5 block">Detail level</Label>
+          <SelectField id="ai-contract-detail" value={prefs.contract_detail} onChange={(v) => set("contract_detail", v)} options={CONTRACT_DETAILS} />
         </div>
         <Separator className="mb-3" />
         <ToggleRow
@@ -282,12 +282,12 @@ export default function AiPreferencesSettings() {
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <Label className="text-xs text-muted-foreground mb-1.5 block">Tone</Label>
-            <SelectField value={prefs.lead_reply_tone} onChange={(v) => set("lead_reply_tone", v)} options={LEAD_TONES} />
+            <Label htmlFor="ai-lead-tone" className="text-xs text-muted-foreground mb-1.5 block">Tone</Label>
+            <SelectField id="ai-lead-tone" value={prefs.lead_reply_tone} onChange={(v) => set("lead_reply_tone", v)} options={LEAD_TONES} />
           </div>
           <div>
-            <Label className="text-xs text-muted-foreground mb-1.5 block">Length</Label>
-            <SelectField value={prefs.lead_reply_length} onChange={(v) => set("lead_reply_length", v)} options={LENGTHS} />
+            <Label htmlFor="ai-lead-length" className="text-xs text-muted-foreground mb-1.5 block">Length</Label>
+            <SelectField id="ai-lead-length" value={prefs.lead_reply_length} onChange={(v) => set("lead_reply_length", v)} options={LENGTHS} />
           </div>
         </div>
       </SettingsSection>
@@ -300,12 +300,12 @@ export default function AiPreferencesSettings() {
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <Label className="text-xs text-muted-foreground mb-1.5 block">Tone</Label>
-            <SelectField value={prefs.email_tone} onChange={(v) => set("email_tone", v)} options={EMAIL_TONES} />
+            <Label htmlFor="ai-email-tone" className="text-xs text-muted-foreground mb-1.5 block">Tone</Label>
+            <SelectField id="ai-email-tone" value={prefs.email_tone} onChange={(v) => set("email_tone", v)} options={EMAIL_TONES} />
           </div>
           <div>
-            <Label className="text-xs text-muted-foreground mb-1.5 block">Length</Label>
-            <SelectField value={prefs.email_length} onChange={(v) => set("email_length", v)} options={LENGTHS} />
+            <Label htmlFor="ai-email-length" className="text-xs text-muted-foreground mb-1.5 block">Length</Label>
+            <SelectField id="ai-email-length" value={prefs.email_length} onChange={(v) => set("email_length", v)} options={LENGTHS} />
           </div>
         </div>
       </SettingsSection>
@@ -319,6 +319,7 @@ export default function AiPreferencesSettings() {
       >
         <div className="space-y-4">
           <Field
+            id="ai-business-what-you-do"
             label="What you do"
             placeholder="e.g. I run a brand strategy studio for early-stage SaaS founders."
             value={prefs.business_what_you_do}
@@ -327,6 +328,7 @@ export default function AiPreferencesSettings() {
             multiline
           />
           <Field
+            id="ai-business-services"
             label="Services offered"
             placeholder="e.g. Brand identity, messaging frameworks, website copy."
             value={prefs.business_services}
@@ -335,6 +337,7 @@ export default function AiPreferencesSettings() {
             multiline
           />
           <Field
+            id="ai-business-target-audience"
             label="Target audience"
             placeholder="e.g. B2B SaaS companies with 5–50 employees."
             value={prefs.business_target_audience}
@@ -342,6 +345,7 @@ export default function AiPreferencesSettings() {
             max={300}
           />
           <Field
+            id="ai-business-ideal-client"
             label="Ideal client"
             placeholder="e.g. Technical founders raising seed/Series A who care about brand."
             value={prefs.business_ideal_client}
@@ -357,13 +361,16 @@ export default function AiPreferencesSettings() {
         title="Additional AI Instructions"
         description='Free-form rules the AI should follow. Examples: "Always write in British English." · "Never use aggressive sales language."'
       >
+        <Label htmlFor="ai-custom-instructions" className="sr-only">Additional AI instructions</Label>
         <Textarea
+          id="ai-custom-instructions"
           value={prefs.custom_instructions}
           onChange={(e) => set("custom_instructions", e.target.value.slice(0, 1500))}
           placeholder="Add any specific writing rules, vocabulary preferences or things to avoid…"
           rows={4}
+          aria-describedby="ai-custom-instructions-count"
         />
-        <p className="text-[10px] text-muted-foreground mt-1.5 text-right">
+        <p id="ai-custom-instructions-count" className="text-[10px] text-muted-foreground mt-1.5 text-right">
           {prefs.custom_instructions.length} / 1500
         </p>
       </SettingsSection>
@@ -444,17 +451,19 @@ function SettingsSection({
 }
 
 function SelectField({
+  id,
   value,
   onChange,
   options,
 }: {
+  id: string;
   value: string;
   onChange: (v: string) => void;
   options: { value: string; label: string }[];
 }) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="h-9">
+      <SelectTrigger id={id} className="h-9">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -470,12 +479,13 @@ function ToggleRow({ label, checked, onChange }: { label: string; checked: boole
   return (
     <div className="flex items-center justify-between py-2.5">
       <span className="text-sm text-foreground">{label}</span>
-      <Switch checked={checked} onCheckedChange={onChange} />
+      <Switch checked={checked} onCheckedChange={onChange} aria-label={label} />
     </div>
   );
 }
 
 function Field({
+  id,
   label,
   value,
   onChange,
@@ -483,6 +493,7 @@ function Field({
   max,
   multiline,
 }: {
+  id: string;
   label: string;
   value: string;
   onChange: (v: string) => void;
@@ -492,24 +503,28 @@ function Field({
 }) {
   return (
     <div>
-      <Label className="text-xs text-muted-foreground mb-1.5 block">{label}</Label>
+      <Label htmlFor={id} className="text-xs text-muted-foreground mb-1.5 block">{label}</Label>
       {multiline ? (
         <Textarea
+          id={id}
           value={value}
           onChange={(e) => onChange(max ? e.target.value.slice(0, max) : e.target.value)}
           placeholder={placeholder}
           rows={2}
+          aria-describedby={max ? `${id}-count` : undefined}
         />
       ) : (
         <Input
+          id={id}
           value={value}
           onChange={(e) => onChange(max ? e.target.value.slice(0, max) : e.target.value)}
           placeholder={placeholder}
           className="h-9"
+          aria-describedby={max ? `${id}-count` : undefined}
         />
       )}
       {max && (
-        <p className="text-[10px] text-muted-foreground mt-1 text-right">
+        <p id={`${id}-count`} className="text-[10px] text-muted-foreground mt-1 text-right">
           {value.length} / {max}
         </p>
       )}

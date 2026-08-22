@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle,
@@ -19,6 +19,7 @@ interface Props {
 }
 
 export default function AiGenerateFieldsDialog({ open, onOpenChange, context, onGenerated }: Props) {
+  const promptId = useId();
   const { toast } = useToast();
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
@@ -62,7 +63,7 @@ export default function AiGenerateFieldsDialog({ open, onOpenChange, context, on
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-purple" /> Generate fields with AI
+            <Sparkles aria-hidden="true" className="w-4 h-4 text-purple" /> Generate fields with AI
           </DialogTitle>
           <DialogDescription>
             Describe the form you need and AI will draft the fields. You can edit them afterward.
@@ -71,8 +72,9 @@ export default function AiGenerateFieldsDialog({ open, onOpenChange, context, on
 
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label className="text-xs">Describe your form</Label>
+            <Label htmlFor={promptId} className="text-xs">Describe your form</Label>
             <Textarea
+              id={promptId}
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               rows={4}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -35,13 +35,19 @@ export function formatTimeline(num: string, unit: TimelineUnit): string {
 }
 
 interface Props {
+  /** ID for the timeline amount input, used by an external label when provided. */
+  id?: string;
   value: string;
   onChange: (combined: string) => void;
   /** If provided and value doesn't parse, shown as a "current value" note. */
   originalRaw?: string | null;
 }
 
-export function TimelineInput({ value, onChange, originalRaw }: Props) {
+export function TimelineInput({ id, value, onChange, originalRaw }: Props) {
+  const generatedId = useId();
+  const inputId = id ?? `${generatedId}-timeline-amount`;
+  const unitId = `${inputId}-unit`;
+  const noteId = `${inputId}-note`;
   const parsed = useMemo(() => parseTimeline(value), [value]);
   const [num, setNum] = useState<string>(parsed?.num ?? "");
   const [unit, setUnit] = useState<TimelineUnit>(parsed?.unit ?? "week");
@@ -69,6 +75,7 @@ export function TimelineInput({ value, onChange, originalRaw }: Props) {
     <div className="mt-2 space-y-2">
       <div className="flex gap-2">
         <Input
+          id={inputId}
           type="number"
           min={1}
           step={1}
@@ -76,9 +83,16 @@ export function TimelineInput({ value, onChange, originalRaw }: Props) {
           onChange={(e) => update(e.target.value, unit)}
           placeholder="e.g. 6"
           className="w-32"
+          aria-label={id ? undefined : "Timeline amount"}
+          aria-describedby={unparseableExisting ? noteId : undefined}
         />
         <Select value={unit} onValueChange={(v) => update(num, v as TimelineUnit)}>
-          <SelectTrigger className="flex-1">
+          <SelectTrigger
+            id={unitId}
+            aria-label="Timeline unit"
+            aria-describedby={unparseableExisting ? noteId : undefined}
+            className="flex-1"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -91,7 +105,7 @@ export function TimelineInput({ value, onChange, originalRaw }: Props) {
         </Select>
       </div>
       {unparseableExisting ? (
-        <p className="text-xs text-muted-foreground">
+        <p id={noteId} className="text-xs text-muted-foreground">
           Current value: <span className="font-medium text-foreground">{originalRaw}</span> — saving
           will replace it.
         </p>

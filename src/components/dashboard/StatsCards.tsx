@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileText, Users, DollarSign, Clock } from "lucide-react";
+import { activateOnEnterOrSpace } from "@/lib/keyboard";
 
 interface StatsCardsProps {
   totalProposals: number;
@@ -62,8 +63,12 @@ export default function StatsCards({ totalProposals, revenueGenerated, activeCli
       {stats.map((s) => (
         <Card
           key={s.label}
-          className="group hover:shadow-lg hover:border-accent/20 transition-all duration-300 cursor-pointer"
+          role="link"
+          tabIndex={0}
+          aria-label={`View ${s.label}`}
+          className="group hover:shadow-lg hover:border-accent/20 transition-all duration-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           onClick={() => navigate(s.link)}
+          onKeyDown={(event) => activateOnEnterOrSpace(event, () => navigate(s.link))}
         >
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-center justify-between mb-2">

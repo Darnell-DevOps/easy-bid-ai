@@ -20,9 +20,9 @@ import {
   Sparkles,
   Crown,
 } from "lucide-react";
-import { toast } from "sonner";
 import { format } from "date-fns";
 import { usePlan } from "@/hooks/use-plan";
+import { useToast } from "@/hooks/use-toast";
 import UpgradeModal from "@/components/plan/UpgradeModal";
 
 interface Policy {
@@ -82,6 +82,7 @@ const STALE_DAYS = 180;
 
 export default function Policies() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { hasFeature } = usePlan();
   const policiesUnlocked = hasFeature("policies");
   const [upgradeOpen, setUpgradeOpen] = useState(false);
@@ -99,7 +100,7 @@ export default function Policies() {
       .from("policies")
       .select("id, business_name, policy_type, country, created_at, updated_at")
       .order("created_at", { ascending: false });
-    if (error) toast.error(error.message);
+    if (error) toast({ title: error.message, variant: "destructive" });
     else setPolicies(data ?? []);
     setLoading(false);
   };
@@ -115,8 +116,11 @@ export default function Policies() {
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this policy?")) return;
     const { error } = await supabase.from("policies").delete().eq("id", id);
-    if (error) return toast.error(error.message);
-    toast.success("Policy deleted");
+    if (error) {
+      toast({ title: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Policy deleted" });
     setPolicies((p) => p.filter((x) => x.id !== id));
   };
 
@@ -278,7 +282,11 @@ export default function Policies() {
               </div>
             </div>
           </div>
-          <Switch checked={autoAttach} onCheckedChange={setAutoAttach} />
+          <Switch
+            checked={autoAttach}
+            onCheckedChange={setAutoAttach}
+            aria-label="Automatically attach policies to proposals and invoices"
+          />
         </CardContent>
       </Card>
 
@@ -301,6 +309,7 @@ export default function Policies() {
             return (
               <Card
                 key={p.type}
+                data-keyboard-proxy="true"
                 onClick={() => handleCardClick(p.type)}
                 className="group cursor-pointer relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-accent/40"
               >
@@ -342,9 +351,15 @@ export default function Policies() {
                       variant="outline"
                       size="sm"
                       className="w-full gap-2 group-hover:border-accent/40 group-hover:text-accent transition-colors"
+                      data-keyboard-proxy="true"
+                      aria-label={`${status === "missing" ? "Create" : "Open"} ${p.type}`}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleCardClick(p.type);
+                      }}
                     >
                       {status === "missing" ? "Generate now" : "View & edit"}
-                      <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+                      <ArrowRight aria-hidden="true" className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
                     </Button>
                   </div>
                 </CardContent>

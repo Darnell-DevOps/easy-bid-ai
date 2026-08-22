@@ -170,12 +170,13 @@ export default function OnboardingTemplateEditorDialog({
         <div className="space-y-4">
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Template name</Label>
-              <Input value={form.name} onChange={(e) => setField("name", e.target.value)} />
+              <Label htmlFor="ot-name">Template name</Label>
+              <Input id="ot-name" value={form.name} onChange={(e) => setField("name", e.target.value)} required />
             </div>
             <div className="space-y-1.5">
-              <Label>Service type</Label>
+              <Label htmlFor="ot-service-type">Service type</Label>
               <Input
+                id="ot-service-type"
                 value={form.service_type}
                 onChange={(e) => setField("service_type", e.target.value)}
                 placeholder="e.g. Web Design"
@@ -184,8 +185,9 @@ export default function OnboardingTemplateEditorDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Short description</Label>
+            <Label htmlFor="ot-description">Short description</Label>
             <Textarea
+              id="ot-description"
               value={form.description}
               onChange={(e) => setField("description", e.target.value)}
               rows={2}
@@ -194,9 +196,9 @@ export default function OnboardingTemplateEditorDialog({
 
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Icon</Label>
+              <Label htmlFor="ot-icon">Icon</Label>
               <Select value={form.icon} onValueChange={(v) => setField("icon", v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="ot-icon"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {ONBOARDING_ICON_OPTIONS.map((o) => (
                     <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
@@ -205,9 +207,9 @@ export default function OnboardingTemplateEditorDialog({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Colour</Label>
+              <Label htmlFor="ot-colour">Colour</Label>
               <Select value={form.accent} onValueChange={(v) => setField("accent", v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="ot-colour"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {ONBOARDING_ACCENT_OPTIONS.map((o) => (
                     <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
@@ -218,8 +220,9 @@ export default function OnboardingTemplateEditorDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Best for</Label>
+            <Label htmlFor="ot-best-for">Best for</Label>
             <Input
+              id="ot-best-for"
               value={form.best_for}
               onChange={(e) => setField("best_for", e.target.value)}
               placeholder="e.g. Designers & studios"
@@ -227,8 +230,9 @@ export default function OnboardingTemplateEditorDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Kickoff instructions (shown at the top of the form)</Label>
+            <Label htmlFor="ot-intro">Kickoff instructions (shown at the top of the form)</Label>
             <Textarea
+              id="ot-intro"
               value={form.intro}
               onChange={(e) => setField("intro", e.target.value)}
               rows={3}
@@ -238,7 +242,7 @@ export default function OnboardingTemplateEditorDialog({
 
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label>Onboarding questions</Label>
+              <Label htmlFor="ot-questions">Onboarding questions</Label>
               <Button
                 type="button"
                 size="sm"
@@ -246,14 +250,16 @@ export default function OnboardingTemplateEditorDialog({
                 onClick={() => setAiOpen(true)}
                 className="gap-1.5 h-7 text-xs"
               >
-                <Sparkles className="w-3 h-3" /> Generate with AI
+                <Sparkles className="w-3 h-3" aria-hidden="true" /> Generate with AI
               </Button>
             </div>
-            <p className="text-[11px] text-muted-foreground">
+            <p id="ot-questions-help" className="text-[11px] text-muted-foreground">
               One per line. Format: <code>Question label | type | required</code>. Type is one of
               short_text, long_text, url, email, phone, number, date, select, radio, multi_select, checkbox. The "required" flag is optional.
             </p>
             <Textarea
+              id="ot-questions"
+              aria-describedby="ot-questions-help"
               value={form.fields_text}
               onChange={(e) => setField("fields_text", e.target.value)}
               rows={6}
@@ -263,12 +269,14 @@ export default function OnboardingTemplateEditorDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Files to request</Label>
-            <p className="text-[11px] text-muted-foreground">
+            <Label htmlFor="ot-file-requests">Files to request</Label>
+            <p id="ot-file-requests-help" className="text-[11px] text-muted-foreground">
               One per line. Format: <code>File label — short description</code>. The em dash and
               description are optional.
             </p>
             <Textarea
+              id="ot-file-requests"
+              aria-describedby="ot-file-requests-help"
               value={form.file_requests_text}
               onChange={(e) => setField("file_requests_text", e.target.value)}
               rows={4}
@@ -278,11 +286,13 @@ export default function OnboardingTemplateEditorDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Suggested deadlines</Label>
-            <p className="text-[11px] text-muted-foreground">
+            <Label htmlFor="ot-deadlines">Suggested deadlines</Label>
+            <p id="ot-deadlines-help" className="text-[11px] text-muted-foreground">
               One per line. Format: <code>Milestone label | days after kickoff</code>.
             </p>
             <Textarea
+              id="ot-deadlines"
+              aria-describedby="ot-deadlines-help"
               value={form.deadlines_text}
               onChange={(e) => setField("deadlines_text", e.target.value)}
               rows={4}
@@ -292,8 +302,9 @@ export default function OnboardingTemplateEditorDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Internal notes</Label>
+            <Label htmlFor="ot-notes">Internal notes</Label>
             <Textarea
+              id="ot-notes"
               value={form.notes}
               onChange={(e) => setField("notes", e.target.value)}
               rows={2}
@@ -303,8 +314,8 @@ export default function OnboardingTemplateEditorDialog({
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+          <Button onClick={handleSave} disabled={saving} aria-busy={saving}>
+            {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden="true" /> : null}
             Save template
           </Button>
         </DialogFooter>

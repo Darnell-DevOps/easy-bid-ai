@@ -1,6 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import AuthGuard from "@/components/AuthGuard";
@@ -60,15 +59,33 @@ import NotFound from "./pages/NotFound";
 import OAuthConsent from "./pages/OAuthConsent";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { PageTransition } from "@/components/PageTransition";
+import RouteAccessibility from "@/components/RouteAccessibility";
 
 const queryClient = new QueryClient();
+
+function RouteSkipLink() {
+  const { pathname } = useLocation();
+  const targetId = pathname === "/"
+    ? "landing-main"
+    : pathname === "/admin" || pathname.startsWith("/dashboard")
+      ? "dashboard-main"
+      : null;
+  if (!targetId) return null;
+
+  return (
+    <a href={`#${targetId}`} className="landing-skip-link">
+      Skip to main content
+    </a>
+  );
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
-      <Sonner />
       <BrowserRouter>
+        <RouteAccessibility />
+        <RouteSkipLink />
         <PaymentTestModeBanner />
         <PageTransition>
           <Routes>

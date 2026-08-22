@@ -136,7 +136,7 @@ export default function TemplateEditorDialog({
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="t-name">Template name</Label>
-              <Input id="t-name" value={form.name} onChange={(e) => setField("name", e.target.value)} placeholder="e.g. SEO Retainer Pitch" />
+              <Input id="t-name" value={form.name} onChange={(e) => setField("name", e.target.value)} placeholder="e.g. SEO Retainer Pitch" required />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="t-service">Service type</Label>
@@ -151,9 +151,9 @@ export default function TemplateEditorDialog({
 
           <div className="grid sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
-              <Label>Icon</Label>
+              <Label htmlFor="t-icon">Icon</Label>
               <Select value={form.icon} onValueChange={(v) => setField("icon", v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="t-icon"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {ICON_OPTIONS.map((o) => (
                     <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
@@ -162,9 +162,9 @@ export default function TemplateEditorDialog({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Colour</Label>
+              <Label htmlFor="t-colour">Colour</Label>
               <Select value={form.accent} onValueChange={(v) => setField("accent", v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="t-colour"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {ACCENT_OPTIONS.map((o) => (
                     <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
@@ -173,9 +173,9 @@ export default function TemplateEditorDialog({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Tone</Label>
+              <Label htmlFor="t-tone">Tone</Label>
               <Select value={form.tone} onValueChange={(v) => setField("tone", v as TemplateFormValues["tone"])}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="t-tone"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="professional">Professional</SelectItem>
                   <SelectItem value="persuasive">Persuasive</SelectItem>
@@ -187,49 +187,49 @@ export default function TemplateEditorDialog({
 
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Best for</Label>
-              <Input value={form.best_for} onChange={(e) => setField("best_for", e.target.value)} placeholder="e.g. Agencies & Studios" />
+              <Label htmlFor="t-best-for">Best for</Label>
+              <Input id="t-best-for" value={form.best_for} onChange={(e) => setField("best_for", e.target.value)} placeholder="e.g. Agencies & Studios" />
             </div>
             <div className="space-y-1.5">
-              <Label>Typical deal size</Label>
-              <Input value={form.deal_size} onChange={(e) => setField("deal_size", e.target.value)} placeholder="e.g. £1K–£5K" />
+              <Label htmlFor="t-deal-size">Typical deal size</Label>
+              <Input id="t-deal-size" value={form.deal_size} onChange={(e) => setField("deal_size", e.target.value)} placeholder="e.g. £1K–£5K" />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label>Default goals</Label>
-            <Textarea value={form.default_goals} onChange={(e) => setField("default_goals", e.target.value)} rows={3} />
+            <Label htmlFor="t-default-goals">Default goals</Label>
+            <Textarea id="t-default-goals" value={form.default_goals} onChange={(e) => setField("default_goals", e.target.value)} rows={3} />
           </div>
           <div className="space-y-1.5">
-            <Label>Default deliverables</Label>
-            <Textarea value={form.default_deliverables} onChange={(e) => setField("default_deliverables", e.target.value)} rows={3} />
+            <Label htmlFor="t-default-deliverables">Default deliverables</Label>
+            <Textarea id="t-default-deliverables" value={form.default_deliverables} onChange={(e) => setField("default_deliverables", e.target.value)} rows={3} />
           </div>
           <div className="space-y-1.5">
-            <Label>Project scope</Label>
-            <Textarea value={form.project_scope} onChange={(e) => setField("project_scope", e.target.value)} rows={3} />
+            <Label htmlFor="t-project-scope">Project scope</Label>
+            <Textarea id="t-project-scope" value={form.project_scope} onChange={(e) => setField("project_scope", e.target.value)} rows={3} />
           </div>
 
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Default budget</Label>
-              <Input value={form.budget} onChange={(e) => setField("budget", e.target.value)} placeholder="e.g. £1,500" />
+              <Label htmlFor="t-default-budget">Default budget</Label>
+              <Input id="t-default-budget" value={form.budget} onChange={(e) => setField("budget", e.target.value)} placeholder="e.g. £1,500" />
             </div>
             <div className="space-y-1.5">
-              <Label>Default timeline</Label>
-              <Input value={form.timeline} onChange={(e) => setField("timeline", e.target.value)} placeholder="e.g. 3 weeks" />
+              <Label htmlFor="t-default-timeline">Default timeline</Label>
+              <Input id="t-default-timeline" value={form.timeline} onChange={(e) => setField("timeline", e.target.value)} placeholder="e.g. 3 weeks" />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label>Internal notes</Label>
-            <Textarea value={form.notes} onChange={(e) => setField("notes", e.target.value)} rows={2} />
+            <Label htmlFor="t-notes">Internal notes</Label>
+            <Textarea id="t-notes" value={form.notes} onChange={(e) => setField("notes", e.target.value)} rows={2} />
           </div>
         </div>
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+          <Button onClick={handleSave} disabled={saving} aria-busy={saving}>
+            {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden="true" /> : null}
             Save template
           </Button>
         </DialogFooter>

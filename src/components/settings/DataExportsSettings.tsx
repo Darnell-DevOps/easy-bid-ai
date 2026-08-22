@@ -456,6 +456,7 @@ export default function DataExportsSettings() {
               <Switch
                 checked={schedule.weekly}
                 onCheckedChange={(v) => setSchedule({ ...schedule, weekly: v })}
+                aria-label="Weekly backup export"
               />
             </div>
             <Separator />
@@ -467,19 +468,20 @@ export default function DataExportsSettings() {
               <Switch
                 checked={schedule.monthly}
                 onCheckedChange={(v) => setSchedule({ ...schedule, monthly: v })}
+                aria-label="Monthly backup export"
               />
             </div>
             <Separator />
             <div className="flex items-center justify-between py-2 gap-3">
               <div>
-                <p className="text-sm font-medium text-foreground">Delivery method</p>
-                <p className="text-xs text-muted-foreground">Where to send the backup when ready</p>
+                <Label htmlFor="data-export-delivery" className="text-sm font-medium text-foreground">Delivery method</Label>
+                <p id="data-export-delivery-help" className="text-xs text-muted-foreground">Where to send the backup when ready</p>
               </div>
               <Select
                 value={schedule.delivery}
                 onValueChange={(v: "email" | "dashboard") => setSchedule({ ...schedule, delivery: v })}
               >
-                <SelectTrigger className="w-44 h-9">
+                <SelectTrigger id="data-export-delivery" aria-describedby="data-export-delivery-help" className="w-44 h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -518,7 +520,12 @@ export default function DataExportsSettings() {
                 {Math.round(usedPct)}%
               </Badge>
             </div>
-            <Progress value={usedPct} className="h-2" />
+            <Progress
+              value={usedPct}
+              aria-label="Storage usage"
+              aria-valuetext={`${usedMb.toFixed(0)} of ${quotaMb.toFixed(0)} megabytes used`}
+              className="h-2"
+            />
           </div>
         </CardContent>
       </Card>
@@ -532,11 +539,17 @@ export default function DataExportsSettings() {
             </div>
             <div>
               <h3 className="font-semibold text-foreground text-base">Data retention</h3>
-              <p className="text-xs text-muted-foreground">How long deleted items remain recoverable</p>
+              <p id="data-retention-help" className="text-xs text-muted-foreground">How long deleted items remain recoverable</p>
             </div>
           </div>
+          <Label htmlFor="data-retention-period" className="sr-only">Data retention period</Label>
           <Select value={retention} onValueChange={(v: Retention) => updateRetention(v)} disabled={retentionSaving}>
-            <SelectTrigger className="max-w-md">
+            <SelectTrigger
+              id="data-retention-period"
+              aria-describedby={retention === "0" ? "data-retention-help data-retention-warning" : "data-retention-help"}
+              aria-busy={retentionSaving}
+              className="max-w-md"
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -548,7 +561,7 @@ export default function DataExportsSettings() {
           {retention === "0" && (
             <div className="mt-3 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
               <AlertTriangle className="w-4 h-4 text-destructive mt-0.5 flex-shrink-0" />
-              <p className="text-xs text-destructive">
+              <p id="data-retention-warning" className="text-xs text-destructive">
                 Items deleted with this setting cannot be recovered. Use with caution.
               </p>
             </div>
@@ -641,19 +654,24 @@ export default function DataExportsSettings() {
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label className="text-xs">Confirm your password</Label>
+              <Label htmlFor="delete-account-password" className="text-xs">Confirm your password</Label>
               <Input
+                id="delete-account-password"
                 type="password"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Current password"
               />
             </div>
             <div>
-              <Label className="text-xs">
+              <Label htmlFor="delete-account-confirmation" className="text-xs">
                 Type <span className="font-mono text-destructive">DELETE</span> to confirm
               </Label>
               <Input
+                id="delete-account-confirmation"
+                autoComplete="off"
+                spellCheck={false}
                 value={confirmText}
                 onChange={(e) => setConfirmText(e.target.value)}
                 placeholder="DELETE"
@@ -668,6 +686,7 @@ export default function DataExportsSettings() {
               variant="destructive"
               disabled={confirmText !== "DELETE" || !password || deleting}
               onClick={deleteAccount}
+              aria-busy={deleting}
             >
               {deleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
               Permanently delete

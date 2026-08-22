@@ -11,6 +11,12 @@ project_id = "avtogztwdoemxuffnwyv"
     verify_jwt = true
   [functions.client-portal-accept]
     verify_jwt = false
+  [functions.create-public-booking]
+    verify_jwt = false
+  [functions.notify-booking-host]
+    verify_jwt = true
+  [functions.send-email]
+    verify_jwt = true
   [functions.automation-dispatcher]
     verify_jwt = false
   [functions.report-client-error]
@@ -20,7 +26,7 @@ project_id = "avtogztwdoemxuffnwyv"
   [functions.create-retainer-subscription]
     verify_jwt = false
   [functions.get-paddle-price]
-    verify_jwt = false
+    verify_jwt = true
   [functions.payments-webhook]
     verify_jwt = false
   [functions.retainer-portal-session]

@@ -27,6 +27,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { hasConfiguredInboundSecret, isInboundSecretValid } from "../_shared/inbound-auth.ts";
 import { logLeadActivity } from "../_shared/lead-activity.ts";
 import { logSecurityEvent } from "../_shared/security-telemetry.ts";
+import { enforcePublicRateLimit } from "../_shared/abuse-rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -261,6 +262,11 @@ function appendSignature(reply: string, signature: string | null | undefined): s
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
+  const preAuthLimited = await enforcePublicRateLimit(req, {
+    source: "inbound-email-webhook-auth",
+    ipLimit: { maxRequests: 120, windowSeconds: 5 * 60 },
+  });
+  if (preAuthLimited) return preAuthLimited;
 
   let body: any;
   try { body = await req.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400); }
@@ -275,7 +281,7 @@ Deno.serve(async (req) => {
 
   const { data: alias, error: aliasErr } = await svc
     .from("user_inbound_aliases")
-    .select("user_id, inbound_secret, rate_window_started_at, rate_window_count")
+    .select("user_id, inbound_secret")
     .eq("slug", slug)
     .maybeSingle();
   if (aliasErr || !alias) {
@@ -319,30 +325,15 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Invalid secret" }, 401);
   }
 
-  // Per-alias rate limit: max 20 requests per 5-minute rolling window.
-  const RATE_LIMIT_MAX = 20;
-  const RATE_WINDOW_MS = 5 * 60 * 1000;
-  const now = Date.now();
-  const windowStart = alias.rate_window_started_at ? new Date(alias.rate_window_started_at).getTime() : 0;
-  const windowActive = windowStart && (now - windowStart) < RATE_WINDOW_MS;
-  const currentCount = windowActive ? (alias.rate_window_count || 0) : 0;
-  if (windowActive && currentCount >= RATE_LIMIT_MAX) {
-    await logSecurityEvent(svc, req, {
-      eventType: "rate_limit_exceeded",
-      source: "inbound-email-webhook",
-      statusCode: 429,
-      userId: alias.user_id,
-      metadata: { limit: RATE_LIMIT_MAX, window_seconds: RATE_WINDOW_MS / 1000 },
-    });
-    return jsonResponse({ error: "Rate limit exceeded for this inbound alias" }, 429);
-  }
-  await svc
-    .from("user_inbound_aliases")
-    .update({
-      rate_window_started_at: windowActive ? alias.rate_window_started_at : new Date(now).toISOString(),
-      rate_window_count: currentCount + 1,
-    })
-    .eq("slug", slug);
+  // Only authenticated deliveries consume the per-alias allowance, so an
+  // attacker cannot lock out a customer's real email provider with bad secrets.
+  const deliveryLimited = await enforcePublicRateLimit(req, {
+    source: "inbound-email-webhook-delivery",
+    resource: slug,
+    ipLimit: { maxRequests: 120, windowSeconds: 5 * 60 },
+    resourceLimit: { maxRequests: 20, windowSeconds: 5 * 60 },
+  });
+  if (deliveryLimited) return deliveryLimited;
 
   const fromRaw = String(body.from ?? body.sender ?? body.envelope?.from ?? "");
   const { name, email: fromEmail } = parseFromName(fromRaw);

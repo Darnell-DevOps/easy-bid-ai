@@ -381,7 +381,7 @@ function ToggleRow({
         <p className="text-sm font-medium text-foreground">{title}</p>
         <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
       </div>
-      <Switch checked={on} onCheckedChange={setOn} />
+      <Switch checked={on} onCheckedChange={setOn} aria-label={title} />
     </div>
   );
 }

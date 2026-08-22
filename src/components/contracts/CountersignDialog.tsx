@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -158,27 +158,27 @@ export default function CountersignDialog({
       <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle>Countersign contract</DialogTitle>
+          <DialogDescription>
+            Your client has signed. Add your signature to mark this contract fully executed.
+          </DialogDescription>
         </DialogHeader>
-        <p className="text-sm text-muted-foreground">
-          Your client has signed. Add your signature to mark this contract fully executed.
-        </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <Label>Full legal name *</Label>
-            <Input value={signerName} onChange={(e) => setSignerName(e.target.value)} placeholder="Your name" />
+            <Label htmlFor="countersign-name">Full legal name *</Label>
+            <Input id="countersign-name" value={signerName} onChange={(e) => setSignerName(e.target.value)} placeholder="Your name" autoComplete="name" required />
           </div>
           <div>
-            <Label>Email</Label>
-            <Input type="email" value={signerEmail} onChange={(e) => setSignerEmail(e.target.value)} placeholder="you@example.com" />
+            <Label htmlFor="countersign-email">Email</Label>
+            <Input id="countersign-email" type="email" value={signerEmail} onChange={(e) => setSignerEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" />
           </div>
         </div>
         <Tabs value={method} onValueChange={(v) => setMethod(v as any)}>
-          <TabsList className="grid grid-cols-2 w-full sm:w-auto">
+          <TabsList className="grid grid-cols-2 w-full sm:w-auto" aria-label="Signature method">
             <TabsTrigger value="typed">Type signature</TabsTrigger>
             <TabsTrigger value="drawn">Draw signature</TabsTrigger>
           </TabsList>
           <TabsContent value="typed" className="mt-3">
-            <div className="border border-border rounded-lg bg-white p-6 min-h-24 flex items-center justify-center">
+            <div className="border border-border rounded-lg bg-white p-6 min-h-24 flex items-center justify-center" aria-hidden="true">
               <p
                 className="text-3xl text-slate-900"
                 style={{ fontFamily: "'Caveat', 'Brush Script MT', cursive" }}
@@ -191,6 +191,8 @@ export default function CountersignDialog({
             <div className="relative border border-border rounded-lg bg-white">
               <canvas
                 ref={canvasRef}
+                role="img"
+                aria-label="Signature drawing area. Use the Type signature tab if you cannot draw with a pointer."
                 className="w-full h-40 touch-none cursor-crosshair rounded-lg"
                 onMouseDown={startDraw}
                 onMouseMove={draw}
@@ -205,7 +207,7 @@ export default function CountersignDialog({
                 onClick={clearCanvas}
                 className="absolute top-2 right-2 inline-flex items-center gap-1 text-xs text-slate-600 bg-white border border-slate-200 px-2 py-1 rounded hover:bg-slate-50"
               >
-                <Eraser className="w-3 h-3" /> Clear
+                <Eraser className="w-3 h-3" aria-hidden="true" /> Clear
               </button>
             </div>
           </TabsContent>
@@ -215,9 +217,10 @@ export default function CountersignDialog({
           <Button
             onClick={submit}
             disabled={submitting}
+            aria-busy={submitting}
             className="gap-2 bg-accent text-accent-foreground font-semibold"
           >
-            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+            {submitting ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <ShieldCheck className="w-4 h-4" aria-hidden="true" />}
             Countersign &amp; execute
           </Button>
         </DialogFooter>

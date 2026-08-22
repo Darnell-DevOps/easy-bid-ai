@@ -167,14 +167,20 @@ export default function PremiumPricingRenderer({ content, onPayClick, showPayCta
           <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground mb-4">
             Cost breakdown
           </h3>
-          <div className="overflow-hidden rounded-lg border border-border">
+          <div
+            role="region"
+            aria-label="Proposal cost breakdown table"
+            tabIndex={0}
+            className="overflow-x-auto rounded-lg border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
             <table className="w-full text-sm">
+              <caption className="sr-only">Proposal cost breakdown, taxes, and total.</caption>
               <thead className="bg-secondary/60">
                 <tr>
-                  <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <th scope="col" className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Item
                   </th>
-                  <th className="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <th scope="col" className="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Price
                   </th>
                 </tr>

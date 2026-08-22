@@ -9,8 +9,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { markOAuthRedirect } from "@/lib/oauth-return";
 import { consumeReturnPath } from "@/lib/session-expiry";
-import { useToast } from "@/hooks/use-toast";
 import { CheckCircle2, Clock } from "lucide-react";
+import AuthCaptcha, { type AuthCaptchaHandle } from "@/components/auth/AuthCaptcha";
+import AuthFormError from "@/components/auth/AuthFormError";
+import { isAuthCaptchaConfigured } from "@/lib/auth-captcha";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -19,8 +21,12 @@ export default function Login() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
   const [signedOut, setSignedOut] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<AuthCaptchaHandle>(null);
+  const authErrorRef = useRef<HTMLDivElement>(null);
+  const captchaConfigured = isAuthCaptchaConfigured();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const expired = searchParams.get("expired") === "1";
   const returnTo = useRef<string>("/dashboard");
@@ -37,30 +43,23 @@ export default function Login() {
   }, [searchParams]);
 
   useEffect(() => {
-    if (!expired) return;
-    toast({
-      title: "Session expired",
-      description: "You were signed out for your security. Please sign in again.",
-    });
-  }, [expired, toast]);
-
-  useEffect(() => {
     try {
       if (window.sessionStorage.getItem("show_signed_out_notice") === "1") {
         window.sessionStorage.removeItem("show_signed_out_notice");
         setSignedOut(true);
-        toast({
-          title: "Signed out",
-          description: "You have been signed out successfully.",
-        });
       }
     } catch {
       /* storage unavailable */
     }
-  }, [toast]);
+  }, []);
+
+  useEffect(() => {
+    if (authError) authErrorRef.current?.focus();
+  }, [authError]);
 
 
   const handleGoogle = async () => {
+    setAuthError(null);
     setGoogleLoading(true);
     markOAuthRedirect(returnTo.current);
     const result = await lovable.auth.signInWithOAuth("google", {
@@ -68,7 +67,7 @@ export default function Login() {
     });
     if (result.error) {
       setGoogleLoading(false);
-      toast({ title: "Google sign-in failed", description: result.error.message, variant: "destructive" });
+      setAuthError(`Google sign-in failed. ${result.error.message}`);
       return;
     }
     if (result.redirected) return;
@@ -76,6 +75,7 @@ export default function Login() {
   };
 
   const handleApple = async () => {
+    setAuthError(null);
     setAppleLoading(true);
     markOAuthRedirect(returnTo.current);
     const result = await lovable.auth.signInWithOAuth("apple", {
@@ -83,7 +83,7 @@ export default function Login() {
     });
     if (result.error) {
       setAppleLoading(false);
-      toast({ title: "Apple sign-in failed", description: result.error.message, variant: "destructive" });
+      setAuthError(`Apple sign-in failed. ${result.error.message}`);
       return;
     }
     if (result.redirected) return;
@@ -92,22 +92,32 @@ export default function Login() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setAuthError(null);
+    if (captchaConfigured && !captchaToken) {
+      setAuthError("Complete the security check. Please verify you are human before signing in.");
+      return;
+    }
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+      options: { captchaToken: captchaToken || undefined },
+    });
+    captchaRef.current?.reset();
     setLoading(false);
     if (error) {
-      toast({ title: "Login failed", description: error.message, variant: "destructive" });
+      setAuthError(`Sign-in failed. ${error.message}`);
     } else {
       navigate(returnTo.current);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+    <main className="min-h-screen bg-background flex items-center justify-center px-4">
       <PageMeta title="Sign in | CloseSync AI" description="Sign in to your CloseSync AI account to manage proposals, contracts and clients." path="/login" noIndex />
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <Link to="/" className="text-xl font-semibold text-foreground tracking-tight">
+          <Link to="/" className="rounded-sm text-xl font-semibold text-foreground tracking-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
             Close<span className="text-gradient-sync">Sync</span> <span className="text-foreground">AI</span>
           </Link>
           <h1 className="text-2xl font-semibold text-foreground mt-4">Sign in to CloseSync AI</h1>
@@ -137,11 +147,12 @@ export default function Login() {
 
         <Card className="border-border">
           <CardContent className="p-6">
+            <AuthFormError ref={authErrorRef} id="login-auth-error" message={authError} />
             <button
               type="button"
               onClick={handleGoogle}
               disabled={googleLoading}
-              className="w-full h-11 rounded-lg border border-border bg-background hover:bg-muted/60 transition flex items-center justify-center gap-2.5 text-sm font-medium text-foreground disabled:opacity-60"
+              className="w-full h-11 rounded-lg border border-border bg-background hover:bg-muted/60 transition flex items-center justify-center gap-2.5 text-sm font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-60"
             >
               <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
                 <path fill="#EA4335" d="M9 3.48c1.69 0 3.21.58 4.4 1.72l3.27-3.27C14.69.92 12.05 0 9 0 5.48 0 2.44 2.02.96 4.96l3.81 2.96C5.5 5.34 7.07 3.48 9 3.48z"/>
@@ -156,7 +167,7 @@ export default function Login() {
               type="button"
               onClick={handleApple}
               disabled={appleLoading}
-              className="w-full h-11 mt-3 rounded-lg border border-border bg-background hover:bg-muted/60 transition flex items-center justify-center gap-2.5 text-sm font-medium text-foreground disabled:opacity-60"
+              className="w-full h-11 mt-3 rounded-lg border border-border bg-background hover:bg-muted/60 transition flex items-center justify-center gap-2.5 text-sm font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-60"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M16.36 12.78c.02 2.6 2.28 3.47 2.31 3.48-.02.06-.36 1.24-1.19 2.45-.72 1.05-1.47 2.1-2.65 2.12-1.16.02-1.53-.69-2.85-.69-1.32 0-1.74.67-2.83.71-1.14.04-2.01-1.13-2.73-2.18-1.48-2.15-2.62-6.08-1.09-8.73.76-1.32 2.11-2.15 3.58-2.17 1.12-.02 2.17.75 2.85.75.68 0 1.96-.93 3.3-.79.56.02 2.14.23 3.15 1.71-.08.05-1.88 1.1-1.86 3.34M14.2 4.6c.6-.73 1.01-1.74.9-2.75-.87.04-1.92.58-2.54 1.3-.56.64-1.05 1.67-.92 2.66.97.07 1.96-.49 2.56-1.21"/>
@@ -171,14 +182,24 @@ export default function Login() {
               <div className="h-px flex-1 bg-border" />
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form
+              onSubmit={handleLogin}
+              aria-busy={loading}
+              aria-describedby={authError ? "login-auth-error" : undefined}
+              className="space-y-4"
+            >
               <div>
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
+                  name="email"
                   type="email"
+                  autoComplete="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setAuthError(null);
+                  }}
                   placeholder="you@company.com"
                   required
                   className="mt-1.5"
@@ -187,23 +208,29 @@ export default function Login() {
               <div>
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
-                  <Link to="/forgot-password" className="text-xs text-accent hover:underline">
+                  <Link to="/forgot-password" className="rounded-sm text-xs text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                     Forgot password?
                   </Link>
                 </div>
                 <Input
                   id="password"
+                  name="password"
                   type="password"
+                  autoComplete="current-password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setAuthError(null);
+                  }}
                   placeholder="••••••••"
                   required
                   className="mt-1.5"
                 />
               </div>
+              <AuthCaptcha ref={captchaRef} action="login" onTokenChange={setCaptchaToken} />
               <Button
                 type="submit"
-                disabled={loading}
+                disabled={loading || (captchaConfigured && !captchaToken)}
                 className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
               >
                 {loading ? "Signing in…" : "Sign in"}
@@ -213,9 +240,9 @@ export default function Login() {
         </Card>
         <p className="text-center text-sm text-muted-foreground mt-4">
           Don't have an account?{" "}
-          <Link to="/signup" className="text-accent hover:underline">Sign up</Link>
+          <Link to="/signup" className="rounded-sm text-accent underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">Sign up</Link>
         </p>
       </div>
-    </div>
+    </main>
   );
 }

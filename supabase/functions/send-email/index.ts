@@ -4,7 +4,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { renderTemplate, type EmailData } from "../_shared/email-templates.ts";
 import { renderClientEmail } from "../_shared/client-email-templates.ts";
-
+import { enforceUserRateLimit } from "../_shared/abuse-rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -60,6 +60,7 @@ const ALLOWED_ATTACHMENT_TYPES = new Set([
   "application/vnd.openxmlformats-officedocument.presentationml.presentation",
   "text/plain",
   "text/csv",
+  "text/calendar",
   "image/png",
   "image/jpeg",
   "image/gif",
@@ -97,6 +98,16 @@ Deno.serve(async (req) => {
     const { data: u, error: uErr } = await userClient.auth.getUser();
     if (uErr || !u?.user) return json({ error: "unauthorized" }, 401);
     authedUserId = u.user.id;
+
+    const limited = await enforceUserRateLimit(req, authedUserId, {
+      source: "send-email",
+      windows: [
+        { name: "burst", maxRequests: 30, windowSeconds: 10 * 60 },
+        { name: "daily", maxRequests: 250, windowSeconds: 24 * 60 * 60 },
+      ],
+      errorMessage: "Too many email requests. Please try again later.",
+    });
+    if (limited) return limited;
   }
 
   let body: Body;

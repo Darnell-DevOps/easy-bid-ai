@@ -60,7 +60,7 @@ export default function ProjectProgressTracker({ currentStage, className }: Prop
       <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-semibold mb-4">
         Project Progress
       </p>
-      <div className="space-y-3">
+      <ol aria-label="Project progress" className="space-y-3">
         {STAGES.map((stage, i) => {
           const Icon = stage.icon;
           const isComplete = i < currentIdx || currentStage === "active";
@@ -74,8 +74,9 @@ export default function ProjectProgressTracker({ currentStage, className }: Prop
             : { label: "Pending", cls: "border-border/40 text-muted-foreground" };
 
           return (
-            <div
+            <li
               key={stage.id}
+              aria-current={isCurrent ? "step" : undefined}
               className={cn(
                 "group relative flex items-start gap-4 p-4 rounded-xl border transition-all duration-500",
                 isCurrent &&
@@ -87,6 +88,7 @@ export default function ProjectProgressTracker({ currentStage, className }: Prop
               {/* Connector line */}
               {i < STAGES.length - 1 && (
                 <span
+                  aria-hidden="true"
                   className={cn(
                     "absolute left-[27px] top-[52px] bottom-[-14px] w-px transition-colors duration-500",
                     isComplete
@@ -108,14 +110,14 @@ export default function ProjectProgressTracker({ currentStage, className }: Prop
                 )}
               >
                 {isComplete ? (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400 animate-scale-in" />
+                  <CheckCircle2 aria-hidden="true" className="w-5 h-5 text-emerald-400 animate-scale-in" />
                 ) : isCurrent ? (
-                  <Loader2 className="w-4 h-4 text-accent animate-spin" />
+                  <Loader2 aria-hidden="true" className="w-4 h-4 text-accent animate-spin" />
                 ) : (
-                  <Circle className="w-4 h-4 text-muted-foreground" />
+                  <Circle aria-hidden="true" className="w-4 h-4 text-muted-foreground" />
                 )}
                 {isCurrent && (
-                  <span className="absolute inset-0 rounded-full border border-accent/50 animate-ping" />
+                  <span aria-hidden="true" className="absolute inset-0 rounded-full border border-accent/50 animate-ping" />
                 )}
               </div>
 
@@ -124,6 +126,7 @@ export default function ProjectProgressTracker({ currentStage, className }: Prop
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2 min-w-0">
                     <Icon
+                      aria-hidden="true"
                       className={cn(
                         "w-3.5 h-3.5 shrink-0",
                         isPending ? "text-muted-foreground" : "text-foreground/80",
@@ -142,10 +145,10 @@ export default function ProjectProgressTracker({ currentStage, className }: Prop
                 </div>
                 <div className="text-sm text-muted-foreground mt-1">{stage.detail}</div>
               </div>
-            </div>
+            </li>
           );
         })}
-      </div>
+      </ol>
     </div>
   );
 }

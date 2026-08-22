@@ -41,15 +41,20 @@ export default function OnboardingProgressTracker({ currentStage, className, com
       <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-semibold mb-3 text-center sm:text-left">
         Project Progress
       </p>
-      <div className="flex items-center justify-between gap-1 sm:gap-2 overflow-x-auto">
+      <ol aria-label="Project progress" className="flex items-center justify-between gap-1 sm:gap-2 overflow-x-auto">
         {STAGES.map((stage, i) => {
           const Icon = stage.icon;
           const isComplete = i < currentIdx;
           const isCurrent = i === currentIdx;
           const isPending = i > currentIdx;
+          const statusLabel = isComplete ? "Complete" : isCurrent ? "Current step" : "Pending";
 
           return (
-            <div key={stage.id} className="flex items-center flex-1 min-w-0 last:flex-none">
+            <li
+              key={stage.id}
+              aria-current={isCurrent ? "step" : undefined}
+              className="flex items-center flex-1 min-w-0 last:flex-none"
+            >
               <div className="flex flex-col items-center gap-1.5 min-w-0">
                 <div
                   className={cn(
@@ -60,34 +65,35 @@ export default function OnboardingProgressTracker({ currentStage, className, com
                   )}
                 >
                   {isComplete ? (
-                    <Check className="w-4 h-4" />
+                    <Check aria-hidden="true" className="w-4 h-4" />
                   ) : (
-                    <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <Icon aria-hidden="true" className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   )}
                 </div>
-                {!compact && (
-                  <span
-                    className={cn(
-                      "text-[10px] sm:text-xs font-medium whitespace-nowrap",
-                      (isComplete || isCurrent) ? "text-foreground" : "text-muted-foreground",
-                    )}
-                  >
-                    {stage.label}
-                  </span>
-                )}
+                <span
+                  className={cn(
+                    compact && "sr-only",
+                    !compact && "text-[10px] sm:text-xs font-medium whitespace-nowrap",
+                    !compact && ((isComplete || isCurrent) ? "text-foreground" : "text-muted-foreground"),
+                  )}
+                >
+                  {stage.label}
+                </span>
+                <span className="sr-only"> — {statusLabel}</span>
               </div>
               {i < STAGES.length - 1 && (
                 <div
+                  aria-hidden="true"
                   className={cn(
                     "flex-1 h-0.5 mx-1 sm:mx-2 rounded -translate-y-2.5 transition-all",
                     i < currentIdx ? "bg-emerald-500" : "bg-border",
                   )}
                 />
               )}
-            </div>
+            </li>
           );
         })}
-      </div>
+      </ol>
     </div>
   );
 }

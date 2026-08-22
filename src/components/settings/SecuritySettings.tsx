@@ -566,6 +566,7 @@ export default function SecuritySettings() {
                 if (v) beginEnroll2FA();
                 else setDisableDialog(true);
               }}
+              aria-label="Authenticator app two-factor authentication"
             />
           </div>
 
@@ -822,9 +823,16 @@ export default function SecuritySettings() {
 
                 {enrollSecret && (
                   <div>
-                    <Label className="text-xs">Or enter this code manually</Label>
+                    <Label htmlFor="totp-manual-secret" className="text-xs">Or enter this code manually</Label>
                     <div className="mt-1.5 flex gap-2">
-                      <Input value={enrollSecret} readOnly className="font-mono text-xs" />
+                      <Input
+                        id="totp-manual-secret"
+                        value={enrollSecret}
+                        readOnly
+                        autoComplete="off"
+                        spellCheck={false}
+                        className="font-mono text-xs"
+                      />
                       <Button
                         variant="outline"
                         size="icon"
@@ -832,8 +840,9 @@ export default function SecuritySettings() {
                           await navigator.clipboard.writeText(enrollSecret);
                           toast({ title: "Copied" });
                         }}
+                        aria-label="Copy manual two-factor authentication code"
                       >
-                        <Copy className="w-4 h-4" />
+                        <Copy aria-hidden="true" className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>
@@ -1050,7 +1059,7 @@ function AlertToggle({
   return (
     <div className="flex items-center justify-between">
       <span className="text-sm text-foreground">{label}</span>
-      <Switch checked={checked} onCheckedChange={onChange} />
+      <Switch checked={checked} onCheckedChange={onChange} aria-label={label} />
     </div>
   );
 }

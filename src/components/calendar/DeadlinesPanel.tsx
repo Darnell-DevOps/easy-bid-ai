@@ -10,6 +10,7 @@ import { Calendar as CalendarUI } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -352,15 +353,17 @@ export default function DeadlinesPanel() {
                   return (
                     <div key={d.id} className="flex items-start gap-3 p-4 hover:bg-muted/30 transition">
                       <button
+                        type="button"
                         onClick={() => toggleComplete(d)}
-                        className={`mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition ${
+                        className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition ${
                           d.status === "completed"
                             ? "bg-success border-success"
                             : "border-muted-foreground/40 hover:border-success"
                         }`}
                         title={d.status === "completed" ? "Mark as not done" : "Mark complete"}
+                        aria-label={`${d.status === "completed" ? "Mark as not done" : "Mark complete"}: ${d.title}`}
                       >
-                        {d.status === "completed" && <CheckCircle2 className="w-3 h-3 text-white" />}
+                        {d.status === "completed" && <CheckCircle2 aria-hidden="true" className="w-3 h-3 text-white" />}
                       </button>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start gap-2 flex-wrap">
@@ -393,16 +396,26 @@ export default function DeadlinesPanel() {
                       <div className="flex items-center gap-1 flex-shrink-0">
                         {href && (
                           <Button asChild variant="ghost" size="icon" className="h-7 w-7">
-                            <Link to={href} title="Open related record">
-                              <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+                            <Link
+                              to={href}
+                              title="Open related record"
+                              aria-label={`Open related record for ${d.title}`}
+                            >
+                              <ExternalLink aria-hidden="true" className="w-3.5 h-3.5 text-muted-foreground" />
                             </Link>
                           </Button>
                         )}
                         <Button variant="ghost" size="sm" onClick={() => openEdit(d)} className="text-xs h-7 px-2">
                           Edit
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => remove(d.id)} className="h-7 w-7">
-                          <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => remove(d.id)}
+                          className="h-7 w-7"
+                          aria-label={`Delete deadline: ${d.title}`}
+                        >
+                          <Trash2 aria-hidden="true" className="w-3.5 h-3.5 text-muted-foreground" />
                         </Button>
                       </div>
                     </div>
@@ -463,30 +476,37 @@ export default function DeadlinesPanel() {
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing ? "Edit deadline" : "Add deadline"}</DialogTitle>
+            <DialogDescription>
+              Add the deadline details. Fields marked with an asterisk are required.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Title *</Label>
+              <Label htmlFor="deadline-title">Title *</Label>
               <Input
+                id="deadline-title"
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
                 placeholder="Deliver website mockups"
                 maxLength={200}
+                required
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Due date *</Label>
+                <Label htmlFor="deadline-due-date">Due date *</Label>
                 <Input
+                  id="deadline-due-date"
                   type="date"
                   value={form.due_date}
                   onChange={(e) => setForm({ ...form, due_date: e.target.value })}
+                  required
                 />
               </div>
               <div>
-                <Label>Priority</Label>
+                <Label htmlFor="deadline-priority">Priority</Label>
                 <Select value={form.priority} onValueChange={(v) => setForm({ ...form, priority: v as DeadlinePriority })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="deadline-priority"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {PRIORITY_OPTIONS.map((p) => (
                       <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
@@ -496,9 +516,9 @@ export default function DeadlinesPanel() {
               </div>
             </div>
             <div>
-              <Label>Client</Label>
+              <Label htmlFor="deadline-client">Client</Label>
               <Select value={form.client_id} onValueChange={(v) => setForm({ ...form, client_id: v })}>
-                <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                <SelectTrigger id="deadline-client"><SelectValue placeholder="None" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">None</SelectItem>
                   {clients.map((c) => (
@@ -509,9 +529,9 @@ export default function DeadlinesPanel() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Proposal</Label>
+                <Label htmlFor="deadline-proposal">Proposal</Label>
                 <Select value={form.proposal_id} onValueChange={(v) => setForm({ ...form, proposal_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                  <SelectTrigger id="deadline-proposal"><SelectValue placeholder="None" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">None</SelectItem>
                     {proposals.map((p) => (
@@ -521,9 +541,9 @@ export default function DeadlinesPanel() {
                 </Select>
               </div>
               <div>
-                <Label>Contract</Label>
+                <Label htmlFor="deadline-contract">Contract</Label>
                 <Select value={form.contract_id} onValueChange={(v) => setForm({ ...form, contract_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                  <SelectTrigger id="deadline-contract"><SelectValue placeholder="None" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">None</SelectItem>
                     {contracts.map((c) => (
@@ -534,8 +554,9 @@ export default function DeadlinesPanel() {
               </div>
             </div>
             <div>
-              <Label>Notes</Label>
+              <Label htmlFor="deadline-notes">Notes</Label>
               <Textarea
+                id="deadline-notes"
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 placeholder="Anything to remember"

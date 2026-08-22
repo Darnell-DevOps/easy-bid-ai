@@ -290,7 +290,7 @@ export default function ProfileSettings() {
   if (loading) {
     return (
       <Card>
-        <CardContent className="p-6">
+        <CardContent role="status" aria-live="polite" className="p-6">
           <p className="text-sm text-muted-foreground">Loading your profile…</p>
         </CardContent>
       </Card>
@@ -302,7 +302,7 @@ export default function ProfileSettings() {
       <Card>
         <CardContent className="p-6 space-y-5">
           <div>
-            <Label className="text-xs text-muted-foreground">Email address</Label>
+            <p className="text-xs text-muted-foreground">Email address</p>
             <div className="flex items-center gap-2 mt-1.5">
               <Mail className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm text-foreground">{email || "—"}</span>
@@ -313,7 +313,7 @@ export default function ProfileSettings() {
           </div>
 
           {relay && (
-            <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
+            <div role="status" className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
               <div className="flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
                 <div className="space-y-1">
@@ -332,11 +332,14 @@ export default function ProfileSettings() {
 
           <div>
             <Field
+              id="profile-contact-email"
               label="Contact email"
               value={form.contact_email || ""}
               onChange={(v) => set("contact_email", v)}
               error={errors.contact_email}
               placeholder="you@yourbusiness.com"
+              type="email"
+              autoComplete="email"
               hint={
                 relay
                   ? "Where we'll actually reach you instead of the Apple relay address"
@@ -350,44 +353,56 @@ export default function ProfileSettings() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field
+              id="profile-first-name"
               label="First name"
               value={form.first_name || ""}
               onChange={(v) => set("first_name", v)}
               error={errors.first_name}
               placeholder="Alex"
+              autoComplete="given-name"
             />
             <Field
+              id="profile-last-name"
               label="Last name"
               value={form.last_name || ""}
               onChange={(v) => set("last_name", v)}
               error={errors.last_name}
               placeholder="Morgan"
+              autoComplete="family-name"
             />
           </div>
 
           <Field
+            id="profile-business-name"
             label="Business name"
             value={form.business_name || ""}
             onChange={(v) => set("business_name", v)}
             error={errors.business_name}
             placeholder="Acme Studio"
             hint="Used on proposals, contracts and invoices"
+            autoComplete="organization"
           />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field
+              id="profile-phone"
               label="Phone number"
               value={form.phone || ""}
               onChange={(v) => set("phone", v)}
               error={errors.phone}
               placeholder="+1 555 123 4567"
+              type="tel"
+              autoComplete="tel"
             />
             <Field
+              id="profile-website"
               label="Website"
               value={form.website || ""}
               onChange={(v) => set("website", v)}
               error={errors.website}
               placeholder="https://acme.com"
+              type="url"
+              autoComplete="url"
             />
           </div>
 
@@ -395,12 +410,12 @@ export default function ProfileSettings() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <Label className="text-xs text-muted-foreground">Timezone</Label>
+              <Label htmlFor="profile-timezone" className="text-xs text-muted-foreground">Timezone</Label>
               <Select
                 value={form.timezone}
                 onValueChange={(v) => set("timezone", v)}
               >
-                <SelectTrigger className="mt-1.5">
+                <SelectTrigger id="profile-timezone" className="mt-1.5">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -413,12 +428,12 @@ export default function ProfileSettings() {
               </Select>
             </div>
             <div>
-              <Label className="text-xs text-muted-foreground">Default currency</Label>
+              <Label htmlFor="profile-default-currency" className="text-xs text-muted-foreground">Default currency</Label>
               <Select
                 value={form.default_currency}
                 onValueChange={(v) => set("default_currency", v)}
               >
-                <SelectTrigger className="mt-1.5">
+                <SelectTrigger id="profile-default-currency" className="mt-1.5">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -431,12 +446,12 @@ export default function ProfileSettings() {
               </Select>
             </div>
             <div>
-              <Label className="text-xs text-muted-foreground">Language</Label>
+              <Label htmlFor="profile-language" className="text-xs text-muted-foreground">Language</Label>
               <Select
                 value={form.language}
                 onValueChange={(v) => set("language", v)}
               >
-                <SelectTrigger className="mt-1.5">
+                <SelectTrigger id="profile-language" className="mt-1.5">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -453,7 +468,7 @@ export default function ProfileSettings() {
           <Separator />
 
           <div>
-            <Label className="text-xs text-muted-foreground">Appearance</Label>
+            <p id="profile-appearance-label" className="text-xs text-muted-foreground">Appearance</p>
             <div className="mt-3 flex items-center justify-between rounded-lg border border-border p-4">
               <div className="flex items-center gap-3">
                 {theme === "dark" ? (
@@ -462,10 +477,10 @@ export default function ProfileSettings() {
                   <Sun className="w-4 h-4 text-muted-foreground" />
                 )}
                 <div>
-                  <p className="text-sm font-medium text-foreground">
+                  <p id="profile-appearance-mode" className="text-sm font-medium text-foreground">
                     {theme === "dark" ? "Dark mode" : "Light mode"}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p id="profile-appearance-description" className="text-xs text-muted-foreground">
                     {theme === "dark"
                       ? "Easier on the eyes in low light"
                       : "Bright, clean interface for daytime use"}
@@ -475,7 +490,8 @@ export default function ProfileSettings() {
               <Switch
                 checked={theme === "dark"}
                 onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
-                aria-label="Toggle dark mode"
+                aria-labelledby="profile-appearance-label profile-appearance-mode"
+                aria-describedby="profile-appearance-description"
               />
             </div>
           </div>
@@ -484,23 +500,25 @@ export default function ProfileSettings() {
 
       {/* Sticky save bar */}
       <div
+        aria-hidden={!dirty}
         className={`sticky bottom-4 z-20 transition-all ${
           dirty ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
         }`}
       >
         <div className="flex items-center justify-between gap-3 rounded-xl border border-accent/30 bg-card/95 backdrop-blur px-4 py-3 shadow-lg">
-          <div className="flex items-center gap-2 text-sm text-foreground">
+          <div role="status" className="flex items-center gap-2 text-sm text-foreground">
             <AlertCircle className="w-4 h-4 text-accent" />
             You have unsaved changes
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={handleDiscard} disabled={saving}>
+            <Button variant="ghost" size="sm" onClick={handleDiscard} disabled={!dirty || saving}>
               Discard
             </Button>
             <Button
               size="sm"
               onClick={handleSave}
-              disabled={saving}
+              disabled={!dirty || saving}
+              aria-busy={saving}
               className="gap-2"
             >
               <Save className="w-4 h-4" />
@@ -514,33 +532,47 @@ export default function ProfileSettings() {
 }
 
 function Field({
+  id,
   label,
   value,
   onChange,
   error,
   placeholder,
   hint,
+  type = "text",
+  autoComplete,
 }: {
+  id: string;
   label: string;
   value: string;
   onChange: (v: string) => void;
   error?: string;
   placeholder?: string;
   hint?: string;
+  type?: "text" | "email" | "tel" | "url";
+  autoComplete?: string;
 }) {
+  const messageId = error || hint ? `${id}-message` : undefined;
+
   return (
     <div>
-      <Label className="text-xs text-muted-foreground">{label}</Label>
+      <Label htmlFor={id} className="text-xs text-muted-foreground">{label}</Label>
       <Input
+        id={id}
+        type={type}
+        autoComplete={autoComplete}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
+        aria-invalid={Boolean(error)}
+        aria-describedby={messageId}
+        aria-errormessage={error ? messageId : undefined}
         className={`mt-1.5 ${error ? "border-destructive focus-visible:ring-destructive" : ""}`}
       />
       {error ? (
-        <p className="text-xs text-destructive mt-1">{error}</p>
+        <p id={messageId} role="alert" className="text-xs text-destructive mt-1">{error}</p>
       ) : hint ? (
-        <p className="text-xs text-muted-foreground mt-1">{hint}</p>
+        <p id={messageId} className="text-xs text-muted-foreground mt-1">{hint}</p>
       ) : null}
     </div>
   );

@@ -172,6 +172,12 @@ export default function LeadAssistant() {
     else if (message.trim().length < 20)
       next.message = "Add a bit more context (at least 20 characters)";
     setErrors(next);
+    const firstInvalid = (["name", "email", "message"] as const).find((field) => next[field]);
+    if (firstInvalid) {
+      window.requestAnimationFrame(() => {
+        document.getElementById(firstInvalid === "message" ? "msg" : firstInvalid)?.focus();
+      });
+    }
     return Object.keys(next).length === 0;
   };
 
@@ -539,6 +545,11 @@ export default function LeadAssistant() {
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
+            {Object.keys(errors).length > 0 && (
+              <p role="alert" aria-atomic="true" className="sr-only">
+                {Object.values(errors).filter(Boolean).join(". ")}
+              </p>
+            )}
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Lead name *</Label>
@@ -551,9 +562,10 @@ export default function LeadAssistant() {
                     if (errors.name) setErrors({ ...errors, name: undefined });
                   }}
                   aria-invalid={!!errors.name}
+                  aria-describedby={errors.name ? "name-error" : undefined}
                   className={errors.name ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
-                {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
+                {errors.name && <p id="name-error" className="text-xs text-destructive">{errors.name}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Lead email</Label>
@@ -567,9 +579,10 @@ export default function LeadAssistant() {
                     if (errors.email) setErrors({ ...errors, email: undefined });
                   }}
                   aria-invalid={!!errors.email}
+                  aria-describedby={errors.email ? "email-error" : undefined}
                   className={errors.email ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
-                {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
+                {errors.email && <p id="email-error" className="text-xs text-destructive">{errors.email}</p>}
               </div>
             </div>
             <div className="space-y-2">
@@ -601,17 +614,19 @@ export default function LeadAssistant() {
                   if (errors.message) setErrors({ ...errors, message: undefined });
                 }}
                 aria-invalid={!!errors.message}
+                aria-describedby={errors.message ? "msg-error" : undefined}
                 className={`resize-none ${
                   errors.message ? "border-destructive focus-visible:ring-destructive" : ""
                 }`}
               />
-              {errors.message && <p className="text-xs text-destructive">{errors.message}</p>}
+              {errors.message && <p id="msg-error" className="text-xs text-destructive">{errors.message}</p>}
             </div>
 
             <div className="space-y-3 pt-1">
               <Button
                 onClick={handleGenerate}
                 disabled={generating}
+                aria-busy={generating}
                 size="lg"
                 className={
                   aiLeadUnlocked
@@ -627,6 +642,9 @@ export default function LeadAssistant() {
                   <><Crown className="w-4 h-4" /> Unlock AI Reply with Pro</>
                 )}
               </Button>
+              <p role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+                {generating ? "Generating lead analysis and reply." : hasResponse ? "Lead analysis and reply ready." : ""}
+              </p>
 
               <ul className="space-y-1.5 text-sm text-muted-foreground">
                 <li className="flex items-center gap-2">
@@ -663,14 +681,16 @@ export default function LeadAssistant() {
             {/* Section 2: AI Response */}
             <Card className="border-primary/30">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Bot className="w-4 h-4 text-primary" />
+                <CardTitle id="ai-drafted-reply-heading" className="flex items-center gap-2 text-base">
+                  <Bot aria-hidden="true" className="w-4 h-4 text-primary" />
                   AI-drafted reply
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="rounded-lg bg-muted/40 border border-border/50 p-1">
                   <Textarea
+                    id="ai-drafted-reply"
+                    aria-labelledby="ai-drafted-reply-heading"
                     rows={10}
                     value={reply}
                     onChange={(e) => setReply(e.target.value)}
@@ -688,7 +708,7 @@ export default function LeadAssistant() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <ClipboardList className="w-4 h-4 text-primary" />
+                  <ClipboardList aria-hidden="true" className="w-4 h-4 text-primary" />
                   Extracted client details
                 </CardTitle>
                 <p className="text-xs text-muted-foreground">
@@ -698,9 +718,16 @@ export default function LeadAssistant() {
               <CardContent className="space-y-4">
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Phone</Label>
+                    <Label htmlFor="lead-detail-phone">Phone</Label>
                     <div className="flex gap-2">
-                      <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Optional" />
+                      <Input
+                        id="lead-detail-phone"
+                        type="tel"
+                        autoComplete="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="Optional"
+                      />
                       <WhatsAppButton
                         phone={phone}
                         context="lead"
@@ -710,21 +737,22 @@ export default function LeadAssistant() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>Service requested</Label>
-                    <Input value={service} onChange={(e) => setService(e.target.value)} placeholder="e.g. Paid ads management" />
+                    <Label htmlFor="lead-detail-service">Service requested</Label>
+                    <Input id="lead-detail-service" value={service} onChange={(e) => setService(e.target.value)} placeholder="e.g. Paid ads management" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Budget</Label>
-                    <Input value={budget} onChange={(e) => setBudget(e.target.value)} placeholder="e.g. £3-5k/month" />
+                    <Label htmlFor="lead-detail-budget">Budget</Label>
+                    <Input id="lead-detail-budget" value={budget} onChange={(e) => setBudget(e.target.value)} placeholder="e.g. £3-5k/month" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Timeline</Label>
-                    <Input value={timeline} onChange={(e) => setTimeline(e.target.value)} placeholder="e.g. Start next month" />
+                    <Label htmlFor="lead-detail-timeline">Timeline</Label>
+                    <Input id="lead-detail-timeline" value={timeline} onChange={(e) => setTimeline(e.target.value)} placeholder="e.g. Start next month" />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Goals</Label>
+                  <Label htmlFor="lead-detail-goals">Goals</Label>
                   <Textarea
+                    id="lead-detail-goals"
                     rows={2}
                     value={goals}
                     onChange={(e) => setGoals(e.target.value)}
@@ -733,8 +761,9 @@ export default function LeadAssistant() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Project description / notes</Label>
+                  <Label htmlFor="lead-detail-notes">Project description / notes</Label>
                   <Textarea
+                    id="lead-detail-notes"
                     rows={3}
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
@@ -970,8 +999,8 @@ export default function LeadAssistant() {
               <CardContent className="p-6 space-y-4">
                 {savedClientId ? (
                   <>
-                    <div className="flex items-center gap-2 text-emerald-600">
-                      <Check className="w-5 h-5" />
+                    <div role="status" aria-live="polite" className="flex items-center gap-2 text-emerald-600">
+                      <Check aria-hidden="true" className="w-5 h-5" />
                       <p className="font-semibold">Client saved successfully</p>
                     </div>
                     <p className="text-sm text-muted-foreground">
@@ -1005,11 +1034,11 @@ export default function LeadAssistant() {
                       <p className="text-sm font-medium">Save & take action</p>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-3">
-                      <Button onClick={handleSaveClient} disabled={saving}>
+                      <Button onClick={handleSaveClient} disabled={saving} aria-busy={saving}>
                         {saving ? (
-                          <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
+                          <><Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" /> Saving...</>
                         ) : (
-                          <><UserPlus className="w-4 h-4" /> Save as Client</>
+                          <><UserPlus aria-hidden="true" className="w-4 h-4" /> Save as Client</>
                         )}
                       </Button>
                       <Button onClick={reset} variant="ghost">

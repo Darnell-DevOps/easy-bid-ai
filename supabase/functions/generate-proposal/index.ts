@@ -9,6 +9,7 @@ import {
   type TaxMode,
 } from "../_shared/commercial-calc.ts";
 import { getUserPlan } from "../_shared/plan-entitlements.ts";
+import { enforceAiRateLimit } from "../_shared/abuse-rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -45,7 +46,10 @@ async function requireAuthUser(req: Request): Promise<Response | { user: any; su
   return { user, supabase };
 }
 
-async function enforcePlanLimit(req: Request, payload: any): Promise<Response | null> {
+async function enforcePlanLimit(
+  req: Request,
+  payload: any,
+): Promise<Response | { user: any; supabase: any }> {
   const auth = await requireAuthUser(req);
   if (auth instanceof Response) return auth;
   const { user, supabase } = auth;
@@ -55,12 +59,12 @@ async function enforcePlanLimit(req: Request, payload: any): Promise<Response | 
   if (proposalId && typeof proposalId === "string") {
     const { data: existing } = await supabase
       .from("proposals").select("user_id").eq("id", proposalId).maybeSingle();
-    if (existing && existing.user_id === user.id) return null;
+    if (existing && existing.user_id === user.id) return auth;
   }
 
   const plan = await getUserPlan(supabase, user.id);
   const limit = PLAN_MONTHLY_PROPOSAL_LIMIT[plan];
-  if (limit === "unlimited") return null;
+  if (limit === "unlimited") return auth;
 
   const monthStart = new Date();
   monthStart.setUTCDate(1);
@@ -75,7 +79,7 @@ async function enforcePlanLimit(req: Request, payload: any): Promise<Response | 
       error: `You've reached your ${plan} plan limit of ${limit} proposals this month. Upgrade to keep generating.`,
     }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
-  return null;
+  return auth;
 }
 
 
@@ -463,6 +467,10 @@ serve(async (req) => {
     if (section && typeof section === "string") {
       const auth = await requireAuthUser(req);
       if (auth instanceof Response) return auth;
+      const rateLimited = await enforceAiRateLimit(req, auth.user.id, {
+        source: "generate-proposal",
+      });
+      if (rateLimited) return rateLimited;
       if (!SECTION_HEADINGS.includes(section)) {
         return new Response(JSON.stringify({ error: `Unknown section: ${section}` }), {
           status: 400,
@@ -483,8 +491,12 @@ serve(async (req) => {
     }
 
     // Full proposal generation (preserves original API contract)
-    const limitResponse = await enforcePlanLimit(req, payload);
-    if (limitResponse) return limitResponse;
+    const planAuth = await enforcePlanLimit(req, payload);
+    if (planAuth instanceof Response) return planAuth;
+    const rateLimited = await enforceAiRateLimit(req, planAuth.user.id, {
+      source: "generate-proposal",
+    });
+    if (rateLimited) return rateLimited;
 
     const content = await callAI(buildSystemPrompt(), buildFullPrompt(payload));
 

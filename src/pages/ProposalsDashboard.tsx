@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { FileText, CheckCircle, Send, Eye, XCircle, TrendingUp, Plus, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeStatus } from "@/components/proposal/StatusBadge";
+import { AccessibleLoadingState } from "@/components/ui/accessible-loading-state";
 
 interface Proposal {
   id: string;
@@ -68,9 +69,11 @@ export default function ProposalsDashboard() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-        </div>
+        <AccessibleLoadingState
+          label="Loading proposals"
+          className="h-64"
+          spinnerClassName="h-8 w-8 text-primary"
+        />
       </DashboardLayout>
     );
   }
@@ -81,8 +84,14 @@ export default function ProposalsDashboard() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="text-muted-foreground hover:text-foreground">
-              <ArrowLeft className="w-5 h-5" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/dashboard")}
+              className="text-muted-foreground hover:text-foreground"
+              aria-label="Back to dashboard"
+            >
+              <ArrowLeft aria-hidden="true" className="w-5 h-5" />
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-foreground">Proposals Overview</h1>

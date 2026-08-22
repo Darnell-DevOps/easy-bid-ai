@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { CheckCircle2, FileText, PenLine, CreditCard, ClipboardList, CalendarCheck, Sparkles, Circle, Loader2, ShieldCheck } from "lucide-react";
+import { CheckCircle2, FileText, PenLine, CreditCard, ClipboardList, CalendarCheck, Sparkles, Circle, Loader2, ShieldCheck, Pause, Play } from "lucide-react";
 import { AnimateIn } from "@/hooks/use-scroll-animation";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 
 type StageState = "done" | "active" | "pending";
 
@@ -39,13 +40,17 @@ const stages = [
 
 export default function ClientPortalShowcase() {
   const [activeIndex, setActiveIndex] = useState(2);
+  const [userPlaying, setUserPlaying] = useState<boolean | null>(null);
+  const reducedMotion = useReducedMotion();
+  const paused = userPlaying === null ? reducedMotion : !userPlaying;
 
   useEffect(() => {
+    if (paused) return;
     const id = setInterval(() => {
       setActiveIndex((i) => (i + 1) % (stages.length + 1));
     }, 2200);
     return () => clearInterval(id);
-  }, []);
+  }, [paused]);
 
   const getState = (i: number): StageState => {
     if (i < activeIndex) return "done";
@@ -55,9 +60,10 @@ export default function ClientPortalShowcase() {
 
   const completedCount = Math.min(activeIndex, stages.length);
   const progress = (completedCount / stages.length) * 100;
+  const motionControlLabel = paused ? "Play client portal demo" : "Pause client portal demo";
 
   return (
-    <section id="portal" className="relative py-24 md:py-32 overflow-hidden">
+    <section id="portal" className={`${paused ? "motion-paused " : ""}relative py-24 md:py-32 overflow-hidden`}>
       <div className="absolute inset-0 -z-10 opacity-60">
         <div className="absolute top-1/3 left-1/4 w-[480px] h-[480px] rounded-full bg-accent/10 blur-[120px] animate-soft-pulse" />
         <div className="absolute bottom-1/4 right-1/4 w-[420px] h-[420px] rounded-full bg-purple/10 blur-[120px] animate-soft-pulse" style={{ animationDelay: "1.5s" }} />
@@ -91,9 +97,20 @@ export default function ClientPortalShowcase() {
                 <div className="ml-3 flex-1 text-xs text-muted-foreground font-mono truncate">
                   portal.closesync.io / acme-co / project-orbit
                 </div>
-                <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-emerald-400">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Live
+                <div className="flex items-center gap-2">
+                  <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-emerald-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    {paused ? "Paused" : "Live"}
+                  </div>
+                  <button
+                    type="button"
+                    aria-label={motionControlLabel}
+                    title={motionControlLabel}
+                    onClick={() => setUserPlaying(paused)}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-md text-accent hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    {paused ? <Play aria-hidden="true" className="h-3.5 w-3.5" /> : <Pause aria-hidden="true" className="h-3.5 w-3.5" />}
+                  </button>
                 </div>
               </div>
 
@@ -112,7 +129,7 @@ export default function ClientPortalShowcase() {
 
               {/* progress bar */}
               <div className="px-6 pt-4">
-                <div className="h-1.5 w-full rounded-full bg-muted/40 overflow-hidden">
+                <div aria-hidden="true" className="h-1.5 w-full rounded-full bg-muted/40 overflow-hidden">
                   <div
                     className="h-full bg-accent rounded-full transition-all duration-700 ease-out"
                     style={{ width: `${progress}%` }}

@@ -145,25 +145,25 @@ export default function RetainerTemplateEditorDialog({
         <div className="space-y-4">
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Template name</Label>
-              <Input value={form.name} onChange={(e) => setField("name", e.target.value)} placeholder="e.g. Premium SEO Retainer" />
+              <Label htmlFor="rt-name">Template name</Label>
+              <Input id="rt-name" value={form.name} onChange={(e) => setField("name", e.target.value)} placeholder="e.g. Premium SEO Retainer" required />
             </div>
             <div className="space-y-1.5">
-              <Label>Service type</Label>
-              <Input value={form.service_type} onChange={(e) => setField("service_type", e.target.value)} placeholder="e.g. SEO" />
+              <Label htmlFor="rt-service-type">Service type</Label>
+              <Input id="rt-service-type" value={form.service_type} onChange={(e) => setField("service_type", e.target.value)} placeholder="e.g. SEO" />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label>Short description</Label>
-            <Textarea value={form.description} onChange={(e) => setField("description", e.target.value)} rows={2} />
+            <Label htmlFor="rt-description">Short description</Label>
+            <Textarea id="rt-description" value={form.description} onChange={(e) => setField("description", e.target.value)} rows={2} />
           </div>
 
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Icon</Label>
+              <Label htmlFor="rt-icon">Icon</Label>
               <Select value={form.icon} onValueChange={(v) => setField("icon", v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="rt-icon"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {RETAINER_ICON_OPTIONS.map((o) => (
                     <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
@@ -172,9 +172,9 @@ export default function RetainerTemplateEditorDialog({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Colour</Label>
+              <Label htmlFor="rt-colour">Colour</Label>
               <Select value={form.accent} onValueChange={(v) => setField("accent", v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="rt-colour"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {RETAINER_ACCENT_OPTIONS.map((o) => (
                     <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
@@ -185,14 +185,15 @@ export default function RetainerTemplateEditorDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Best for</Label>
-            <Input value={form.best_for} onChange={(e) => setField("best_for", e.target.value)} placeholder="e.g. Agencies & studios" />
+            <Label htmlFor="rt-best-for">Best for</Label>
+            <Input id="rt-best-for" value={form.best_for} onChange={(e) => setField("best_for", e.target.value)} placeholder="e.g. Agencies & studios" />
           </div>
 
           <div className="grid sm:grid-cols-3 gap-3">
             <div className="space-y-1.5 sm:col-span-1">
-              <Label>Default amount</Label>
+              <Label htmlFor="rt-default-amount">Default amount</Label>
               <Input
+                id="rt-default-amount"
                 type="number"
                 inputMode="decimal"
                 value={form.default_amount}
@@ -201,9 +202,9 @@ export default function RetainerTemplateEditorDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Currency</Label>
+              <Label htmlFor="rt-currency">Currency</Label>
               <Select value={form.default_currency} onValueChange={(v) => setField("default_currency", v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="rt-currency"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {CURRENCIES.map((c) => (
                     <SelectItem key={c.code} value={c.code}>{c.symbol} {c.code}</SelectItem>
@@ -212,12 +213,12 @@ export default function RetainerTemplateEditorDialog({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Frequency</Label>
+              <Label htmlFor="rt-frequency">Frequency</Label>
               <Select
                 value={form.default_interval}
                 onValueChange={(v) => setField("default_interval", v as RetainerTemplateFormValues["default_interval"])}
               >
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="rt-frequency"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="weekly">Weekly</SelectItem>
                   <SelectItem value="monthly">Monthly</SelectItem>
@@ -230,8 +231,9 @@ export default function RetainerTemplateEditorDialog({
 
           {form.default_interval === "custom" && (
             <div className="space-y-1.5">
-              <Label>Every X days</Label>
+              <Label htmlFor="rt-custom-days">Every X days</Label>
               <Input
+                id="rt-custom-days"
                 type="number"
                 value={form.default_custom_days}
                 onChange={(e) => setField("default_custom_days", e.target.value)}
@@ -241,8 +243,9 @@ export default function RetainerTemplateEditorDialog({
           )}
 
           <div className="space-y-1.5">
-            <Label>What's included (one item per line)</Label>
+            <Label htmlFor="rt-default-bullets">What's included (one item per line)</Label>
             <Textarea
+              id="rt-default-bullets"
               value={form.default_bullets}
               onChange={(e) => setField("default_bullets", e.target.value)}
               rows={5}
@@ -251,15 +254,15 @@ export default function RetainerTemplateEditorDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Internal notes</Label>
-            <Textarea value={form.notes} onChange={(e) => setField("notes", e.target.value)} rows={2} />
+            <Label htmlFor="rt-notes">Internal notes</Label>
+            <Textarea id="rt-notes" value={form.notes} onChange={(e) => setField("notes", e.target.value)} rows={2} />
           </div>
         </div>
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+          <Button onClick={handleSave} disabled={saving} aria-busy={saving}>
+            {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden="true" /> : null}
             Save template
           </Button>
         </DialogFooter>

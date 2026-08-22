@@ -111,7 +111,10 @@ export default function AiRetainersScroller() {
         </div>
 
         {/* Progress dots */}
-        <div className="pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10"
+        >
           <span
             className="h-1.5 rounded-full bg-accent transition-all duration-300"
             style={{ width: progress < 0.5 ? 28 : 8, opacity: progress < 0.5 ? 1 : 0.4 }}

@@ -388,20 +388,21 @@ export default function ContractSignPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
+      <main className="min-h-screen flex items-center justify-center bg-background" aria-busy="true">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" aria-hidden="true" />
+        <span className="sr-only">Loading contract</span>
+      </main>
     );
   }
 
   if (notFound || !contract) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background px-6">
+      <main className="min-h-screen flex items-center justify-center bg-background px-6">
         <div className="text-center max-w-md">
           <h1 className="text-2xl font-bold text-foreground mb-2">Contract not found</h1>
           <p className="text-muted-foreground text-sm">This signing link may be invalid or expired.</p>
         </div>
-      </div>
+      </main>
     );
   }
 
@@ -490,7 +491,7 @@ export default function ContractSignPage() {
             </p>
           </section>
         ) : isSigned ? (
-          <section className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-6 lg:p-10 text-center">
+          <section className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-6 lg:p-10 text-center" aria-live="polite">
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/15 mb-4">
               <CheckCircle2 className="w-6 h-6 text-emerald-500" />
             </div>
@@ -535,79 +536,122 @@ export default function ContractSignPage() {
           <section className="rounded-xl border border-border bg-card p-6 lg:p-8">
             <div className="flex items-center gap-2 mb-4">
               <Sparkles className="w-5 h-5 text-purple" />
-              <h2 className="text-xl font-semibold text-foreground">Sign this agreement</h2>
+              <h2 id="contract-signature-heading" className="text-xl font-semibold text-foreground">Sign this agreement</h2>
             </div>
             <p className="text-sm text-muted-foreground mb-5">
               Your typed name or drawn signature, your IP address, and the timestamp will be recorded as your electronic signature.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-              <div>
-                <Label>Full legal name *</Label>
-                <Input value={signerName} onChange={(e) => setSignerName(e.target.value)} placeholder="Jane Smith" />
-              </div>
-              <div>
-                <Label>Email</Label>
-                <Input type="email" value={signerEmail} onChange={(e) => setSignerEmail(e.target.value)} placeholder="you@example.com" />
-              </div>
-            </div>
-
-            <Tabs value={method} onValueChange={(v) => setMethod(v as any)} className="mb-4">
-              <TabsList className="grid grid-cols-2 w-full sm:w-auto">
-                <TabsTrigger value="typed">Type signature</TabsTrigger>
-                <TabsTrigger value="drawn">Draw signature</TabsTrigger>
-              </TabsList>
-              <TabsContent value="typed" className="mt-3">
-                <div className="border border-border rounded-lg bg-white p-6 min-h-24 flex items-center justify-center">
-                  <p
-                    className="text-3xl text-slate-900"
-                    style={{ fontFamily: "'Caveat', 'Brush Script MT', cursive" }}
-                  >
-                    {signerName || "Your signature here"}
-                  </p>
-                </div>
-              </TabsContent>
-              <TabsContent value="drawn" className="mt-3">
-                <div className="relative border border-border rounded-lg bg-white">
-                  <canvas
-                    ref={canvasRef}
-                    className="w-full h-40 touch-none cursor-crosshair rounded-lg"
-                    onMouseDown={startDraw}
-                    onMouseMove={draw}
-                    onMouseUp={stopDraw}
-                    onMouseLeave={stopDraw}
-                    onTouchStart={startDraw}
-                    onTouchMove={draw}
-                    onTouchEnd={stopDraw}
-                  />
-                  <button
-                    type="button"
-                    onClick={clearCanvas}
-                    className="absolute top-2 right-2 inline-flex items-center gap-1 text-xs text-slate-600 bg-white border border-slate-200 px-2 py-1 rounded hover:bg-slate-50"
-                  >
-                    <Eraser className="w-3 h-3" /> Clear
-                  </button>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">Use your mouse or finger to draw your signature.</p>
-              </TabsContent>
-            </Tabs>
-
-            <label className="flex items-start gap-2 mb-5 cursor-pointer">
-              <Checkbox checked={agreed} onCheckedChange={(v) => setAgreed(!!v)} className="mt-0.5" />
-              <span className="text-sm text-foreground/90">
-                I have read and agree to the terms of this {contract.title.toLowerCase()}.
-              </span>
-            </label>
-
-            <Button
-              size="lg"
-              onClick={handleSign}
-              disabled={submitting}
-              className="w-full sm:w-auto gap-2 bg-accent text-accent-foreground font-semibold hover:bg-accent/90"
+            <form
+              aria-labelledby="contract-signature-heading"
+              aria-busy={submitting}
+              onSubmit={(event) => {
+                event.preventDefault();
+                void handleSign();
+              }}
             >
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-              Sign Contract
-            </Button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                <div>
+                  <Label htmlFor="contract-signer-name">Full legal name *</Label>
+                  <Input
+                    id="contract-signer-name"
+                    name="name"
+                    autoComplete="name"
+                    value={signerName}
+                    onChange={(e) => setSignerName(e.target.value)}
+                    placeholder="Jane Smith"
+                    minLength={2}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="contract-signer-email">Email</Label>
+                  <Input
+                    id="contract-signer-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    value={signerEmail}
+                    onChange={(e) => setSignerEmail(e.target.value)}
+                    placeholder="you@example.com"
+                  />
+                </div>
+              </div>
+
+              <Tabs value={method} onValueChange={(v) => setMethod(v as any)} className="mb-4">
+                <TabsList className="grid grid-cols-2 w-full sm:w-auto" aria-label="Signature method">
+                  <TabsTrigger value="typed">Type signature</TabsTrigger>
+                  <TabsTrigger value="drawn">Draw signature</TabsTrigger>
+                </TabsList>
+                <TabsContent value="typed" className="mt-3">
+                  <div
+                    className="border border-border rounded-lg bg-white p-6 min-h-24 flex items-center justify-center"
+                    role="img"
+                    aria-label={`Typed signature preview: ${signerName || "your signature here"}`}
+                  >
+                    <p
+                      className="text-3xl text-slate-900"
+                      style={{ fontFamily: "'Caveat', 'Brush Script MT', cursive" }}
+                      aria-hidden="true"
+                    >
+                      {signerName || "Your signature here"}
+                    </p>
+                  </div>
+                </TabsContent>
+                <TabsContent value="drawn" className="mt-3">
+                  <div className="relative border border-border rounded-lg bg-white">
+                    <canvas
+                      ref={canvasRef}
+                      className="w-full h-40 touch-none cursor-crosshair rounded-lg"
+                      role="img"
+                      aria-label={hasDrawn ? "Drawn signature preview" : "Empty signature drawing area"}
+                      aria-describedby="draw-signature-instructions"
+                      onMouseDown={startDraw}
+                      onMouseMove={draw}
+                      onMouseUp={stopDraw}
+                      onMouseLeave={stopDraw}
+                      onTouchStart={startDraw}
+                      onTouchMove={draw}
+                      onTouchEnd={stopDraw}
+                    />
+                    <button
+                      type="button"
+                      onClick={clearCanvas}
+                      disabled={!hasDrawn}
+                      aria-label="Clear drawn signature"
+                      className="absolute top-2 right-2 inline-flex min-h-8 items-center gap-1 rounded border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-700 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <Eraser className="w-3 h-3" /> Clear
+                    </button>
+                  </div>
+                  <p id="draw-signature-instructions" className="text-xs text-muted-foreground mt-2">
+                    Use your mouse or finger to draw your signature. Keyboard and screen-reader users can select Type signature instead.
+                  </p>
+                </TabsContent>
+              </Tabs>
+
+              <div className="flex items-start gap-2 mb-5">
+                <Checkbox
+                  id="contract-agreement"
+                  checked={agreed}
+                  onCheckedChange={(v) => setAgreed(!!v)}
+                  className="mt-0.5 h-6 w-6"
+                />
+                <Label htmlFor="contract-agreement" className="cursor-pointer text-sm font-normal leading-5 text-foreground/90">
+                  I have read and agree to the terms of this {contract.title.toLowerCase()}.
+                </Label>
+              </div>
+
+              <Button
+                type="submit"
+                size="lg"
+                disabled={submitting}
+                className="w-full sm:w-auto gap-2 bg-accent text-accent-foreground font-semibold hover:bg-accent/90"
+              >
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                Sign Contract
+              </Button>
+            </form>
           </section>
         )}
       </main>

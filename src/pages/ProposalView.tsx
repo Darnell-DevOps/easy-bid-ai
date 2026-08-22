@@ -31,6 +31,7 @@ import TemplateEditorDialog from "@/components/templates/TemplateEditorDialog";
 import { Bookmark } from "lucide-react";
 import { calculateCommercialTotals, formatCents } from "@/lib/commercial-calc";
 import { resolveProviderName } from "@/lib/provider-identity";
+import { AccessibleLoadingState } from "@/components/ui/accessible-loading-state";
 
 interface ProposalData {
   id: string;
@@ -726,8 +727,8 @@ export default function ProposalView() {
             const header = rows[0];
             const body = rows.slice(1);
             const totalIdx = body.findIndex(r => /total/i.test(r[0] || ""));
-            out.push('<div class="pricing-card"><table><thead><tr>' +
-              header.map(h => `<th>${renderInline(h)}</th>`).join("") +
+            out.push('<div class="pricing-card" role="region" aria-label="Proposal pricing table" tabindex="0"><table><caption style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Proposal pricing details.</caption><thead><tr>' +
+              header.map(h => `<th scope="col">${renderInline(h)}</th>`).join("") +
               '</tr></thead><tbody>' +
               body.map((r, ri) => {
                 const cls = ri === totalIdx ? ' class="total-row"' : '';
@@ -889,7 +890,11 @@ export default function ProposalView() {
     margin: 14px 0 18px;
     border: 1px solid #e5e7eb;
     border-radius: 6px;
-    overflow: hidden;
+    overflow-x: auto;
+  }
+  .pricing-card:focus {
+    outline: 2px solid ${accent};
+    outline-offset: 2px;
   }
   table { width: 100%; border-collapse: collapse; font-size: 10.5pt; }
   thead th {
@@ -977,9 +982,8 @@ export default function ProposalView() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-        </div>
+        <h1 className="sr-only">Proposal details</h1>
+        <AccessibleLoadingState label="Loading proposal details" className="h-64" spinnerClassName="h-6 w-6" />
       </DashboardLayout>
     );
   }
@@ -987,7 +991,7 @@ export default function ProposalView() {
   if (!proposal) {
     return (
       <DashboardLayout>
-        <p className="text-muted-foreground">Proposal not found.</p>
+        <h1 className="text-2xl font-bold text-foreground">Proposal not found</h1>
       </DashboardLayout>
     );
   }
@@ -1326,7 +1330,8 @@ export default function ProposalView() {
         {/* Compact top meta strip */}
         <div className="mb-5 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3 min-w-0">
-            <p className="text-xs text-muted-foreground truncate">
+            <h1 className="text-xs text-muted-foreground truncate">
+              <span className="sr-only">Proposal details for </span>
               <span className="text-foreground font-medium">{proposal.client_name}</span>
               {proposal.company_name && (
                 <>
@@ -1334,7 +1339,7 @@ export default function ProposalView() {
                   {proposal.company_name}
                 </>
               )}
-            </p>
+            </h1>
             <StatusBadge status={currentStatus} paid={clientPaid} descriptive />
             <DealScoreBadge proposalId={proposal.id} enabled={currentStatus !== "draft"} />
           </div>
@@ -1423,6 +1428,7 @@ export default function ProposalView() {
                   const isComplete = idx < currentStageIndex || (idx === currentStageIndex && idx === 4 && clientPaid);
                   const isFuture = idx > currentStageIndex;
                   const isClickable = !isFuture || idx === currentStageIndex + 1;
+                  const stageStatus = isComplete ? "Complete" : isActive ? "Current step" : "Pending";
 
                   const handleStageClick = () => {
                     if (!isClickable) return;
@@ -1453,6 +1459,8 @@ export default function ProposalView() {
                         type="button"
                         onClick={handleStageClick}
                         disabled={!isClickable}
+                        aria-current={isActive ? "step" : undefined}
+                        aria-label={`${stage.label}: ${stageStatus}`}
                         className={`flex flex-col items-center gap-1.5 flex-1 min-w-0 transition-all ${
                           !isClickable ? "cursor-not-allowed opacity-40" : "cursor-pointer hover:opacity-90"
                         }`}
@@ -1467,7 +1475,7 @@ export default function ProposalView() {
                                 : "border-border bg-background/40 text-muted-foreground"
                           }`}
                         >
-                          <Icon className="w-4 h-4" />
+                          <Icon aria-hidden="true" className="w-4 h-4" />
                         </div>
                         <p className={`text-[10px] sm:text-xs font-medium truncate w-full text-center ${
                           isComplete || isActive ? "text-foreground" : "text-muted-foreground"
@@ -1476,7 +1484,7 @@ export default function ProposalView() {
                         </p>
                       </button>
                       {idx < stageOrder.length - 1 && (
-                        <div className={`h-0.5 flex-1 min-w-[12px] -mt-5 transition-colors ${
+                        <div aria-hidden="true" className={`h-0.5 flex-1 min-w-[12px] -mt-5 transition-colors ${
                           idx < currentStageIndex ? "bg-accent" : "bg-border"
                         }`} />
                       )}

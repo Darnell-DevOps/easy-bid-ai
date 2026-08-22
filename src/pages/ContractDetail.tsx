@@ -16,6 +16,7 @@ import { renderMergeTags } from "@/lib/merge-tags";
 import { resolveProviderName, type ProviderIdentityFields } from "@/lib/provider-identity";
 import { WhatsAppButton } from "@/components/whatsapp/WhatsAppButton";
 import { downloadContractPdf } from "@/lib/contract-pdf";
+import { AccessibleLoadingState } from "@/components/ui/accessible-loading-state";
 
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -92,7 +93,7 @@ export default function ContractDetail() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
+        <AccessibleLoadingState label="Loading contract details" className="py-20" spinnerClassName="h-6 w-6" />
       </DashboardLayout>
     );
   }
@@ -312,8 +313,8 @@ export default function ContractDetail() {
                     />
                   );
                 })()}
-                <Button variant="outline" className="gap-2" onClick={downloadPdf} disabled={downloading}>
-                  {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                <Button variant="outline" className="gap-2" onClick={downloadPdf} disabled={downloading} aria-busy={downloading}>
+                  {downloading ? <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                   {isExecuted ? "Download Executed PDF" : "Download PDF"}
                 </Button>
                 {contract.status === "draft" && (
@@ -322,9 +323,10 @@ export default function ContractDetail() {
                       className="gap-2 bg-accent text-accent-foreground"
                       onClick={sendViaCloseSync}
                       disabled={sending || !contract.client_email}
+                      aria-busy={sending}
                       title={!contract.client_email ? "Add a client email to send via CloseSync" : undefined}
                     >
-                      {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                      {sending ? <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
                       Send via CloseSync email
                     </Button>
                     <Button
@@ -332,8 +334,9 @@ export default function ContractDetail() {
                       className="gap-2"
                       onClick={markAsSentManually}
                       disabled={markingSent}
+                      aria-busy={markingSent}
                     >
-                      {markingSent ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckSquare className="w-4 h-4" />}
+                      {markingSent ? <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" /> : <CheckSquare className="w-4 h-4" />}
                       Mark as sent — I sent it myself
                     </Button>
                   </>

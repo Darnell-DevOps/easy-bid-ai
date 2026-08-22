@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,6 +16,7 @@ export default function TestimonialSubmitPage() {
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({ name: "", company: "", role_title: "", rating: 5, content: "", allow_public: true });
   const [busy, setBusy] = useState(false);
+  const [reviewError, setReviewError] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -29,8 +30,15 @@ export default function TestimonialSubmitPage() {
     })();
   }, [token]);
 
-  const submit = async () => {
-    if (!form.content || form.content.length < 5) return toast({ title: "Please write a short review", variant: "destructive" });
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (form.content.trim().length < 5) {
+      setReviewError("Please write a review of at least 5 characters.");
+      document.getElementById("testimonial-review")?.focus();
+      return;
+    }
+
+    setReviewError("");
     setBusy(true);
     const { error } = await supabase.rpc("testimonial_submit", {
       _token: token!,
@@ -46,7 +54,7 @@ export default function TestimonialSubmitPage() {
     setSubmitted(true);
   };
 
-  if (loading) return <CenterShell><p className="text-sm text-muted-foreground">Loading…</p></CenterShell>;
+  if (loading) return <CenterShell><p role="status" aria-live="polite" className="text-sm text-muted-foreground">Loading…</p></CenterShell>;
   if (!info) return <CenterShell><h1 className="type-page-title">Link not found</h1><p className="text-sm text-muted-foreground mt-2">This review link is invalid or has expired.</p></CenterShell>;
 
   if (submitted) {
@@ -54,14 +62,14 @@ export default function TestimonialSubmitPage() {
       <CenterShell>
         <div className="text-center space-y-4">
           <div className="w-14 h-14 rounded-full bg-green-500/10 mx-auto flex items-center justify-center">
-            <Check className="w-7 h-7 text-green-500" />
+            <Check aria-hidden="true" className="w-7 h-7 text-green-500" />
           </div>
           <h1 className="text-2xl font-bold">Thank you</h1>
           <p className="text-sm text-muted-foreground">Your feedback means a lot{info.from_name ? ` to ${info.from_name}` : ""}.</p>
           {info.google_review_url && (
             <Button asChild variant="outline">
-              <a href={info.google_review_url} target="_blank" rel="noreferrer">
-                Share on Google too <ExternalLink className="w-4 h-4 ml-1" />
+              <a href={info.google_review_url} target="_blank" rel="noreferrer" aria-label="Share a review on Google (opens in a new tab)">
+                Share on Google too <ExternalLink aria-hidden="true" className="w-4 h-4 ml-1" />
               </a>
             </Button>
           )}
@@ -79,43 +87,76 @@ export default function TestimonialSubmitPage() {
           {info.custom_message && <p className="text-sm text-foreground/80 mt-3 italic">"{info.custom_message}"</p>}
         </div>
 
-        <div className="space-y-4">
-          <div>
-            <Label className="mb-2 block">Rating</Label>
+        <form onSubmit={submit} noValidate aria-busy={busy} className="space-y-4">
+          <fieldset>
+            <legend className="mb-2 text-sm font-medium leading-none">Rating</legend>
             <div className="flex items-center gap-1">
               {[1,2,3,4,5].map(i => (
-                <button key={i} type="button" onClick={() => setForm({ ...form, rating: i })}>
-                  <Star className={`w-8 h-8 ${form.rating >= i ? "fill-amber-500 text-amber-500" : "text-muted-foreground/30"}`} />
-                </button>
+                <label
+                  key={i}
+                  className="relative inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
+                >
+                  <input
+                    type="radio"
+                    name="testimonial-rating"
+                    value={i}
+                    checked={form.rating === i}
+                    onChange={() => setForm({ ...form, rating: i })}
+                    aria-label={`${i} ${i === 1 ? "star" : "stars"}`}
+                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                  />
+                  <Star
+                    aria-hidden="true"
+                    className={`pointer-events-none h-8 w-8 ${form.rating >= i ? "fill-amber-500 text-amber-500" : "text-muted-foreground/30"}`}
+                  />
+                </label>
               ))}
             </div>
-          </div>
+          </fieldset>
           <div>
-            <Label className="mb-2 block">Your review</Label>
-            <Textarea rows={5} value={form.content} onChange={e => setForm({ ...form, content: e.target.value })}
-              placeholder="What was the experience like? What stood out?" />
+            <Label htmlFor="testimonial-review" className="mb-2 block">Your review</Label>
+            <Textarea
+              id="testimonial-review"
+              rows={5}
+              required
+              minLength={5}
+              value={form.content}
+              onChange={event => {
+                const content = event.target.value;
+                setForm({ ...form, content });
+                if (reviewError && content.trim().length >= 5) setReviewError("");
+              }}
+              aria-invalid={!!reviewError}
+              aria-describedby={reviewError ? "testimonial-review-error" : undefined}
+              placeholder="What was the experience like? What stood out?"
+            />
+            {reviewError && (
+              <p id="testimonial-review-error" role="alert" className="mt-2 text-sm text-destructive">
+                {reviewError}
+              </p>
+            )}
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div><Label className="mb-2 block">Name</Label>
-              <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
-            <div><Label className="mb-2 block">Company (optional)</Label>
-              <Input value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} /></div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div><Label htmlFor="testimonial-name" className="mb-2 block">Name</Label>
+              <Input id="testimonial-name" autoComplete="name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
+            <div><Label htmlFor="testimonial-company" className="mb-2 block">Company (optional)</Label>
+              <Input id="testimonial-company" autoComplete="organization" value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} /></div>
           </div>
-          <div><Label className="mb-2 block">Role / title (optional)</Label>
-            <Input value={form.role_title} onChange={e => setForm({ ...form, role_title: e.target.value })} /></div>
+          <div><Label htmlFor="testimonial-role" className="mb-2 block">Role / title (optional)</Label>
+            <Input id="testimonial-role" autoComplete="organization-title" value={form.role_title} onChange={e => setForm({ ...form, role_title: e.target.value })} /></div>
           <label className="flex items-center gap-2 text-sm text-muted-foreground">
-            <input type="checkbox" checked={form.allow_public} onChange={e => setForm({ ...form, allow_public: e.target.checked })} />
+            <input className="h-6 w-6 shrink-0" type="checkbox" checked={form.allow_public} onChange={e => setForm({ ...form, allow_public: e.target.checked })} />
             Allow this review to be shown publicly
           </label>
-          <Button onClick={submit} disabled={busy} className="w-full">{busy ? "Submitting…" : "Submit review"}</Button>
+          <Button type="submit" disabled={busy} className="w-full">{busy ? "Submitting…" : "Submit review"}</Button>
           {info.google_review_url && (
             <Button asChild variant="outline" className="w-full">
-              <a href={info.google_review_url} target="_blank" rel="noreferrer">
-                Or leave a Google review <ExternalLink className="w-4 h-4 ml-1" />
+              <a href={info.google_review_url} target="_blank" rel="noreferrer" aria-label="Leave a Google review (opens in a new tab)">
+                Or leave a Google review <ExternalLink aria-hidden="true" className="w-4 h-4 ml-1" />
               </a>
             </Button>
           )}
-        </div>
+        </form>
       </div>
     </CenterShell>
   );
@@ -123,8 +164,8 @@ export default function TestimonialSubmitPage() {
 
 function CenterShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <main className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-lg"><CardContent className="p-8">{children}</CardContent></Card>
-    </div>
+    </main>
   );
 }

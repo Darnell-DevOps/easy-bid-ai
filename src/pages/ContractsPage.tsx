@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
+import { AccessibleLoadingState } from "@/components/ui/accessible-loading-state";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -327,9 +328,7 @@ export default function ContractsPage() {
         <Card>
           <CardContent className="p-0">
             {loading ? (
-              <div className="p-12 flex justify-center">
-                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-              </div>
+              <AccessibleLoadingState label="Loading contracts" className="p-12" spinnerClassName="h-6 w-6" />
             ) : contracts.length === 0 ? (
               <div className="p-12 text-center">
                 <FileSignature className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
@@ -370,8 +369,13 @@ export default function ContractsPage() {
                           <Send className="w-3.5 h-3.5" /> Send
                         </Button>
                       )}
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(c.id)}>
-                        <Trash2 className="w-4 h-4 text-muted-foreground" />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(c.id)}
+                        aria-label={`Delete contract: ${c.title}`}
+                      >
+                        <Trash2 aria-hidden="true" className="w-4 h-4 text-muted-foreground" />
                       </Button>
                     </div>
                   </li>
@@ -393,9 +397,9 @@ export default function ContractsPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label>Contract type</Label>
+                <Label htmlFor="contract-create-type">Contract type</Label>
                 <Select value={contractType} onValueChange={setContractType}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="contract-create-type"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {CONTRACT_TYPES.map((t) => (
                       <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
@@ -404,9 +408,9 @@ export default function ContractsPage() {
                 </Select>
               </div>
               <div>
-                <Label>Auto-fill from proposal</Label>
+                <Label htmlFor="contract-create-proposal">Auto-fill from proposal</Label>
                 <Select value={proposalId} onValueChange={fillFromProposal}>
-                  <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                  <SelectTrigger id="contract-create-proposal"><SelectValue placeholder="None" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">None</SelectItem>
                     {proposals.map((p) => (
@@ -420,9 +424,11 @@ export default function ContractsPage() {
             </div>
 
             <div>
-              <Label>Link to client</Label>
+              <Label htmlFor="contract-create-client-link">Link to client</Label>
               <Select value={clientId} onValueChange={pickClient}>
-                <SelectTrigger><SelectValue placeholder="No linked client" /></SelectTrigger>
+                <SelectTrigger id="contract-create-client-link" aria-describedby="contract-create-client-link-help">
+                  <SelectValue placeholder="No linked client" />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No linked client</SelectItem>
                   {clients.map((c) => (
@@ -432,54 +438,54 @@ export default function ContractsPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p id="contract-create-client-link-help" className="text-xs text-muted-foreground mt-1">
                 Linking shows this contract on the client's profile alongside their proposals, retainers and bookings.
               </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label>Your name / business</Label>
-                <Input value={providerName} onChange={(e) => setProviderName(e.target.value)} placeholder="Your business name" />
+                <Label htmlFor="contract-create-provider">Your name / business</Label>
+                <Input id="contract-create-provider" value={providerName} onChange={(e) => setProviderName(e.target.value)} placeholder="Your business name" />
               </div>
               <div>
-                <Label>Client name *</Label>
-                <Input value={clientName} onChange={(e) => setClientName(e.target.value)} />
+                <Label htmlFor="contract-create-client-name">Client name *</Label>
+                <Input id="contract-create-client-name" required autoComplete="name" value={clientName} onChange={(e) => setClientName(e.target.value)} />
               </div>
               <div>
-                <Label>Client email</Label>
-                <Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} />
+                <Label htmlFor="contract-create-client-email">Client email</Label>
+                <Input id="contract-create-client-email" type="email" autoComplete="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} />
               </div>
               <div>
-                <Label>Client company</Label>
-                <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
+                <Label htmlFor="contract-create-client-company">Client company</Label>
+                <Input id="contract-create-client-company" autoComplete="organization" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
               </div>
             </div>
 
             <div>
-              <Label>Service / project *</Label>
-              <Input value={serviceType} onChange={(e) => setServiceType(e.target.value)} />
+              <Label htmlFor="contract-create-service">Service / project *</Label>
+              <Input id="contract-create-service" required value={serviceType} onChange={(e) => setServiceType(e.target.value)} />
             </div>
 
             <div>
-              <Label>Scope</Label>
-              <Textarea rows={3} value={scope} onChange={(e) => setScope(e.target.value)} />
+              <Label htmlFor="contract-create-scope">Scope</Label>
+              <Textarea id="contract-create-scope" rows={3} value={scope} onChange={(e) => setScope(e.target.value)} />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label>Timeline</Label>
-                <Input value={timeline} onChange={(e) => setTimeline(e.target.value)} placeholder="e.g. 4 weeks" />
+                <Label htmlFor="contract-create-timeline">Timeline</Label>
+                <Input id="contract-create-timeline" value={timeline} onChange={(e) => setTimeline(e.target.value)} placeholder="e.g. 4 weeks" />
               </div>
               <div>
-                <Label>Total fee</Label>
-                <Input value={budget} onChange={(e) => setBudget(e.target.value)} placeholder="e.g. £4,500" />
+                <Label htmlFor="contract-create-fee">Total fee</Label>
+                <Input id="contract-create-fee" inputMode="decimal" value={budget} onChange={(e) => setBudget(e.target.value)} placeholder="e.g. £4,500" />
               </div>
             </div>
 
             <div>
-              <Label>Payment terms</Label>
-              <Input value={paymentTerms} onChange={(e) => setPaymentTerms(e.target.value)} />
+              <Label htmlFor="contract-create-payment-terms">Payment terms</Label>
+              <Input id="contract-create-payment-terms" value={paymentTerms} onChange={(e) => setPaymentTerms(e.target.value)} />
             </div>
 
             <p className="text-xs text-muted-foreground">
@@ -488,8 +494,13 @@ export default function ContractsPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenCreate(false)}>Cancel</Button>
-            <Button onClick={handleCreate} disabled={creating} className="gap-2 bg-accent text-accent-foreground">
-              {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            <Button
+              onClick={handleCreate}
+              disabled={creating}
+              aria-busy={creating}
+              className="gap-2 bg-accent text-accent-foreground"
+            >
+              {creating ? <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
               Generate Contract
             </Button>
           </DialogFooter>

@@ -8,9 +8,10 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Trash2, RotateCcw, Loader2 } from "lucide-react";
+import { Trash2, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { parseFilePayload, parseFilePayloads } from "@/lib/form-fields";
+import { AccessibleLoadingState } from "@/components/ui/accessible-loading-state";
 
 interface TrashedClient {
   id: string;
@@ -177,9 +178,7 @@ export default function Trash() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-          </div>
+          <AccessibleLoadingState label="Loading deleted clients" className="py-20" spinnerClassName="h-6 w-6" />
         ) : items.length === 0 ? (
           <Card className="border-dashed">
             <CardContent className="p-10 text-center space-y-2">

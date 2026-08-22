@@ -348,16 +348,16 @@ export default function NotificationsSettings() {
                       </div>
                       <div className="flex sm:contents items-center gap-4">
                         <div className="flex justify-center sm:justify-self-center">
-                          <Switch checked={!!p.in_app} onCheckedChange={(v) => setChannel(ev.id, "in_app", v)} />
+                          <Switch checked={!!p.in_app} onCheckedChange={(v) => setChannel(ev.id, "in_app", v)} aria-label={`${ev.label}: in-app notifications`} />
                         </div>
                         <div className="flex justify-center sm:justify-self-center">
-                          <Switch checked={!!p.email} onCheckedChange={(v) => setChannel(ev.id, "email", v)} />
+                          <Switch checked={!!p.email} onCheckedChange={(v) => setChannel(ev.id, "email", v)} aria-label={`${ev.label}: email notifications`} />
                         </div>
                         <div className="hidden sm:flex justify-center">
-                          <Switch checked={false} disabled />
+                          <Switch checked={false} disabled aria-label={`${ev.label}: SMS notifications unavailable`} />
                         </div>
                         <div className="hidden sm:flex justify-center">
-                          <Switch checked={false} disabled />
+                          <Switch checked={false} disabled aria-label={`${ev.label}: WhatsApp notifications unavailable`} />
                         </div>
                       </div>
                     </div>

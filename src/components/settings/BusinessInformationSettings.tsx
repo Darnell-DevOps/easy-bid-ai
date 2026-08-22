@@ -186,22 +186,22 @@ export default function BusinessInformationSettings() {
         <CardContent className="p-6 space-y-5">
           <SectionHeader icon={Building2} title="Business details" description="Legal name and address used on contracts and invoices." />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Field label="Legal business name">
-              <Input value={data.legal_name} onChange={(e) => set("legal_name", e.target.value)} placeholder="Acme Studio Ltd" />
+            <Field id="business-info-legal-name" label="Legal business name">
+              <Input id="business-info-legal-name" autoComplete="organization" value={data.legal_name} onChange={(e) => set("legal_name", e.target.value)} placeholder="Acme Studio Ltd" />
             </Field>
-            <Field label="Trading name" optional>
-              <Input value={data.trading_name} onChange={(e) => set("trading_name", e.target.value)} placeholder="Acme" />
+            <Field id="business-info-trading-name" label="Trading name" optional>
+              <Input id="business-info-trading-name" value={data.trading_name} onChange={(e) => set("trading_name", e.target.value)} placeholder="Acme" />
             </Field>
-            <Field label="Address line 1" className="md:col-span-2">
-              <Input value={data.address_line1} onChange={(e) => set("address_line1", e.target.value)} placeholder="123 Market Street" />
+            <Field id="business-info-address-line-1" label="Address line 1" className="md:col-span-2">
+              <Input id="business-info-address-line-1" autoComplete="address-line1" value={data.address_line1} onChange={(e) => set("address_line1", e.target.value)} placeholder="123 Market Street" />
             </Field>
-            <Field label="Address line 2" optional className="md:col-span-2">
-              <Input value={data.address_line2} onChange={(e) => set("address_line2", e.target.value)} placeholder="Suite 400" />
+            <Field id="business-info-address-line-2" label="Address line 2" optional className="md:col-span-2">
+              <Input id="business-info-address-line-2" autoComplete="address-line2" value={data.address_line2} onChange={(e) => set("address_line2", e.target.value)} placeholder="Suite 400" />
             </Field>
-            <Field label="City"><Input value={data.city} onChange={(e) => set("city", e.target.value)} /></Field>
-            <Field label="State / County"><Input value={data.state_region} onChange={(e) => set("state_region", e.target.value)} /></Field>
-            <Field label="Postcode / ZIP"><Input value={data.postcode} onChange={(e) => set("postcode", e.target.value)} /></Field>
-            <Field label="Country"><Input value={data.country} onChange={(e) => set("country", e.target.value)} placeholder="United Kingdom" /></Field>
+            <Field id="business-info-city" label="City"><Input id="business-info-city" autoComplete="address-level2" value={data.city} onChange={(e) => set("city", e.target.value)} /></Field>
+            <Field id="business-info-state-region" label="State / County"><Input id="business-info-state-region" autoComplete="address-level1" value={data.state_region} onChange={(e) => set("state_region", e.target.value)} /></Field>
+            <Field id="business-info-postcode" label="Postcode / ZIP"><Input id="business-info-postcode" autoComplete="postal-code" value={data.postcode} onChange={(e) => set("postcode", e.target.value)} /></Field>
+            <Field id="business-info-country" label="Country"><Input id="business-info-country" autoComplete="country-name" value={data.country} onChange={(e) => set("country", e.target.value)} placeholder="United Kingdom" /></Field>
           </div>
         </CardContent>
       </Card>
@@ -211,14 +211,14 @@ export default function BusinessInformationSettings() {
         <CardContent className="p-6 space-y-5">
           <SectionHeader icon={Receipt} title="Registration" description="Optional — shown on legal documents where required." />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Field label="Company reg. number" optional>
-              <Input value={data.registration_number} onChange={(e) => set("registration_number", e.target.value)} />
+            <Field id="business-info-registration-number" label="Company reg. number" optional>
+              <Input id="business-info-registration-number" value={data.registration_number} onChange={(e) => set("registration_number", e.target.value)} />
             </Field>
-            <Field label="VAT number" optional>
-              <Input value={data.vat_number} onChange={(e) => set("vat_number", e.target.value)} />
+            <Field id="business-info-vat-number" label="VAT number" optional>
+              <Input id="business-info-vat-number" value={data.vat_number} onChange={(e) => set("vat_number", e.target.value)} />
             </Field>
-            <Field label="Tax number" optional>
-              <Input value={data.tax_number} onChange={(e) => set("tax_number", e.target.value)} />
+            <Field id="business-info-tax-number" label="Tax number" optional>
+              <Input id="business-info-tax-number" value={data.tax_number} onChange={(e) => set("tax_number", e.target.value)} />
             </Field>
           </div>
         </CardContent>
@@ -229,14 +229,17 @@ export default function BusinessInformationSettings() {
         <CardContent className="p-6 space-y-5">
           <SectionHeader icon={Mail} title="Contact information" description="Visible to clients on proposals, invoices and the portal." />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Field label="Business email" error={errors.business_email}>
-              <Input type="email" value={data.business_email} onChange={(e) => set("business_email", e.target.value)} placeholder="hello@acme.com" />
+            <Field id="business-info-business-email" label="Business email" error={errors.business_email}>
+              <Input id="business-info-business-email" type="email" autoComplete="email" value={data.business_email} onChange={(e) => set("business_email", e.target.value)} placeholder="hello@acme.com"
+                aria-invalid={!!errors.business_email} aria-describedby={errors.business_email ? "business-info-business-email-error" : undefined} />
             </Field>
-            <Field label="Business phone" error={errors.business_phone}>
-              <Input value={data.business_phone} onChange={(e) => set("business_phone", e.target.value)} placeholder="+1 555 123 4567" />
+            <Field id="business-info-business-phone" label="Business phone" error={errors.business_phone}>
+              <Input id="business-info-business-phone" type="tel" autoComplete="tel" value={data.business_phone} onChange={(e) => set("business_phone", e.target.value)} placeholder="+1 555 123 4567"
+                aria-invalid={!!errors.business_phone} aria-describedby={errors.business_phone ? "business-info-business-phone-error" : undefined} />
             </Field>
-            <Field label="Website" className="md:col-span-2" error={errors.website_url}>
-              <Input value={data.website_url} onChange={(e) => set("website_url", e.target.value)} placeholder="https://acme.com" />
+            <Field id="business-info-website" label="Website" className="md:col-span-2" error={errors.website_url}>
+              <Input id="business-info-website" type="url" autoComplete="url" value={data.website_url} onChange={(e) => set("website_url", e.target.value)} placeholder="https://acme.com"
+                aria-invalid={!!errors.website_url} aria-describedby={errors.website_url ? "business-info-website-error" : undefined} />
             </Field>
           </div>
         </CardContent>
@@ -246,7 +249,9 @@ export default function BusinessInformationSettings() {
       <Card>
         <CardContent className="p-6 space-y-3">
           <SectionHeader icon={FileText} title="Business description" description="Used by AI to generate proposals, onboarding and client copy." />
+          <Label htmlFor="business-info-description" className="sr-only">Business description</Label>
           <Textarea
+            id="business-info-description"
             rows={5}
             value={data.business_description}
             onChange={(e) => set("business_description", e.target.value)}
@@ -260,28 +265,28 @@ export default function BusinessInformationSettings() {
         <CardContent className="p-6 space-y-5">
           <SectionHeader icon={FileText} title="Default proposal details" description="Pre-fill values when you create a new proposal." />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Field label="Default expiry">
+            <Field id="business-info-proposal-expiry" label="Default expiry">
               <Select
                 value={String(data.default_proposal_expiry_days)}
                 onValueChange={(v) => set("default_proposal_expiry_days", Number(v))}
               >
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="business-info-proposal-expiry"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {EXPIRY_OPTIONS.map((d) => <SelectItem key={d} value={String(d)}>{d} days</SelectItem>)}
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="Default currency">
+            <Field id="business-info-currency" label="Default currency">
               <Select value={data.default_currency} onValueChange={(v) => set("default_currency", v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="business-info-currency"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {CURRENCIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="Default payment terms">
+            <Field id="business-info-payment-terms" label="Default payment terms">
               <Select value={data.default_payment_terms} onValueChange={(v) => set("default_payment_terms", v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="business-info-payment-terms"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {PAYMENT_TERMS.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
                 </SelectContent>
@@ -296,31 +301,32 @@ export default function BusinessInformationSettings() {
         <CardContent className="p-6 space-y-5">
           <SectionHeader icon={Receipt} title="Invoice defaults" description="Used across invoices and retainers." />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Field label="Default due (days)">
-              <Input type="number" min={0} value={data.default_invoice_due_days}
+            <Field id="business-info-invoice-due-days" label="Default due (days)">
+              <Input id="business-info-invoice-due-days" type="number" min={0} value={data.default_invoice_due_days}
                 onChange={(e) => set("default_invoice_due_days", Number(e.target.value))} />
             </Field>
-            <Field label="Late grace period (days)">
-              <Input type="number" min={0} value={data.default_invoice_grace_days}
+            <Field id="business-info-invoice-grace-days" label="Late grace period (days)">
+              <Input id="business-info-invoice-grace-days" type="number" min={0} value={data.default_invoice_grace_days}
                 onChange={(e) => set("default_invoice_grace_days", Number(e.target.value))} />
             </Field>
-            <Field label="Default tax rate (%)" optional error={errors.default_tax_rate}>
-              <Input type="number" min={0} max={100} step="0.01" value={data.default_tax_rate}
-                onChange={(e) => set("default_tax_rate", e.target.value)} placeholder="20" />
+            <Field id="business-info-tax-rate" label="Default tax rate (%)" optional error={errors.default_tax_rate}>
+              <Input id="business-info-tax-rate" type="number" min={0} max={100} step="0.01" value={data.default_tax_rate}
+                onChange={(e) => set("default_tax_rate", e.target.value)} placeholder="20"
+                aria-invalid={!!errors.default_tax_rate} aria-describedby={errors.default_tax_rate ? "business-info-tax-rate-error" : undefined} />
             </Field>
-            <Field label="Tax treatment">
+            <Field id="business-info-tax-mode" label="Tax treatment">
               <Select
                 value={data.default_tax_mode}
                 onValueChange={(v) => set("default_tax_mode", v as BusinessInfo["default_tax_mode"])}
               >
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="business-info-tax-mode" aria-describedby="business-info-tax-mode-help"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No tax</SelectItem>
                   <SelectItem value="exclusive">Add tax on top of prices</SelectItem>
                   <SelectItem value="inclusive">Prices already include tax</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-[11px] text-muted-foreground">Only applies when a tax rate is set above.</p>
+              <p id="business-info-tax-mode-help" className="text-[11px] text-muted-foreground">Only applies when a tax rate is set above.</p>
             </Field>
           </div>
         </CardContent>
@@ -413,16 +419,16 @@ function SectionHeader({ icon: Icon, title, description }: { icon: any; title: s
 }
 
 function Field({
-  label, children, optional, error, className,
-}: { label: string; children: React.ReactNode; optional?: boolean; error?: string; className?: string }) {
+  id, label, children, optional, error, className,
+}: { id: string; label: string; children: React.ReactNode; optional?: boolean; error?: string; className?: string }) {
   return (
     <div className={`space-y-1.5 ${className ?? ""}`}>
-      <Label className="flex items-center gap-2 text-xs font-medium text-foreground">
+      <Label htmlFor={id} className="flex items-center gap-2 text-xs font-medium text-foreground">
         {label}
         {optional && <Badge variant="outline" className="text-[10px] font-normal h-4 px-1.5">Optional</Badge>}
       </Label>
       {children}
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      {error && <p id={`${id}-error`} className="text-xs text-destructive">{error}</p>}
     </div>
   );
 }

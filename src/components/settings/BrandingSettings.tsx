@@ -207,13 +207,13 @@ export default function BrandingSettings() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-xs">Business name</Label>
-                  <Input className="mt-1.5" value={state.business_name}
+                  <Label htmlFor="brand-settings-business-name" className="text-xs">Business name</Label>
+                  <Input id="brand-settings-business-name" autoComplete="organization" className="mt-1.5" value={state.business_name}
                     onChange={(e) => update("business_name", e.target.value)} placeholder="Acme Studio" />
                 </div>
                 <div>
-                  <Label className="text-xs">Tagline <span className="text-muted-foreground">(optional)</span></Label>
-                  <Input className="mt-1.5" value={state.tagline}
+                  <Label htmlFor="brand-settings-tagline" className="text-xs">Tagline <span className="text-muted-foreground">(optional)</span></Label>
+                  <Input id="brand-settings-tagline" className="mt-1.5" value={state.tagline}
                     onChange={(e) => update("tagline", e.target.value)} placeholder="Design that converts." />
                 </div>
               </div>
@@ -221,6 +221,7 @@ export default function BrandingSettings() {
               {/* Logo + Favicon */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <AssetUpload
+                  id="brand-settings-logo"
                   label="Business logo"
                   hint="PNG, JPG or SVG · max 2MB"
                   value={state.logo_url}
@@ -230,6 +231,7 @@ export default function BrandingSettings() {
                   onRemove={() => update("logo_url", "")}
                 />
                 <AssetUpload
+                  id="brand-settings-favicon"
                   label="Favicon"
                   hint="Square PNG or ICO · max 2MB"
                   value={state.favicon_url}
@@ -252,9 +254,9 @@ export default function BrandingSettings() {
                 subtitle="Applied to client portal, proposals, onboarding & booking pages — never the admin UI."
               />
               <div className="grid grid-cols-2 gap-4">
-                <ColorField label="Primary colour" value={state.brand_color}
+                <ColorField id="brand-settings-primary-colour" label="Primary colour" value={state.brand_color}
                   onChange={(v) => update("brand_color", v)} />
-                <ColorField label="Secondary colour" value={state.brand_secondary_color}
+                <ColorField id="brand-settings-secondary-colour" label="Secondary colour" value={state.brand_secondary_color}
                   onChange={(v) => update("brand_secondary_color", v)} />
               </div>
             </CardContent>
@@ -268,7 +270,9 @@ export default function BrandingSettings() {
                 title="Client welcome message"
                 subtitle="Shown inside the client portal and onboarding area."
               />
+              <Label htmlFor="brand-settings-welcome-message" className="sr-only">Client welcome message</Label>
               <Textarea
+                id="brand-settings-welcome-message"
                 rows={3}
                 value={state.welcome_message}
                 onChange={(e) => update("welcome_message", e.target.value)}
@@ -407,34 +411,34 @@ function ToggleRow({ label, checked, onChange }: { label: string; checked: boole
   return (
     <div className="flex items-center justify-between py-2.5">
       <span className="text-sm">{label}</span>
-      <Switch checked={checked} onCheckedChange={onChange} />
+      <Switch checked={checked} onCheckedChange={onChange} aria-label={label} />
     </div>
   );
 }
 
-function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function ColorField({ id, label, value, onChange }: { id: string; label: string; value: string; onChange: (v: string) => void }) {
   return (
     <div>
-      <Label className="text-xs">{label}</Label>
+      <Label htmlFor={id} className="text-xs">{label}</Label>
       <div className="flex items-center gap-2 mt-1.5">
-        <input type="color" value={value} onChange={(e) => onChange(e.target.value)}
+        <input type="color" value={value} onChange={(e) => onChange(e.target.value)} aria-label={`${label} picker`}
           className="h-10 w-12 rounded border border-border bg-transparent cursor-pointer" />
-        <Input value={value} onChange={(e) => onChange(e.target.value)} className="font-mono text-sm" />
+        <Input id={id} value={value} onChange={(e) => onChange(e.target.value)} className="font-mono text-sm" />
       </div>
     </div>
   );
 }
 
 function AssetUpload({
-  label, hint, value, uploading, inputRef, onPick, onRemove, square,
+  id, label, hint, value, uploading, inputRef, onPick, onRemove, square,
 }: {
-  label: string; hint: string; value: string; uploading: boolean;
+  id: string; label: string; hint: string; value: string; uploading: boolean;
   inputRef: React.RefObject<HTMLInputElement>;
   onPick: (f: File) => void; onRemove: () => void; square?: boolean;
 }) {
   return (
     <div>
-      <Label className="text-xs">{label}</Label>
+      <Label htmlFor={id} className="text-xs">{label}</Label>
       <div className="mt-2 flex items-center gap-3">
         <div className={`${square ? "h-14 w-14" : "h-16 w-16"} rounded-lg border border-border bg-muted/30 flex items-center justify-center overflow-hidden shrink-0`}>
           {value ? <img src={value} alt={`${label} brand image preview`} className="max-h-full max-w-full object-contain" />
@@ -443,19 +447,21 @@ function AssetUpload({
         <div className="flex-1 space-y-1.5 min-w-0">
           <div className="flex gap-2 flex-wrap">
             <Button type="button" size="sm" variant="outline" onClick={() => inputRef.current?.click()}
-              disabled={uploading} className="gap-1.5">
+              disabled={uploading} className="gap-1.5" aria-busy={uploading}
+              aria-label={`${value ? "Replace" : "Upload"} ${label.toLowerCase()}`}>
               {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
               {value ? "Replace" : "Upload"}
             </Button>
             {value && (
               <Button type="button" size="sm" variant="ghost" onClick={onRemove}
-                className="gap-1.5 text-destructive hover:text-destructive">
+                className="gap-1.5 text-destructive hover:text-destructive"
+                aria-label={`Remove ${label.toLowerCase()}`}>
                 <Trash2 className="w-3.5 h-3.5" /> Remove
               </Button>
             )}
           </div>
-          <p className="text-[11px] text-muted-foreground">{hint}</p>
-          <input ref={inputRef} type="file" accept="image/*" className="hidden"
+          <p id={`${id}-help`} className="text-[11px] text-muted-foreground">{hint}</p>
+          <input id={id} ref={inputRef} type="file" accept="image/*" className="hidden" aria-describedby={`${id}-help`}
             onChange={(e) => { const f = e.target.files?.[0]; if (f) onPick(f); e.target.value = ""; }} />
         </div>
       </div>
