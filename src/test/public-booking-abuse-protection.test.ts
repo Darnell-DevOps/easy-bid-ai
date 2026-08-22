@@ -45,7 +45,15 @@ describe("public booking abuse protection", () => {
     expect(migration).toContain(
       'DROP POLICY IF EXISTS "Public create bookings via link" ON public.bookings',
     );
-    expect(migration).toContain("REVOKE INSERT ON public.bookings FROM anon");
+    expect(migration).toContain(
+      'DROP POLICY IF EXISTS "Users create own bookings" ON public.bookings',
+    );
+    expect(migration).toMatch(
+      /CREATE POLICY "Users create own bookings"[\s\S]*FOR INSERT[\s\S]*TO authenticated[\s\S]*WITH CHECK \(auth\.uid\(\) = user_id\)/,
+    );
+    expect(migration).toContain(
+      "REVOKE INSERT ON public.bookings FROM PUBLIC, anon",
+    );
     expect(migration).toMatch(
       /REVOKE EXECUTE ON FUNCTION public\.public_get_booking_reschedule_token\(uuid\)[\s\S]*FROM PUBLIC, anon, authenticated/,
     );

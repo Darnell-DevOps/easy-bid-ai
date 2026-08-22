@@ -1,5 +1,10 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
+import {
+  createClient,
+  type SupabaseClient,
+} from "npm:@supabase/supabase-js@2";
 import { logSecurityEvent } from "./security-telemetry.ts";
+
+type AdminClient = SupabaseClient<any, any, any, any, any>;
 
 type AiRateLimitOptions = {
   source: string;
@@ -66,7 +71,7 @@ function getRequestAddress(req: Request): string {
 }
 
 async function consumeWindow(
-  admin: ReturnType<typeof createClient>,
+  admin: AdminClient,
   bucket: string,
   subjectHash: string,
   maxRequests: number,

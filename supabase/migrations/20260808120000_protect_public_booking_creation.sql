@@ -2,7 +2,19 @@
 -- Edge Function. Authenticated hosts retain their existing owner-scoped INSERT
 -- policy for bookings they create from the calendar.
 DROP POLICY IF EXISTS "Public create bookings via link" ON public.bookings;
-REVOKE INSERT ON public.bookings FROM anon;
+
+-- The original owner policy did not name a role, so PostgreSQL recorded it as
+-- applying to PUBLIC (and therefore anon). Scope it explicitly to signed-in
+-- hosts before asserting that anonymous INSERT access is gone.
+DROP POLICY IF EXISTS "Users create own bookings" ON public.bookings;
+CREATE POLICY "Users create own bookings"
+  ON public.bookings
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() = user_id);
+
+REVOKE INSERT ON public.bookings FROM PUBLIC, anon;
+GRANT INSERT ON public.bookings TO authenticated, service_role;
 
 -- The protected Edge Function returns the newly-created booking's token to the
 -- caller, so a public UUID-to-token lookup is no longer required.

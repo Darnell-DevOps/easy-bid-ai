@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 
+type SecurityEventClient = SupabaseClient<any, any, any, any, any>;
+
 type SecurityEventSeverity = "info" | "warning" | "error" | "critical";
 type SecurityEventOutcome = "observed" | "blocked" | "failed";
 
@@ -37,7 +39,7 @@ async function requestFingerprint(req: Request): Promise<string | null> {
 }
 
 export async function logSecurityEvent(
-  client: SupabaseClient,
+  client: SecurityEventClient,
   req: Request,
   event: SecurityEvent,
 ): Promise<void> {
