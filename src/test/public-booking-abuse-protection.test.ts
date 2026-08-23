@@ -13,7 +13,7 @@ describe("public booking abuse protection", () => {
   const frontend = source("src/pages/PublicBookingPage.tsx");
   const config = source("supabase/config.toml");
   const migration = source(
-    "supabase/migrations/20260808120000_protect_public_booking_creation.sql",
+    "supabase/migrations/20260822155745_b6233417-6904-4249-a906-df1a172e82fe.sql",
   );
 
   it("creates public bookings only through the rate-limited Edge Function", () => {
