@@ -1,8 +1,7 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { readSource } from "./read-source";
 
-const source = readFileSync(resolve(process.cwd(), "src/pages/AdminDashboard.tsx"), "utf8");
+const source = readSource("src/pages/AdminDashboard.tsx");
 
 describe("Admin dashboard dialog accessibility", () => {
   it("associates each admin dialog label with its input", () => {

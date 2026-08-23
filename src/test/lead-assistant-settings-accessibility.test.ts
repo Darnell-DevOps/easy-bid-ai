@@ -1,8 +1,7 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { readSource } from "./read-source";
 
-const source = readFileSync(resolve(process.cwd(), "src/components/settings/LeadAssistantSettings.tsx"), "utf8");
+const source = readSource("src/components/settings/LeadAssistantSettings.tsx");
 
 describe("Lead Assistant settings accessibility", () => {
   it("associates reusable business fields with labels and help", () => {
