@@ -1,8 +1,7 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { readSource } from "./read-source";
 
-const calendar = readFileSync(resolve(process.cwd(), "src/pages/CalendarPage.tsx"), "utf8");
+const calendar = readSource("src/pages/CalendarPage.tsx");
 
 describe("calendar form accessibility", () => {
   it("associates every Calendar Label with a unique form control", () => {

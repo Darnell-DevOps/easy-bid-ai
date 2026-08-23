@@ -1,8 +1,7 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { readSource } from "./read-source";
 
-const source = readFileSync(resolve(process.cwd(), "src/components/settings/AiPreferencesSettings.tsx"), "utf8");
+const source = readSource("src/components/settings/AiPreferencesSettings.tsx");
 
 describe("AI preferences form accessibility", () => {
   it("associates every standalone preference label with its Select trigger", () => {

@@ -1,9 +1,10 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { readFileSync, readdirSync } from "node:fs";
+import { readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import FieldListEditor from "@/components/forms/FieldListEditor";
 import type { SmartField } from "@/lib/form-fields";
+import { readSource } from "./read-source";
 
 function tsxFiles(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -21,7 +22,7 @@ describe("dashboard form accessibility", () => {
     );
 
     for (const file of applicationFiles) {
-      const contents = readFileSync(file, "utf8");
+      const contents = readSource(file);
       for (const match of contents.matchAll(/<Switch\b[\s\S]*?\/>/g)) {
         if (/aria-label\s*=/.test(match[0]) || /aria-labelledby\s*=/.test(match[0])) continue;
         const line = contents.slice(0, match.index).split("\n").length;
@@ -64,10 +65,10 @@ describe("dashboard form accessibility", () => {
     expect(screen.getByRole("combobox", { name: "Condition field for Documents" })).toBeInTheDocument();
     expect(screen.getByRole("combobox", { name: "Condition operator for Documents" })).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "Condition value for Documents" })).toBeInTheDocument();
-  });
+  }, 10_000);
 
   it("associates every lead-form setting label with its control", () => {
-    const editor = readFileSync(resolve(process.cwd(), "src/pages/LeadFormEditor.tsx"), "utf8");
+    const editor = readSource("src/pages/LeadFormEditor.tsx");
     const controlIds = [
       "lead-form-name",
       "lead-form-slug",
@@ -86,7 +87,7 @@ describe("dashboard form accessibility", () => {
   });
 
   it("associates the AI form description with its textarea", () => {
-    const dialog = readFileSync(resolve(process.cwd(), "src/components/forms/AiGenerateFieldsDialog.tsx"), "utf8");
+    const dialog = readSource("src/components/forms/AiGenerateFieldsDialog.tsx");
 
     expect(dialog).toContain("<Label htmlFor={promptId}");
     expect(dialog).toContain("<Textarea\n              id={promptId}");

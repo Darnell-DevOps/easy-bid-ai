@@ -1,15 +1,11 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { readSource } from "./read-source";
 
-function source(path: string) {
-  return readFileSync(resolve(process.cwd(), path), "utf8");
-}
 
 describe("landing page accessibility", () => {
-  const app = source("src/App.tsx");
-  const landing = source("src/pages/Index.tsx");
-  const styles = source("src/index.css");
+  const app = readSource("src/App.tsx");
+  const landing = readSource("src/pages/Index.tsx");
+  const styles = readSource("src/index.css");
 
   it("provides a first-position skip link and focusable main target", () => {
     expect(app).toContain("function RouteSkipLink()");

@@ -1,8 +1,7 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { readSource } from "./read-source";
 
-const source = readFileSync(resolve(process.cwd(), "src/components/settings/BrandingSettings.tsx"), "utf8");
+const source = readSource("src/components/settings/BrandingSettings.tsx");
 
 describe("Branding settings accessibility", () => {
   it("associates identity and welcome-message labels with their controls", () => {

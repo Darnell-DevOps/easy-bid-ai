@@ -1,8 +1,7 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { readSource } from "./read-source";
 
-const source = readFileSync(resolve(process.cwd(), "src/components/settings/ProfileSettings.tsx"), "utf8");
+const source = readSource("src/components/settings/ProfileSettings.tsx");
 
 describe("Profile settings accessibility", () => {
   it("associates reusable profile fields with labels, errors, and guidance", () => {
