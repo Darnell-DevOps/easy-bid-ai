@@ -37,7 +37,7 @@ describe("AI abuse protection", () => {
 
   it("keeps rate-limit storage and consumption server-only", () => {
     const migration = source(
-      "supabase/migrations/20260807120000_ai_abuse_rate_limits.sql",
+      "supabase/migrations/20260822155730_296b50f3-e76c-4264-a1f8-9f3d272793f3.sql",
     );
     expect(migration).toContain("ALTER TABLE public.abuse_rate_limits ENABLE ROW LEVEL SECURITY");
     expect(migration).toContain("REVOKE ALL ON public.abuse_rate_limits FROM PUBLIC, anon, authenticated");
