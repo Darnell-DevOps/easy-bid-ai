@@ -164,7 +164,7 @@
   }
 
   button {
-    font-weight: 600;
+    font-weight: var(--cs-font-medium);
   }
 
   .light body {
@@ -215,48 +215,103 @@
   }
 
   .btn-gradient {
-    background: hsl(var(--accent));
-    color: hsl(var(--accent-foreground));
+    background: var(--cs-primary);
+    color: var(--cs-text-inverse);
     border: none;
-    transition: background-color 150ms ease;
+    transition: background-color var(--cs-duration-fast) var(--cs-ease-standard);
   }
 
   .btn-gradient:hover {
-    background: hsl(215 82% 60%);
+    background: var(--cs-primary-hover);
   }
 }
 
 /* CloseSync marketing surface: restrained, product-led and high contrast. */
 .landing-shell {
-  --background: 220 20% 98%;
-  --foreground: 219 40% 16%;
+  --background: 0 0% 100%;
+  --foreground: 231 17% 8%;
   --card: 0 0% 100%;
-  --card-foreground: 219 40% 16%;
+  --card-foreground: 231 17% 8%;
   --popover: 0 0% 100%;
-  --popover-foreground: 219 40% 16%;
-  --primary: 219 40% 16%;
+  --popover-foreground: 231 17% 8%;
+  --primary: 260 100% 62%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 220 21% 95%;
-  --secondary-foreground: 219 40% 16%;
-  --muted: 220 21% 95%;
-  --muted-foreground: 217 13% 44%;
-  --accent: 226 54% 48%;
+  --secondary: 220 14% 96%;
+  --secondary-foreground: 231 17% 8%;
+  --muted: 220 14% 96%;
+  --muted-foreground: 222 7% 40%;
+  --accent: 260 100% 62%;
   --accent-foreground: 0 0% 100%;
-  --border: 218 18% 87%;
-  --input: 218 18% 87%;
-  --ring: 226 54% 48%;
-  --success: 153 65% 38%;
-  --purple: 226 54% 48%;
-  background-color: #f7f8fa;
-  color: #182338;
+  --border: 214 13% 90%;
+  --input: 214 13% 90%;
+  --ring: 260 100% 62%;
+  --success: 160 73% 31%;
+  --purple: 260 100% 62%;
+  background-color: var(--cs-bg-page);
+  color: var(--cs-text-primary);
 }
 
 .landing-display {
-  font-family: "Inter", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--cs-font-sans);
 }
 
 .landing-shell {
-  font-family: "Inter", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--cs-font-sans);
+  caret-color: var(--cs-primary);
+}
+
+html:has(.landing-shell) {
+  scrollbar-color: var(--cs-border-strong) var(--cs-bg-subtle);
+  scrollbar-width: thin;
+}
+
+html:has(.landing-shell)::-webkit-scrollbar {
+  width: 10px;
+}
+
+html:has(.landing-shell)::-webkit-scrollbar-track {
+  background: var(--cs-bg-subtle);
+}
+
+html:has(.landing-shell)::-webkit-scrollbar-thumb {
+  border: 2px solid var(--cs-bg-subtle);
+  border-radius: var(--cs-radius-full);
+  background: var(--cs-border-strong);
+}
+
+.landing-shell ::selection {
+  color: var(--cs-text-primary);
+  background: var(--cs-violet-100);
+}
+
+.landing-workflow-current::after {
+  position: absolute;
+  inset: -2px;
+  border: 1px solid var(--cs-primary);
+  border-radius: inherit;
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes landing-current-step {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  40% {
+    opacity: 0.35;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.18);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .landing-workflow-current::after {
+    animation: landing-current-step var(--cs-duration-slow) var(--cs-ease-standard) 350ms 1;
+  }
 }
 
 .landing-shell .font-mono {
@@ -269,13 +324,13 @@
   top: 1rem;
   z-index: 100;
   transform: translateY(-200%);
-  border-radius: 0.5rem;
-  background: #ffffff;
-  color: #182338;
+  border-radius: var(--cs-radius-sm);
+  background: var(--cs-bg-page);
+  color: var(--cs-text-primary);
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
   font-weight: 700;
-  box-shadow: 0 8px 24px rgb(24 35 56 / 0.18);
+  box-shadow: var(--cs-shadow-md);
 }
 
 .landing-skip-link:focus {
@@ -284,7 +339,7 @@
 
 .landing-skip-link:focus-visible,
 .landing-shell :is(a, button):focus-visible {
-  outline: 3px solid #3858bd;
+  outline: 3px solid var(--cs-primary);
   outline-offset: 3px;
 }
 

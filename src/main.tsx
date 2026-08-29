@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
+import "./styles/closesync-design-system.css";
 import "./index.css";
 import { applyTheme, getInitialTheme } from "./hooks/use-theme";
 import AppErrorBoundary from "./components/AppErrorBoundary";

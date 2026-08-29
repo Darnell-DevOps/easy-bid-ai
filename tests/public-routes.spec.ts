@@ -79,7 +79,7 @@ test("landing page links to a usable login form", async ({ page }) => {
   await expect(page.locator('[aria-label="Notifications alt+T"]')).toHaveCount(0);
 
   const clientRecord = page.getByRole("region", {
-    name: "Client record Acme Studio - Brand refresh",
+    name: "Example client record Briar & Co. - Brand refresh",
   });
   await expect(clientRecord).toBeVisible();
   const clientWorkflow = clientRecord.getByRole("list", { name: "Client workflow" });

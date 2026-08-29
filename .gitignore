@@ -16,6 +16,16 @@ dist-ssr
 test-results/
 playwright-report/
 
+# Local Impeccable visual-review artifacts
+.impeccable/review/
+
+# Local design-agent tooling installed for this checkout
+.agents/
+.codex/
+.github/agents/
+.github/hooks/
+.github/skills/
+
 # Local and deployment environment files. Only the documented template is tracked.
 .env
 .env.*

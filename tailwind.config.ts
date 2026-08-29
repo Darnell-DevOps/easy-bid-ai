@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Inter", "ui-sans-serif", "-apple-system", "BlinkMacSystemFont", '"Segoe UI"', "sans-serif"],
+        sans: ["var(--cs-font-sans)"],
       },
       fontSize: {
         micro: ["0.75rem", { lineHeight: "1rem" }],
@@ -88,11 +88,33 @@ export default {
           DEFAULT: "hsl(var(--purple))",
           foreground: "hsl(var(--purple-foreground))",
         },
+        brand: {
+          DEFAULT: "var(--cs-primary)",
+          blue: "var(--cs-brand-blue)",
+          violet: "var(--cs-brand-violet)",
+          magenta: "var(--cs-brand-magenta)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        "cs-xs": "var(--cs-radius-xs)",
+        "cs-sm": "var(--cs-radius-sm)",
+        "cs-md": "var(--cs-radius-md)",
+        "cs-lg": "var(--cs-radius-lg)",
+        "cs-xl": "var(--cs-radius-xl)",
+      },
+      boxShadow: {
+        "cs-xs": "var(--cs-shadow-xs)",
+        "cs-sm": "var(--cs-shadow-sm)",
+        "cs-md": "var(--cs-shadow-md)",
+        "cs-lg": "var(--cs-shadow-lg)",
+      },
+      transitionDuration: {
+        fast: "var(--cs-duration-fast)",
+        normal: "var(--cs-duration-normal)",
+        slow: "var(--cs-duration-slow)",
       },
       keyframes: {
         "accordion-down": {

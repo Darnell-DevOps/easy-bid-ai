@@ -9,6 +9,8 @@ type RouteTitle = {
 // Keep specific paths above dynamic siblings such as /dashboard/policies/:id.
 const ROUTE_TITLES: RouteTitle[] = [
   { path: "/", title: "CloseSync - Client operations, in one place" },
+  { path: "/landing-concepts", title: "Landing page concepts | CloseSync AI" },
+  { path: "/landing-concepts/:concept", title: "Landing page concept | CloseSync AI" },
   { path: "/.lovable/oauth/consent", title: "Authorize access | CloseSync AI" },
   { path: "/login", title: "Sign in | CloseSync AI" },
   { path: "/signup", title: "Create your CloseSync AI account" },

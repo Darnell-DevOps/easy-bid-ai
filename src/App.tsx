@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import AuthGuard from "@/components/AuthGuard";
 import Index from "./pages/Index";
+import LandingConcepts from "./pages/LandingConcepts";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -65,7 +66,7 @@ const queryClient = new QueryClient();
 
 function RouteSkipLink() {
   const { pathname } = useLocation();
-  const targetId = pathname === "/"
+  const targetId = pathname === "/" || pathname.startsWith("/landing-concepts")
     ? "landing-main"
     : pathname === "/admin" || pathname.startsWith("/dashboard")
       ? "dashboard-main"
@@ -90,6 +91,8 @@ const App = () => (
         <PageTransition>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/landing-concepts" element={<LandingConcepts />} />
+            <Route path="/landing-concepts/:concept" element={<LandingConcepts />} />
             <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
