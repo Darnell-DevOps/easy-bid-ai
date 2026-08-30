@@ -477,6 +477,10 @@
   font-size: var(--cs-text-xs);
 }
 
+.concept-plan-pro > div small {
+  color: var(--cs-text-disabled);
+}
+
 .concept-plan > p,
 .concept-plan li {
   font-size: var(--cs-text-sm);

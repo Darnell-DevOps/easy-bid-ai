@@ -19,6 +19,7 @@ import "@/styles/landing-concepts.css";
 
 const conceptKeys = ["editorial", "system", "studio"] as const;
 type ConceptKey = (typeof conceptKeys)[number];
+type LandingCtaLocation = "hero" | "pricing_free" | "pricing_pro" | "footer";
 
 const conceptLabels: Record<ConceptKey, string> = {
   editorial: "A - Editorial record",
@@ -151,11 +152,17 @@ function ConceptHeader({
   );
 }
 
-function ConceptActions({ showSecondary = true }: { showSecondary?: boolean }) {
+function ConceptActions({
+  showSecondary = true,
+  onStartFree,
+}: {
+  showSecondary?: boolean;
+  onStartFree?: () => void;
+}) {
   return (
     <div className="concept-actions">
       <Button asChild size="lg" className="concept-button-primary">
-        <Link to="/signup">
+        <Link to="/signup" onClick={onStartFree}>
           Start free
           <ArrowRight aria-hidden="true" />
         </Link>
@@ -233,7 +240,13 @@ function JourneyRail() {
   );
 }
 
-function PricingDecision({ quiet = false }: { quiet?: boolean }) {
+function PricingDecision({
+  quiet = false,
+  onStartFree,
+}: {
+  quiet?: boolean;
+  onStartFree?: (location: Extract<LandingCtaLocation, "pricing_free" | "pricing_pro">) => void;
+}) {
   return (
     <section id="pricing" className={`concept-pricing${quiet ? " concept-pricing-quiet" : ""}`}>
       <div className="concept-pricing-copy">
@@ -248,7 +261,7 @@ function PricingDecision({ quiet = false }: { quiet?: boolean }) {
         </div>
         <p>Two proposals each month, limited AI insights and no card required.</p>
         <Button asChild variant="outline" className="concept-button-secondary">
-          <Link to="/signup">Start free</Link>
+          <Link to="/signup" onClick={() => onStartFree?.("pricing_free")}>Start free</Link>
         </Button>
       </div>
       <div className="concept-plan concept-plan-pro">
@@ -266,14 +279,20 @@ function PricingDecision({ quiet = false }: { quiet?: boolean }) {
           ))}
         </ul>
         <Button asChild className="concept-button-primary">
-          <Link to="/signup">Create an account</Link>
+          <Link to="/signup" onClick={() => onStartFree?.("pricing_pro")}>Create an account</Link>
         </Button>
       </div>
     </section>
   );
 }
 
-function ConceptFooter({ inverse = false }: { inverse?: boolean }) {
+function ConceptFooter({
+  inverse = false,
+  onStartFree,
+}: {
+  inverse?: boolean;
+  onStartFree?: () => void;
+}) {
   return (
     <footer className={`concept-footer${inverse ? " concept-footer-inverse" : ""}`}>
       <Brand inverse={inverse} />
@@ -281,7 +300,7 @@ function ConceptFooter({ inverse = false }: { inverse?: boolean }) {
       <nav aria-label="Footer navigation">
         <Link to="/sample">Sample proposal</Link>
         <Link to="/login">Sign in</Link>
-        <Link to="/signup">Start free</Link>
+        <Link to="/signup" onClick={onStartFree}>Start free</Link>
       </nav>
     </footer>
   );
@@ -474,9 +493,13 @@ function SystemMap() {
   );
 }
 
-function SystemConcept() {
+export function WorkflowSystemLanding({
+  onStartFree,
+}: {
+  onStartFree?: (location: LandingCtaLocation) => void;
+}) {
   return (
-    <div className="landing-concept concept-system" data-design-provenance="refero-default-mobbin-intercom-stripe-2026-08-25">
+    <div className="landing-shell landing-concept concept-system" data-design-provenance="refero-default-mobbin-intercom-stripe-2026-08-25">
       <ConceptHeader showPrimaryAction={false} />
       <main id="landing-main" tabIndex={-1}>
         <section className="system-hero">
@@ -489,7 +512,7 @@ function SystemConcept() {
                 Keep leads, proposals, contracts, payments and onboarding connected, so you can respond faster and begin
                 work with complete client context.
               </p>
-              <ConceptActions showSecondary={false} />
+              <ConceptActions showSecondary={false} onStartFree={() => onStartFree?.("hero")} />
             </div>
           </div>
           <SystemMap />
@@ -576,9 +599,9 @@ function SystemConcept() {
           </div>
         </section>
 
-        <PricingDecision />
+        <PricingDecision onStartFree={onStartFree} />
       </main>
-      <ConceptFooter />
+      <ConceptFooter onStartFree={() => onStartFree?.("footer")} />
     </div>
   );
 }
@@ -654,7 +677,7 @@ function StudioConcept() {
 export default function LandingConcepts() {
   const { concept: conceptParam } = useParams();
   const concept: ConceptKey = isConceptKey(conceptParam) ? conceptParam : "editorial";
-  const Concept = concept === "system" ? SystemConcept : concept === "studio" ? StudioConcept : EditorialConcept;
+  const Concept = concept === "system" ? WorkflowSystemLanding : concept === "studio" ? StudioConcept : EditorialConcept;
 
   return (
     <>

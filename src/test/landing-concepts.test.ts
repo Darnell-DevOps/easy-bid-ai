@@ -3,14 +3,21 @@ import { readSource } from "./read-source";
 
 describe("landing page design concepts", () => {
   const app = readSource("src/App.tsx");
+  const livePage = readSource("src/pages/Index.tsx");
   const page = readSource("src/pages/LandingConcepts.tsx");
   const styles = readSource("src/styles/landing-concepts.css");
   const routes = readSource("src/components/RouteAccessibility.tsx");
 
-  it("keeps the concepts isolated from the current landing page", () => {
+  it("promotes the selected workflow system while retaining the private concept routes", () => {
     expect(app).toContain('<Route path="/" element={<Index />} />');
     expect(app).toContain('<Route path="/landing-concepts" element={<LandingConcepts />} />');
     expect(app).toContain('<Route path="/landing-concepts/:concept" element={<LandingConcepts />} />');
+    expect(livePage).toContain('import { WorkflowSystemLanding } from "./LandingConcepts";');
+    expect(livePage).toContain("<WorkflowSystemLanding");
+    expect(livePage).toContain('track("landing_view")');
+    expect(livePage).toContain('track("cta_click", { location })');
+    expect(livePage).toContain("consumeOAuthRedirect");
+    expect(livePage).not.toContain("noIndex");
   });
 
   it("provides three traceable and visibly distinct directions", () => {
@@ -36,7 +43,7 @@ describe("landing page design concepts", () => {
     expect(page).toContain('<Link to="/signup">Start free</Link>');
     expect(page).toContain('<Link className="concept-sign-in" to="/login">Sign in</Link>');
     expect(page).toContain('<Link to="/sample">');
-    expect(page).toContain("<ConceptActions showSecondary={false} />");
+    expect(page).toContain("<ConceptActions showSecondary={false}");
     expect(page).toContain("<ConceptHeader showPrimaryAction={false} />");
     expect(page).toContain('className="system-hero-intro"');
     expect(page).not.toContain("View a sample workflow");
@@ -96,7 +103,7 @@ describe("landing page design concepts", () => {
 
   it("gives the selected concept a deliberate proof-to-conversion reading order", () => {
     expect(page).toMatch(
-      /className="system-hero"[\s\S]*className="system-assurances"[\s\S]*className="system-problem"[\s\S]*className="system-capabilities"[\s\S]*className="system-ai"[\s\S]*<PricingDecision \/>/,
+      /className="system-hero"[\s\S]*className="system-assurances"[\s\S]*className="system-problem"[\s\S]*className="system-capabilities"[\s\S]*className="system-ai"[\s\S]*<PricingDecision onStartFree={onStartFree} \/>/,
     );
     expect(page).toContain("Designed first for UK freelancers, consultants and small agencies.");
     expect(page).toContain("Paddle handles checkout.");

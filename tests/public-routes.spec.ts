@@ -78,15 +78,20 @@ test("landing page links to a usable login form", async ({ page }) => {
   await expect(page.getByRole("region", { name: "Notifications (F8)" })).toHaveCount(1);
   await expect(page.locator('[aria-label="Notifications alt+T"]')).toHaveCount(0);
 
-  const clientRecord = page.getByRole("region", {
-    name: "Example client record Briar & Co. - Brand refresh",
-  });
-  await expect(clientRecord).toBeVisible();
-  const clientWorkflow = clientRecord.getByRole("list", { name: "Client workflow" });
-  await expect(clientWorkflow.getByRole("listitem")).toHaveCount(5);
-  await expect(clientWorkflow.locator('[aria-current="step"]')).toContainText("Onboarding");
-  await expect(clientWorkflow.locator('[aria-current="step"]')).toContainText("In progress");
-  await expect(clientRecord.getByRole("complementary", { name: "Commercial summary" })).toBeVisible();
+  await expect(page.getByRole("heading", {
+    level: 1,
+    name: "Turn every enquiry into a clear path to payment.",
+  })).toBeVisible();
+
+  const workflow = page.getByRole("region", { name: "BrightStone website redesign" });
+  await expect(workflow).toBeVisible();
+  const stages = workflow.getByRole("list", { name: "Client workflow stages" });
+  await expect(stages.getByRole("listitem")).toHaveCount(7);
+  await expect(stages.locator('[aria-current="step"]')).toContainText("Proposal");
+  await expect(stages.locator('[aria-current="step"]')).toContainText("Active stage");
+  await expect(workflow.getByRole("region", { name: "Proposal sent" })).toContainText("Awaiting decision");
+  await expect(page.locator('.concept-toolbar')).toHaveCount(0);
+  await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
 
   const skipLink = page.getByRole("link", { name: "Skip to main content" });
   await page.keyboard.press("Tab");
@@ -110,7 +115,7 @@ test("landing page links to a usable login form", async ({ page }) => {
   );
   expect(hasHorizontalOverflow).toBe(false);
 
-  await page.getByRole("link", { name: "Sign in", exact: true }).click();
+  await page.getByRole("banner").getByRole("link", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);
   await expect(page).toHaveTitle("Sign in | CloseSync AI");
   await expect(page.getByText("Sign in to your account")).toBeVisible();
