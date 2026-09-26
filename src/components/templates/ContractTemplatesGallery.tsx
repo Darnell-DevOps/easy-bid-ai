@@ -19,19 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  ChevronDown,
-  ChevronUp,
-  Copy,
-  MoreVertical,
-  Pencil,
-  Plus,
-  RotateCcw,
-  Sparkles,
-  Star,
-  Trash2,
-  Users,
-} from "lucide-react";
+import { ChevronDown, ChevronUp, Copy, MoreVertical, Pencil, Plus, RotateCcw, FileSignature, Star, Trash2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -163,7 +151,7 @@ export default function ContractTemplatesGallery({ onUseTemplate }: Props) {
       <CardContent className="p-4 sm:p-5 space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-accent" />
+            <FileSignature className="w-4 h-4 text-accent" />
             <h2 className="text-sm font-semibold text-foreground">Contract templates</h2>
             {defaultTpl && (
               <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 text-[10px] gap-1">

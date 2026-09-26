@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Mail, Send, Sparkles } from "lucide-react";
+import { Copy, Mail, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   buildFollowUpTemplate,
@@ -65,7 +65,7 @@ export default function FollowUpDialog({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <div className="flex items-center gap-2 mb-1">
-            <Sparkles className="w-4 h-4 text-accent" />
+            <Mail className="w-4 h-4 text-accent" />
             <Badge variant="outline" className="text-[10px] uppercase tracking-wider">
               {meta.badge}
             </Badge>

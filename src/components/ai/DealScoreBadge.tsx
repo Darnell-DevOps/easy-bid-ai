@@ -1,4 +1,4 @@
-import { RefreshCw, Sparkles } from "lucide-react";
+import { RefreshCw, Gauge } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAIInsight } from "@/hooks/use-ai-insight";
 import { scoreBg, scoreColor, scoreLabel } from "@/lib/ai-coach";
@@ -40,7 +40,7 @@ export default function DealScoreBadge({
           size === "md" && "px-2.5 py-1 text-sm",
         )}
       >
-        <Sparkles aria-hidden="true" className="w-3 h-3" />
+        <Gauge aria-hidden="true" className="w-3 h-3" />
         Scoring
       </span>
     );
@@ -98,7 +98,7 @@ export default function DealScoreBadge({
                 size === "md" && "px-2.5 py-1 text-sm",
               )}
             >
-              <Sparkles aria-hidden="true" className="w-3 h-3" />
+              <Gauge aria-hidden="true" className="w-3 h-3" />
               {insight.score} · {label}
             </button>
           </TooltipTrigger>

@@ -12,11 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Loader2, Sparkles, User, Building2, Briefcase, PoundSterling, FileText, Clock,
-  StickyNote, Target, ListChecks, Users, AlertTriangle, ArrowLeft, Pencil,
-  CheckCircle2, Circle, Wand2, ArrowRight,
-} from "lucide-react";
+import { Loader2, FilePlus2, User, Building2, Briefcase, PoundSterling, FileText, Clock, StickyNote, Target, ListChecks, Users, AlertTriangle, ArrowLeft, Pencil, CheckCircle2, Circle, ArrowRight } from "lucide-react";
 import { usePlan } from "@/hooks/use-plan";
 import { useProposalUsage } from "@/hooks/use-proposal-usage";
 import UpgradeModal from "@/components/plan/UpgradeModal";
@@ -673,10 +669,7 @@ export default function NewProposal() {
   return (
     <DashboardLayout>
       <div className="mb-6">
-        <p className="text-xs font-semibold uppercase tracking-wider text-accent flex items-center gap-1.5 mb-2">
-          <Sparkles className="w-3.5 h-3.5" /> AI-powered proposal builder
-        </p>
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Create a proposal in minutes</h1>
+        <h1 className="cs-workspace-page-title text-foreground">Create a proposal</h1>
         <p className="text-sm text-muted-foreground mt-1.5 max-w-2xl">
           Review the key project details below and let AI draft a polished, client-ready proposal.
         </p>
@@ -726,7 +719,7 @@ export default function NewProposal() {
           <CardContent className="p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center flex-shrink-0">
-                <Wand2 className="w-5 h-5 text-accent-foreground" />
+                <FilePlus2 className="w-5 h-5 text-accent-foreground" />
               </div>
               <div>
                 <p className="text-base font-semibold text-foreground">Generate from existing client</p>
@@ -763,7 +756,7 @@ export default function NewProposal() {
         description={`Upgrade to ${PLANS[isFree ? "starter" : "pro"].name} to keep generating proposals and close more deals.`}
       />
 
-      <Card className="glass-card">
+      <Card className="cs-workspace-panel">
         <CardContent className="p-6 md:p-8">
           <form onSubmit={handleGenerate} className="space-y-10">
             {/* ESSENTIALS */}
@@ -895,7 +888,7 @@ export default function NewProposal() {
                           onClick={() => { update("budget", String(p)); markTouched("budget"); setBudgetPrefillNotice(""); }}
                           className={`text-xs px-3 py-1.5 rounded-md border transition-all ${
                             selected
-                              ? "border-accent bg-accent/15 text-accent shadow-sm shadow-accent/20 ring-1 ring-accent/30"
+                              ? "border-accent bg-accent/15 text-accent  ring-1 ring-accent/30"
                               : "border-border/60 text-muted-foreground hover:border-accent/50 hover:bg-accent/5 hover:text-foreground hover:-translate-y-0.5"
                           }`}
                         >
@@ -1121,7 +1114,7 @@ export default function NewProposal() {
                   : "border-border/60 bg-muted/30"
                 }`}>
                   <div className="flex items-center gap-2 mb-3">
-                    <Sparkles className={`w-4 h-4 ${aiReady ? "text-accent" : "text-muted-foreground"}`} />
+                    <FilePlus2 className={`w-4 h-4 ${aiReady ? "text-accent" : "text-muted-foreground"}`} />
                     <p className="text-sm font-semibold text-foreground">
                       {allDone
                         ? "All key details look great — ready to generate"
@@ -1191,10 +1184,10 @@ export default function NewProposal() {
                           <Button
                             type="submit"
                             disabled={!isValid}
-                            className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2 w-full sm:w-auto sm:min-w-[300px] h-12 text-base font-semibold transition-colors group"
+                            className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 w-full sm:w-auto sm:min-w-[300px] h-12 text-base font-semibold transition-colors group"
                             size="lg"
                           >
-                            <Sparkles className="w-5 h-5 transition-transform group-hover:rotate-12" />
+                            <FilePlus2 className="w-5 h-5 transition-transform group-hover:rotate-12" />
                             Generate Proposal with AI
                             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                           </Button>

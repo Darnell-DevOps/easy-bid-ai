@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Copy, ExternalLink, CheckCircle2, Sparkles } from "lucide-react";
+import { Loader2, Copy, ExternalLink, CheckCircle2, ClipboardList } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -231,7 +231,7 @@ export default function CreateOnboardingFromTemplateDialog({
             </div>
             {prefillCount > 0 && (
               <div className="rounded-lg border border-purple/30 bg-purple/5 p-3 flex items-start gap-3">
-                <Sparkles className="w-4 h-4 text-purple shrink-0 mt-0.5" />
+                <ClipboardList className="w-4 h-4 text-purple shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-sm font-medium">Pre-fill from lead intake</p>

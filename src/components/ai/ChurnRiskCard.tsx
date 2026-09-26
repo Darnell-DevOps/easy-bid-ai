@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, ShieldAlert } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
 import { useAIInsight } from "@/hooks/use-ai-insight";
 import { scoreBg, scoreColor } from "@/lib/ai-coach";
 
@@ -58,7 +58,7 @@ export default function ChurnRiskCard({ retainerId, enabled = true }: ChurnRiskC
     return (
       <Card aria-busy="true" className="border-border/60">
         <CardContent role="status" aria-live="polite" aria-atomic="true" className="p-4 flex items-center gap-3">
-          <Sparkles aria-hidden="true" className="w-4 h-4 text-muted-foreground animate-pulse" />
+          <ShieldAlert aria-hidden="true" className="w-4 h-4 text-muted-foreground animate-pulse" />
           <p className="text-sm text-muted-foreground">
             {generating ? "AI is checking churn risk…" : "Loading churn risk…"}
           </p>

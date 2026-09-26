@@ -6,7 +6,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, ListChecks } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { newFieldId, type SmartField, ALL_FIELD_TYPES } from "@/lib/form-fields";
@@ -63,7 +63,7 @@ export default function AiGenerateFieldsDialog({ open, onOpenChange, context, on
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles aria-hidden="true" className="w-4 h-4 text-purple" /> Generate fields with AI
+            <ListChecks aria-hidden="true" className="w-4 h-4 text-purple" /> Generate fields with AI
           </DialogTitle>
           <DialogDescription>
             Describe the form you need and AI will draft the fields. You can edit them afterward.
@@ -106,7 +106,7 @@ export default function AiGenerateFieldsDialog({ open, onOpenChange, context, on
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={loading}>Cancel</Button>
           {!preview ? (
             <Button onClick={run} disabled={loading} className="gap-2">
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ListChecks className="w-4 h-4" />}
               Generate
             </Button>
           ) : (

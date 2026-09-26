@@ -194,7 +194,7 @@ export default function OnboardingResponseDetail() {
           </Button>
           <Card>
             <CardContent className="p-8 text-center">
-              <h1 className="text-base font-semibold text-foreground">Onboarding form not found</h1>
+              <h1 className="cs-workspace-page-title text-base font-semibold text-foreground">Onboarding form not found</h1>
             </CardContent>
           </Card>
         </div>
@@ -282,7 +282,7 @@ export default function OnboardingResponseDetail() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
-                <h1 className="text-base font-semibold leading-6 tracking-[-0.01em]">
+                <h1 className="cs-workspace-page-title text-base font-semibold leading-6 tracking-[-0.01em]">
                   <span className="sr-only">Onboarding response for </span>
                   {form.client_name || "Client"}
                 </h1>

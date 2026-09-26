@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Inbox, Loader2, UserPlus, Archive, FileDown, Sparkles, Copy, Check } from "lucide-react";
+import { Inbox, Loader2, UserPlus, Archive, FileDown, ListChecks, Copy, Check } from "lucide-react";
 import type { SmartField } from "@/lib/form-fields";
 import LeadScoreBadge from "@/components/ai/LeadScoreBadge";
 import { scoreTone, scoreLabel } from "@/lib/leadScore";
@@ -152,7 +152,7 @@ export default function LeadInbox() {
       <div className="space-y-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <h1 className="cs-workspace-page-title text-foreground flex items-center gap-2">
               <Inbox className="w-6 h-6 text-purple" /> Lead Inbox
             </h1>
             <p className="text-sm text-muted-foreground mt-1">Submissions from your lead forms. Convert qualified ones into clients.</p>
@@ -277,7 +277,7 @@ export default function LeadInbox() {
                   <div className="rounded-lg border border-purple/20 bg-purple/5 p-3 text-sm space-y-1.5">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-purple font-semibold">
-                        <Sparkles className="w-3 h-3" /> AI Qualification
+                        <ListChecks className="w-3 h-3" /> AI Qualification
                       </div>
                       {selected.lead_score && (
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] uppercase font-semibold border ${scoreTone(selected.lead_score)}`}>
@@ -324,7 +324,7 @@ export default function LeadInbox() {
                   <div className="rounded-lg border border-border bg-card p-3 space-y-2">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                        <Sparkles className="w-3 h-3 text-purple" /> Suggested reply
+                        <ListChecks className="w-3 h-3 text-purple" /> Suggested reply
                       </div>
                       <Button size="sm" variant="outline" className="h-7 px-2 gap-1.5 text-xs" onClick={() => copyReply(selected.draft_reply!)}>
                         {replyCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
@@ -379,7 +379,7 @@ export default function LeadInbox() {
                     <Button className="gap-2" onClick={() => convert(selected)}><UserPlus className="w-4 h-4" />Convert to client</Button>
                   )}
                   <Button variant="outline" className="gap-2" onClick={() => requalify(selected)} disabled={requalifying} aria-busy={requalifying}>
-                    {requalifying ? <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                    {requalifying ? <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" /> : <ListChecks className="w-4 h-4" />}
                     {selected.qualified_at ? "Re-qualify" : "Qualify with AI"}
                   </Button>
                   {selected.status !== "archived" && (

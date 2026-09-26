@@ -94,7 +94,7 @@ export default function ProposalsDashboard() {
               <ArrowLeft aria-hidden="true" className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Proposals Overview</h1>
+              <h1 className="cs-workspace-page-title text-foreground">Proposals Overview</h1>
               <p className="text-sm text-muted-foreground mt-0.5">Track your proposal performance</p>
             </div>
           </div>

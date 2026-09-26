@@ -27,19 +27,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CONTRACT_TYPES, contractTypeLabel, type ContractRow } from "@/lib/contracts";
 import { useToast } from "@/hooks/use-toast";
 import { sendEmail } from "@/lib/email";
-import {
-  FileSignature,
-  Plus,
-  ExternalLink,
-  Copy,
-  CheckCircle2,
-  Clock,
-  Eye,
-  Send,
-  Loader2,
-  Trash2,
-  Sparkles,
-} from "lucide-react";
+import { FileSignature, Plus, ExternalLink, Copy, CheckCircle2, Clock, Eye, Send, Loader2, Trash2 } from "lucide-react";
 import type { MergedContractTemplate } from "@/lib/contract-templates";
 
 const STATUS_STYLES: Record<string, string> = {
@@ -306,7 +294,7 @@ export default function ContractsPage() {
       <div className="space-y-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <h1 className="cs-workspace-page-title text-foreground flex items-center gap-2">
               <FileSignature className="w-6 h-6 text-accent" />
               Contracts
             </h1>
@@ -314,7 +302,7 @@ export default function ContractsPage() {
               Generate, send and e-sign professional client agreements.
             </p>
           </div>
-          <Button onClick={() => setOpenCreate(true)} className="gap-2 bg-accent text-accent-foreground">
+          <Button onClick={() => setOpenCreate(true)} className="gap-2 bg-primary text-primary-foreground">
             <Plus className="w-4 h-4" /> New Contract
           </Button>
         </div>
@@ -337,7 +325,7 @@ export default function ContractsPage() {
                   Generate your first contract — auto-filled from a proposal or built from scratch.
                 </p>
                 <Button onClick={() => setOpenCreate(true)} className="gap-2">
-                  <Sparkles className="w-4 h-4" /> Create Contract
+                  <FileSignature className="w-4 h-4" /> Create Contract
                 </Button>
               </div>
             ) : (
@@ -498,9 +486,9 @@ export default function ContractsPage() {
               onClick={handleCreate}
               disabled={creating}
               aria-busy={creating}
-              className="gap-2 bg-accent text-accent-foreground"
+              className="gap-2 bg-primary text-primary-foreground"
             >
-              {creating ? <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+              {creating ? <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" /> : <FileSignature className="w-4 h-4" />}
               Generate Contract
             </Button>
           </DialogFooter>

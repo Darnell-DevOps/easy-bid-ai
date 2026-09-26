@@ -217,7 +217,7 @@ export default function LeadFormsDashboard() {
       <div className="space-y-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <h1 className="cs-workspace-page-title text-foreground flex items-center gap-2">
               <ClipboardList className="w-6 h-6 text-purple" /> Lead Forms
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
@@ -228,7 +228,7 @@ export default function LeadFormsDashboard() {
             <Button asChild variant="outline">
               <Link to="/dashboard/lead-inbox">View Lead Inbox</Link>
             </Button>
-            <Button onClick={create} disabled={creating} aria-busy={creating} className="gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
+            <Button onClick={create} disabled={creating} aria-busy={creating} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
               {creating ? <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
               New form
             </Button>

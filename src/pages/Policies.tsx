@@ -6,20 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  FileText,
-  Plus,
-  Trash2,
-  Shield,
-  Lock,
-  RotateCcw,
-  ArrowRight,
-  AlertTriangle,
-  CheckCircle2,
-  Circle,
-  Sparkles,
-  Crown,
-} from "lucide-react";
+import { FileText, Plus, Trash2, Shield, Lock, RotateCcw, ArrowRight, AlertTriangle, CheckCircle2, Circle, Crown } from "lucide-react";
 import { format } from "date-fns";
 import { usePlan } from "@/hooks/use-plan";
 import { useToast } from "@/hooks/use-toast";
@@ -186,7 +173,7 @@ export default function Policies() {
               <Shield className="w-3.5 h-3.5" />
               Business protection
             </div>
-            <h1 className="type-page-title">
+            <h1 className="cs-workspace-page-title">
               Protect your revenue with professional policies
             </h1>
             <p className="text-muted-foreground mt-2 text-base">
@@ -204,7 +191,7 @@ export default function Policies() {
             <Button
               size="lg"
               onClick={handleGenerateClick}
-              className="shrink-0 bg-accent text-accent-foreground font-semibold hover:bg-accent/90"
+              className="shrink-0 bg-primary text-primary-foreground font-semibold hover:bg-primary/90"
             >
               <Crown className="w-4 h-4 mr-2" />
               Unlock with Pro
@@ -273,7 +260,7 @@ export default function Policies() {
         <CardContent className="p-4 flex items-center justify-between gap-4">
           <div className="flex items-start gap-3">
             <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-              <Sparkles className="w-4 h-4 text-accent" />
+              <FileText className="w-4 h-4 text-accent" />
             </div>
             <div>
               <div className="font-medium text-sm text-foreground">Auto-attach to proposals & invoices</div>

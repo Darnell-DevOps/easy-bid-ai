@@ -176,7 +176,7 @@ export default function KickoffDashboard() {
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-1">
           <Rocket className="w-5 h-5 text-accent" />
-          <h1 className="text-2xl font-bold">Kickoff</h1>
+          <h1 className="cs-workspace-page-title">Kickoff</h1>
         </div>
         <p className="text-muted-foreground text-sm">Clients ready for or currently scheduling a kickoff call.</p>
       </div>

@@ -1,17 +1,6 @@
 import { Link as RouterLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import {
-  ArrowRight,
-  Calendar,
-  CheckCircle2,
-  CreditCard,
-  FileSignature,
-  FileText,
-  Rocket,
-  Sparkles,
-  Clock,
-  Activity,
-} from "lucide-react";
+import { ArrowRight, Calendar, CheckCircle2, CreditCard, FileSignature, FileText, Rocket, ClipboardList, Clock, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ProjectStage } from "./ProjectProgressTracker";
 
@@ -110,29 +99,27 @@ export default function ProjectOverview({
   progressPct,
 }: Props) {
   const firstName = clientName.split(" ")[0] || clientName;
-  const NextIcon = nextAction?.icon || Sparkles;
+  const NextIcon = nextAction?.icon || ClipboardList;
   const liveActivity = activity.slice(0, 3);
 
   return (
     <section className="space-y-4">
       {/* Welcome header — glass + animated progress */}
-      <div className="relative rounded-2xl border border-border/60 bg-card/70 backdrop-blur-xl p-5 sm:p-6 overflow-hidden shadow-[0_30px_80px_-30px_hsl(var(--accent)/0.35)]">
-        <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-purple/10 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-16 -left-16 w-56 h-56 rounded-full bg-accent/10 blur-3xl pointer-events-none" />
+      <div className="relative rounded-[var(--cs-radius-lg)] border border-border/60 bg-card p-5 sm:p-6 overflow-hidden">
         <div className="relative flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-[10px] uppercase tracking-[0.25em] text-purple font-semibold mb-2 flex items-center gap-2">
-              <Sparkles className="w-3 h-3" />
+              <ClipboardList className="w-3 h-3" />
               Project Hub · {stageLabel}
             </p>
             <h1 className="type-page-title text-foreground mb-1">
-              Welcome back, <span className="bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent">{firstName}</span>
+              Welcome back, <span className="text-foreground">{firstName}</span>
             </h1>
             <p className="text-sm text-muted-foreground truncate">{projectName}</p>
           </div>
           <div className="text-right">
             <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-semibold mb-1">Progress</p>
-            <p className="text-2xl sm:text-3xl font-bold tabular-nums bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent">
+            <p className="text-2xl sm:text-3xl font-semibold tabular-nums text-foreground">
               {progressPct}%
             </p>
           </div>
@@ -147,7 +134,7 @@ export default function ProjectOverview({
           className="relative mt-5 h-1.5 w-full rounded-full bg-muted/40 overflow-hidden"
         >
           <div
-            className="h-full bg-gradient-to-r from-accent via-purple to-accent rounded-full transition-all duration-700 ease-out shadow-[0_0_20px_hsl(var(--accent)/0.6)]"
+            className="h-full bg-primary rounded-full transition-[width] duration-700 ease-out"
             style={{ width: `${progressPct}%` }}
           />
         </div>

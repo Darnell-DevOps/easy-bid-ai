@@ -250,8 +250,8 @@ function PricingDecision({
   return (
     <section id="pricing" className={`concept-pricing${quiet ? " concept-pricing-quiet" : ""}`}>
       <div className="concept-pricing-copy">
-        <h2>Start simply. Upgrade when the workflow earns it.</h2>
-        <p>Try the proposal workflow free, then move to Pro when you want the complete client-closing system.</p>
+        <h2>Start with proposals. Connect the rest when you're ready.</h2>
+        <p>Use Free to prepare your first proposals, then choose Pro for the close-to-kickoff workflow.</p>
       </div>
       <div className="concept-plan concept-plan-free">
         <div>
@@ -288,20 +288,28 @@ function PricingDecision({
 
 function ConceptFooter({
   inverse = false,
+  includeLegal = false,
   onStartFree,
 }: {
   inverse?: boolean;
+  includeLegal?: boolean;
   onStartFree?: () => void;
 }) {
   return (
-    <footer className={`concept-footer${inverse ? " concept-footer-inverse" : ""}`}>
+    <footer className={`concept-footer${inverse ? " concept-footer-inverse" : ""}${includeLegal ? " concept-footer-with-legal" : ""}`}>
       <Brand inverse={inverse} />
-      <p>CloseSync AI is part of StriveSync.</p>
+      <p>CloseSync AI</p>
       <nav aria-label="Footer navigation">
         <Link to="/sample">Sample proposal</Link>
         <Link to="/login">Sign in</Link>
         <Link to="/signup" onClick={onStartFree}>Start free</Link>
       </nav>
+      {includeLegal ? (
+        <nav className="concept-footer-legal" aria-label="Legal information">
+          <Link to="/terms">Terms of Service</Link>
+          <Link to="/privacy">Privacy Policy</Link>
+        </nav>
+      ) : null}
     </footer>
   );
 }
@@ -429,7 +437,7 @@ function SystemMap() {
         <p>From first enquiry to ongoing work, every client step stays connected.</p>
       </header>
       <div className="system-map-body">
-        <ol aria-label="Client workflow stages">
+        <ol aria-label="Client workflow stages" tabIndex={0}>
           {stages.map((stage) => {
             const Icon = stage.icon;
             const active = stage.state === "Active";
@@ -485,6 +493,25 @@ function SystemMap() {
           </div>
         </section>
       </div>
+      <section className="system-map-ai" aria-labelledby="system-map-ai-title">
+        <div className="system-map-ai-copy">
+          <Sparkles aria-hidden="true" />
+          <div>
+            <h3 id="system-map-ai-title">Responsible AI, inside the workflow.</h3>
+            <p>
+              AI can draft, summarise and flag what needs attention. You stay in control, with important actions
+              reviewable before they move forward.
+            </p>
+          </div>
+        </div>
+        <div className="system-map-ai-sequence" aria-label="AI assistance sequence">
+          <span>Brief received</span>
+          <ArrowRight aria-hidden="true" />
+          <span>Draft prepared</span>
+          <ArrowRight aria-hidden="true" />
+          <span>Human review</span>
+        </div>
+      </section>
       <footer>
         <span>Illustrative product data</span>
         <span>Completed stages remain attached to the client record.</span>
@@ -505,24 +532,24 @@ export function WorkflowSystemLanding({
         <section className="system-hero">
           <div className="system-hero-intro">
             <div className="system-hero-heading">
-              <h1>Turn every enquiry into a clear path to payment.</h1>
+              <h1>From first enquiry to signed, paid and ready to start.</h1>
             </div>
             <div className="system-hero-copy">
               <p>
-                Keep leads, proposals, contracts, payments and onboarding connected, so you can respond faster and begin
-                work with complete client context.
+                CloseSync AI is the close-to-kickoff workspace for freelancers, consultants and small agencies.
+                Keep the brief, proposal, agreement, payment and onboarding linked to one client record.
               </p>
               <ConceptActions showSecondary={false} onStartFree={() => onStartFree?.("hero")} />
+              <p className="system-trust-line">Create a Free account without entering card details.</p>
             </div>
           </div>
           <SystemMap />
-          <p className="system-trust-line">Create a Free account without entering card details.</p>
         </section>
 
         <section className="system-assurances" aria-labelledby="system-assurances-title">
           <div className="system-assurances-copy">
-            <h2 id="system-assurances-title">Know what happens at every commercial step.</h2>
-            <p>The product, pricing and review points stay explicit from the outset.</p>
+            <h2 id="system-assurances-title">Built for the handoff after “yes”.</h2>
+            <p>A proposal is only one step. Keep the agreement, payment and start of work in view.</p>
           </div>
           <dl className="system-assurance-list">
             <div>
@@ -535,7 +562,7 @@ export function WorkflowSystemLanding({
             </div>
             <div>
               <dt>Human review</dt>
-              <dd>AI prepares drafts and summaries. You review important actions before they move forward.</dd>
+              <dd>AI helps prepare drafts and summaries. You decide what to send.</dd>
             </div>
             <div>
               <dt>Clear pricing</dt>
@@ -547,7 +574,7 @@ export function WorkflowSystemLanding({
         <section className="system-problem" aria-labelledby="system-problem-title">
           <div className="system-problem-inner">
             <div className="system-problem-copy">
-              <h2 id="system-problem-title">Disconnected tools turn simple handoffs into avoidable work.</h2>
+              <h2 id="system-problem-title">The gap between “interested” and “ready to start” creates avoidable work.</h2>
               <p>
                 Lead details live in one place, approvals in another, and onboarding starts without the decisions that
                 came before. Every handoff creates another chance to lose context or miss the next action.
@@ -561,7 +588,7 @@ export function WorkflowSystemLanding({
 
         <section id="product" className="system-capabilities" aria-labelledby="system-capabilities-title">
           <div className="system-section-intro">
-            <h2 id="system-capabilities-title">Three moments. One connected workflow.</h2>
+            <h2 id="system-capabilities-title">One client record from enquiry to kickoff.</h2>
             <p>
               CloseSync keeps the client record intact while you understand the opportunity, reach agreement and
               begin delivery.
@@ -581,27 +608,9 @@ export function WorkflowSystemLanding({
           </div>
         </section>
 
-        <section className="system-ai">
-          <div className="system-ai-copy">
-            <Sparkles aria-hidden="true" />
-            <h2>Responsible AI, inside the workflow.</h2>
-            <p>
-              AI can draft, summarise and flag what needs attention. You stay in control, with important actions
-              reviewable before they move forward.
-            </p>
-          </div>
-          <div className="system-ai-sequence" aria-label="AI assistance sequence">
-            <span>Brief received</span>
-            <ArrowRight aria-hidden="true" />
-            <span>Draft prepared</span>
-            <ArrowRight aria-hidden="true" />
-            <span>Human review</span>
-          </div>
-        </section>
-
         <PricingDecision onStartFree={onStartFree} />
       </main>
-      <ConceptFooter onStartFree={() => onStartFree?.("footer")} />
+      <ConceptFooter includeLegal onStartFree={() => onStartFree?.("footer")} />
     </div>
   );
 }

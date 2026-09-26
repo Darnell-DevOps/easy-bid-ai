@@ -1,17 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Mail,
-  Gauge,
-  Bot,
-  Send,
-  ClipboardList,
-  FileText,
-  Ban,
-  ArrowRight,
-  Inbox,
-} from "lucide-react";
+import { Mail, Gauge, FilePenLine, Send, ClipboardList, FileText, Ban, ArrowRight, Inbox } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { LeadActivityType } from "@/lib/lead-activity";
 
@@ -38,7 +28,7 @@ function timeAgo(iso: string) {
 const ICONS: Record<LeadActivityType, { icon: typeof Mail; accent: string }> = {
   lead_email_received: { icon: Mail, accent: "text-blue-500" },
   lead_qualified: { icon: Gauge, accent: "text-amber-500" },
-  reply_drafted: { icon: Bot, accent: "text-purple-500" },
+  reply_drafted: { icon: FilePenLine, accent: "text-purple-500" },
   reply_sent: { icon: Send, accent: "text-emerald-500" },
   intake_form_sent: { icon: ClipboardList, accent: "text-cyan-500" },
   proposal_created_from_lead: { icon: FileText, accent: "text-accent" },

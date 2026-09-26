@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, TrendingUp, AlertTriangle, Target } from "lucide-react";
+import { ClipboardList, TrendingUp, AlertTriangle, Target } from "lucide-react";
 import { useAIInsight } from "@/hooks/use-ai-insight";
 
 export default function WeeklyBriefingCard() {
@@ -45,7 +45,7 @@ export default function WeeklyBriefingCard() {
           aria-live="polite"
           aria-atomic="true"
         >
-          <Sparkles className="w-4 h-4 text-primary" aria-hidden="true" />
+          <ClipboardList className="w-4 h-4 text-primary" aria-hidden="true" />
           Loading weekly briefing…
         </CardContent>
       </Card>
@@ -57,7 +57,7 @@ export default function WeeklyBriefingCard() {
       <Card className="border-border/60 bg-card overflow-hidden">
         <CardContent className="p-5 space-y-3">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-primary" aria-hidden="true" />
+            <ClipboardList className="w-4 h-4 text-primary" aria-hidden="true" />
             <h2 className="text-xs uppercase tracking-wide font-semibold text-muted-foreground">
               Weekly Briefing
             </h2>
@@ -94,7 +94,7 @@ export default function WeeklyBriefingCard() {
           {statusMessage}
         </div>
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-primary" aria-hidden="true" />
+          <ClipboardList className="w-4 h-4 text-primary" aria-hidden="true" />
           <h2
             id="weekly-briefing-title"
             className="text-xs uppercase tracking-wide font-semibold text-muted-foreground"

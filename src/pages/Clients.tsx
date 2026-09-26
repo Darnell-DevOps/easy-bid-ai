@@ -23,9 +23,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Users, Plus, Search, Sparkles, Lightbulb, Activity, ArrowRight, Eye, UserCheck } from "lucide-react";
+import { Users, Plus, Search, FilePlus2, Lightbulb, Activity, ArrowRight, Eye, UserCheck } from "lucide-react";
 import { WhatsAppButton } from "@/components/whatsapp/WhatsAppButton";
 import { AccessibleLoadingState } from "@/components/ui/accessible-loading-state";
+import { clientListAction } from "@/lib/client-list-action";
 
 interface Client {
   id: string;
@@ -44,6 +45,11 @@ interface Client {
   lead_quality: string | null;
   lead_source: string | null;
   ai_recommendation: string | null;
+}
+
+interface ClientProposal {
+  id: string;
+  status: string;
 }
 
 const qualityBadgeStyle = (q: string | null) => {
@@ -93,21 +99,59 @@ const timeAgo = (date: string) => {
 export default function Clients() {
   const navigate = useNavigate();
   const [clients, setClients] = useState<Client[]>([]);
+  const [proposalsByClient, setProposalsByClient] = useState<Record<string, ClientProposal>>({});
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [proposalLookupFailed, setProposalLookupFailed] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
 
   useEffect(() => {
+    let cancelled = false;
     const fetch = async () => {
-      const { data } = await supabase
-        .from("clients")
-        .select("*")
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false });
-      setClients((data as Client[]) || []);
-      setLoading(false);
+      try {
+        const { data, error } = await supabase
+          .from("clients")
+          .select("*")
+          .is("deleted_at", null)
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        const nextClients = (data as Client[]) || [];
+        if (!cancelled) setClients(nextClients);
+
+        if (nextClients.length > 0) {
+          try {
+            const nextProposals: Record<string, ClientProposal> = {};
+            const clientIds = nextClients.map((client) => client.id);
+            for (let offset = 0; ; offset += 1000) {
+              const { data: proposalRows, error: proposalError } = await supabase
+                .from("proposals")
+                .select("id, client_id, status, created_at")
+                .in("client_id", clientIds)
+                .is("deleted_at", null)
+                .order("created_at", { ascending: false })
+                .range(offset, offset + 999);
+              if (proposalError) throw proposalError;
+              for (const proposal of proposalRows || []) {
+                if (proposal.client_id && !nextProposals[proposal.client_id]) {
+                  nextProposals[proposal.client_id] = { id: proposal.id, status: proposal.status };
+                }
+              }
+              if ((proposalRows?.length || 0) < 1000) break;
+            }
+            if (!cancelled) setProposalsByClient(nextProposals);
+          } catch {
+            if (!cancelled) setProposalLookupFailed(true);
+          }
+        }
+      } catch {
+        if (!cancelled) setLoadError("Couldn't load clients. Reload this page to try again.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     };
-    fetch();
+    void fetch();
+    return () => { cancelled = true; };
   }, []);
 
   const filtered = useMemo(() => {
@@ -125,23 +169,30 @@ export default function Clients() {
 
   // Best candidate for "Create Proposal" CTA on the banner
   const topCandidate = useMemo(() => {
-    if (clients.length === 0) return null;
+    if (clients.length === 0 || proposalLookupFailed) return null;
+    const eligible = clients.filter((client) => clientListAction(client, proposalsByClient[client.id]) === "Create Proposal");
     return (
-      clients.find((c) => c.lead_quality === "High" && c.status !== "Won" && c.status !== "Lost") ||
-      clients.find((c) => c.status === "Qualified") ||
-      clients.find((c) => c.status === "New") ||
+      eligible.find((c) => c.lead_quality === "High") ||
+      eligible.find((c) => c.status === "Qualified") ||
+      eligible.find((c) => c.status === "New") ||
       null
     );
-  }, [clients]);
+  }, [clients, proposalsByClient, proposalLookupFailed]);
+
+  const draftCandidate = useMemo(() => clients
+    .map((client) => proposalsByClient[client.id])
+    .find((proposal) => proposal?.status === "draft"), [clients, proposalsByClient]);
 
   // Dynamic insight based on data
   const insight = useMemo(() => {
     if (clients.length === 0) return null;
-    const readyForProposal = clients.filter(
+    if (proposalLookupFailed) return "Proposal status is unavailable. Open a client to check the next step.";
+    const eligible = clients.filter((client) => clientListAction(client, proposalsByClient[client.id]) === "Create Proposal");
+    const readyForProposal = eligible.filter(
       (c) => c.status === "Qualified" || c.status === "New",
     ).length;
-    const highQuality = clients.filter((c) => c.lead_quality === "High").length;
-    const lowQuality = clients.filter((c) => c.lead_quality === "Low").length;
+    const highQuality = eligible.filter((c) => c.lead_quality === "High").length;
+    const lowQuality = clients.filter((c) => clientListAction(c, proposalsByClient[c.id]) === "Qualify Lead").length;
 
     if (highQuality > 0) {
       return `${highQuality} high-quality ${highQuality === 1 ? "lead" : "leads"} ready for a proposal — send one to get paid`;
@@ -149,11 +200,12 @@ export default function Clients() {
     if (readyForProposal > 0) {
       return `${readyForProposal} ${readyForProposal === 1 ? "client" : "clients"} ready for a proposal — send one to get paid`;
     }
+    if (draftCandidate) return "A proposal draft is ready to review and send.";
     if (lowQuality > 0) {
       return `${lowQuality} low-quality ${lowQuality === 1 ? "lead" : "leads"} detected — focus on qualified ones first`;
     }
-    return "Select a client to create a proposal and get paid faster";
-  }, [clients]);
+    return "Open a client to see the next step in their work.";
+  }, [clients, proposalsByClient, proposalLookupFailed, draftCandidate]);
 
   const goGenerate = (c: Client, e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -182,7 +234,7 @@ export default function Clients() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="cs-workspace-page-title text-foreground">
               Clients{!loading && clients.length > 0 && (
                 <span className="text-muted-foreground font-medium"> ({clients.length})</span>
               )}
@@ -194,7 +246,7 @@ export default function Clients() {
           <Button
             onClick={() => navigate("/dashboard/clients/new")}
             size="lg"
-            className="gap-2 h-12 px-6 text-base bg-accent text-accent-foreground hover:bg-accent/90"
+            className="gap-2 h-12 px-6 text-base bg-primary text-primary-foreground hover:bg-primary/90"
           >
             <Plus className="w-5 h-5" />
             Add New Client
@@ -210,14 +262,14 @@ export default function Clients() {
               </div>
               <p className="text-sm text-foreground/90 truncate">{insight}</p>
             </div>
-            {topCandidate && (
+            {(topCandidate || draftCandidate) && !proposalLookupFailed && (
               <Button
                 size="sm"
-                onClick={() => goGenerate(topCandidate)}
-                className="gap-1.5 bg-accent text-accent-foreground hover:bg-accent/90 shadow-sm shadow-accent/20 flex-shrink-0"
+                onClick={() => topCandidate ? goGenerate(topCandidate) : navigate(`/dashboard/proposal/${draftCandidate?.id}`)}
+                className="gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90  flex-shrink-0"
               >
-                <Sparkles className="w-3.5 h-3.5" />
-                Create Proposal
+                <FilePlus2 className="w-3.5 h-3.5" />
+                {topCandidate ? "Create Proposal" : "Review Draft"}
               </Button>
             )}
           </div>
@@ -261,6 +313,8 @@ export default function Clients() {
               ))}
             </div>
           </>
+        ) : loadError ? (
+          <p role="alert" className="text-sm text-destructive">{loadError}</p>
         ) : clients.length === 0 ? (
           <Card className="border-dashed">
             <CardContent className="p-12 text-center">
@@ -276,7 +330,7 @@ export default function Clients() {
               <Button
                 onClick={() => navigate("/dashboard/clients/new")}
                 size="lg"
-                className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
               >
                 <Plus className="w-4 h-4" /> Add Client
               </Button>
@@ -308,23 +362,23 @@ export default function Clients() {
                   {filtered.map((c) => {
                     const subtext = c.service_requested || "No service selected";
                     // Contextual row action
-                    let actionLabel = "Create Proposal";
-                    let ActionIcon = Sparkles;
+                    const proposal = proposalsByClient[c.id];
+                    const actionLabel = proposalLookupFailed ? "View Client" : clientListAction(c, proposal);
+                    let ActionIcon = FilePlus2;
                     let onAction = (e: React.MouseEvent) => goGenerate(c, e);
-                    if (c.lead_quality === "Low") {
-                      actionLabel = "Qualify Lead";
+                    if (actionLabel === "Review Draft" && proposal) {
+                      ActionIcon = Eye;
+                      onAction = (e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        navigate(`/dashboard/proposal/${proposal.id}`);
+                      };
+                    } else if (actionLabel === "Qualify Lead" || actionLabel === "View Client") {
                       ActionIcon = UserCheck;
                       onAction = (e: React.MouseEvent) => {
                         e.stopPropagation();
                         navigate(`/dashboard/clients/${c.id}`);
                       };
-                    } else if (c.status === "Won" || c.status === "Proposal Sent") {
-                      actionLabel = "View Client";
-                      ActionIcon = Eye;
-                      onAction = (e: React.MouseEvent) => {
-                        e.stopPropagation();
-                        navigate(`/dashboard/clients/${c.id}`);
-                      };
+                      if (actionLabel === "View Client") ActionIcon = Eye;
                     }
                     const isPrimary = actionLabel === "Create Proposal";
                     return (
@@ -382,7 +436,7 @@ export default function Clients() {
                               onClick={onAction}
                               className={
                                 isPrimary
-                                  ? "gap-1.5 bg-accent text-accent-foreground hover:bg-accent/90 shadow-sm shadow-accent/20"
+                                  ? "gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 "
                                   : "gap-1.5"
                               }
                             >

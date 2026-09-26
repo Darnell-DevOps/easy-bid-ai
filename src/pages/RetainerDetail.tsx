@@ -306,7 +306,7 @@ export default function RetainerDetail() {
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div className="space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+              <h1 className="cs-workspace-page-title text-foreground">
                 {retainer.client_name}
               </h1>
               <Badge variant="outline" className={`capitalize ${statusBadgeClasses(retainer.status)}`}>
@@ -333,7 +333,7 @@ export default function RetainerDetail() {
               <Button
                 size="sm"
                 onClick={activate}
-                className="gap-1.5 bg-accent text-accent-foreground hover:bg-accent/90"
+                className="gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 <Play className="w-3.5 h-3.5" /> {isCancelled ? "Reactivate" : "Activate"}
               </Button>

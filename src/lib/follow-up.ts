@@ -15,6 +15,11 @@ export interface FollowUpInput {
   paid_at?: string | null;
 }
 
+export function canSendFollowUp(p: FollowUpInput): boolean {
+  const status = (p.status || "").toLowerCase();
+  return !p.client_paid && ["sent", "viewed", "accepted"].includes(status);
+}
+
 const HOUR = 60 * 60 * 1000;
 
 function hoursSince(iso?: string | null): number {

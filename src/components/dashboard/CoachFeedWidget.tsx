@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, RefreshCw, Loader2, TrendingUp, AlertTriangle, Target } from "lucide-react";
+import { MessagesSquare, RefreshCw, Loader2, TrendingUp, AlertTriangle, Target } from "lucide-react";
 import { useAIInsight } from "@/hooks/use-ai-insight";
 import { severityStyles } from "@/lib/ai-coach";
 
@@ -17,9 +17,9 @@ const CATEGORY_ICONS: Record<string, typeof Target> = {
   follow_up: Target,
   pricing: TrendingUp,
   churn: AlertTriangle,
-  lead: Sparkles,
+  lead: MessagesSquare,
   retainer: TrendingUp,
-  opportunity: Sparkles,
+  opportunity: MessagesSquare,
   habit: Target,
 };
 
@@ -72,7 +72,7 @@ export default function CoachFeedWidget() {
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center">
-              <Sparkles aria-hidden="true" className="w-4 h-4 text-primary" />
+              <MessagesSquare aria-hidden="true" className="w-4 h-4 text-primary" />
             </div>
             <div>
               <h2 className="text-xl font-semibold flex items-center gap-2">
@@ -126,7 +126,7 @@ export default function CoachFeedWidget() {
         {!loading && actions.length === 0 && !generating && !error && (
           <div className="text-center py-6 space-y-2">
             <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center mx-auto">
-              <Sparkles aria-hidden="true" className="w-4 h-4 text-primary" />
+              <MessagesSquare aria-hidden="true" className="w-4 h-4 text-primary" />
             </div>
             <p className="text-sm font-semibold text-foreground">Your AI coach is ready</p>
             <p className="text-xs text-muted-foreground max-w-[280px] mx-auto leading-relaxed">
@@ -138,7 +138,7 @@ export default function CoachFeedWidget() {
         <div role="list" aria-label="AI Sales Coach recommendations" className="space-y-2">
           {actions.map((a, i) => {
             const styles = severityStyles(a.severity);
-            const Icon = CATEGORY_ICONS[a.category] || Sparkles;
+            const Icon = CATEGORY_ICONS[a.category] || MessagesSquare;
             return (
               <div
                 key={i}

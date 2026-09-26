@@ -92,7 +92,7 @@ export default function OnboardingDashboard() {
       <div className="space-y-6">
         <div className="flex items-end justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <h1 className="cs-workspace-page-title text-foreground flex items-center gap-2">
               <ClipboardList className="w-6 h-6 text-purple" />
               Client Onboarding
             </h1>

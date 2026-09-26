@@ -103,16 +103,16 @@ describe("landing page design concepts", () => {
 
   it("gives the selected concept a deliberate proof-to-conversion reading order", () => {
     expect(page).toMatch(
-      /className="system-hero"[\s\S]*className="system-assurances"[\s\S]*className="system-problem"[\s\S]*className="system-capabilities"[\s\S]*className="system-ai"[\s\S]*<PricingDecision onStartFree={onStartFree} \/>/,
+      /className="system-hero"[\s\S]*className="system-assurances"[\s\S]*className="system-problem"[\s\S]*className="system-capabilities"[\s\S]*<PricingDecision onStartFree={onStartFree} \/>/,
     );
     expect(page).toContain("Designed first for UK freelancers, consultants and small agencies.");
     expect(page).toContain("Paddle handles checkout.");
-    expect(page).toContain("You review important actions before they move forward.");
+    expect(page).toContain("You decide what to send.");
     expect(page).toContain("Free is £0. Pro is £29 per month.");
     expect(page).toContain("Two proposals each month");
     expect(page).not.toContain("Start 7-day trial");
-    expect(page).toContain("Disconnected tools turn simple handoffs into avoidable work.");
-    expect(page).toContain("Three moments. One connected workflow.");
+    expect(page).toContain("The gap between “interested” and “ready to start” creates avoidable work.");
+    expect(page).toContain("One client record from enquiry to kickoff.");
     expect(page).toContain("Responsible AI, inside the workflow.");
     expect(page).not.toContain("system-record-proof");
     expect(page).not.toContain("system-final-cta");

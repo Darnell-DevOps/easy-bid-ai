@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { ChevronDown, ChevronUp, Trash2, Plus, Sparkles, GripVertical } from "lucide-react";
+import { ChevronDown, ChevronUp, Trash2, Plus, ListChecks, GripVertical } from "lucide-react";
 import {
   ALL_FIELD_TYPES, FIELD_TYPE_LABELS, newFieldId,
   type SmartField, type ConditionOperator,
@@ -70,7 +70,7 @@ export default function FieldListEditor({ fields, onChange, context = "onboardin
         <h2 className="text-sm font-medium">Form fields ({fields.length})</h2>
         <div className="flex gap-2">
           <Button type="button" size="sm" variant="outline" onClick={() => setAiOpen(true)} className="gap-1.5">
-            <Sparkles aria-hidden="true" className="w-3.5 h-3.5" />
+            <ListChecks aria-hidden="true" className="w-3.5 h-3.5" />
             Generate with AI
           </Button>
           <Button type="button" size="sm" variant="outline" onClick={add} className="gap-1.5">

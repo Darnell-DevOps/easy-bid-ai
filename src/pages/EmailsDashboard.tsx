@@ -165,7 +165,7 @@ export default function EmailsDashboard() {
       <div className="space-y-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <h1 className="cs-workspace-page-title text-foreground flex items-center gap-2">
               <Mail className="w-6 h-6 text-accent" aria-hidden="true" /> Emails
             </h1>
             <p className="text-sm text-muted-foreground mt-1">

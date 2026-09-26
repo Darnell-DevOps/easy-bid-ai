@@ -1,4 +1,4 @@
-import { Sparkles } from "lucide-react";
+import { Gauge } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { scoreBg, scoreColor, scoreLabel } from "@/lib/ai-coach";
 import { cn } from "@/lib/utils";
@@ -41,7 +41,7 @@ export default function LeadScoreBadge({
         )}
         title="AI scoring this lead..."
       >
-        <Sparkles className="w-3 h-3" />
+        <Gauge className="w-3 h-3" />
         Scoring
       </span>
     );
@@ -61,7 +61,7 @@ export default function LeadScoreBadge({
               size === "md" && "px-2.5 py-1 text-sm",
             )}
           >
-            <Sparkles className="w-3 h-3" />
+            <Gauge className="w-3 h-3" />
             {fitScore} · {scoreLabel(fitScore)}
           </span>
         </TooltipTrigger>

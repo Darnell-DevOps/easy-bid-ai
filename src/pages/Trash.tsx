@@ -168,7 +168,7 @@ export default function Trash() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+          <h1 className="cs-workspace-page-title text-foreground flex items-center gap-2">
             <Trash2 className="w-6 h-6 text-muted-foreground" />
             Trash
           </h1>

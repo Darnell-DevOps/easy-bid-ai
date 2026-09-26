@@ -40,7 +40,7 @@ describe("New Policy form accessibility", () => {
     expect(source).toContain("aria-busy={loading}");
     expect(source).toContain('<ArrowLeft aria-hidden="true"');
     expect(source).toContain('<AlertTriangle aria-hidden="true"');
-    expect(source).toContain('<Sparkles aria-hidden="true"');
+    expect(source).toContain('<FileText aria-hidden="true"');
   });
 
   it("preserves the policy generation and persistence flow", () => {

@@ -64,6 +64,11 @@ Deno.serve(async (req) => {
   if (pErr || !proposal) return json({ error: "proposal_not_found" }, 404);
   if (proposal.user_id !== userId) return json({ error: "forbidden" }, 403);
 
+  const status = String(proposal.status || "").toLowerCase();
+  if (proposal.client_paid || !["sent", "viewed", "accepted"].includes(status)) {
+    return json({ error: "proposal_not_follow_up_eligible" }, 409);
+  }
+
   // Pick scenario: explicit override or derived from timestamps. If override
   // is "none" or derived is "none", fall back to a generic nudge so the user
   // can always send a manual follow-up.

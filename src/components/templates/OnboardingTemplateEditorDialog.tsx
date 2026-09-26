@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, ClipboardList } from "lucide-react";
 import AiGenerateFieldsDialog from "@/components/forms/AiGenerateFieldsDialog";
 import type { SmartField } from "@/lib/form-fields";
 import { supabase } from "@/integrations/supabase/client";
@@ -250,7 +250,7 @@ export default function OnboardingTemplateEditorDialog({
                 onClick={() => setAiOpen(true)}
                 className="gap-1.5 h-7 text-xs"
               >
-                <Sparkles className="w-3 h-3" aria-hidden="true" /> Generate with AI
+                <ClipboardList className="w-3 h-3" aria-hidden="true" /> Generate with AI
               </Button>
             </div>
             <p id="ot-questions-help" className="text-[11px] text-muted-foreground">

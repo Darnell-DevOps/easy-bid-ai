@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Check, Sparkles, X, ArrowRight, UserPlus, FileText, Send, CreditCard, CalendarCheck } from "lucide-react";
+import { Check, ListChecks, X, ArrowRight, UserPlus, FileText, Send, CreditCard, CalendarCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -129,7 +129,7 @@ export default function ActivationChecklist() {
   const pct = Math.round((completed / total) * 100);
 
   return (
-    <div className="relative rounded-xl border border-accent/25 bg-accent/[0.05] p-4 sm:p-5">
+    <div className="cs-activation-panel relative rounded-xl border border-accent/25 bg-accent/[0.05] p-4 sm:p-5">
       <button
         onClick={dismiss}
         aria-label="Dismiss activation checklist"
@@ -140,7 +140,7 @@ export default function ActivationChecklist() {
 
       <div className="flex items-start gap-3 pr-6">
         <div className="w-9 h-9 rounded-lg bg-accent/20 text-accent flex items-center justify-center flex-shrink-0">
-          <Sparkles className="w-4 h-4" />
+          <ListChecks className="w-4 h-4" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -161,13 +161,13 @@ export default function ActivationChecklist() {
 
           {next && (
             <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-background/40 px-3 py-2">
-              <div className="flex items-center gap-2.5 min-w-0">
+              <div className="flex items-center gap-2.5 min-w-0 w-full">
                 <next.icon className="w-4 h-4 text-accent shrink-0" />
                 <div className="min-w-0">
                   <p className="text-xs font-semibold text-foreground truncate">
                     Next: {next.label}
                   </p>
-                  <p className="text-[11px] text-muted-foreground line-clamp-2 sm:truncate">{next.description}</p>
+                  <p className="text-[11px] text-muted-foreground break-words">{next.description}</p>
                 </div>
               </div>
               <Button asChild size="sm" className="h-7 px-2.5 text-xs gap-1 shrink-0">

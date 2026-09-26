@@ -25,33 +25,7 @@ import DataExportsSettings from "@/components/settings/DataExportsSettings";
 import BusinessInformationSettings from "@/components/settings/BusinessInformationSettings";
 import DomainSettings from "@/components/settings/DomainSettings";
 import { KickoffBookingUrlCard } from "@/components/settings/KickoffBookingUrlCard";
-import {
-  User,
-  Palette,
-  Building2,
-  Mail,
-  Inbox,
-  Calendar,
-  CreditCard,
-  FileText,
-  FileSignature,
-  Globe,
-  Bell,
-  Zap,
-  Sparkles,
-  Plug,
-  Shield,
-  Receipt,
-  Database,
-  KeyRound,
-  Sun,
-  Moon,
-  Lock,
-  LifeBuoy,
-  ExternalLink,
-  ChevronRight,
-  Search,
-} from "lucide-react";
+import { User, Palette, Building2, Mail, Inbox, Calendar, CreditCard, FileText, FileSignature, Globe, Bell, Zap, SlidersHorizontal, Plug, Shield, Receipt, Database, KeyRound, Sun, Moon, Lock, LifeBuoy, ExternalLink, ChevronRight, Search } from "lucide-react";
 
 type SectionId =
   | "profile"
@@ -112,11 +86,11 @@ const SECTION_GROUPS: SectionGroup[] = [
     label: "Advanced",
     items: [
       { id: "automations", label: "Automations", icon: Zap, description: "Follow-ups, reminders and triggers" },
-      { id: "ai", label: "AI Preferences", icon: Sparkles, description: "Tone, model and assistant behaviour" },
+      { id: "ai", label: "AI Preferences", icon: SlidersHorizontal, description: "Tone, model and assistant behaviour" },
       { id: "lead-assistant", label: "Lead Assistant", icon: Inbox, description: "Voice, signature, booking link and auto-send rules" },
       { id: "integrations", label: "Integrations", icon: Plug, description: "Third-party connections" },
       { id: "connected-apps", label: "Connected Apps", icon: KeyRound, description: "AI assistants authorised to access your account" },
-      { id: "data", label: "Data & Exports", icon: Database, description: "Export, import and delete your data" },
+      { id: "data", label: "Data & Exports", icon: Database, description: "Download workspace records and set Trash retention" },
     ],
   },
 ];
@@ -188,7 +162,7 @@ export default function SettingsPage() {
   return (
     <DashboardLayout>
       <div className="mb-6 md:mb-8">
-        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+        <h1 className="cs-workspace-page-title text-foreground">Settings</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Manage your account, workspace and product preferences
         </p>

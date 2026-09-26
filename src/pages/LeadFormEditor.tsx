@@ -97,7 +97,7 @@ export default function LeadFormEditor() {
     return (
       <DashboardLayout>
         <div className="text-center py-20">
-          <h1 className="type-page-title text-foreground">Form not found</h1>
+          <h1 className="cs-workspace-page-title text-foreground">Form not found</h1>
           <Button asChild variant="outline" className="mt-4"><Link to="/dashboard/lead-forms">Back</Link></Button>
         </div>
       </DashboardLayout>
@@ -115,7 +115,7 @@ export default function LeadFormEditor() {
               </Link>
             </Button>
             <div className="min-w-0">
-              <h1 className="type-section-title text-foreground truncate">{form.name}</h1>
+              <h1 className="cs-workspace-page-title text-foreground truncate">{form.name}</h1>
               <div className="text-xs text-muted-foreground flex items-center gap-2">
                 <span>/f/{form.slug}</span>
                 <Badge variant={form.is_active ? "default" : "secondary"} className="text-[10px]">{form.is_active ? "Live" : "Off"}</Badge>
@@ -276,7 +276,7 @@ export default function LeadFormEditor() {
                     <Button
                       disabled
                       size="lg"
-                      className="w-full gap-2 bg-accent text-accent-foreground font-semibold h-12"
+                      className="w-full gap-2 bg-primary text-primary-foreground font-semibold h-12"
                     >
                       <Send aria-hidden="true" className="w-4 h-4" />
                       {form.submit_label || "Send Project Details"}

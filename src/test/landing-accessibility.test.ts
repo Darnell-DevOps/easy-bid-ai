@@ -46,7 +46,7 @@ describe("landing page accessibility", () => {
 
   it("exposes the client preview as a labelled workflow with a current step", () => {
     expect(workflow).toContain('aria-labelledby="system-map-title"');
-    expect(workflow).toContain('<ol aria-label="Client workflow stages">');
+    expect(workflow).toContain('<ol aria-label="Client workflow stages" tabIndex={0}>');
     expect(workflow).toContain('aria-current={active ? "step" : undefined}');
     expect(workflow).toContain('aria-labelledby="system-active-stage-title"');
   });

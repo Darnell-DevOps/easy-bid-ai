@@ -5,33 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Sparkles,
-  MessageSquare,
-  Send,
-  Pencil,
-  Copy,
-  Check,
-  Loader2,
-  ClipboardList,
-  FileText,
-  Ban,
-  Lightbulb,
-  AlertTriangle,
-  Gauge,
-  RefreshCw,
-  ChevronDown,
-  ChevronUp,
-  Mail,
-  Bot,
-  Inbox,
-  Building2,
-  Calendar,
-  DollarSign,
-  Clock,
-  ArrowRight,
-  Wand2,
-} from "lucide-react";
+import { ClipboardCheck, MessageSquare, Send, Pencil, Copy, Check, Loader2, ClipboardList, FileText, Ban, Lightbulb, AlertTriangle, Gauge, RefreshCw, ChevronDown, ChevronUp, Mail, FilePenLine, Inbox, Building2, Calendar, DollarSign, Clock, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import LeadScoreBadge from "@/components/ai/LeadScoreBadge";
 import { toast } from "@/hooks/use-toast";
@@ -111,7 +85,7 @@ function timeAgo(iso: string) {
 const ACTIVITY_META: Record<LeadActivityType, { icon: any; accent: string }> = {
   lead_email_received: { icon: Mail, accent: "text-blue-500" },
   lead_qualified: { icon: Gauge, accent: "text-amber-500" },
-  reply_drafted: { icon: Bot, accent: "text-purple-500" },
+  reply_drafted: { icon: FilePenLine, accent: "text-purple-500" },
   reply_sent: { icon: Send, accent: "text-emerald-500" },
   intake_form_sent: { icon: ClipboardList, accent: "text-cyan-500" },
   proposal_created_from_lead: { icon: FileText, accent: "text-accent" },
@@ -369,13 +343,13 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
             : "border-border/60 bg-background/40";
 
   return (
-    <Card className="glass-card border-accent/20 overflow-hidden">
+    <Card className="border-border/60 overflow-hidden">
       <CardContent className="p-0">
         {/* Header + identity meta strip */}
         <div className="px-5 sm:px-6 pt-5 pb-4 border-b border-border/60">
           <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
-            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-accent" /> Lead insight
+            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <ClipboardCheck className="w-4 h-4 text-primary" /> Lead insight
             </h2>
             {client.lead_source && (
               <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 text-xs">
@@ -387,7 +361,7 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm">
             {client.service_requested && (
               <span className="inline-flex items-center gap-1.5 text-foreground">
-                <Sparkles className="w-3.5 h-3.5 text-accent" />
+                <ClipboardCheck className="w-3.5 h-3.5 text-primary" />
                 <span className="font-medium">{client.service_requested}</span>
               </span>
             )}
@@ -547,7 +521,7 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
             {client.goals?.trim() && (
               <div>
                 <span className="text-[11px] uppercase tracking-wider text-muted-foreground flex items-center gap-1 mb-2">
-                  <Sparkles className="w-3 h-3" /> Goals
+                  <ClipboardCheck className="w-3 h-3" /> Goals
                 </span>
                 <div className="rounded-lg bg-muted/40 border border-border/50 p-3 text-sm text-foreground whitespace-pre-wrap leading-relaxed">
                   {client.goals}
@@ -606,7 +580,7 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
           >
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-accent" />
+                <ClipboardCheck className="w-4 h-4 text-accent" />
                 <span className="text-sm font-semibold">AI suggested reply</span>
                 {client.lead_reply_sent_at ? (
                   <Badge variant="outline" className="text-[10px] bg-emerald-500/15 text-emerald-600 border-emerald-500/30 gap-1">
@@ -675,7 +649,7 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
             {!client.lead_reply_sent_at && (
               <div className="flex flex-wrap items-center gap-1.5 pt-1">
                 <span className="text-[11px] uppercase tracking-wider text-muted-foreground mr-1 inline-flex items-center gap-1">
-                  <Wand2 className="w-3 h-3" /> Adjust
+                  <Pencil className="w-3 h-3" /> Adjust
                 </span>
                 {(["regenerate", "shorter", "warmer", "more_professional"] as const).map((m) => (
                   <Button
@@ -691,7 +665,7 @@ export default function LeadInsightPanel(props: LeadInsightPanelProps) {
                     ) : m === "regenerate" ? (
                       <RefreshCw className="w-3 h-3" />
                     ) : (
-                      <Sparkles className="w-3 h-3" />
+                      <ClipboardCheck className="w-3 h-3" />
                     )}
                     {m === "regenerate" ? "Regenerate" : m === "shorter" ? "Shorter" : m === "warmer" ? "Warmer" : "More professional"}
                   </Button>

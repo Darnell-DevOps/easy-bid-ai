@@ -1,1065 +1,215 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { KeyRound, LogOut, Shield, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { performSignOut } from "@/lib/logout";
-import { isAppleRelayEmail } from "@/lib/apple-relay";
-import {
-  Eye,
-  EyeOff,
-  Shield,
-  ShieldCheck,
-  ShieldAlert,
-  KeyRound,
-  Smartphone,
-  Monitor,
-  LogOut,
-  AlertTriangle,
-  CheckCircle2,
-  XCircle,
-  Download,
-  ExternalLink,
-  Trash2,
-  History,
-  Bell,
-  Copy,
-  Loader2,
-} from "lucide-react";
-
-type AlertPrefs = {
-  newLogin: boolean;
-  newDevice: boolean;
-  passwordChanged: boolean;
-  settingsChanged: boolean;
-  methodEmail: boolean;
-  methodInApp: boolean;
-};
-
-const DEFAULT_ALERTS: AlertPrefs = {
-  newLogin: true,
-  newDevice: true,
-  passwordChanged: true,
-  settingsChanged: false,
-  methodEmail: true,
-  methodInApp: true,
-};
-
-function scorePassword(pw: string): { score: number; label: string; color: string } {
-  let s = 0;
-  if (pw.length >= 8) s++;
-  if (pw.length >= 12) s++;
-  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) s++;
-  if (/\d/.test(pw)) s++;
-  if (/[^A-Za-z0-9]/.test(pw)) s++;
-  const labels = ["Too short", "Weak", "Fair", "Good", "Strong", "Excellent"];
-  const colors = ["bg-destructive", "bg-destructive", "bg-amber-500", "bg-amber-500", "bg-emerald-500", "bg-emerald-500"];
-  return { score: s, label: labels[s], color: colors[s] };
-}
 
 export default function SecuritySettings() {
   const { toast } = useToast();
   const [email, setEmail] = useState("");
-  const [userCreatedAt, setUserCreatedAt] = useState<string | null>(null);
-  const [providers, setProviders] = useState<string[]>([]);
-  const [lastSignInAt, setLastSignInAt] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [factorId, setFactorId] = useState<string | null>(null);
+  const [loadingFactor, setLoadingFactor] = useState(true);
+  const [enrollment, setEnrollment] = useState<{ id: string; qr: string; secret: string } | null>(null);
+  const [code, setCode] = useState("");
+  const [mfaBusy, setMfaBusy] = useState(false);
+  const [disableOpen, setDisableOpen] = useState(false);
+  const [sessionsOpen, setSessionsOpen] = useState(false);
 
-  // password
-  const [currentPw, setCurrentPw] = useState("");
-  const [newPw, setNewPw] = useState("");
-  const [confirmPw, setConfirmPw] = useState("");
-  const [showCurrent, setShowCurrent] = useState(false);
-  const [showNew, setShowNew] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [savingPw, setSavingPw] = useState(false);
-
-  // 2FA (Supabase MFA / TOTP)
-  const [twoFAEnabled, setTwoFAEnabled] = useState(false);
-  const [twoFAFactorId, setTwoFAFactorId] = useState<string | null>(null);
-  const [twoFASetupAt, setTwoFASetupAt] = useState<string | null>(null);
-  const [twoFALoading, setTwoFALoading] = useState(true);
-  const [twoFADialog, setTwoFADialog] = useState(false);
-  const [enrollStep, setEnrollStep] = useState<"scan" | "verify" | "codes">("scan");
-  const [enrollFactorId, setEnrollFactorId] = useState<string | null>(null);
-  const [enrollQr, setEnrollQr] = useState<string | null>(null);
-  const [enrollSecret, setEnrollSecret] = useState<string | null>(null);
-  const [enrollCode, setEnrollCode] = useState("");
-  const [enrollBusy, setEnrollBusy] = useState(false);
-  const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
-  const [recoveryDialog, setRecoveryDialog] = useState(false);
-  const [disableDialog, setDisableDialog] = useState(false);
-
-  // alerts
-  const [alerts, setAlerts] = useState<AlertPrefs>(DEFAULT_ALERTS);
-
-  // delete account
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deletePw, setDeletePw] = useState("");
-  const [deleteConfirmText, setDeleteConfirmText] = useState("");
-
-  // sign-out-all
-  const [signOutAllOpen, setSignOutAllOpen] = useState(false);
-
-  const pwStrength = useMemo(() => scorePassword(newPw), [newPw]);
-
-  const refreshFactors = async () => {
-    setTwoFALoading(true);
+  const refreshFactor = useCallback(async () => {
+    setLoadingFactor(true);
     const { data, error } = await supabase.auth.mfa.listFactors();
     if (error) {
-      setTwoFALoading(false);
-      return;
-    }
-    const verified = (data?.totp || []).find((f: any) => f.status === "verified");
-    if (verified) {
-      setTwoFAEnabled(true);
-      setTwoFAFactorId(verified.id);
-      setTwoFASetupAt(verified.created_at || verified.updated_at || null);
+      toast({ title: "Couldn't check your authenticator", description: error.message, variant: "destructive" });
     } else {
-      setTwoFAEnabled(false);
-      setTwoFAFactorId(null);
-      setTwoFASetupAt(null);
-      // clean up any leftover unverified factors
-      for (const f of data?.totp || []) {
-        if (f.status !== "verified") {
-          await supabase.auth.mfa.unenroll({ factorId: f.id });
-        }
-      }
+      setFactorId(data.totp.find((factor) => factor.status === "verified")?.id ?? null);
     }
-    try {
-      const codesRaw = localStorage.getItem("security_2fa_codes");
-      if (codesRaw) setRecoveryCodes(JSON.parse(codesRaw));
-    } catch {}
-    setTwoFALoading(false);
-  };
+    setLoadingFactor(false);
+  }, [toast]);
 
   useEffect(() => {
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setEmail(user.email || "");
-        setUserCreatedAt(user.created_at || null);
-        const ids = (user.identities || []).map((i) => i.provider);
-        const primary = (user.app_metadata as { provider?: string } | undefined)?.provider;
-        const all = Array.from(new Set([...(primary ? [primary] : []), ...ids]));
-        setProviders(all.length ? all : ["email"]);
-        setLastSignInAt(user.last_sign_in_at || null);
-      }
+    void supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
+    void refreshFactor();
+  }, [refreshFactor]);
 
-      try {
-        const raw = localStorage.getItem("security_alert_prefs");
-        if (raw) setAlerts({ ...DEFAULT_ALERTS, ...JSON.parse(raw) });
-      } catch {}
-      await refreshFactors();
-    })();
-  }, []);
-
-  const updateAlerts = (patch: Partial<AlertPrefs>) => {
-    const next = { ...alerts, ...patch };
-    setAlerts(next);
-    localStorage.setItem("security_alert_prefs", JSON.stringify(next));
-  };
-
-  // Active sessions — current session only is reliable from the SDK.
-  const [currentSession, setCurrentSession] = useState<{ ua: string; lastActive: string } | null>(null);
-  useEffect(() => {
-    setCurrentSession({
-      ua: typeof navigator !== "undefined" ? navigator.userAgent : "Unknown",
-      lastActive: new Date().toISOString(),
-    });
-  }, []);
-
-  const parseUA = (ua: string) => {
-    const browser = /Chrome\//.test(ua) && !/Edg\//.test(ua) ? "Chrome"
-      : /Safari\//.test(ua) && !/Chrome\//.test(ua) ? "Safari"
-      : /Firefox\//.test(ua) ? "Firefox"
-      : /Edg\//.test(ua) ? "Edge"
-      : "Browser";
-    const os = /Windows/.test(ua) ? "Windows"
-      : /Mac OS X/.test(ua) ? "macOS"
-      : /iPhone|iPad/.test(ua) ? "iOS"
-      : /Android/.test(ua) ? "Android"
-      : /Linux/.test(ua) ? "Linux"
-      : "Unknown OS";
-    return { browser, os };
-  };
-
-  const handleChangePassword = async () => {
-    if (newPw !== confirmPw) {
-      toast({ title: "Passwords don't match", variant: "destructive" });
+  const updatePassword = async () => {
+    if (newPassword.length < 12 || newPassword !== confirmPassword) {
+      toast({ title: "Check your new password", description: "Use at least 12 characters and enter the same password twice.", variant: "destructive" });
       return;
     }
-    if (pwStrength.score < 3) {
-      toast({ title: "Password too weak", description: "Use 12+ chars with mixed case, numbers and symbols.", variant: "destructive" });
-      return;
-    }
-    setSavingPw(true);
-    const { error } = await supabase.auth.updateUser({ password: newPw });
-    setSavingPw(false);
+    setSavingPassword(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setSavingPassword(false);
     if (error) {
       toast({ title: "Couldn't update password", description: error.message, variant: "destructive" });
       return;
     }
-    setCurrentPw("");
-    setNewPw("");
-    setConfirmPw("");
-    toast({ title: "Password updated", description: "Your password has been changed successfully." });
+    setNewPassword("");
+    setConfirmPassword("");
+    toast({ title: "Password updated" });
   };
 
-  const handleSignOutOthers = async () => {
-    const { error } = await supabase.auth.signOut({ scope: "others" as any });
-    setSignOutAllOpen(false);
-    if (error) {
-      toast({ title: "Couldn't sign out other sessions", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Signed out other sessions", description: "All other devices have been logged out." });
-    }
-  };
-
-  const handleSignOutCurrent = async () => {
-    await performSignOut("/login");
-  };
-
-  const handlePasswordReset = async () => {
+  const sendResetLink = async () => {
     if (!email) return;
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else toast({ title: "Reset email sent", description: "Check your inbox for the reset link." });
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + "/reset-password" });
+    toast(error
+      ? { title: "Couldn't send reset link", description: error.message, variant: "destructive" }
+      : { title: "Reset link requested", description: "Check your email for the link." });
   };
 
-  const genRecoveryCodes = () => {
-    const out: string[] = [];
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    for (let i = 0; i < 10; i++) {
-      let c = "";
-      for (let j = 0; j < 10; j++) c += chars[Math.floor(Math.random() * chars.length)];
-      out.push(c.slice(0, 5) + "-" + c.slice(5));
-    }
-    return out;
-  };
-
-  const beginEnroll2FA = async () => {
-    setEnrollBusy(true);
-    setEnrollCode("");
-    setEnrollStep("scan");
-    const { data, error } = await supabase.auth.mfa.enroll({
-      factorType: "totp",
-      friendlyName: `CloseSync ${new Date().toISOString().slice(0, 10)}`,
-    });
-    setEnrollBusy(false);
-    if (error || !data) {
-      toast({ title: "Couldn't start 2FA setup", description: error?.message, variant: "destructive" });
+  const beginEnrollment = async () => {
+    setMfaBusy(true);
+    const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp", friendlyName: "CloseSync authenticator" });
+    setMfaBusy(false);
+    if (error || !data?.totp) {
+      toast({ title: "Couldn't start authenticator setup", description: error?.message, variant: "destructive" });
       return;
     }
-    setEnrollFactorId(data.id);
-    setEnrollQr((data as any).totp?.qr_code ?? null);
-    setEnrollSecret((data as any).totp?.secret ?? null);
-    setTwoFADialog(true);
+    setEnrollment({ id: data.id, qr: data.totp.qr_code, secret: data.totp.secret });
   };
 
-  const verifyEnroll2FA = async () => {
-    if (!enrollFactorId || enrollCode.length !== 6) return;
-    setEnrollBusy(true);
-    const { data: ch, error: chErr } = await supabase.auth.mfa.challenge({ factorId: enrollFactorId });
-    if (chErr || !ch) {
-      setEnrollBusy(false);
-      toast({ title: "Verification failed", description: chErr?.message, variant: "destructive" });
-      return;
-    }
-    const { error: vErr } = await supabase.auth.mfa.verify({
-      factorId: enrollFactorId,
-      challengeId: ch.id,
-      code: enrollCode,
-    });
-    setEnrollBusy(false);
-    if (vErr) {
-      toast({ title: "Invalid code", description: vErr.message, variant: "destructive" });
-      return;
-    }
-    const codes = genRecoveryCodes();
-    setRecoveryCodes(codes);
-    localStorage.setItem("security_2fa_codes", JSON.stringify(codes));
-    setEnrollStep("codes");
-    await refreshFactors();
-    toast({ title: "Two-factor authentication enabled" });
+  const cancelEnrollment = async () => {
+    const id = enrollment?.id;
+    setEnrollment(null);
+    setCode("");
+    if (id) await supabase.auth.mfa.unenroll({ factorId: id });
   };
 
-  const cancelEnroll = async () => {
-    if (enrollFactorId && !twoFAEnabled) {
-      await supabase.auth.mfa.unenroll({ factorId: enrollFactorId });
-    }
-    setTwoFADialog(false);
-    setEnrollFactorId(null);
-    setEnrollQr(null);
-    setEnrollSecret(null);
-    setEnrollCode("");
-    setEnrollStep("scan");
-  };
-
-  const finishEnroll = () => {
-    setTwoFADialog(false);
-    setEnrollFactorId(null);
-    setEnrollQr(null);
-    setEnrollSecret(null);
-    setEnrollCode("");
-    setEnrollStep("scan");
-  };
-
-  const disable2FA = async () => {
-    if (!twoFAFactorId) return;
-    setEnrollBusy(true);
-    const { error } = await supabase.auth.mfa.unenroll({ factorId: twoFAFactorId });
-    setEnrollBusy(false);
-    setDisableDialog(false);
+  const verifyEnrollment = async () => {
+    if (!enrollment || !/^\d{6}$/.test(code)) return;
+    setMfaBusy(true);
+    const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId: enrollment.id, code });
+    setMfaBusy(false);
     if (error) {
-      toast({ title: "Couldn't disable 2FA", description: error.message, variant: "destructive" });
+      toast({ title: "Code not accepted", description: "Check the current code in your authenticator and try again.", variant: "destructive" });
       return;
     }
-    localStorage.removeItem("security_2fa_codes");
-    setRecoveryCodes([]);
-    await refreshFactors();
-    toast({ title: "Two-factor authentication disabled" });
+    setEnrollment(null);
+    setCode("");
+    await refreshFactor();
+    toast({ title: "Authenticator enabled" });
   };
 
-  const downloadRecoveryCodes = () => {
-    const text =
-      "CloseSync AI — Two-factor recovery codes\n" +
-      "Generated: " + new Date().toLocaleString() + "\n\n" +
-      recoveryCodes.join("\n") + "\n\n" +
-      "Keep these somewhere safe. Each code can only be used once.\n";
-    const blob = new Blob([text], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "closesync-recovery-codes.txt";
-    a.click();
-    URL.revokeObjectURL(url);
+  const disableMfa = async () => {
+    if (!factorId) return;
+    setMfaBusy(true);
+    const { error } = await supabase.auth.mfa.unenroll({ factorId });
+    setMfaBusy(false);
+    setDisableOpen(false);
+    if (error) {
+      toast({ title: "Couldn't disable authenticator", description: error.message, variant: "destructive" });
+      return;
+    }
+    await refreshFactor();
+    toast({ title: "Authenticator disabled" });
   };
 
-  const copyRecoveryCodes = async () => {
-    await navigator.clipboard.writeText(recoveryCodes.join("\n"));
-    toast({ title: "Copied to clipboard" });
+  const signOutOtherSessions = async () => {
+    const { error } = await supabase.auth.signOut({ scope: "others" });
+    setSessionsOpen(false);
+    toast(error
+      ? { title: "Couldn't sign out other sessions", description: error.message, variant: "destructive" }
+      : { title: "Other sessions signed out" });
   };
-
-  const regenerateRecoveryCodes = () => {
-    const codes = genRecoveryCodes();
-    setRecoveryCodes(codes);
-    localStorage.setItem("security_2fa_codes", JSON.stringify(codes));
-    toast({ title: "New recovery codes generated", description: "Previous codes are no longer valid." });
-  };
-
-  // mock login history
-  const loginHistory = useMemo(() => {
-    const ua = currentSession?.ua || "";
-    const { browser, os } = parseUA(ua);
-    const now = Date.now();
-    return [
-      { date: new Date(now).toISOString(), browser, os, status: "success" as const },
-      { date: new Date(now - 86400000).toISOString(), browser, os, status: "success" as const },
-      { date: new Date(now - 3 * 86400000).toISOString(), browser, os, status: "success" as const },
-    ];
-  }, [currentSession]);
-
-  // security score
-  const recs = useMemo(() => {
-    const items: { ok: boolean; label: string }[] = [];
-    items.push({ ok: pwStrength.score >= 4 || !newPw, label: newPw ? "Strong password chosen" : "Strong password set" });
-    items.push({ ok: twoFAEnabled, label: twoFAEnabled ? "2FA enabled" : "Enable 2FA for stronger protection" });
-    items.push({ ok: alerts.newLogin || alerts.newDevice, label: "Login alerts enabled" });
-    items.push({ ok: true, label: "Email verified" });
-    const score = Math.round((items.filter((i) => i.ok).length / items.length) * 100);
-    return { items, score };
-  }, [pwStrength.score, newPw, twoFAEnabled, alerts]);
-
-  const scoreColor =
-    recs.score >= 80 ? "text-emerald-500" : recs.score >= 50 ? "text-amber-500" : "text-destructive";
-  const scoreBar =
-    recs.score >= 80 ? "bg-emerald-500" : recs.score >= 50 ? "bg-amber-500" : "bg-destructive";
-
-  const { browser: curBrowser, os: curOs } = parseUA(currentSession?.ua || "");
 
   return (
     <div className="space-y-6">
-      {/* Security score */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between gap-4 mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
-                <ShieldCheck className="w-5 h-5 text-accent" />
-              </div>
-              <div>
-                <h3 className="text-base font-semibold text-foreground">Security Score</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">How protected your account is</p>
-              </div>
-            </div>
-            <div className={`text-2xl font-bold ${scoreColor}`}>{recs.score}%</div>
+      <Card><CardContent className="p-6">
+        <h3 className="text-base font-semibold text-foreground">Sign-in</h3>
+        <p className="mt-1 text-sm text-muted-foreground">{email ? "Signed in as " + email : "Checking your account…"}</p>
+        <div className="mt-5 grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="security-new-password">New password</Label>
+            <Input id="security-new-password" type="password" autoComplete="new-password" minLength={12} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} />
           </div>
-          <div className="w-full h-2 rounded-full bg-muted overflow-hidden mb-4">
-            <div className={`h-full ${scoreBar} transition-all`} style={{ width: `${recs.score}%` }} />
+          <div className="space-y-2">
+            <Label htmlFor="security-confirm-password">Confirm new password</Label>
+            <Input id="security-confirm-password" type="password" autoComplete="new-password" minLength={12} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} />
           </div>
-          <ul className="space-y-2">
-            {recs.items.map((r, i) => (
-              <li key={i} className="flex items-center gap-2 text-sm">
-                {r.ok ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                ) : (
-                  <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
-                )}
-                <span className={r.ok ? "text-foreground" : "text-muted-foreground"}>{r.label}</span>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">Use at least 12 characters.</p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button onClick={updatePassword} disabled={savingPassword || !newPassword || !confirmPassword}>{savingPassword ? "Updating…" : "Update password"}</Button>
+          <Button variant="outline" onClick={sendResetLink} disabled={!email}>Send reset link instead</Button>
+        </div>
+      </CardContent></Card>
 
-      {/* Sign-in method */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <KeyRound className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-base font-semibold text-foreground">Sign-in method</h3>
+      <Card><CardContent className="p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3 className="flex items-center gap-2 text-base font-semibold text-foreground"><Shield className="h-4 w-4" aria-hidden="true" /> Authenticator app</h3>
+            <p className="mt-1 text-sm text-muted-foreground">Require a six-digit code when opening your workspace after sign-in.</p>
           </div>
-          <div className="flex flex-wrap items-center gap-2 mb-3">
-            {providers.length === 0 ? (
-              <span className="text-sm text-muted-foreground">Loading…</span>
-            ) : (
-              providers.map((p) => (
-                <Badge key={p} variant="secondary" className="capitalize">
-                  {p === "email" ? "Email & password" : p}
-                </Badge>
-              ))
-            )}
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {email ? <>Signed in as <span className="text-foreground">{email}</span>. </> : null}
-            {lastSignInAt
-              ? `Last sign-in ${new Date(lastSignInAt).toLocaleString()}.`
-              : ""}
-          </p>
-          {isAppleRelayEmail(email) && (
-            <div className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
-              <p className="text-xs text-muted-foreground">
-                This is an Apple private relay address. It forwards to your real inbox but
-                changes if you revoke access, so add a contact email in{" "}
-                <span className="text-foreground">Profile</span> to keep notifications and
-                account matching reliable.
-              </p>
-            </div>
-          )}
+          <Badge variant={factorId ? "default" : "outline"}>{loadingFactor ? "Checking" : factorId ? "On" : "Off"}</Badge>
+        </div>
+        <div className="mt-5 flex items-center justify-between gap-4 border-t border-border pt-4">
+          <Label htmlFor="security-mfa-switch">Use an authenticator app</Label>
+          <Switch id="security-mfa-switch" aria-label="Use an authenticator app" checked={Boolean(factorId)} disabled={loadingFactor || mfaBusy} onCheckedChange={(checked) => checked ? void beginEnrollment() : setDisableOpen(true)} />
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Recovery codes are not available yet. If you lose your authenticator, you will need help from support to regain access. Do not enable this until you can keep a second copy of your authenticator.
+        </p>
+      </CardContent></Card>
 
-        </CardContent>
-      </Card>
+      <Card><CardContent className="p-6">
+        <h3 className="text-base font-semibold text-foreground">Sessions</h3>
+        <p className="mt-1 text-sm text-muted-foreground">Manage where your account is signed in.</p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => void performSignOut("/login")}><LogOut className="mr-2 h-4 w-4" aria-hidden="true" /> Sign out here</Button>
+          <Button variant="outline" onClick={() => setSessionsOpen(true)}>Sign out other sessions</Button>
+        </div>
+      </CardContent></Card>
 
+      <Card><CardContent className="p-6">
+        <h3 className="text-base font-semibold text-foreground">Privacy and account requests</h3>
+        <p className="mt-1 text-sm text-muted-foreground">You can export workspace records in Data & Exports. For an account deletion request, email support; do not send your password.</p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button asChild variant="outline"><Link to="/privacy">View privacy draft</Link></Button>
+          <Button asChild variant="outline"><a href="mailto:support@closesync.io?subject=CloseSync%20account%20deletion%20request"><Trash2 className="mr-2 h-4 w-4" aria-hidden="true" /> Email a deletion request</a></Button>
+        </div>
+      </CardContent></Card>
 
-
-      {/* Password */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <KeyRound className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-base font-semibold text-foreground">Password</h3>
-          </div>
-
-          <div className="space-y-4">
-            <PasswordField
-              id="current-pw"
-              label="Current password"
-              value={currentPw}
-              onChange={setCurrentPw}
-              show={showCurrent}
-              setShow={setShowCurrent}
-            />
-            <PasswordField
-              id="new-pw"
-              label="New password"
-              value={newPw}
-              onChange={setNewPw}
-              show={showNew}
-              setShow={setShowNew}
-            />
-            {newPw && (
-              <div className="space-y-1.5">
-                <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden flex gap-0.5">
-                  {[0, 1, 2, 3, 4].map((i) => (
-                    <div
-                      key={i}
-                      className={`flex-1 ${i < pwStrength.score ? pwStrength.color : "bg-muted"} transition-colors`}
-                    />
-                  ))}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Strength: <span className="text-foreground font-medium">{pwStrength.label}</span> · Use 12+ chars, mixed case, numbers & symbols.
-                </p>
-              </div>
-            )}
-            <PasswordField
-              id="confirm-pw"
-              label="Confirm new password"
-              value={confirmPw}
-              onChange={setConfirmPw}
-              show={showConfirm}
-              setShow={setShowConfirm}
-            />
-            {confirmPw && newPw !== confirmPw && (
-              <p className="text-xs text-destructive">Passwords don't match.</p>
-            )}
-
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <Button onClick={handleChangePassword} disabled={savingPw || !newPw || newPw !== confirmPw}>
-                {savingPw ? "Updating..." : "Update password"}
-              </Button>
-              <Button variant="outline" onClick={handlePasswordReset}>
-                Send reset link instead
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* 2FA */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between gap-4 mb-4">
-            <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-muted-foreground" />
-              <div>
-                <h3 className="text-base font-semibold text-foreground">Two-factor authentication</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Add a one-time code from your authenticator app on sign in
-                </p>
-              </div>
-            </div>
-            <Badge variant={twoFAEnabled ? "default" : "outline"} className="text-xs">
-              {twoFAEnabled ? "Enabled" : "Disabled"}
-            </Badge>
-          </div>
-
-          <div className="flex items-center justify-between py-3 border-t border-border">
-            <div>
-              <p className="text-sm font-medium text-foreground">Authenticator app</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {twoFAEnabled && twoFASetupAt
-                  ? `Set up ${new Date(twoFASetupAt).toLocaleDateString()}`
-                  : "Works with Google Authenticator, 1Password, Authy and more"}
-              </p>
-            </div>
-            <Switch
-              checked={twoFAEnabled}
-              disabled={twoFALoading || enrollBusy}
-              onCheckedChange={(v) => {
-                if (v) beginEnroll2FA();
-                else setDisableDialog(true);
-              }}
-              aria-label="Authenticator app two-factor authentication"
-            />
-          </div>
-
-          {twoFAEnabled && (
-            <div className="flex items-center justify-between py-3 border-t border-border">
-              <div>
-                <p className="text-sm font-medium text-foreground">Backup recovery codes</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {recoveryCodes.length > 0
-                    ? `${recoveryCodes.length} single-use codes available`
-                    : "Generate codes to use if you lose your authenticator"}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                {recoveryCodes.length > 0 ? (
-                  <Button variant="outline" size="sm" className="gap-2" onClick={() => setRecoveryDialog(true)}>
-                    <KeyRound className="w-3.5 h-3.5" />
-                    View codes
-                  </Button>
-                ) : (
-                  <Button variant="outline" size="sm" className="gap-2" onClick={regenerateRecoveryCodes}>
-                    <KeyRound className="w-3.5 h-3.5" />
-                    Generate codes
-                  </Button>
-                )}
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Active sessions */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Monitor className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-base font-semibold text-foreground">Active sessions</h3>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-start justify-between gap-4 py-3 border-b border-border">
-              <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
-                  {/iPhone|iPad|Android/.test(currentSession?.ua || "") ? (
-                    <Smartphone className="w-4 h-4 text-emerald-500" />
-                  ) : (
-                    <Monitor className="w-4 h-4 text-emerald-500" />
-                  )}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium text-foreground">
-                      {curBrowser} on {curOs}
-                    </p>
-                    <Badge variant="secondary" className="text-[10px]">This device</Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">Active now</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3 mt-4">
-            <Button variant="outline" size="sm" className="gap-2" onClick={handleSignOutCurrent}>
-              <LogOut className="w-3.5 h-3.5" />
-              Sign out this session
-            </Button>
-            <Button variant="outline" size="sm" className="gap-2" onClick={() => setSignOutAllOpen(true)}>
-              <LogOut className="w-3.5 h-3.5" />
-              Sign out all other sessions
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Login history */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <History className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-base font-semibold text-foreground">Recent login activity</h3>
-          </div>
-          <div className="divide-y divide-border">
-            {loginHistory.map((l, i) => (
-              <div key={i} className="flex items-center justify-between py-3 text-sm">
-                <div>
-                  <p className="text-foreground">
-                    {l.browser} on {l.os}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {new Date(l.date).toLocaleString()}
-                  </p>
-                </div>
-                {l.status === "success" ? (
-                  <Badge variant="outline" className="text-[10px] border-emerald-500/30 text-emerald-500 gap-1">
-                    <CheckCircle2 className="w-3 h-3" /> Successful
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="text-[10px] border-destructive/30 text-destructive gap-1">
-                    <XCircle className="w-3 h-3" /> Failed
-                  </Badge>
-                )}
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Security alerts */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Bell className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-base font-semibold text-foreground">Security alerts</h3>
-          </div>
-
-          <div className="space-y-3">
-            <AlertToggle
-              label="New login detected"
-              checked={alerts.newLogin}
-              onChange={(v) => updateAlerts({ newLogin: v })}
-            />
-            <AlertToggle
-              label="Login from a new device"
-              checked={alerts.newDevice}
-              onChange={(v) => updateAlerts({ newDevice: v })}
-            />
-            <AlertToggle
-              label="Password changed"
-              checked={alerts.passwordChanged}
-              onChange={(v) => updateAlerts({ passwordChanged: v })}
-            />
-            <AlertToggle
-              label="Security settings changed"
-              checked={alerts.settingsChanged}
-              onChange={(v) => updateAlerts({ settingsChanged: v })}
-            />
-          </div>
-
-          <Separator className="my-5" />
-
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-            Notify me via
-          </p>
-          <div className="flex gap-6">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox
-                checked={alerts.methodEmail}
-                onCheckedChange={(v) => updateAlerts({ methodEmail: !!v })}
-              />
-              <span className="text-sm text-foreground">Email</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox
-                checked={alerts.methodInApp}
-                onCheckedChange={(v) => updateAlerts({ methodInApp: !!v })}
-              />
-              <span className="text-sm text-foreground">In-app</span>
-            </label>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Privacy */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <ShieldAlert className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-base font-semibold text-foreground">Privacy</h3>
-          </div>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Data processing</span>
-              <Badge variant="outline" className="text-[10px] border-emerald-500/30 text-emerald-500">
-                Active · GDPR-compliant
-              </Badge>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Data export</span>
-              <Button variant="link" size="sm" className="h-auto p-0 text-accent" onClick={() => { window.location.hash = "data"; }}>
-                Available in Data & Exports
-              </Button>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Privacy policy</span>
-              <Button variant="link" size="sm" className="h-auto p-0 text-accent gap-1" onClick={() => window.open("https://closesync.io/privacy", "_blank")}>
-                View <ExternalLink className="w-3 h-3" />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Danger zone */}
-      <Card className="border-destructive/30">
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center flex-shrink-0">
-                <Trash2 className="w-4 h-4 text-destructive" />
-              </div>
-              <div>
-                <h3 className="text-base font-semibold text-foreground">Delete account</h3>
-                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                  Deleting your account will permanently remove all your clients, proposals, contracts and billing history. This cannot be undone.
-                </p>
-              </div>
-            </div>
-            <Button variant="destructive" size="sm" onClick={() => setDeleteOpen(true)}>
-              Delete account
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Sign out all dialog */}
-      <Dialog open={signOutAllOpen} onOpenChange={setSignOutAllOpen}>
+      <Dialog open={Boolean(enrollment)} onOpenChange={(open) => { if (!open) void cancelEnrollment(); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Sign out all other sessions?</DialogTitle>
-            <DialogDescription>
-              You'll stay signed in on this device. All other devices currently logged into your account will be signed out immediately.
-            </DialogDescription>
+            <DialogTitle>Set up an authenticator</DialogTitle>
+            <DialogDescription>Scan the QR code, then enter the current six-digit code. Keep access to your authenticator: recovery codes are not available.</DialogDescription>
           </DialogHeader>
+          {enrollment && <div className="space-y-4">
+            <img src={enrollment.qr} alt="Authenticator setup QR code" className="mx-auto h-44 w-44" />
+            <div className="space-y-2"><Label htmlFor="mfa-secret">Manual setup key</Label><Input id="mfa-secret" value={enrollment.secret} readOnly /></div>
+            <div className="space-y-2"><Label htmlFor="mfa-enrollment-code">Authenticator code</Label><Input id="mfa-enrollment-code" autoComplete="one-time-code" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))} /></div>
+          </div>}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setSignOutAllOpen(false)}>Cancel</Button>
-            <Button onClick={handleSignOutOthers}>Sign out others</Button>
+            <Button variant="outline" onClick={() => void cancelEnrollment()}>Cancel</Button>
+            <Button onClick={verifyEnrollment} disabled={mfaBusy || code.length !== 6}>{mfaBusy ? "Verifying…" : "Enable authenticator"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* 2FA enrollment dialog */}
-      <Dialog open={twoFADialog} onOpenChange={(o) => { if (!o) cancelEnroll(); else setTwoFADialog(true); }}>
-        <DialogContent className="max-w-md">
-          {enrollStep !== "codes" ? (
-            <>
-              <DialogHeader>
-                <DialogTitle>Enable two-factor authentication</DialogTitle>
-                <DialogDescription>
-                  Scan the QR code with your authenticator app, then enter the 6-digit code it generates.
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="space-y-4">
-                <div className="flex justify-center bg-white rounded-lg p-4">
-                  {enrollQr ? (
-                    <img src={enrollQr} alt="2FA QR code" className="w-44 h-44" />
-                  ) : (
-                    <div className="w-44 h-44 flex items-center justify-center">
-                      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                    </div>
-                  )}
-                </div>
-
-                {enrollSecret && (
-                  <div>
-                    <Label htmlFor="totp-manual-secret" className="text-xs">Or enter this code manually</Label>
-                    <div className="mt-1.5 flex gap-2">
-                      <Input
-                        id="totp-manual-secret"
-                        value={enrollSecret}
-                        readOnly
-                        autoComplete="off"
-                        spellCheck={false}
-                        className="font-mono text-xs"
-                      />
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={async () => {
-                          await navigator.clipboard.writeText(enrollSecret);
-                          toast({ title: "Copied" });
-                        }}
-                        aria-label="Copy manual two-factor authentication code"
-                      >
-                        <Copy aria-hidden="true" className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                <div>
-                  <Label htmlFor="totp-code" className="text-xs">6-digit verification code</Label>
-                  <Input
-                    id="totp-code"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    maxLength={6}
-                    value={enrollCode}
-                    onChange={(e) => setEnrollCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                    placeholder="123456"
-                    className="mt-1.5 tracking-[0.5em] text-center font-mono text-lg"
-                  />
-                </div>
-              </div>
-
-              <DialogFooter>
-                <Button variant="outline" onClick={cancelEnroll} disabled={enrollBusy}>Cancel</Button>
-                <Button onClick={verifyEnroll2FA} disabled={enrollBusy || enrollCode.length !== 6}>
-                  {enrollBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify & enable"}
-                </Button>
-              </DialogFooter>
-            </>
-          ) : (
-            <>
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5 text-emerald-500" />
-                  Save your recovery codes
-                </DialogTitle>
-                <DialogDescription>
-                  Store these somewhere safe. Each code can be used once if you lose access to your authenticator.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid grid-cols-2 gap-2 bg-muted/40 rounded-md p-4 font-mono text-sm">
-                {recoveryCodes.map((c) => (
-                  <div key={c} className="text-foreground">{c}</div>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" className="flex-1 gap-2" onClick={downloadRecoveryCodes}>
-                  <Download className="w-4 h-4" /> Download
-                </Button>
-                <Button variant="outline" className="flex-1 gap-2" onClick={copyRecoveryCodes}>
-                  <Copy className="w-4 h-4" /> Copy
-                </Button>
-              </div>
-              <DialogFooter>
-                <Button onClick={finishEnroll}>Done</Button>
-              </DialogFooter>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* 2FA disable confirmation */}
-      <Dialog open={disableDialog} onOpenChange={setDisableDialog}>
+      <Dialog open={disableOpen} onOpenChange={setDisableOpen}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Disable two-factor authentication?</DialogTitle>
-            <DialogDescription>
-              Your account will only be protected by your password. We strongly recommend keeping 2FA enabled.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDisableDialog(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={disable2FA} disabled={enrollBusy}>
-              {enrollBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : "Disable 2FA"}
-            </Button>
-          </DialogFooter>
+          <DialogHeader><DialogTitle>Disable authenticator?</DialogTitle><DialogDescription>Your next sign-in will use your regular sign-in method without an authenticator code.</DialogDescription></DialogHeader>
+          <DialogFooter><Button variant="outline" onClick={() => setDisableOpen(false)}>Keep enabled</Button><Button variant="destructive" onClick={disableMfa} disabled={mfaBusy}>Disable authenticator</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Recovery codes view dialog */}
-      <Dialog open={recoveryDialog} onOpenChange={setRecoveryDialog}>
+      <Dialog open={sessionsOpen} onOpenChange={setSessionsOpen}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <KeyRound className="w-5 h-5 text-accent" /> Recovery codes
-            </DialogTitle>
-            <DialogDescription>
-              Each code can be used once. Regenerate if you suspect they've been compromised.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-2 bg-muted/40 rounded-md p-4 font-mono text-sm">
-            {recoveryCodes.map((c) => (
-              <div key={c} className="text-foreground">{c}</div>
-            ))}
-          </div>
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="outline" className="gap-2" onClick={downloadRecoveryCodes}>
-              <Download className="w-4 h-4" /> Download
-            </Button>
-            <Button variant="outline" className="gap-2" onClick={copyRecoveryCodes}>
-              <Copy className="w-4 h-4" /> Copy
-            </Button>
-            <Button variant="outline" className="gap-2" onClick={regenerateRecoveryCodes}>
-              Regenerate
-            </Button>
-          </DialogFooter>
+          <DialogHeader><DialogTitle>Sign out other sessions?</DialogTitle><DialogDescription>This revokes other sessions. They may remain active until their current access tokens expire. Your current session stays open.</DialogDescription></DialogHeader>
+          <DialogFooter><Button variant="outline" onClick={() => setSessionsOpen(false)}>Cancel</Button><Button onClick={signOutOtherSessions}>Sign out other sessions</Button></DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Delete account dialog */}
-      <Dialog open={deleteOpen} onOpenChange={(o) => { setDeleteOpen(o); if (!o) { setDeletePw(""); setDeleteConfirmText(""); } }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-destructive">
-              <AlertTriangle className="w-5 h-5" /> Delete your account
-            </DialogTitle>
-            <DialogDescription>
-              This action is permanent. Your data will be wiped and cannot be recovered.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="del-pw" className="text-xs">Confirm with your password</Label>
-              <Input
-                id="del-pw"
-                type="password"
-                value={deletePw}
-                onChange={(e) => setDeletePw(e.target.value)}
-                className="mt-1.5"
-              />
-            </div>
-            <div>
-              <Label htmlFor="del-confirm" className="text-xs">Type <span className="font-mono text-destructive">DELETE</span> to confirm</Label>
-              <Input
-                id="del-confirm"
-                value={deleteConfirmText}
-                onChange={(e) => setDeleteConfirmText(e.target.value)}
-                className="mt-1.5"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteOpen(false)}>Cancel</Button>
-            <Button
-              variant="destructive"
-              disabled={!deletePw || deleteConfirmText !== "DELETE"}
-              onClick={() => {
-                toast({
-                  title: "Deletion request received",
-                  description: "Our team will process your account deletion within 24 hours.",
-                });
-                setDeleteOpen(false);
-                setDeletePw("");
-                setDeleteConfirmText("");
-              }}
-            >
-              Permanently delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
-
-function PasswordField({
-  id,
-  label,
-  value,
-  onChange,
-  show,
-  setShow,
-}: {
-  id: string;
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  show: boolean;
-  setShow: (v: boolean) => void;
-}) {
-  return (
-    <div>
-      <Label htmlFor={id} className="text-xs">{label}</Label>
-      <div className="relative mt-1.5">
-        <Input
-          id={id}
-          type={show ? "text" : "password"}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="pr-10"
-          autoComplete="new-password"
-        />
-        <button
-          type="button"
-          onClick={() => setShow(!show)}
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground transition-colors"
-          tabIndex={-1}
-          aria-label={show ? "Hide password" : "Show password"}
-        >
-          {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function AlertToggle({
-  label,
-  checked,
-  onChange,
-}: {
-  label: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-sm text-foreground">{label}</span>
-      <Switch checked={checked} onCheckedChange={onChange} aria-label={label} />
     </div>
   );
 }

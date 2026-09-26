@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Check, Crown, Sparkles, Zap, Lock, ArrowRight, Loader2 } from "lucide-react";
+import { Check, Crown, CreditCard, Zap, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePlan } from "@/hooks/use-plan";
 import { useProposalUsage } from "@/hooks/use-proposal-usage";
@@ -64,7 +64,7 @@ export default function Billing() {
   return (
     <DashboardLayout>
       <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+        <h1 className="cs-workspace-page-title text-foreground">
           Plans & Pricing
         </h1>
         <p className="text-sm text-muted-foreground mt-1.5">
@@ -90,7 +90,7 @@ export default function Billing() {
                   {planId === "pro" ? (
                     <Crown className="w-5 h-5 text-accent" />
                   ) : planId === "starter" ? (
-                    <Sparkles className="w-5 h-5 text-purple" />
+                    <CreditCard className="w-5 h-5 text-purple" />
                   ) : (
                     <Zap className="w-5 h-5 text-muted-foreground" />
                   )}
@@ -154,7 +154,7 @@ export default function Billing() {
               >
                 {isHighlight && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                    <Badge className="bg-accent text-accent-foreground font-semibold border-0 shadow">
+                    <Badge className="bg-primary text-primary-foreground font-semibold border-0 shadow">
                       Most Popular
                     </Badge>
                   </div>
@@ -192,7 +192,7 @@ export default function Billing() {
                     disabled={isCurrent || !!switching}
                     className={`w-full ${
                       isHighlight && !isCurrent
-                        ? "bg-accent text-accent-foreground font-semibold hover:bg-accent/90"
+                        ? "bg-primary text-primary-foreground font-semibold hover:bg-primary/90"
                         : ""
                     }`}
                     variant={isCurrent ? "outline" : isHighlight ? "default" : "secondary"}

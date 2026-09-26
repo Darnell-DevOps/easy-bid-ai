@@ -227,6 +227,10 @@
 }
 
 /* CloseSync marketing surface: restrained, product-led and high contrast. */
+.cs-auth-shell {
+  --ring: 260 100% 62%;
+}
+
 .landing-shell {
   --background: 0 0% 100%;
   --foreground: 231 17% 8%;
@@ -260,20 +264,20 @@
   caret-color: var(--cs-primary);
 }
 
-html:has(.landing-shell) {
+html:has(.landing-shell, .cs-auth-shell[data-appearance="landing"]) {
   scrollbar-color: var(--cs-border-strong) var(--cs-bg-subtle);
   scrollbar-width: thin;
 }
 
-html:has(.landing-shell)::-webkit-scrollbar {
+html:has(.landing-shell, .cs-auth-shell[data-appearance="landing"])::-webkit-scrollbar {
   width: 10px;
 }
 
-html:has(.landing-shell)::-webkit-scrollbar-track {
+html:has(.landing-shell, .cs-auth-shell[data-appearance="landing"])::-webkit-scrollbar-track {
   background: var(--cs-bg-subtle);
 }
 
-html:has(.landing-shell)::-webkit-scrollbar-thumb {
+html:has(.landing-shell, .cs-auth-shell[data-appearance="landing"])::-webkit-scrollbar-thumb {
   border: 2px solid var(--cs-bg-subtle);
   border-radius: var(--cs-radius-full);
   background: var(--cs-border-strong);
@@ -580,4 +584,27 @@ html:has(.landing-shell)::-webkit-scrollbar-thumb {
     color: CanvasText !important;
     -webkit-text-fill-color: CanvasText !important;
   }
+}
+
+/* Landing-facing auth uses the CloseSync palette locally, preserving the saved app theme.
+   HSL channels mirror the --cs-* source tokens for Tailwind/shadcn compatibility. */
+.cs-auth-shell[data-appearance="landing"] {
+  --background: 0 0% 100%;
+  --foreground: 222.857 17.073% 8.039%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.857 17.073% 8.039%;
+  --primary: 259.077 100% 61.765%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 27.273% 97.843%;
+  --secondary-foreground: 222.857 17.073% 8.039%;
+  --muted: 220 14.286% 95.882%;
+  --muted-foreground: 222.857 6.863% 40%;
+  --accent: 257.143 100% 97.255%;
+  --accent-foreground: 259.077 100% 61.765%;
+  --destructive: 4.216 74.297% 48.824%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 216 15.152% 93.529%;
+  --input: 214.286 13.208% 89.608%;
+  --ring: 259.077 100% 61.765%;
+  color-scheme: light;
 }

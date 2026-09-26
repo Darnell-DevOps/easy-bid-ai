@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, AlertTriangle, ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
+import { FileText, AlertTriangle, ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
 
 const POLICY_TYPES = ["Terms & Conditions", "Privacy Policy", "Refund Policy"];
 const BUSINESS_TYPES = [
@@ -95,7 +95,7 @@ export default function NewPolicy() {
         <ArrowLeft aria-hidden="true" className="w-4 h-4 mr-2" /> Back to policies
       </Button>
 
-      <h1 className="type-page-title mb-2">
+      <h1 className="cs-workspace-page-title mb-2">
         Generate {form.policy_type || "policy"} in seconds
       </h1>
       <p className="text-muted-foreground mb-6">
@@ -263,7 +263,7 @@ export default function NewPolicy() {
 
         <div className="flex justify-end">
           <Button onClick={handleGenerate} disabled={loading} aria-busy={loading} size="lg">
-            <Sparkles aria-hidden="true" className="w-4 h-4 mr-2" />
+            <FileText aria-hidden="true" className="w-4 h-4 mr-2" />
             {loading ? "Generating…" : "Generate Policy"}
           </Button>
         </div>

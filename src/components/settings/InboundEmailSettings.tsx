@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Inbox, Copy, Check, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { Inbox, Copy, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { publicClientConfig } from "@/config/public-client-config";
@@ -114,7 +114,7 @@ export default function InboundEmailSettings() {
                 </Button>
               </div>
               <p id="inbound-email-address-help" className="text-[11px] text-muted-foreground mt-2 flex items-start gap-1.5">
-                <Sparkles className="w-3 h-3 text-accent mt-0.5 shrink-0" />
+                <Inbox className="w-3 h-3 text-accent mt-0.5 shrink-0" />
                 Anything sent here becomes a new lead with an AI-drafted reply ready in your{" "}
                 <a href="/dashboard/leads" className="text-accent hover:underline">Lead Assistant</a>.
               </p>

@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Save, Loader2, Pencil, Eye, Copy, Check, Sparkles, RefreshCw, RotateCcw, Wand2, Zap, Send, XCircle, CheckCircle2, Mail, ExternalLink, AlertTriangle, Banknote, FileText, Crown, Lock, MessageCircle } from "lucide-react";
+import { Download, Save, Loader2, Pencil, Eye, Copy, Check, FilePenLine, RefreshCw, RotateCcw, Zap, Send, XCircle, CheckCircle2, Mail, ExternalLink, AlertTriangle, Banknote, FileText, Crown, Lock, MessageCircle } from "lucide-react";
 import { waLink } from "@/lib/whatsapp";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -991,7 +991,7 @@ export default function ProposalView() {
   if (!proposal) {
     return (
       <DashboardLayout>
-        <h1 className="text-2xl font-bold text-foreground">Proposal not found</h1>
+        <h1 className="cs-workspace-page-title text-foreground">Proposal not found</h1>
       </DashboardLayout>
     );
   }
@@ -1242,13 +1242,13 @@ export default function ProposalView() {
     alerts.push({ tone: "success", icon: Banknote, text: "Accepted — request payment now to close the deal." });
   } else if (followUpScenario !== "none") {
     const meta = FOLLOW_UP_META[followUpScenario];
-    alerts.push({ tone: meta.tone, icon: Sparkles, text: `${meta.headline} — ${meta.description}` });
+    alerts.push({ tone: meta.tone, icon: FilePenLine, text: `${meta.headline} — ${meta.description}` });
   } else if (currentStatus === "draft") {
     alerts.push({ tone: "warning", icon: AlertTriangle, text: "Proposal not sent yet. Send to client to start the clock." });
   } else if (currentStatus === "sent") {
     alerts.push({ tone: "info", icon: Eye, text: "Sent — waiting for the client to view it." });
   } else if (currentStatus === "viewed") {
-    alerts.push({ tone: "info", icon: Sparkles, text: "Client has viewed the proposal. Now's a great time to follow up." });
+    alerts.push({ tone: "info", icon: FilePenLine, text: "Client has viewed the proposal. Now's a great time to follow up." });
   }
 
 
@@ -1330,7 +1330,7 @@ export default function ProposalView() {
         {/* Compact top meta strip */}
         <div className="mb-5 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3 min-w-0">
-            <h1 className="text-xs text-muted-foreground truncate">
+            <h1 className="cs-workspace-page-title text-muted-foreground truncate">
               <span className="sr-only">Proposal details for </span>
               <span className="text-foreground font-medium">{proposal.client_name}</span>
               {proposal.company_name && (
@@ -1410,7 +1410,7 @@ export default function ProposalView() {
         <details open className="group mb-8 rounded-xl border border-border/60 bg-card/40 overflow-hidden">
           <summary className="flex items-center justify-between gap-3 px-4 py-3 cursor-pointer list-none hover:bg-card/60 transition-colors">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-muted-foreground" />
+              <FilePenLine className="w-3.5 h-3.5 text-muted-foreground" />
               <span className="text-xs font-semibold text-foreground uppercase tracking-wider">Proposal Controls</span>
               <span className="text-[10px] text-muted-foreground">(only you can see this)</span>
             </div>
@@ -1469,7 +1469,7 @@ export default function ProposalView() {
                         <div
                           className={`flex h-9 w-9 items-center justify-center rounded-full border-2 transition-all ${
                             isComplete
-                              ? "border-accent bg-accent text-accent-foreground"
+                              ? "border-accent bg-primary text-primary-foreground"
                               : isActive
                                 ? "border-purple bg-purple/15 text-purple ring-4 ring-purple/10"
                                 : "border-border bg-background/40 text-muted-foreground"
@@ -1533,7 +1533,7 @@ export default function ProposalView() {
                     disabled={autoFillingPrice}
                     className="gap-1.5 h-7 text-[11px] text-purple hover:text-purple hover:bg-purple/10"
                   >
-                    {autoFillingPrice ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                    {autoFillingPrice ? <Loader2 className="w-3 h-3 animate-spin" /> : <FilePenLine className="w-3 h-3" />}
                     Auto-fill from proposal
                   </Button>
                 )}
@@ -1555,7 +1555,7 @@ export default function ProposalView() {
                       <Button
                         size="sm"
                         onClick={() => setPaymentsUpgradeOpen(true)}
-                        className="gap-1.5 bg-accent text-accent-foreground font-semibold hover:bg-accent/90"
+                        className="gap-1.5 bg-primary text-primary-foreground font-semibold hover:bg-primary/90"
                       >
                         <Crown className="w-3.5 h-3.5" />
                         Unlock Payments with Pro
@@ -1660,7 +1660,7 @@ export default function ProposalView() {
                 <DropdownMenuTrigger asChild>
                   <Button
                     size="lg"
-                    className="w-full sm:w-auto gap-2 bg-accent text-accent-foreground font-semibold hover:bg-accent/90 transition-colors h-11 px-6"
+                    className="w-full sm:w-auto gap-2 bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors h-11 px-6"
                   >
                     <Send className="w-4 h-4 shrink-0" />
                     Send to Client
@@ -1717,7 +1717,7 @@ export default function ProposalView() {
                     size="sm"
                     className="gap-1.5 h-9 bg-amber-500/15 text-amber-500 border border-amber-500/30 hover:bg-amber-500/25"
                   >
-                    <Sparkles className="w-3.5 h-3.5 shrink-0" /> Send Follow-Up
+                    <FilePenLine className="w-3.5 h-3.5 shrink-0" /> Send Follow-Up
                   </Button>
                 )}
                 <Button onClick={() => handleExportPDF("proposal")} variant="outline" size="sm" className="gap-1.5 h-9">
@@ -1742,7 +1742,7 @@ export default function ProposalView() {
                       {regenerating === "full" || regenerating === "concise" || regenerating === "persuasive" || regenerating === "alternative" ? (
                         <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" />
                       ) : (
-                        <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                        <FilePenLine className="w-3.5 h-3.5 shrink-0" />
                       )}
                       Regenerate
                     </Button>
@@ -1757,10 +1757,10 @@ export default function ProposalView() {
                       <Zap className="w-4 h-4" /> Make more concise
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleRegenerateFull("persuasive")} className="gap-2">
-                      <Wand2 className="w-4 h-4" /> Make more persuasive
+                      <Pencil className="w-4 h-4" /> Make more persuasive
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleRegenerateFull("alternative")} className="gap-2">
-                      <Sparkles className="w-4 h-4" /> Alternative version
+                      <FilePenLine className="w-4 h-4" /> Alternative version
                     </DropdownMenuItem>
                     {proposal?.previous_content_saved_at && (
                       <>
@@ -1878,7 +1878,7 @@ export default function ProposalView() {
                   {t.key === "proposal" && (
                     <div className="mt-6 rounded-xl border border-border/60 bg-card/30 p-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <Sparkles className="w-3.5 h-3.5 text-accent" />
+                        <FilePenLine className="w-3.5 h-3.5 text-accent" />
                         <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider">Regenerate a section</h3>
                       </div>
                       <p className="text-xs text-muted-foreground mb-3">

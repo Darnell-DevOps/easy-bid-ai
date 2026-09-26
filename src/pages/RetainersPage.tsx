@@ -94,7 +94,7 @@ export default function RetainersPage() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <h1 className="cs-workspace-page-title text-foreground flex items-center gap-2">
               <Repeat className="w-6 h-6 text-accent" /> Retainers
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
@@ -103,7 +103,7 @@ export default function RetainersPage() {
           </div>
           <Button
             onClick={() => navigate("/dashboard/retainers/new")}
-            className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
           >
             <Plus className="w-4 h-4" /> New Retainer
           </Button>

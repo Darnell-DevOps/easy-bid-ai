@@ -1,13 +1,13 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, UserPlus, ArrowRight, Wand2 } from "lucide-react";
+import { FilePlus2, UserPlus, ArrowRight, MessagesSquare } from "lucide-react";
 
 export default function QuickActions() {
   const actions = [
     {
       label: "Generate Proposal from Lead",
       description: "Paste a lead — AI picks the best template",
-      icon: Wand2,
+      icon: MessagesSquare,
       href: "/dashboard/leads?mode=smart",
       accent: "bg-accent text-accent-foreground",
       primary: true,
@@ -15,7 +15,7 @@ export default function QuickActions() {
     {
       label: "Create Proposal",
       description: "Start from scratch or a template",
-      icon: Sparkles,
+      icon: FilePlus2,
       href: "/dashboard/new",
       accent: "bg-secondary text-accent",
       primary: false,

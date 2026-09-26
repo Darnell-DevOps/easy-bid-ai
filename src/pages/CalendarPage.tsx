@@ -462,7 +462,7 @@ export default function CalendarPage() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <h1 className="cs-workspace-page-title text-foreground flex items-center gap-2">
               <Calendar className="w-6 h-6 text-purple" />
               Calendar
             </h1>
@@ -477,7 +477,7 @@ export default function CalendarPage() {
             <Button variant="outline" onClick={() => setCreateOpen(true)} className="gap-2">
               <LinkIcon className="w-4 h-4" /> New booking link
             </Button>
-            <Button onClick={() => setScheduleOpen(true)} className="gap-2 bg-accent text-accent-foreground">
+            <Button onClick={() => setScheduleOpen(true)} className="gap-2 bg-primary text-primary-foreground">
               <CalendarPlus className="w-4 h-4" /> Schedule meeting
             </Button>
           </div>
@@ -869,7 +869,7 @@ export default function CalendarPage() {
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setScheduleOpen(false)}>Cancel</Button>
-            <Button onClick={scheduleMeeting} className="gap-2 bg-accent text-accent-foreground">
+            <Button onClick={scheduleMeeting} className="gap-2 bg-primary text-primary-foreground">
               <CheckCircle2 className="w-4 h-4" /> Schedule
             </Button>
           </DialogFooter>

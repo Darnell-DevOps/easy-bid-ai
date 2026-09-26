@@ -10,10 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Loader2, Save, Upload, Trash2, RotateCcw, Palette, FileText, FileSignature,
-  Image as ImageIcon, LayoutGrid, Receipt, CalendarDays, ClipboardList, Sparkles,
-} from "lucide-react";
+import { Loader2, Save, Upload, Trash2, RotateCcw, Palette, FileText, FileSignature, Image as ImageIcon, LayoutGrid, Receipt, CalendarDays, ClipboardList } from "lucide-react";
 
 interface BrandingState {
   business_name: string;
@@ -195,7 +192,7 @@ export default function BrandingSettings() {
           <Card>
             <CardContent className="p-6 space-y-6">
               <SectionHeader
-                icon={<Sparkles className="w-4 h-4 text-accent" />}
+                icon={<Palette className="w-4 h-4 text-accent" />}
                 title="Brand identity"
                 subtitle="Flows automatically into every client touchpoint."
                 action={

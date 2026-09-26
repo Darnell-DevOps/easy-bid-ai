@@ -54,6 +54,6 @@ describe("onboarding template editor accessibility", () => {
       /<Button onClick=\{handleSave\} disabled=\{saving\} aria-busy=\{saving\}>/,
     );
     expect(source).toMatch(/<Loader2[^>]*aria-hidden="true"/);
-    expect(source).toMatch(/<Sparkles[^>]*aria-hidden="true"/);
+    expect(source).toMatch(/<ClipboardList[^>]*aria-hidden="true"/);
   });
 });

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
+import { ArrowUpRight, Wallet, TrendingUp, Clock3, Repeat2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { monthlyEquivalentCents } from "@/lib/retainers";
 
@@ -62,41 +62,43 @@ export default function BusinessPulse({ proposals }: Props) {
       .reduce((a, p) => a + parseAmount(p.budget), 0);
 
     return [
-      { label: "Revenue", value: fmt(revenue), tone: "text-emerald-400", href: "/dashboard/revenue" },
-      { label: "Pipeline", value: fmt(pipeline), tone: "text-foreground", href: "/dashboard/proposals" },
-      { label: "Outstanding", value: fmt(outstanding), tone: "text-amber-400", href: "/dashboard/proposals" },
-      { label: "MRR", value: fmt(mrr), tone: "text-foreground", href: "/dashboard/retainers" },
+      { icon: Wallet, detail: "Paid proposals", label: "Revenue", value: fmt(revenue), href: "/dashboard/revenue" },
+      { icon: TrendingUp, detail: "Sent & viewed proposals", label: "Pipeline", value: fmt(pipeline), href: "/dashboard/proposals" },
+      { icon: Clock3, detail: "Accepted, awaiting payment", label: "Outstanding", value: fmt(outstanding), href: "/dashboard/proposals" },
+      { icon: Repeat2, detail: "Monthly recurring revenue", label: "MRR", value: fmt(mrr), href: "/dashboard/retainers" },
     ];
   }, [proposals, mrr]);
 
   return (
     <section aria-labelledby="pulse-heading" className="space-y-3">
-      <div>
+      <div className="sr-only">
         <h2 id="pulse-heading" className="text-xl font-semibold text-foreground">
           Business pulse
         </h2>
         <p className="text-xs text-muted-foreground mt-0.5">Where the money is right now.</p>
       </div>
-      <Card>
-        <CardContent className="p-0">
-          <div className="grid grid-cols-2 divide-x divide-y divide-border/60 [&>*:nth-child(-n+2)]:border-t-0 [&>*:nth-child(2n+1)]:border-l-0">
-            {stats.map((s) => (
-              <button
-                key={s.label}
-                onClick={() => navigate(s.href)}
-                className="flex flex-col items-start gap-1 px-4 py-4 sm:py-5 hover:bg-muted/30 transition-colors text-left"
-              >
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-                  {s.label}
-                </span>
-                <span className={`text-2xl font-bold tabular-nums leading-none ${s.tone}`}>
-                  {s.value}
-                </span>
-              </button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <div className="cs-pulse-strip">
+        <div className="cs-pulse-grid">
+          {stats.map((s) => (
+            <button
+              key={s.label}
+              aria-label={s.label + " " + s.value}
+              onClick={() => navigate(s.href)}
+              className="cs-pulse-stat"
+            >
+              <span className="cs-pulse-icon"><s.icon aria-hidden="true" /></span>
+              <span className="cs-pulse-label">
+                {s.label}
+              </span>
+              <span className="cs-pulse-value">
+                {s.value}
+              </span>
+              <span className="cs-pulse-detail">{s.detail}</span>
+              <ArrowUpRight aria-hidden="true" className="cs-pulse-arrow" />
+            </button>
+          ))}
+        </div>
+      </div>
     </section>
   );
 }

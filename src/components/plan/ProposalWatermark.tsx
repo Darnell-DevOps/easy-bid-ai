@@ -1,4 +1,4 @@
-import { Sparkles } from "lucide-react";
+import { FileText } from "lucide-react";
 
 /**
  * Diagonal "Made with CloseSync — Free Plan" watermark overlay shown on
@@ -30,7 +30,7 @@ export default function ProposalWatermark() {
 
       {/* Corner badge — slightly more visible */}
       <div className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-md border border-border/60 bg-card/80 px-2.5 py-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold backdrop-blur">
-        <Sparkles className="w-3 h-3 text-accent" />
+        <FileText className="w-3 h-3 text-accent" />
         Made with CloseSync
       </div>
     </div>

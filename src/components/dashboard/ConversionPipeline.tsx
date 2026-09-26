@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Sparkles, FileText, CheckCircle2, FileSignature, Banknote, ChevronRight, GitBranch } from "lucide-react";
+import { UserPlus, UserCheck, FileText, CheckCircle2, FileSignature, Banknote, ChevronRight, GitBranch } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { scoreRank } from "@/lib/leadScore";
 
@@ -25,7 +25,7 @@ interface Props {
 
 const STAGES = [
   { key: "lead", label: "New Lead", icon: UserPlus, tone: "text-muted-foreground", bg: "bg-muted", href: "/dashboard/clients" },
-  { key: "qualified", label: "Qualified", icon: Sparkles, tone: "text-blue-400", bg: "bg-blue-500/15", href: "/dashboard/clients" },
+  { key: "qualified", label: "Qualified", icon: UserCheck, tone: "text-blue-400", bg: "bg-blue-500/15", href: "/dashboard/clients" },
   { key: "proposal", label: "Proposal", icon: FileText, tone: "text-purple-400", bg: "bg-purple-500/15", href: "/dashboard/proposals" },
   { key: "accepted", label: "Accepted", icon: CheckCircle2, tone: "text-amber-400", bg: "bg-amber-500/15", href: "/dashboard/proposals" },
   { key: "signed", label: "Signed", icon: FileSignature, tone: "text-cyan-400", bg: "bg-cyan-500/15", href: "/dashboard/contracts" },
@@ -64,7 +64,7 @@ export default function ConversionPipeline({ proposals, clients, proposalClientI
     ).length;
     const proposal = proposals.filter((p) => {
       const s = (p.status || "").toLowerCase();
-      return s === "sent" || s === "viewed";
+      return s === "draft" || s === "sent" || s === "viewed";
     }).length;
     const accepted = proposals.filter(
       (p) => (p.status || "").toLowerCase() === "accepted" && !p.client_paid,
@@ -83,7 +83,7 @@ export default function ConversionPipeline({ proposals, clients, proposalClientI
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
 
   return (
-    <section aria-labelledby="pipeline-heading" className="space-y-3">
+    <section aria-labelledby="pipeline-heading" className="cs-dashboard-panel cs-pipeline-panel space-y-3">
       <div>
         <h2 id="pipeline-heading" className="text-xl font-semibold text-foreground">
           Conversion pipeline
@@ -94,8 +94,8 @@ export default function ConversionPipeline({ proposals, clients, proposalClientI
       </div>
 
       {total === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="p-4 sm:p-5 flex items-center gap-4">
+        <Card className="cs-pipeline-empty">
+          <CardContent className="cs-pipeline-empty-content">
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
               <GitBranch className="w-5 h-5 text-primary" />
             </div>
@@ -111,7 +111,7 @@ export default function ConversionPipeline({ proposals, clients, proposalClientI
           </CardContent>
         </Card>
       ) : (
-        <Card>
+        <Card className="cs-pipeline-stages">
           <CardContent className="p-3 sm:p-5">
             <div className="flex items-stretch gap-1 sm:gap-2 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory">
               {STAGES.map((stage, i) => {

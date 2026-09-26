@@ -72,14 +72,14 @@ describe("route accessibility", () => {
 
     expect(proposal).toContain('<h1 className="sr-only">Proposal details</h1>');
     expect(proposal).toContain('<span className="sr-only">Proposal details for </span>');
-    expect(proposal).toContain('<h1 className="text-2xl font-bold text-foreground">Proposal not found</h1>');
+    expect(proposal).toContain('<h1 className="cs-workspace-page-title text-foreground">Proposal not found</h1>');
     expect(proposalDocumentHeader).toContain('<h2 className="text-3xl lg:text-5xl');
     expect(proposalDocumentHeader).not.toContain("<h1");
 
     expect(onboardingResponse).toContain('<h1 className="sr-only">Onboarding response</h1>');
     expect(onboardingResponse).toContain('<span className="sr-only">Onboarding response for </span>');
     expect(onboardingResponse).toContain(
-      '<h1 className="text-base font-semibold text-foreground">Onboarding form not found</h1>',
+      '<h1 className="cs-workspace-page-title text-base font-semibold text-foreground">Onboarding form not found</h1>',
     );
     expect(onboardingResponse).toContain(
       '<h2 className="text-base font-semibold leading-6 tracking-[-0.01em] text-foreground">{g.group}</h2>',

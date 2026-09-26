@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Mail, Gauge, Bot, Send, FileText } from "lucide-react";
+import { Mail, Gauge, FilePenLine, Send, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 type Counts = {
@@ -41,7 +41,7 @@ export default function LeadFunnelMetrics() {
   const tiles = [
     { label: "New leads", value: counts.lead_email_received, icon: Mail, accent: "text-blue-500", bg: "bg-blue-500/10" },
     { label: "Qualified", value: counts.lead_qualified, icon: Gauge, accent: "text-amber-500", bg: "bg-amber-500/10" },
-    { label: "Replies drafted", value: counts.reply_drafted, icon: Bot, accent: "text-purple-500", bg: "bg-purple-500/10" },
+    { label: "Replies drafted", value: counts.reply_drafted, icon: FilePenLine, accent: "text-purple-500", bg: "bg-purple-500/10" },
     { label: "Replies sent", value: counts.reply_sent, icon: Send, accent: "text-emerald-500", bg: "bg-emerald-500/10" },
     { label: "Proposals from leads", value: counts.proposal_created_from_lead, icon: FileText, accent: "text-accent", bg: "bg-accent/10" },
   ];

@@ -12,11 +12,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Clock, CheckCircle2, Mail, Sparkles, Send, Loader2, MessageCircle } from "lucide-react";
+import { Clock, CheckCircle2, Mail, Send, Loader2, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
   getFollowUpScenario,
+  canSendFollowUp,
   FOLLOW_UP_META,
   type FollowUpScenario,
   type FollowUpInput,
@@ -123,6 +124,7 @@ export default function FollowUpStatus({ proposalId, proposal, clientEmail, clie
   const dueNow = currentScenario !== "none" && !sentScenarios.has(currentScenario);
   const status = (proposal.status || "").toLowerCase();
   const terminal = proposal.client_paid || status === "rejected";
+  const eligible = canSendFollowUp(proposal);
 
   // Scenario we will actually send if user clicks "Send now"
   const sendScenario: Exclude<FollowUpScenario, "none"> =
@@ -134,6 +136,10 @@ export default function FollowUpStatus({ proposalId, proposal, clientEmail, clie
 
   const handleSendNow = async () => {
     if (sending) return; // hard guard against rapid double-clicks
+    if (!eligible) {
+      setConfirmOpen(false);
+      return;
+    }
     if (!clientEmail) {
       toast({
         title: "No client email on file",
@@ -175,20 +181,21 @@ export default function FollowUpStatus({ proposalId, proposal, clientEmail, clie
 
   // Hide entirely if proposal is closed and there's no history.
   if (terminal && sent.length === 0 && waSent.length === 0) return null;
+  if (!eligible && sent.length === 0 && waSent.length === 0) return null;
 
   return (
     <Card className="border-border/60 bg-card/40">
       <CardContent className="p-5 space-y-4">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-accent" />
+            <Mail className="w-4 h-4 text-accent" />
             <h3 className="text-base font-semibold leading-6 tracking-[-0.01em] text-foreground">Follow-up status</h3>
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-[10px] uppercase tracking-wider">
               Auto
             </Badge>
-            {!terminal && (
+            {eligible && (
               <Button
                 size="sm"
                 variant="outline"

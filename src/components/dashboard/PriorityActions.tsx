@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bell, Sparkles, Banknote, UserPlus, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Bell, FilePlus2, Banknote, UserPlus, ArrowRight, CheckCircle2 } from "lucide-react";
 import { getFollowUpScenario, FOLLOW_UP_META, type FollowUpScenario } from "@/lib/follow-up";
 import FollowUpDialog from "@/components/proposal/FollowUpDialog";
 
@@ -111,7 +111,7 @@ export default function PriorityActions({ proposals, clients, proposalClientName
       out.push({
         key: `proposal-${p.id}`,
         tone: meta.tone,
-        icon: isPayment ? Banknote : Sparkles,
+        icon: isPayment ? Banknote : FilePlus2,
         title: isPayment
           ? `Payment pending — ${p.client_name} accepted proposal`
           : `Follow up with ${p.client_name} — proposal ${verb} ${relTime(ageIso)}`,
@@ -174,7 +174,7 @@ export default function PriorityActions({ proposals, clients, proposalClientName
             </p>
           </div>
           <Button asChild size="sm" variant="outline" className="gap-1.5 hidden sm:inline-flex">
-            <Link to="/dashboard/new"><Sparkles className="w-3.5 h-3.5" /> New Proposal</Link>
+            <Link to="/dashboard/new"><FilePlus2 className="w-3.5 h-3.5" /> New Proposal</Link>
           </Button>
         </CardContent>
       </Card>

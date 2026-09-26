@@ -25,7 +25,7 @@ import {
   intervalLabel,
 } from "@/lib/retainers";
 import { calculateCommercialTotals, type TaxMode } from "@/lib/commercial-calc";
-import { ArrowLeft, Repeat, Sparkles, Check } from "lucide-react";
+import { ArrowLeft, Repeat, LayoutTemplate, Check } from "lucide-react";
 
 interface ClientLite {
   id: string;
@@ -238,8 +238,8 @@ export default function NewRetainerPage() {
             <ArrowLeft className="w-3 h-3" /> Back to retainers
           </button>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-accent" /> Choose a retainer template
+            <h1 className="cs-workspace-page-title text-foreground flex items-center gap-2">
+              <LayoutTemplate className="w-6 h-6 text-accent" /> Choose a retainer template
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
               Start from a preset or build your own. Everything is editable.
@@ -312,7 +312,7 @@ export default function NewRetainerPage() {
           <ArrowLeft className="w-3 h-3" /> Choose a different template
         </button>
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+          <h1 className="cs-workspace-page-title text-foreground">
             New retainer
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -579,7 +579,7 @@ export default function NewRetainerPage() {
           <Button
             disabled={submitting}
             onClick={() => handleSubmit("active")}
-            className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90"
+            className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
           >
             Activate retainer
           </Button>

@@ -8,32 +8,7 @@ import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  ArrowLeft,
-  DollarSign,
-  TrendingUp,
-  Calendar,
-  CalendarDays,
-  Repeat,
-  AlertTriangle,
-  AlertCircle,
-  Clock,
-  CheckCircle2,
-  FileCheck,
-  RefreshCw,
-  BellRing,
-  Activity,
-  Users,
-  ExternalLink,
-  CalendarClock,
-  FilePlus,
-  ArrowUpRight,
-  Filter,
-  CalendarRange,
-  Sparkles,
-  TrendingDown,
-  Minus,
-} from "lucide-react";
+import { ArrowLeft, DollarSign, TrendingUp, Calendar, CalendarDays, Repeat, AlertTriangle, AlertCircle, Clock, CheckCircle2, FileCheck, RefreshCw, BellRing, Activity, Users, ExternalLink, CalendarClock, FilePlus, ArrowUpRight, Filter, CalendarRange, TrendingDown, Minus } from "lucide-react";
 import {
   ChartContainer,
   ChartTooltip,
@@ -767,7 +742,7 @@ export default function RevenueDashboard() {
               <ArrowLeft aria-hidden="true" className="w-4 h-4" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Revenue</h1>
+              <h1 className="cs-workspace-page-title text-foreground">Revenue</h1>
               <p className="text-sm text-muted-foreground mt-0.5">
                 Your revenue command centre
               </p>
@@ -787,7 +762,7 @@ export default function RevenueDashboard() {
         </div>
 
         {/* Revenue Filters */}
-        <Card className="border-border/60 bg-card/40 backdrop-blur-sm">
+        <Card className="border-border/60 bg-card">
           <CardContent className="p-3 sm:p-4">
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground/80 font-medium pr-2 border-r border-border/50">

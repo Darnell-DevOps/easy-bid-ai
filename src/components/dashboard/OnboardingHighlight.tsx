@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Sparkles, X } from "lucide-react";
+import { ClipboardCheck, X } from "lucide-react";
 
 /**
  * Subtle, dismissible "you can do these things" highlight shown the first time
@@ -36,7 +36,7 @@ export default function OnboardingHighlight() {
       </button>
       <div className="flex items-start gap-3 pr-6">
         <div className="w-9 h-9 rounded-lg bg-accent/20 text-accent flex items-center justify-center flex-shrink-0">
-          <Sparkles className="w-4 h-4" />
+          <ClipboardCheck className="w-4 h-4" />
         </div>
         <div>
           <p className="text-sm font-semibold text-foreground">

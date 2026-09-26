@@ -363,10 +363,10 @@ export default function AdminDashboard() {
 
   return (
     <DashboardLayout>
-      <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-8">
+      <div className="space-y-6">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
+            <h1 className="cs-workspace-page-title flex items-center gap-2">
               <Shield className="w-6 h-6" /> Founder Dashboard
             </h1>
             <p className="text-sm text-muted-foreground mt-1">Platform-wide stats. Only visible to super admins.</p>

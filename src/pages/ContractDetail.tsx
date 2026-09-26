@@ -4,11 +4,14 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import ContractRenderer from "@/components/contracts/ContractRenderer";
 import SignatureBlock from "@/components/contracts/SignatureBlock";
 import CountersignDialog from "@/components/contracts/CountersignDialog";
-import { Loader2, ArrowLeft, Copy, ExternalLink, Send, CheckCircle2, Clock, Eye, Download, FileSignature, Mail, CheckSquare, MessageCircle } from "lucide-react";
+import { Loader2, ArrowLeft, Copy, ExternalLink, Send, CheckCircle2, Clock, Eye, Download, FileSignature, Mail, CheckSquare, MessageCircle, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { contractTypeLabel, type ContractRow, type ContractSignatureRow } from "@/lib/contracts";
 import { sendEmail } from "@/lib/email";
@@ -49,6 +52,9 @@ export default function ContractDetail() {
   const [branding, setBranding] = useState<ProviderIdentityFields | null>(null);
   const [sending, setSending] = useState(false);
   const [markingSent, setMarkingSent] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [draftBody, setDraftBody] = useState("");
+  const [savingDraft, setSavingDraft] = useState(false);
   const pdfRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -111,6 +117,32 @@ export default function ContractDetail() {
 
   const signingUrl = `${window.location.origin}/sign/${contract.signing_token}`;
 
+  const openDraftEditor = () => {
+    if (contract.status !== "draft") return;
+    setDraftBody(contract.body || "");
+    setEditOpen(true);
+  };
+
+  const saveDraft = async () => {
+    if (contract.status !== "draft" || !draftBody.trim() || savingDraft) return;
+    setSavingDraft(true);
+    const { data, error } = await supabase
+      .from("contracts")
+      .update({ body: draftBody.trim() })
+      .eq("id", contract.id)
+      .eq("status", "draft")
+      .select("id")
+      .maybeSingle();
+    setSavingDraft(false);
+    if (error || !data) {
+      toast({ title: "Couldn't save contract draft", description: error?.message || "This agreement may no longer be a draft. Reload and try again.", variant: "destructive" });
+      return;
+    }
+    setEditOpen(false);
+    await load();
+    toast({ title: "Contract draft saved" });
+  };
+
   const copyLink = async () => {
     const { blocked, missing } = hasCriticalPlaceholders();
     if (blocked) { showPlaceholderBlockedToast(missing); return; }
@@ -134,11 +166,11 @@ export default function ContractDetail() {
 
   const showPlaceholderBlockedToast = (missing: string) => {
     toast({
-      title: "Complete your business details before sending this agreement.",
-      description: `The contract still references ${missing}. Update your business details in Settings and regenerate the contract before sending.`,
+      title: "Complete the agreement before sending it.",
+      description: `The contract still references ${missing}. Edit the draft and replace every placeholder before sharing it.`,
       variant: "destructive",
       action: (
-        <Button size="sm" variant="outline" onClick={() => navigate("/dashboard/settings")}>Open settings</Button>
+        contract.status === "draft" ? <Button size="sm" variant="outline" onClick={openDraftEditor}>Edit draft</Button> : undefined
       ) as any,
     });
   };
@@ -268,7 +300,7 @@ export default function ContractDetail() {
             <div className="flex items-start justify-between gap-3 flex-wrap">
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-2xl font-bold text-foreground">{contract.title}</h1>
+                  <h1 className="cs-workspace-page-title text-foreground">{contract.title}</h1>
                   <Badge className={`${STATUS_STYLES[contract.status] || STATUS_STYLES.draft} border-0`}>{STATUS_LABEL[contract.status] || contract.status}</Badge>
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">
@@ -319,8 +351,11 @@ export default function ContractDetail() {
                 </Button>
                 {contract.status === "draft" && (
                   <>
+                    <Button variant="outline" className="gap-2" onClick={openDraftEditor}>
+                      <Pencil className="w-4 h-4" aria-hidden="true" /> Edit draft
+                    </Button>
                     <Button
-                      className="gap-2 bg-accent text-accent-foreground"
+                      className="gap-2 bg-primary text-primary-foreground"
                       onClick={sendViaCloseSync}
                       disabled={sending || !contract.client_email}
                       aria-busy={sending}
@@ -343,7 +378,7 @@ export default function ContractDetail() {
                 )}
                 {isAwaitingCountersign && (
                   <Button
-                    className="gap-2 bg-accent text-accent-foreground font-semibold"
+                    className="gap-2 bg-primary text-primary-foreground font-semibold"
                     onClick={() => setCountersignOpen(true)}
                   >
                     <FileSignature className="w-4 h-4" /> Countersign contract
@@ -374,7 +409,7 @@ export default function ContractDetail() {
                 </div>
               </div>
               <Button
-                className="gap-2 bg-accent text-accent-foreground font-semibold"
+                className="gap-2 bg-primary text-primary-foreground font-semibold"
                 onClick={() => setCountersignOpen(true)}
               >
                 <FileSignature className="w-4 h-4" /> Countersign now
@@ -457,6 +492,22 @@ export default function ContractDetail() {
         defaultName={ownerName}
         onSigned={handleCountersigned}
       />
+      <Dialog open={editOpen} onOpenChange={(open) => { if (!savingDraft) setEditOpen(open); }}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Edit contract draft</DialogTitle>
+            <DialogDescription>Review the full agreement and replace every [TBD] or other placeholder before you share it. Changes cannot be made here after the contract is sent.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="contract-draft-body">Agreement text (Markdown)</Label>
+            <Textarea id="contract-draft-body" rows={18} value={draftBody} onChange={(event) => setDraftBody(event.target.value)} className="min-h-80 font-mono text-sm" />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)} disabled={savingDraft}>Cancel</Button>
+            <Button onClick={() => void saveDraft()} disabled={savingDraft || !draftBody.trim()} aria-busy={savingDraft}>{savingDraft ? "Saving…" : "Save draft"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

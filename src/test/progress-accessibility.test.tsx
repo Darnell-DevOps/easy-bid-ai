@@ -54,7 +54,6 @@ describe("progress accessibility", () => {
     const namedProgressSources = [
       "src/pages/Billing.tsx",
       "src/pages/NewProposal.tsx",
-      "src/components/settings/DataExportsSettings.tsx",
       "src/pages/OnboardingDashboard.tsx",
       "src/pages/OnboardingResponseDetail.tsx",
       "src/pages/OnboardingFormPage.tsx",
@@ -62,7 +61,7 @@ describe("progress accessibility", () => {
     ].map(source).join("\n");
 
     const progressBlocks = namedProgressSources.match(/<(?:Progress|div)\b[^>]*(?:role="progressbar"|aria-label="[^"]*(?:progress|usage|completion)[^"]*")[^>]*>/gi) ?? [];
-    expect(progressBlocks.length).toBeGreaterThanOrEqual(7);
+    expect(progressBlocks.length).toBeGreaterThanOrEqual(6);
     for (const block of progressBlocks) {
       expect(block).toMatch(/aria-label=|aria-labelledby=/);
     }

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, RefreshCw, Loader2, Brain } from "lucide-react";
+import { FileText, RefreshCw, Loader2, ClipboardList } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -85,12 +85,12 @@ export default function ClientBriefCard({ clientId }: ClientBriefCardProps) {
 
   if (!brief && !loading) {
     return (
-      <Card aria-busy="false" className="glass-card border-accent/20 bg-gradient-to-br from-accent/[0.04] to-transparent">
+      <Card aria-busy="false" className="border-border/60">
         <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex-1 space-y-3">
             <div className="flex items-start gap-3">
               <div className="w-9 h-9 rounded-lg bg-accent/15 flex items-center justify-center flex-shrink-0">
-                <Brain aria-hidden="true" className="w-4 h-4 text-accent" />
+                <ClipboardList aria-hidden="true" className="w-4 h-4 text-accent" />
               </div>
               <div>
                 <p className="text-sm font-semibold text-foreground">Brief me on this client</p>
@@ -103,7 +103,7 @@ export default function ClientBriefCard({ clientId }: ClientBriefCardProps) {
             {statusAnnouncement}
           </div>
           <Button size="sm" onClick={generate} className="gap-2 flex-shrink-0">
-            <Sparkles aria-hidden="true" className="w-3.5 h-3.5" /> Generate brief
+            <FileText aria-hidden="true" className="w-3.5 h-3.5" /> Generate brief
           </Button>
         </CardContent>
       </Card>
@@ -111,11 +111,11 @@ export default function ClientBriefCard({ clientId }: ClientBriefCardProps) {
   }
 
   return (
-    <Card aria-busy={loading} className="glass-card border-accent/30 bg-gradient-to-br from-accent/[0.06] to-transparent">
+    <Card aria-busy={loading} className="border-border/60">
       <CardContent className="p-5 space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
-            <Brain aria-hidden="true" className="w-4 h-4 text-accent" /> AI Client Brief
+            <ClipboardList aria-hidden="true" className="w-4 h-4 text-accent" /> AI Client Brief
           </h3>
           <Button
             size="sm"

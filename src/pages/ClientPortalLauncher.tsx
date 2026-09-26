@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Eye, Loader2, Search, Sparkles } from "lucide-react";
+import { ExternalLink, Eye, Loader2, Search } from "lucide-react";
 
 interface ProposalRow {
   id: string;
@@ -64,14 +64,10 @@ export default function ClientPortalLauncher() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 max-w-5xl">
+      <div className="space-y-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground/70 font-semibold mb-2">
-              <Sparkles className="w-3.5 h-3.5 text-accent" />
-              Client Portal
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          <h1 className="cs-workspace-page-title text-foreground">
               Open a client portal
             </h1>
             <p className="text-sm text-muted-foreground mt-1">

@@ -14,6 +14,8 @@ const ROUTE_TITLES: RouteTitle[] = [
   { path: "/.lovable/oauth/consent", title: "Authorize access | CloseSync AI" },
   { path: "/login", title: "Sign in | CloseSync AI" },
   { path: "/signup", title: "Create your CloseSync AI account" },
+  { path: "/terms", title: "Terms of Service | CloseSync AI" },
+  { path: "/privacy", title: "Privacy Policy | CloseSync AI" },
   { path: "/forgot-password", title: "Reset your password | CloseSync AI" },
   { path: "/reset-password", title: "Set a new password | CloseSync AI" },
   { path: "/sample", title: "Sample AI Proposal | CloseSync AI" },

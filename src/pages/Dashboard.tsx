@@ -3,11 +3,12 @@ import { useNavigate, Link } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import AttentionCenter from "@/components/dashboard/AttentionCenter";
 import ConversionPipeline from "@/components/dashboard/ConversionPipeline";
+import RevenueActivity from "@/components/dashboard/RevenueActivity";
 import BusinessPulse from "@/components/dashboard/BusinessPulse";
 import UpcomingAndRecent from "@/components/dashboard/UpcomingAndRecent";
 import ActivationChecklist from "@/components/dashboard/ActivationChecklist";
 import { Button } from "@/components/ui/button";
-import { UserPlus } from "lucide-react";
+import { UserPlus, ArrowUpRight, MessagesSquare, Calendar, FileText, LayoutDashboard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   loadOnboardingProgress,
@@ -172,15 +173,16 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto space-y-8">
+      <div className="cs-dashboard cs-dashboard-studio max-w-7xl mx-auto">
+        <div className="cs-dashboard-toolbar"><span><LayoutDashboard aria-hidden="true" /> Dashboard</span><Link to="/dashboard/calendar"><Calendar aria-hidden="true" /> Calendar <ArrowUpRight aria-hidden="true" /></Link></div>
         {/* HEADER */}
         <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+            <h1 className="cs-workspace-page-title cs-dashboard-title">
               {greeting()}{firstName ? `, ${firstName}` : ""}
             </h1>
             <p className="text-sm text-muted-foreground mt-1.5 max-w-xl">
-              Here's what needs your attention and where your next revenue could come from.
+              Your clients, priorities and revenue, in one place.
             </p>
           </div>
           <Button
@@ -195,31 +197,25 @@ export default function Dashboard() {
           </Button>
         </header>
 
-        <ActivationChecklist />
+        <BusinessPulse proposals={proposals} />
 
-        {/* MAIN ROW: Attention + Business Pulse */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-8">
-            <AttentionCenter
-              proposals={proposals}
-              clients={clients}
-              proposalClientIds={proposalClientIds}
-            />
+        <div className="cs-dashboard-grid">
+          <div className="cs-dashboard-primary-column">
+            <RevenueActivity proposals={proposals} />
+            <ConversionPipeline proposals={proposals} clients={clients} proposalClientIds={proposalClientIds} />
+            <UpcomingAndRecent proposals={proposals} />
           </div>
-          <div className="lg:col-span-4">
-            <BusinessPulse proposals={proposals} />
+          <div className="cs-dashboard-priorities">
+            <AttentionCenter proposals={proposals} clients={clients} proposalClientIds={proposalClientIds} />
+            <ActivationChecklist />
+            <section className="cs-dashboard-panel cs-dashboard-shortcuts" aria-labelledby="shortcuts-heading">
+              <div className="cs-dashboard-panel-heading"><div><h2 id="shortcuts-heading">Keep work moving</h2><p>Pick up the next step.</p></div></div>
+              <Link to="/dashboard/leads"><MessagesSquare aria-hidden="true" /><span><strong>Lead Assistant</strong><small>Review and qualify enquiries</small></span><ArrowUpRight aria-hidden="true" /></Link>
+              <Link to="/dashboard/new"><FileText aria-hidden="true" /><span><strong>Create a proposal</strong><small>Turn a brief into your next offer</small></span><ArrowUpRight aria-hidden="true" /></Link>
+              <Link to="/dashboard/calendar"><Calendar aria-hidden="true" /><span><strong>Open your calendar</strong><small>Stay on top of client meetings</small></span><ArrowUpRight aria-hidden="true" /></Link>
+            </section>
           </div>
         </div>
-
-        {/* CONVERSION PIPELINE */}
-        <ConversionPipeline
-          proposals={proposals}
-          clients={clients}
-          proposalClientIds={proposalClientIds}
-        />
-
-        {/* SECONDARY: Upcoming & Recent (auto-hides if empty) */}
-        <UpcomingAndRecent proposals={proposals} />
       </div>
     </DashboardLayout>
   );

@@ -10,17 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Sparkles,
-  Loader2,
-  FileText,
-  FileSignature,
-  Mail,
-  Inbox,
-  Building2,
-  Wand2,
-  RefreshCw,
-} from "lucide-react";
+import { PenLine, Loader2, FileText, FileSignature, Mail, Inbox, Building2, ListChecks, RefreshCw } from "lucide-react";
 
 type Prefs = {
   default_tone: string;
@@ -218,7 +208,7 @@ export default function AiPreferencesSettings() {
 
       {/* AI Writing Tone */}
       <SettingsSection
-        icon={Sparkles}
+        icon={PenLine}
         title="Default AI Tone"
         description="The base writing voice used everywhere unless a section overrides it."
       >
@@ -357,7 +347,7 @@ export default function AiPreferencesSettings() {
 
       {/* Custom AI Instructions */}
       <SettingsSection
-        icon={Wand2}
+        icon={ListChecks}
         title="Additional AI Instructions"
         description='Free-form rules the AI should follow. Examples: "Always write in British English." · "Never use aggressive sales language."'
       >
@@ -381,7 +371,7 @@ export default function AiPreferencesSettings() {
           <div className="flex items-start justify-between gap-4 mb-4">
             <div className="flex items-start gap-3">
               <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
-                <Sparkles className="w-4 h-4 text-accent" />
+                <PenLine className="w-4 h-4 text-accent" />
               </div>
               <div>
                 <h3 className="text-base font-semibold text-foreground">AI Preview</h3>

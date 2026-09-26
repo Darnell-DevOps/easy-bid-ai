@@ -6,22 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import {
-  FileText,
-  FileSignature,
-  CreditCard,
-  ClipboardList,
-  Repeat,
-  CalendarClock,
-  Loader2,
-  Sparkles,
-  Zap,
-  Check,
-  Plug,
-  Webhook,
-  MessageSquare,
-  Slack,
-} from "lucide-react";
+import { FileText, FileSignature, CreditCard, ClipboardList, Repeat, CalendarClock, Loader2, Workflow, Zap, Check, Plug, Webhook, MessageSquare, Slack } from "lucide-react";
 
 type AutomationDef = {
   id: string;
@@ -119,7 +104,7 @@ const CATEGORIES: CategoryDef[] = [
 // Automations will be routable to any of these once integrations ship.
 const FUTURE_CHANNELS: { id: string; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: "zapier", label: "Zapier", icon: Zap },
-  { id: "make", label: "Make.com", icon: Sparkles },
+  { id: "make", label: "Make.com", icon: Workflow },
   { id: "webhooks", label: "Webhooks", icon: Webhook },
   { id: "slack", label: "Slack", icon: Slack },
   { id: "teams", label: "Microsoft Teams", icon: MessageSquare },
@@ -239,7 +224,7 @@ export default function AutomationsSettings() {
             </div>
           </div>
           <Badge variant="outline" className="border-accent/30 text-accent gap-1">
-            <Sparkles className="w-3 h-3" /> AI-assisted
+            <Workflow className="w-3 h-3" /> AI-assisted
           </Badge>
         </CardContent>
       </Card>

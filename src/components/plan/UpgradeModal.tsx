@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Crown, Check, Sparkles } from "lucide-react";
+import { Crown, Check } from "lucide-react";
 import { PLANS, type PlanId } from "@/lib/plans";
 
 interface UpgradeModalProps {
@@ -39,7 +39,7 @@ export default function UpgradeModal({
               {requiredPlan === "pro" ? (
                 <Crown className="w-4 h-4 text-accent" />
               ) : (
-                <Sparkles className="w-4 h-4 text-accent" />
+                <Crown className="w-4 h-4 text-accent" />
               )}
             </div>
             <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-semibold">

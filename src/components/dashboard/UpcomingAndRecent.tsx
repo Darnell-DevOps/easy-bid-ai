@@ -88,14 +88,19 @@ export default function UpcomingAndRecent({ proposals }: Props) {
     return events.sort((a, b) => new Date(b.iso).getTime() - new Date(a.iso).getTime()).slice(0, 3);
   })();
 
-  if (bookings.length === 0 && activities.length === 0) return null;
+  if (bookings.length === 0 && activities.length === 0) return (
+    <section className="cs-dashboard-panel cs-activity-panel" aria-labelledby="upcoming-heading">
+      <div className="cs-dashboard-panel-heading"><div><h2 id="upcoming-heading">Recent activity</h2><p>The latest from your client work.</p></div><Link to="/dashboard/proposals" className="cs-dashboard-text-link">View proposals <ArrowRight aria-hidden="true" /></Link></div>
+      <div className="cs-activity-empty"><Clock aria-hidden="true" /><div><strong>Nothing to catch up on yet</strong><p>Proposal updates and upcoming meetings will appear here.</p></div></div>
+    </section>
+  );
 
   const showBookings = bookings.length > 0;
   const showActivity = activities.length > 0;
   const gridCols = showBookings && showActivity ? "md:grid-cols-2" : "md:grid-cols-1";
 
   return (
-    <section aria-labelledby="upcoming-heading" className="space-y-3">
+    <section aria-labelledby="upcoming-heading" className="cs-dashboard-panel cs-activity-panel space-y-3">
       <div className="flex items-end justify-between">
         <div>
           <h2 id="upcoming-heading" className="text-xl font-semibold text-foreground">

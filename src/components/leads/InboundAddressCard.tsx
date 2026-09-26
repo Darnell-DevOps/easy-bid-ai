@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Inbox, Copy, Check, Sparkles, Settings as SettingsIcon } from "lucide-react";
+import { Inbox, Copy, Check, Mail, Settings as SettingsIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -67,7 +67,7 @@ export default function InboundAddressCard() {
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
-              <Sparkles className="w-3 h-3 text-accent" />
+              <Mail className="w-3 h-3 text-accent" />
               Forward any enquiry here — we'll create the lead and draft an AI reply.
             </p>
           </div>

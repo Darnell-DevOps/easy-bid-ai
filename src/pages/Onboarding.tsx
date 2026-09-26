@@ -13,16 +13,7 @@ import {
   saveOnboardingProgress,
   type OnboardingStep,
 } from "@/lib/onboarding-progress";
-import {
-  Sparkles,
-  Loader2,
-  ArrowRight,
-  Send,
-  Eye,
-  CreditCard,
-  CheckCircle2,
-  Rocket,
-} from "lucide-react";
+import { FilePlus2, Loader2, ArrowRight, Send, Eye, CreditCard, CheckCircle2, Rocket } from "lucide-react";
 
 type Step = Exclude<OnboardingStep, "completed" | "skipped">;
 
@@ -409,7 +400,7 @@ export default function Onboarding() {
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-4 h-4" /> Generate Proposal with AI
+                        <FilePlus2 className="w-4 h-4" /> Generate Proposal with AI
                       </>
                     )}
                   </Button>

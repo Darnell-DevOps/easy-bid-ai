@@ -21,37 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  ArrowLeft,
-  Mail,
-  Phone,
-  Building2,
-  FileText,
-  DollarSign,
-  Plus,
-  Trash2,
-  Sparkles,
-  Pencil,
-  Save,
-  X,
-  MessageSquare,
-  Gauge,
-  Lightbulb,
-  ArrowRight,
-  MoreVertical,
-  Send,
-  Receipt,
-  CreditCard,
-  AlertCircle,
-  FileSignature,
-  Repeat,
-  ClipboardList,
-  CalendarDays,
-  Copy,
-  Check,
-  Ban,
-  Loader2,
-} from "lucide-react";
+import { ArrowLeft, Mail, Phone, Building2, FileText, DollarSign, Plus, Trash2, FilePlus2, Pencil, Save, X, MessageSquare, Gauge, Lightbulb, ArrowRight, MoreVertical, Send, Receipt, CreditCard, AlertCircle, FileSignature, Repeat, ClipboardList, CalendarDays, Copy, Check, Ban, Loader2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -607,7 +577,7 @@ export default function ClientDetail() {
               </span>
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">{client.name}</h1>
+              <h1 className="cs-workspace-page-title text-foreground">{client.name}</h1>
               <div className="flex flex-wrap gap-3 mt-1">
                 {client.company && (
                   <span className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -765,9 +735,9 @@ export default function ClientDetail() {
                 <Button
                   onClick={generateProposal}
                   size="sm"
-                  className="gap-2 bg-accent text-accent-foreground hover:bg-accent/90 shadow-sm shadow-accent/20"
+                  className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 "
                 >
-                  <Sparkles className="w-3.5 h-3.5" /> Generate Proposal
+                  <FilePlus2 className="w-3.5 h-3.5" /> Generate Proposal
                 </Button>
               </CardContent>
             </Card>
@@ -1008,7 +978,7 @@ export default function ClientDetail() {
 
 
         {/* Intake details / edit form */}
-        <Card className="glass-card">
+        <Card className="cs-workspace-panel">
           <CardContent className="p-6 space-y-5">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">

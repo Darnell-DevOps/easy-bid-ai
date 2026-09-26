@@ -100,7 +100,7 @@ export default function NewClient() {
         </button>
 
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Add New Client</h1>
+          <h1 className="cs-workspace-page-title text-foreground">Add New Client</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Capture intake details so you can generate proposals in one click.
           </p>
@@ -108,7 +108,7 @@ export default function NewClient() {
 
         <form onSubmit={handleSave} className="space-y-6">
           {/* Basic Info */}
-          <Card className="glass-card">
+          <Card className="cs-workspace-panel">
             <CardContent className="p-6 space-y-5">
               <div>
                 <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">
@@ -169,7 +169,7 @@ export default function NewClient() {
           </Card>
 
           {/* Project Details */}
-          <Card className="glass-card">
+          <Card className="cs-workspace-panel">
             <CardContent className="p-6 space-y-5">
               <div>
                 <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">
@@ -223,7 +223,7 @@ export default function NewClient() {
           </Card>
 
           {/* Goals */}
-          <Card className="glass-card">
+          <Card className="cs-workspace-panel">
             <CardContent className="p-6 space-y-5">
               <div>
                 <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">
@@ -246,7 +246,7 @@ export default function NewClient() {
           </Card>
 
           {/* Internal */}
-          <Card className="glass-card">
+          <Card className="cs-workspace-panel">
             <CardContent className="p-6 space-y-5">
               <div>
                 <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">
@@ -283,7 +283,7 @@ export default function NewClient() {
             <Button
               type="submit"
               disabled={saving}
-              className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
             >
               {saving ? (
                 <>

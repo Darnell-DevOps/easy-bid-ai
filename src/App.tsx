@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,61 +8,62 @@ import Index from "./pages/Index";
 import LandingConcepts from "./pages/LandingConcepts";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import LegalPage from "./pages/LegalPage";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
-import Dashboard from "./pages/Dashboard";
-import NewProposal from "./pages/NewProposal";
-import ProposalView from "./pages/ProposalView";
-import Billing from "./pages/Billing";
-import SettingsPage from "./pages/SettingsPage";
-import SampleProposal from "./pages/SampleProposal";
-import Templates from "./pages/Templates";
-import RevenueDashboard from "./pages/RevenueDashboard";
-import ClientPortalLauncher from "./pages/ClientPortalLauncher";
-import ProposalsDashboard from "./pages/ProposalsDashboard";
-import Clients from "./pages/Clients";
-import NewClient from "./pages/NewClient";
-import ClientDetail from "./pages/ClientDetail";
-import TimeSavedDashboard from "./pages/TimeSavedDashboard";
-import LeadAssistant from "./pages/LeadAssistant";
-import Policies from "./pages/Policies";
-import NewPolicy from "./pages/NewPolicy";
-import PolicyView from "./pages/PolicyView";
-import ClientPortal from "./pages/ClientPortal";
-import Onboarding from "./pages/Onboarding";
-import CalendarPage from "./pages/CalendarPage";
-import PublicBookingPage from "./pages/PublicBookingPage";
-import ReschedulePage from "./pages/ReschedulePage";
-import ContractsPage from "./pages/ContractsPage";
-import ContractDetail from "./pages/ContractDetail";
-import ContractSignPage from "./pages/ContractSignPage";
-import OnboardingFormPage from "./pages/OnboardingFormPage";
-import OnboardingDashboard from "./pages/OnboardingDashboard";
-import OnboardingResponseDetail from "./pages/OnboardingResponseDetail";
-import RetainersPage from "./pages/RetainersPage";
-import NewRetainerPage from "./pages/NewRetainerPage";
-import RetainerDetail from "./pages/RetainerDetail";
-import RetainerSubscribePage from "./pages/RetainerSubscribePage";
-import RetainerRecoverPage from "./pages/RetainerRecoverPage";
-import RecoveryDashboard from "./pages/RecoveryDashboard";
-import EmailsDashboard from "./pages/EmailsDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
-import TestimonialsDashboard from "./pages/TestimonialsDashboard";
-import TestimonialSubmitPage from "./pages/TestimonialSubmitPage";
-import TestimonialWallPage from "./pages/TestimonialWallPage";
 import SuperAdminGuard from "./components/admin/SuperAdminGuard";
-import LeadFormsDashboard from "./pages/LeadFormsDashboard";
-import LeadFormEditor from "./pages/LeadFormEditor";
-import PublicLeadFormPage from "./pages/PublicLeadFormPage";
-import LeadInbox from "./pages/LeadInbox";
-import Trash from "./pages/Trash";
-import KickoffDashboard from "./pages/KickoffDashboard";
 import NotFound from "./pages/NotFound";
 import OAuthConsent from "./pages/OAuthConsent";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { PageTransition } from "@/components/PageTransition";
 import RouteAccessibility from "@/components/RouteAccessibility";
 
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const NewProposal = lazy(() => import("./pages/NewProposal"));
+const ProposalView = lazy(() => import("./pages/ProposalView"));
+const Billing = lazy(() => import("./pages/Billing"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const SampleProposal = lazy(() => import("./pages/SampleProposal"));
+const Templates = lazy(() => import("./pages/Templates"));
+const RevenueDashboard = lazy(() => import("./pages/RevenueDashboard"));
+const ClientPortalLauncher = lazy(() => import("./pages/ClientPortalLauncher"));
+const ProposalsDashboard = lazy(() => import("./pages/ProposalsDashboard"));
+const Clients = lazy(() => import("./pages/Clients"));
+const NewClient = lazy(() => import("./pages/NewClient"));
+const ClientDetail = lazy(() => import("./pages/ClientDetail"));
+const TimeSavedDashboard = lazy(() => import("./pages/TimeSavedDashboard"));
+const LeadAssistant = lazy(() => import("./pages/LeadAssistant"));
+const Policies = lazy(() => import("./pages/Policies"));
+const NewPolicy = lazy(() => import("./pages/NewPolicy"));
+const PolicyView = lazy(() => import("./pages/PolicyView"));
+const ClientPortal = lazy(() => import("./pages/ClientPortal"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
+const CalendarPage = lazy(() => import("./pages/CalendarPage"));
+const PublicBookingPage = lazy(() => import("./pages/PublicBookingPage"));
+const ReschedulePage = lazy(() => import("./pages/ReschedulePage"));
+const ContractsPage = lazy(() => import("./pages/ContractsPage"));
+const ContractDetail = lazy(() => import("./pages/ContractDetail"));
+const ContractSignPage = lazy(() => import("./pages/ContractSignPage"));
+const OnboardingFormPage = lazy(() => import("./pages/OnboardingFormPage"));
+const OnboardingDashboard = lazy(() => import("./pages/OnboardingDashboard"));
+const OnboardingResponseDetail = lazy(() => import("./pages/OnboardingResponseDetail"));
+const RetainersPage = lazy(() => import("./pages/RetainersPage"));
+const NewRetainerPage = lazy(() => import("./pages/NewRetainerPage"));
+const RetainerDetail = lazy(() => import("./pages/RetainerDetail"));
+const RetainerSubscribePage = lazy(() => import("./pages/RetainerSubscribePage"));
+const RetainerRecoverPage = lazy(() => import("./pages/RetainerRecoverPage"));
+const RecoveryDashboard = lazy(() => import("./pages/RecoveryDashboard"));
+const EmailsDashboard = lazy(() => import("./pages/EmailsDashboard"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const TestimonialsDashboard = lazy(() => import("./pages/TestimonialsDashboard"));
+const TestimonialSubmitPage = lazy(() => import("./pages/TestimonialSubmitPage"));
+const TestimonialWallPage = lazy(() => import("./pages/TestimonialWallPage"));
+const LeadFormsDashboard = lazy(() => import("./pages/LeadFormsDashboard"));
+const LeadFormEditor = lazy(() => import("./pages/LeadFormEditor"));
+const PublicLeadFormPage = lazy(() => import("./pages/PublicLeadFormPage"));
+const LeadInbox = lazy(() => import("./pages/LeadInbox"));
+const Trash = lazy(() => import("./pages/Trash"));
+const KickoffDashboard = lazy(() => import("./pages/KickoffDashboard"));
 const queryClient = new QueryClient();
 
 function RouteSkipLink() {
@@ -70,7 +72,9 @@ function RouteSkipLink() {
     ? "landing-main"
     : pathname === "/admin" || pathname.startsWith("/dashboard")
       ? "dashboard-main"
-      : null;
+      : pathname === "/terms" || pathname === "/privacy"
+        ? "legal-main"
+        : null;
   if (!targetId) return null;
 
   return (
@@ -89,6 +93,7 @@ const App = () => (
         <RouteSkipLink />
         <PaymentTestModeBanner />
         <PageTransition>
+          <Suspense fallback={<div role="status" className="min-h-screen bg-background px-6 py-12 text-sm text-muted-foreground">Loading page…</div>}>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/landing-concepts" element={<LandingConcepts />} />
@@ -96,6 +101,8 @@ const App = () => (
             <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/terms" element={<LegalPage kind="terms" />} />
+            <Route path="/privacy" element={<LegalPage kind="privacy" />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/sample" element={<SampleProposal />} />
@@ -149,6 +156,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
 
           </Routes>
+          </Suspense>
         </PageTransition>
       </BrowserRouter>
     </TooltipProvider>

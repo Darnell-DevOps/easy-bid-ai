@@ -453,6 +453,8 @@ Avoid mixing:
 
 Icon colour should normally inherit the surrounding text colour.
 
+Use task-specific symbols rather than generic AI sparkles, magic wands or robots. For the dashboard, use conversation icons for lead assistance, checklist icons for setup, a checked user for qualification and a document-plus icon for new proposals.
+
 ---
 
 ## 17. AI-specific design language
@@ -583,6 +585,21 @@ When Codex needs to design something new:
 
 **Consistency overrides novelty.**
 
+### Public authentication layout
+
+- Login, signup and password recovery share `src/components/auth/AuthLayout.tsx` and the `cs-auth-*` styles in the token stylesheet.
+- Keep authentication state, validation, CAPTCHA, providers and redirects in their existing route components; the shared layout only presents content.
+- Use a 400px maximum form measure, labelled 48px controls, a quiet header and footer, and an illustrative workflow alongside the form on desktop. The illustration is supplementary and omitted on mobile.
+- Password recovery uses the centered layout (`showPreview={false}`) to focus on the immediate task. Persistent confirmation messages use `cs-auth-status` and retain their live-region and focus behaviour.
+- Login and signup use `appearance="landing"`: the landing page’s white surfaces, neutral text, violet actions, header proportions and restrained client-record illustration. Scoped semantic variables in `src/index.css` map the CloseSync palette for existing form primitives; they never change the saved app theme.
+- Recovery screens retain the saved light/dark theme through the default appearance. Primary buttons remain CloseSync violet; text links use the violet tint on dark backgrounds for contrast.
+
+### Legal reading pages
+
+- Terms and Privacy share `src/pages/LegalPage.tsx` and `cs-legal-*` styles: a restrained public header, document title, contents navigation and a readable document column.
+- Contents stack above the document on mobile. Section anchors, route titles and a skip link preserve keyboard wayfinding.
+- The current pages are labelled design previews and excluded from indexing. They require operator details and approved policy wording before publication; layout placeholders are not legal terms.
+
 ---
 
 ## 24. Implementation contract
@@ -595,3 +612,17 @@ The implementation lives in `src/styles/closesync-design-system.css`.
 - Existing dark and light themes remain supported. New UI should use semantic shadcn colours for theme-aware surfaces and CloseSync brand tokens for intentional brand moments.
 - Reusable primitives in `src/components/ui/` consume the typography, radius, shadow, and motion tokens. Prefer those primitives over page-local equivalents.
 - Existing one-off values are legacy migration candidates, not permission to add more. Normalise them only when their owning component is being intentionally changed and regression-tested.
+
+### Dashboard and workspace navigation
+
+The shared dashboard shell uses layered charcoal surfaces, subtle borders and localized violet lighting in dark mode, with neutral light surfaces and softer lighting in its light-theme counterpart. Reuse the scoped `--cs-dashboard-*` tokens and `cs-workspace-*` classes for the shell, brand, create action, navigation rows and footer; preserve Geist, outline Lucide icons and functional CloseSync violet. The desktop sidebar stays within the viewport and its links scroll independently; the mobile version keeps the existing focus-managed sheet. Icon-only links must have accessible names, the current destination uses `aria-current="page"`, and keyboard focus and reduced-motion support remain intact.
+
+The `cs-dashboard` overview places a restrained greeting and contextual primary action above four separate `cs-pulse-stat` panels in `cs-pulse-grid`: Revenue, Pipeline, Outstanding and MRR. Values use neutral, tabular figures with violet icon accents; semantic colour communicates actionable status. Below, `cs-dashboard-grid` gives the revenue activity chart, conversion pipeline and recent activity a wider primary column, with attention items, the activation checklist and shortcuts in the narrower priorities column. Reuse `cs-dashboard-panel` for these bounded groups; checklist steps remain a single column and their descriptions wrap within the side panel.
+
+Above 1000px, the main columns use a 1.85:1 ratio with a 250px minimum priorities column. At 1000px and below, the main columns stack, metrics use two columns and priorities use two columns; at 639px and below, priorities stack and panel spacing and chart height reduce. Preserve readable content and wrapping actions at intermediate widths as well as on mobile; the metric grid stays two columns on small screens.
+
+Revenue activity shows six calendar months of existing paid proposal budgets, grouped by recorded `paid_at` dates, with an equivalent screen-reader data table and an explicit empty state. Do not invent trends, sample revenue or decorative controls for empty accounts. Business totals retain their existing proposal and active-retainer sources. All data queries, actions, permissions and route destinations remain owned by their existing components.
+
+Workspace navigation keeps Dashboard, Clients, Lead Inbox, Calendar and Emails visible. Sales, Delivery, Finance and Resources use labelled disclosure buttons, remember their expansion locally and open for the current route. In the optional collapsed rail, group buttons open accessible destination menus. Settings and Account remain in the fixed footer; account details, Trash, permitted Admin access and sign out live in the Account menu. Keep every existing destination and preserve mobile sheet focus management.
+
+Authenticated route headings use `cs-workspace-page-title`: the overview’s H2 scale on desktop and H3 scale on mobile, semibold Geist and neutral text. Keep document-preview typography independent. Shared Card surfaces use `data-cs-card` to apply the neutral workspace surface and border without extra shadow. Tabs wrap on small screens while retaining Radix keyboard behavior. List screens use the shell content width; focused forms and documents may retain their narrower reading measures. Use task-specific outline icons instead of generic sparkle symbols.

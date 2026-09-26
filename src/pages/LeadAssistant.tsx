@@ -9,29 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Loader2,
-  Sparkles,
-  MessageSquare,
-  Bot,
-  UserPlus,
-  FileText,
-  Copy,
-  Check,
-  Gauge,
-  Lightbulb,
-  Eye,
-  RotateCcw,
-  ClipboardList,
-  Target,
-  Send,
-  TrendingUp,
-  Users,
-  CheckCircle2,
-  Wand2,
-  ArrowRight,
-  Crown,
-} from "lucide-react";
+import { Loader2, MessagesSquare, MessageSquare, FilePenLine, UserPlus, FileText, Copy, Check, Gauge, Lightbulb, Eye, RotateCcw, ClipboardList, Target, Send, TrendingUp, Users, CheckCircle2, FilePlus2, ArrowRight, Crown } from "lucide-react";
 import { smartSelectTemplate, type SmartSelectResult } from "@/lib/smart-template";
 import type { TemplateData } from "@/pages/Templates";
 import { templates } from "@/pages/Templates";
@@ -457,7 +435,7 @@ export default function LeadAssistant() {
 
   const steps = [
     { n: 1, label: "Understand the lead", icon: MessageSquare },
-    { n: 2, label: "Generate response", icon: Bot },
+    { n: 2, label: "Generate response", icon: FilePenLine },
     { n: 3, label: "Send & convert", icon: Send },
   ];
 
@@ -470,19 +448,14 @@ export default function LeadAssistant() {
         title="Turn leads into clients automatically"
         description="Unlock AI Lead Response to instantly draft replies, qualify leads, and recommend next steps. Available on the Pro plan."
       />
-      <div className="space-y-8 max-w-4xl mx-auto">
+      <div className="space-y-6">
         {/* Hero */}
         <div className="space-y-3">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Sparkles className="w-4 h-4 text-primary" />
-            AI Sales Assistant
-          </div>
-          <h1 className="type-page-title">
-            Turn cold leads into paying clients — instantly
+          <h1 className="cs-workspace-page-title">
+            Lead Assistant
           </h1>
           <p className="text-muted-foreground text-base sm:text-lg max-w-2xl">
-            Generate high-converting replies that qualify, position your offer, and move leads
-            toward a sale.
+            Review enquiries, qualify leads and prepare replies.
           </p>
         </div>
 
@@ -631,13 +604,13 @@ export default function LeadAssistant() {
                 className={
                   aiLeadUnlocked
                     ? "w-full sm:w-auto"
-                    : "w-full sm:w-auto bg-accent text-accent-foreground font-semibold hover:bg-accent/90"
+                    : "w-full sm:w-auto bg-primary text-primary-foreground font-semibold hover:bg-primary/90"
                 }
               >
                 {generating ? (
                   <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</>
                 ) : aiLeadUnlocked ? (
-                  <><Sparkles className="w-4 h-4" /> Generate Reply That Converts</>
+                  <><MessagesSquare className="w-4 h-4" /> Generate Reply That Converts</>
                 ) : (
                   <><Crown className="w-4 h-4" /> Unlock AI Reply with Pro</>
                 )}
@@ -682,7 +655,7 @@ export default function LeadAssistant() {
             <Card className="border-primary/30">
               <CardHeader>
                 <CardTitle id="ai-drafted-reply-heading" className="flex items-center gap-2 text-base">
-                  <Bot aria-hidden="true" className="w-4 h-4 text-primary" />
+                  <FilePenLine aria-hidden="true" className="w-4 h-4 text-primary" />
                   AI-drafted reply
                 </CardTitle>
               </CardHeader>
@@ -867,7 +840,7 @@ export default function LeadAssistant() {
               <Card className="border-accent/30 bg-accent/[0.04]">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
-                    <Wand2 className="w-4 h-4 text-accent" />
+                    <FilePlus2 className="w-4 h-4 text-accent" />
                     Smart Template Match
                   </CardTitle>
                   <p className="text-xs text-muted-foreground">
@@ -1018,7 +991,7 @@ export default function LeadAssistant() {
                           {smartLoading ? (
                             <><Loader2 className="w-4 h-4 animate-spin" /> {smartLoadingSteps[smartStep]}</>
                           ) : (
-                            <><Wand2 className="w-4 h-4" /> Generate Proposal</>
+                            <><FilePlus2 className="w-4 h-4" /> Generate Proposal</>
                           )}
                         </Button>
                       )}

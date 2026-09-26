@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 const concepts = [
   { key: "editorial", title: "A - Editorial record", heading: "Every step, connected.", sample: "View sample proposal", sampleHref: "/sample" },
-  { key: "system", title: "B - Workflow system", heading: "Turn every enquiry into a clear path to payment.", sample: null, sampleHref: null },
+  { key: "system", title: "B - Workflow system", heading: "From first enquiry to signed, paid and ready to start.", sample: null, sampleHref: null },
   { key: "studio", title: "C - Quiet studio", heading: "A calmer way to close clients.", sample: "View sample proposal", sampleHref: "/sample" },
 ] as const;
 
@@ -44,12 +44,12 @@ for (const concept of concepts) {
       await expect(workflow).toBeInViewport();
       await expect(workflow).toHaveClass(/is-sequenced/);
 
-      await expect(page.getByRole("heading", { name: "Disconnected tools turn simple handoffs into avoidable work." })).toBeVisible();
-      await expect(page.getByRole("heading", { name: "Know what happens at every commercial step." })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "The gap between “interested” and “ready to start” creates avoidable work." })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Built for the handoff after “yes”." })).toBeVisible();
       await expect(page.getByText("Designed first for UK freelancers, consultants and small agencies.")).toBeVisible();
       await expect(page.getByText("Free is £0. Pro is £29 per month.")).toBeVisible();
-      await expect(page.getByRole("heading", { name: "Three moments. One connected workflow." })).toBeVisible();
-      await expect(page.getByRole("heading", { name: "Responsible AI, inside the workflow." })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "One client record from enquiry to kickoff." })).toBeVisible();
+      await expect(workflow.getByRole("heading", { level: 3, name: "Responsible AI, inside the workflow." })).toBeVisible();
 
       expect(await page.locator("#landing-main > section").evaluateAll((sections) => (
         sections.map((section) => section.className)
@@ -58,7 +58,6 @@ for (const concept of concepts) {
         "system-assurances",
         "system-problem",
         "system-capabilities",
-        "system-ai",
         "concept-pricing",
       ]);
 

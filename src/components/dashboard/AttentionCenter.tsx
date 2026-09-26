@@ -7,7 +7,7 @@ import {
   Flame,
   Banknote,
   FileSignature,
-  Sparkles,
+  FilePlus2,
   ClipboardList,
   CalendarClock,
   Send,
@@ -551,10 +551,11 @@ export default function AttentionCenter({ proposals, clients, proposalClientIds 
 
   if (items.length === 0) {
     return (
-      <Card className="border-emerald-500/20 bg-emerald-500/[0.03]">
+      <section className="cs-dashboard-panel cs-attention-empty" aria-labelledby="attention-heading">
+        <div className="cs-dashboard-panel-heading"><div><h2 id="attention-heading">Needs your attention</h2><p>Your next actions, prioritised.</p></div><Bell aria-hidden="true" className="w-4 h-4 text-muted-foreground" /></div>
         <CardContent className="p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-emerald-500/15 flex items-center justify-center flex-shrink-0">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+          <div className="cs-attention-check">
+            <CheckCircle2 className="w-5 h-5" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground">You're all caught up</p>
@@ -568,15 +569,15 @@ export default function AttentionCenter({ proposals, clients, proposalClientIds 
             className="gap-1.5 hidden sm:inline-flex"
             onClick={() => navigate("/dashboard/new")}
           >
-            <Sparkles className="w-3.5 h-3.5" /> New proposal
+            <FilePlus2 className="w-3.5 h-3.5" /> New proposal
           </Button>
         </CardContent>
-      </Card>
+      </section>
     );
   }
 
   return (
-    <section aria-labelledby="attention-heading" className="space-y-3">
+    <section aria-labelledby="attention-heading" className="cs-dashboard-panel cs-attention-list space-y-3">
       <div className="flex items-end justify-between gap-3 flex-wrap">
         <div>
           <h2 id="attention-heading" className="text-xl font-semibold text-foreground flex items-center gap-2">

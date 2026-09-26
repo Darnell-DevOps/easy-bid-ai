@@ -80,7 +80,7 @@ test("landing page links to a usable login form", async ({ page }) => {
 
   await expect(page.getByRole("heading", {
     level: 1,
-    name: "Turn every enquiry into a clear path to payment.",
+    name: "From first enquiry to signed, paid and ready to start.",
   })).toBeVisible();
 
   const workflow = page.getByRole("region", { name: "BrightStone website redesign" });
@@ -124,7 +124,7 @@ test("landing page links to a usable login form", async ({ page }) => {
   await expect(page.getByLabel("Password")).toBeVisible();
 });
 
-test("forced colours preserve keyboard focus and gradient text", async ({ page }) => {
+test("forced colours preserve keyboard focus and brand text", async ({ page }) => {
   await page.emulateMedia({ forcedColors: "active" });
   await page.goto("/login");
 
@@ -142,8 +142,9 @@ test("forced colours preserve keyboard focus and gradient text", async ({ page }
   expect(focusIndicator.width).toBeGreaterThanOrEqual(2);
   expect(focusIndicator.shadow).toBe("none");
 
-  const gradientText = page.locator(".text-gradient-sync").first();
-  const textPresentation = await gradientText.evaluate((element) => {
+  const brandText = page.getByRole("link", { name: "CloseSync AI home" }).locator(".cs-auth-brand-accent");
+  await expect(brandText).toHaveText("Sync");
+  const textPresentation = await brandText.evaluate((element) => {
     const style = getComputedStyle(element);
     return {
       backgroundImage: style.backgroundImage,
@@ -197,6 +198,9 @@ test("public authentication pages expose accessible form semantics", async ({ pa
   const invalidResetAlert = page.getByRole("alert");
   await expect(invalidResetAlert).toContainText("This password reset link is invalid or has expired");
   await expect(invalidResetAlert).toBeFocused();
+  await page.getByRole("link", { name: "Request a new reset link", exact: true }).click();
+  await expect(page).toHaveURL(/\/forgot-password$/);
+  await expect(page.getByLabel("Email", { exact: true })).toBeVisible();
 
   await page.setViewportSize({ width: 320, height: 800 });
   for (const path of ["/login", "/signup", "/forgot-password", "/reset-password"]) {

@@ -123,7 +123,7 @@ export default function TestimonialsDashboard() {
       <div className="space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Testimonials & Reputation</h1>
+            <h1 className="cs-workspace-page-title">Testimonials & Reputation</h1>
             <p className="text-sm text-muted-foreground">Collect, manage and showcase client reviews automatically.</p>
           </div>
           <div className="flex gap-2">

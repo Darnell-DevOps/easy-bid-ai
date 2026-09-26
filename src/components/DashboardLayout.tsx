@@ -3,12 +3,13 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { performSignOut } from "@/lib/logout";
 import {
-  FileText, Plus, Settings, LogOut, Menu, LayoutTemplate, Users, Sparkles,
+  LayoutDashboard, FileText, Plus, Settings, LogOut, Menu, LayoutTemplate, Users, MessagesSquare,
   ScrollText, Calendar, FileSignature, ClipboardList, Repeat, LifeBuoy, Mail,
-  Shield, Star, ChevronLeft, ChevronRight, CreditCard, TrendingUp, Eye, Trash2, Rocket,
+  Shield, Star, ChevronLeft, ChevronRight, CreditCard, TrendingUp, Eye, Trash2, Rocket, ChevronDown, CircleUserRound, BriefcaseBusiness, FolderOpen,
 } from "lucide-react";
 import { useIsSuperAdmin } from "@/hooks/useIsSuperAdmin";
 import { useUnreadLeadsCount } from "@/hooks/use-unread-leads";
@@ -20,29 +21,30 @@ type NavItem = {
   badgeKey?: "leads" | "recovery" | "emails";
 };
 
-type NavGroup = { label: string; items: NavItem[] };
+type NavGroup = { label: string; icon: NavItem["icon"]; items: NavItem[] };
+
+const dailyItems: NavItem[] = [
+  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+  { label: "Clients", icon: Users, href: "/dashboard/clients" },
+  { label: "Lead Inbox", icon: Mail, href: "/dashboard/lead-inbox" },
+  { label: "Calendar", icon: Calendar, href: "/dashboard/calendar" },
+  { label: "Emails", icon: Mail, href: "/dashboard/emails", badgeKey: "emails" },
+];
 
 const navGroups: NavGroup[] = [
   {
-    label: "Sales",
+    label: "Sales", icon: BriefcaseBusiness,
     items: [
-      { label: "Dashboard", icon: FileText, href: "/dashboard" },
-      { label: "Clients", icon: Users, href: "/dashboard/clients" },
-      { label: "Lead Assistant", icon: Sparkles, href: "/dashboard/leads", badgeKey: "leads" },
+
+      { label: "Lead Assistant", icon: MessagesSquare, href: "/dashboard/leads", badgeKey: "leads" },
       { label: "Lead Forms", icon: ClipboardList, href: "/dashboard/lead-forms" },
-      { label: "Lead Inbox", icon: Mail, href: "/dashboard/lead-inbox" },
+
       { label: "Proposals", icon: FileText, href: "/dashboard/proposals" },
       { label: "Contracts", icon: FileSignature, href: "/dashboard/contracts" },
     ],
   },
   {
-    label: "Client Portal",
-    items: [
-      { label: "Open Client Portal", icon: Eye, href: "/dashboard/client-portal" },
-    ],
-  },
-  {
-    label: "Revenue",
+    label: "Finance", icon: CreditCard,
     items: [
       { label: "Revenue", icon: TrendingUp, href: "/dashboard/revenue" },
       { label: "Retainers", icon: Repeat, href: "/dashboard/retainers" },
@@ -50,36 +52,32 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    label: "Delivery",
+    label: "Delivery", icon: ClipboardList,
     items: [
-      { label: "Calendar", icon: Calendar, href: "/dashboard/calendar" },
+      { label: "Open Client Portal", icon: Eye, href: "/dashboard/client-portal" },
+
       { label: "Onboarding", icon: ClipboardList, href: "/dashboard/onboarding" },
       { label: "Kickoff", icon: Rocket, href: "/dashboard/kickoff" },
+
+
     ],
   },
   {
-    label: "Communication",
-    items: [
-      { label: "Emails", icon: Mail, href: "/dashboard/emails", badgeKey: "emails" },
-      { label: "Testimonials", icon: Star, href: "/dashboard/testimonials" },
-    ],
-  },
-  {
-    label: "Resources",
+    label: "Resources", icon: FolderOpen,
     items: [
       { label: "Templates", icon: LayoutTemplate, href: "/dashboard/templates" },
       { label: "Policies", icon: ScrollText, href: "/dashboard/policies" },
-    ],
-  },
-  {
-    label: "System",
-    items: [
-      { label: "Settings", icon: Settings, href: "/dashboard/settings" },
-      { label: "Trash", icon: Trash2, href: "/dashboard/trash" },
+      { label: "Testimonials", icon: Star, href: "/dashboard/testimonials" },
+
+
     ],
   },
 ];
 
+navGroups.sort((a, b) => ["Sales", "Delivery", "Finance", "Resources"].indexOf(a.label) - ["Sales", "Delivery", "Finance", "Resources"].indexOf(b.label));
+
+const isActiveRoute = (path: string, href: string) => path === href || (href !== "/dashboard" && path.startsWith(`${href}/`));
+const GROUPS_KEY = "cs.sidebar.groups";
 const COLLAPSE_KEY = "cs.sidebar.collapsed";
 
 function QuickStatus({ collapsed }: { collapsed: boolean }) {
@@ -101,35 +99,12 @@ function QuickStatus({ collapsed }: { collapsed: boolean }) {
     return () => { cancelled = true; };
   }, []);
 
-  if (collapsed) {
-    return (
-      <div className="px-2 py-3 flex justify-center">
-        <div className="w-9 h-9 rounded-lg bg-sidebar-accent border border-sidebar-border flex items-center justify-center">
-          <Sparkles className="w-4 h-4 text-accent" />
-        </div>
-      </div>
-    );
-  }
+  if (collapsed) return null;
 
   return (
-    <div className="mx-3 mb-2 p-3 rounded-lg bg-sidebar-accent/60 border border-sidebar-border">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] uppercase tracking-wider text-sidebar-foreground/70 font-semibold">Current Plan</span>
-        <CreditCard className="w-3 h-3 text-sidebar-foreground/40" />
-      </div>
-      <div className="text-sm font-semibold text-sidebar-foreground mb-2">{stats?.plan ?? "—"}</div>
-      <div className="grid grid-cols-2 gap-2 text-[11px]">
-        <div>
-          <div className="text-sidebar-foreground/70">Clients</div>
-          <div className="text-sidebar-foreground font-medium">{stats?.clients ?? "—"}</div>
-        </div>
-        <div>
-          <div className="text-sidebar-foreground/70">MRR</div>
-          <div className="text-sidebar-foreground font-medium">
-            {stats ? `£${(stats.mrr / 1000).toFixed(1)}k` : "—"}
-          </div>
-        </div>
-      </div>
+    <div className="cs-workspace-status">
+      <div><CreditCard aria-hidden="true" /><span>{stats?.plan ?? "—"}</span></div>
+      <p>{stats?.clients ?? "—"} clients <span aria-hidden="true">·</span> {stats ? `£${(stats.mrr / 1000).toFixed(1)}k` : "—"} MRR</p>
     </div>
   );
 }
@@ -141,14 +116,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const mobileNavigationRouteClose = useRef(false);
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
-    return window.localStorage.getItem(COLLAPSE_KEY) === "1";
+    try { return window.localStorage.getItem(COLLAPSE_KEY) === "1"; } catch { return false; }
   });
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(GROUPS_KEY) || "{}");
+      return Object.fromEntries(navGroups.map(group => [group.label, saved?.[group.label] === true]));
+    } catch { return {}; }
+  });
+  const menuRouteClose = useRef(false);
+  useEffect(() => {
+    const active = navGroups.find(group => group.items.some(item => isActiveRoute(location.pathname, item.href)));
+    if (active) setExpandedGroups(previous => previous[active.label] ? previous : { ...previous, [active.label]: true });
+  }, [location.pathname]);
+  useEffect(() => {
+    try { window.localStorage.setItem(GROUPS_KEY, JSON.stringify(expandedGroups)); } catch { /* Navigation remains usable without storage. */ }
+  }, [expandedGroups]);
   const [loggingOut, setLoggingOut] = useState(false);
   const isAdmin = useIsSuperAdmin();
   const unreadLeads = useUnreadLeadsCount();
 
   useEffect(() => {
-    window.localStorage.setItem(COLLAPSE_KEY, collapsed ? "1" : "0");
+    try { window.localStorage.setItem(COLLAPSE_KEY, collapsed ? "1" : "0"); } catch { /* Keep the current session preference. */ }
   }, [collapsed]);
 
   useEffect(() => {
@@ -174,51 +163,41 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setMobileOpen(false);
   };
 
-  const NavItemRow = ({ item, isMobile = false }: { item: NavItem; isMobile?: boolean }) => {
-    const active = location.pathname === item.href;
+  const renderNavItem = (item: NavItem, isMobile = false) => {
+    const active = isActiveRoute(location.pathname, item.href);
     const badge = item.badgeKey ? badges[item.badgeKey] : 0;
     const showCompact = collapsed && !isMobile;
 
     const row = (
       <Link
+        key={item.href}
         to={item.href}
         onClick={isMobile ? () => closeMobileNavigationForRoute(item.href) : undefined}
-        className={`group relative flex items-center gap-3 rounded-md text-sm leading-5 transition-all duration-200 ${
-          showCompact ? "justify-center px-0 py-2.5 mx-2" : "px-3 py-2"
-        } ${
-          active
-            ? "bg-sidebar-accent text-sidebar-foreground font-medium"
-            : "text-sidebar-foreground/65 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-        }`}
+        aria-label={showCompact ? item.label : undefined}
+        aria-current={active ? "page" : undefined}
+        className={`cs-workspace-nav-link${showCompact ? " cs-workspace-nav-link-compact" : ""}`}
       >
-        {active && (
-          <span className="absolute left-0 top-2 bottom-2 w-[2px] rounded-r-full bg-accent" />
-        )}
-        <item.icon
-          className={`w-4 h-4 flex-shrink-0 transition-colors ${
-            active ? "text-accent" : "text-sidebar-foreground/55 group-hover:text-sidebar-foreground/90"
-          }`}
-        />
+        <item.icon aria-hidden="true" />
         {!showCompact && <span className="flex-1 truncate">{item.label}</span>}
         {!showCompact && badge > 0 && (
-          <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-accent/90 text-accent-foreground text-[10px] font-semibold">
+          <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold">
             {badge > 99 ? "99+" : badge}
           </span>
         )}
         {showCompact && badge > 0 && (
-          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-accent" />
+          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary" />
         )}
       </Link>
     );
 
     if (showCompact) {
       return (
-        <Tooltip delayDuration={100}>
+        <Tooltip key={item.href} delayDuration={100}>
           <TooltipTrigger asChild>{row}</TooltipTrigger>
           <TooltipContent side="right" className="flex items-center gap-2">
             <span>{item.label}</span>
             {badge > 0 && (
-              <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-accent text-accent-foreground text-[10px] font-semibold">
+              <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold">
                 {badge}
               </span>
             )}
@@ -229,126 +208,79 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return row;
   };
 
-  const NavContent = ({ isMobile = false }: { isMobile?: boolean }) => {
+  const renderNavContent = (isMobile = false) => {
     const showCompact = collapsed && !isMobile;
     return (
       <>
-        {/* Header */}
-        <div className={`${showCompact ? "px-2 pt-5 pb-4" : "px-5 pt-5 pb-4"}`}>
-          <Link
-            to="/dashboard"
-            onClick={isMobile ? () => closeMobileNavigationForRoute("/dashboard") : undefined}
-            className="block"
-          >
-            {showCompact ? (
-              <div className="w-9 h-9 mx-auto rounded-lg bg-accent flex items-center justify-center text-accent-foreground font-bold text-sm">
-                C
-              </div>
-            ) : (
-              <>
-                <div className="text-base font-semibold text-sidebar-foreground tracking-tight leading-tight">
-                  Close<span className="text-gradient-sync">Sync</span> <span className="text-sidebar-foreground/90">AI</span>
-                </div>
-                <div className="text-[10px] uppercase tracking-[0.15em] text-sidebar-foreground/70 mt-1 font-medium">
-                  by StriveSync
-                </div>
-              </>
-            )}
+        <div className="cs-workspace-brand-area">
+          <Link to="/dashboard" aria-label="CloseSync AI dashboard" className="cs-workspace-brand"
+            onClick={isMobile ? () => closeMobileNavigationForRoute("/dashboard") : undefined}>
+            <img src="/closesync-mark.png" alt="" width="32" height="32" />
+            {!showCompact && <span>CloseSync <small>AI</small></span>}
           </Link>
-
-          {/* Primary CTA */}
-          <div className={showCompact ? "mt-4" : "mt-4"}>
-            {showCompact ? (
-              <Tooltip delayDuration={100}>
-                <TooltipTrigger asChild>
-                  <Link
-                    to="/dashboard/new"
-                    onClick={isMobile ? () => closeMobileNavigationForRoute("/dashboard/new") : undefined}
-                    className="flex items-center justify-center w-9 h-9 mx-auto rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent side="right">New Proposal</TooltipContent>
-              </Tooltip>
-            ) : (
-              <Link
-                to="/dashboard/new"
+          <Tooltip delayDuration={100}>
+            <TooltipTrigger asChild>
+              <Link to="/dashboard/new" aria-label="New Proposal"
                 onClick={isMobile ? () => closeMobileNavigationForRoute("/dashboard/new") : undefined}
-                className="flex items-center justify-center gap-2 w-full h-9 rounded-lg bg-accent text-accent-foreground text-sm font-semibold leading-5 hover:bg-accent/90 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                New Proposal
+                className="cs-workspace-create">
+                <Plus aria-hidden="true" />
+                {!showCompact && <span>New Proposal</span>}
               </Link>
-            )}
-          </div>
+            </TooltipTrigger>
+            {showCompact && <TooltipContent side="right">New Proposal</TooltipContent>}
+          </Tooltip>
         </div>
 
         {/* Nav groups */}
         <nav
           aria-label={isMobile ? "Dashboard navigation" : "Primary dashboard navigation"}
-          className={`flex-1 overflow-y-auto ${showCompact ? "px-0 pb-2" : "px-2 pb-2"} space-y-4`}
+          className="cs-workspace-nav"
         >
-          {navGroups.map((group) => (
-            <div key={group.label}>
-              {!showCompact && (
-                <div className="px-3 pt-1 pb-1.5 text-[10px] uppercase tracking-[0.12em] text-sidebar-foreground/70 font-semibold">
-                  {group.label}
-                </div>
-              )}
-              {showCompact && <div className="mx-3 my-2 h-px bg-sidebar-border/40" />}
-              <div className="space-y-0.5">
-                {group.items.map((item) => (
-                  <NavItemRow key={item.href} item={item} isMobile={isMobile} />
-                ))}
-              </div>
-            </div>
-          ))}
-
-          {isAdmin && (
-            <div>
-              {!showCompact && (
-                <div className="px-3 pt-1 pb-1.5 text-[10px] uppercase tracking-[0.12em] text-sidebar-foreground/70 font-semibold">
-                  Admin
-                </div>
-              )}
-              {showCompact && <div className="mx-3 my-2 h-px bg-sidebar-border/40" />}
-              <NavItemRow item={{ label: "Admin", icon: Shield, href: "/admin" }} isMobile={isMobile} />
-            </div>
-          )}
+          {dailyItems.map(item => renderNavItem(item, isMobile))}
+          <div className="cs-workspace-groups">
+            {navGroups.map(group => {
+              const active = group.items.some(item => isActiveRoute(location.pathname, item.href));
+              const expanded = !!expandedGroups[group.label];
+              const id = `cs-nav-${isMobile ? "mobile" : "desktop"}-${group.label.toLowerCase()}`;
+              const trigger = <button type="button" className={`cs-workspace-nav-link cs-workspace-group-trigger${showCompact ? " cs-workspace-nav-link-compact" : ""}`} aria-label={group.label} data-active={active || undefined}>
+                <group.icon aria-hidden="true" />
+                {!showCompact && <><span className="flex-1 text-left">{group.label}</span><ChevronDown aria-hidden="true" className={expanded ? "rotate-180" : ""} /></>}
+              </button>;
+              if (showCompact) return <DropdownMenu key={group.label}>
+                <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
+                <DropdownMenuContent side="right" align="start" onCloseAutoFocus={event => { if (menuRouteClose.current) { event.preventDefault(); menuRouteClose.current = false; } }}>
+                  <DropdownMenuLabel>{group.label}</DropdownMenuLabel>
+                  {group.items.map(item => <DropdownMenuItem key={item.href} asChild><Link to={item.href} aria-current={isActiveRoute(location.pathname, item.href) ? "page" : undefined} onClick={() => { menuRouteClose.current = item.href !== location.pathname; }}><item.icon aria-hidden="true" className="mr-2 h-4 w-4" />{item.label}</Link></DropdownMenuItem>)}
+                </DropdownMenuContent>
+              </DropdownMenu>;
+              return <div key={group.label}>
+                <button type="button" className="cs-workspace-nav-link cs-workspace-group-trigger" data-active={active || undefined} aria-expanded={expanded} aria-controls={id} onClick={() => setExpandedGroups(previous => ({ ...previous, [group.label]: !previous[group.label] }))}>
+                  <group.icon aria-hidden="true" /><span className="flex-1 text-left">{group.label}</span><ChevronDown aria-hidden="true" className={expanded ? "rotate-180" : ""} />
+                </button>
+                <div id={id} hidden={!expanded} className="cs-workspace-group-items">{group.items.map(item => renderNavItem(item, isMobile))}</div>
+              </div>;
+            })}
+          </div>
         </nav>
 
-        {/* Quick status */}
-        <div className="border-t border-sidebar-border/50 pt-2">
-          <QuickStatus collapsed={showCompact} />
-
-          {/* Footer actions */}
-          <div className={`${showCompact ? "px-2 pb-3" : "px-3 pb-3"} space-y-1`}>
-            {showCompact ? (
-              <Tooltip delayDuration={100}>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={handleLogout}
-                    disabled={loggingOut}
-                    aria-label="Log out"
-                    className="flex items-center justify-center w-full h-9 rounded-md border border-sidebar-border/60 text-sidebar-foreground/75 hover:text-sidebar-foreground hover:bg-destructive/15 hover:border-destructive/40 disabled:opacity-60 transition"
-                  >
-                    <LogOut className="w-4 h-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right">Log out</TooltipContent>
-              </Tooltip>
-            ) : (
-              <button
-                onClick={handleLogout}
-                disabled={loggingOut}
-                aria-label="Log out"
-                className="flex items-center gap-3 px-3 py-2 rounded-md border border-sidebar-border/60 text-sm font-semibold leading-5 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-destructive/15 hover:border-destructive/40 disabled:opacity-60 w-full transition"
-              >
-                <LogOut className="w-4 h-4" />
-                {loggingOut ? "Logging out…" : "Log out"}
-              </button>
-            )}
+        <div className="cs-workspace-footer">
+          <div className="px-2 pb-3">
+            {renderNavItem({ label: "Settings", icon: Settings, href: "/dashboard/settings" }, isMobile)}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button type="button" aria-label="Account" className={`cs-workspace-nav-link cs-workspace-group-trigger${showCompact ? " cs-workspace-nav-link-compact" : ""}`}>
+                  <CircleUserRound aria-hidden="true" />{!showCompact && <><span className="flex-1 text-left">Account</span><ChevronDown aria-hidden="true" /></>}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side={showCompact ? "right" : "top"} align="start" className="cs-workspace-account-menu" onCloseAutoFocus={event => { if (menuRouteClose.current) { event.preventDefault(); menuRouteClose.current = false; } }}>
+                <DropdownMenuLabel>Workspace account</DropdownMenuLabel>
+                <QuickStatus collapsed={false} />
+                <DropdownMenuSeparator />
+                {[{ label: "Trash", icon: Trash2, href: "/dashboard/trash" }, ...(isAdmin ? [{ label: "Admin", icon: Shield, href: "/admin" }] : [])].map(item => <DropdownMenuItem key={item.href} asChild><Link to={item.href} onClick={() => { menuRouteClose.current = item.href !== location.pathname; if (isMobile) closeMobileNavigationForRoute(item.href); }}><item.icon aria-hidden="true" className="mr-2 h-4 w-4" />{item.label}</Link></DropdownMenuItem>)}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={handleLogout} disabled={loggingOut}><LogOut aria-hidden="true" className="mr-2 h-4 w-4" />{loggingOut ? "Logging out…" : "Log out"}</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </>
@@ -357,19 +289,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen flex bg-background">
+      <div className="cs-workspace-shell flex flex-col md:flex-row bg-background">
         {/* Desktop sidebar */}
         <aside
-          className={`hidden md:flex flex-col bg-sidebar border-r border-sidebar-border flex-shrink-0 relative transition-[width] duration-200 ease-out ${
+          className={`cs-workspace-sidebar hidden md:flex flex-col bg-sidebar border-r border-sidebar-border flex-shrink-0 transition-[width] duration-200 ease-out ${
             collapsed ? "w-[64px]" : "w-60"
           }`}
         >
-          <NavContent />
+          {renderNavContent()}
           {/* Collapse toggle */}
           <button
             type="button"
             onClick={() => setCollapsed((c) => !c)}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-expanded={!collapsed}
             className="absolute -right-3 top-7 w-6 h-6 rounded-full bg-sidebar border border-sidebar-border flex items-center justify-center text-sidebar-foreground/60 hover:text-sidebar-foreground hover:border-accent/50 transition-colors z-10"
           >
             {collapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
@@ -377,10 +310,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </aside>
 
         {/* Mobile header */}
-        <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-sidebar border-b border-sidebar-border flex items-center justify-between px-4 z-50">
-          <span className="text-base font-semibold text-sidebar-foreground tracking-tight">
-            Close<span className="text-gradient-sync">Sync</span> <span className="text-sidebar-foreground">AI</span>
-          </span>
+        <div className="cs-workspace-mobile-header md:hidden flex-shrink-0 h-14 bg-sidebar border-b border-sidebar-border flex items-center justify-between px-4 z-50">
+          <Link to="/dashboard" aria-label="CloseSync AI dashboard" className="cs-workspace-brand">
+            <img src="/closesync-mark.png" alt="" width="32" height="32" />
+            <span>CloseSync <small>AI</small></span>
+          </Link>
           <Sheet
             open={mobileOpen}
             onOpenChange={(open) => {
@@ -401,7 +335,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <SheetContent
               id="dashboard-mobile-navigation"
               side="left"
-              className="top-14 bottom-0 h-auto w-64 bg-sidebar p-0 text-sidebar-foreground"
+              className="cs-workspace-drawer inset-y-0 h-full w-64 bg-sidebar p-0 text-sidebar-foreground"
               onCloseAutoFocus={(event) => {
                 if (!mobileNavigationRouteClose.current) return;
                 event.preventDefault();
@@ -413,15 +347,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 Choose a CloseSync dashboard area.
               </SheetDescription>
               <div className="flex h-full flex-col">
-                <NavContent isMobile />
+                {renderNavContent(true)}
               </div>
             </SheetContent>
           </Sheet>
         </div>
 
         {/* Main content */}
-        <main id="dashboard-main" tabIndex={-1} className="flex-1 min-w-0 md:pt-0 pt-14 overflow-auto">
-          <div className="px-4 sm:px-6 md:px-10 py-5 md:py-8 max-w-[1600px] mx-auto content-glow">{children}</div>
+        <main id="dashboard-main" tabIndex={-1} className="flex-1 min-w-0 min-h-0 overflow-auto">
+          <div className="px-4 sm:px-6 md:px-10 py-5 md:py-8 max-w-[1600px] mx-auto">{children}</div>
         </main>
       </div>
     </TooltipProvider>

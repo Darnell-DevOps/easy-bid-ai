@@ -2,7 +2,7 @@ import { useAIInsight } from "@/hooks/use-ai-insight";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Loader2, CheckCircle2, AlertTriangle, RefreshCw } from "lucide-react";
+import { ClipboardCheck, Loader2, CheckCircle2, AlertTriangle, RefreshCw } from "lucide-react";
 import { scoreColor } from "@/lib/ai-coach";
 
 interface ProposalAuditPanelProps {
@@ -23,12 +23,12 @@ export default function ProposalAuditPanel({ proposalId }: ProposalAuditPanelPro
   const hasResult = !!insight;
 
   return (
-    <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+    <Card className="border-border/60">
       <CardContent className="p-5 space-y-4" aria-busy={generating || loading}>
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-primary" />
+              <ClipboardCheck className="w-4 h-4 text-primary" />
             </div>
             <div>
               <h3 className="text-base font-semibold">AI Proposal Audit</h3>
@@ -54,7 +54,7 @@ export default function ProposalAuditPanel({ proposalId }: ProposalAuditPanelPro
               </>
             ) : (
               <>
-                <Sparkles className="w-3.5 h-3.5" /> Run AI Audit
+                <ClipboardCheck className="w-3.5 h-3.5" /> Run AI Audit
               </>
             )}
           </Button>
@@ -127,7 +127,7 @@ export default function ProposalAuditPanel({ proposalId }: ProposalAuditPanelPro
             )}
 
             {!!details.rewrite_suggestions?.length && (
-              <Section title="Rewrite suggestions" icon={<Sparkles className="w-3.5 h-3.5 text-primary" />}>
+              <Section title="Rewrite suggestions" icon={<ClipboardCheck className="w-3.5 h-3.5 text-primary" />}>
                 <ul className="space-y-2">
                   {details.rewrite_suggestions.map((r: any, i: number) => (
                     <li key={i} className="text-xs">
