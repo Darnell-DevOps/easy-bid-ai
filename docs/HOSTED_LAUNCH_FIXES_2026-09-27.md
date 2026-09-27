@@ -52,14 +52,44 @@ database and rebuilds all migrations. See the [official action documentation](ht
   Existing main-domain Google Workspace MX records must remain intact.
 - The auth email hook uses Resend from `notify@closesync.io`, which is a different
   sender domain from `notify.closesync.io`. A Resend key exists, but sender-domain
-  verification and actual delivery have not been confirmed. There is no automatic
-  fallback sender in this hook.
-- Auth site URL, redirect allowlist and Google/Apple provider enablement could
-  not be read through the available connector. Check the actual published,
-  custom-domain and preview redirect URLs in Cloud authentication settings.
+  verification and actual delivery have not been confirmed. A read-only domains
+  query returned `restricted_api_key`: the existing Resend connection has Sending
+  access, which cannot list domain verification. Verify the domain in the Resend
+  dashboard; do not broaden the sending key just to inspect it. There is no
+  automatic fallback sender in this hook.
+- Auth configuration was subsequently verified in the Cloud UI: Email, Google
+  and Apple sign-in are enabled; Site URL is `https://easy-bid-ai.lovable.app`;
+  the redirect allowlist includes the published site, `closesync.io` and
+  `www.closesync.io`. Existing project preview destinations are also present.
 - Authenticated hosted checkout, test payment completion, webhook processing,
   cancellation, inbound mail and outgoing mail still require end-to-end tests.
 
 Terms and Privacy remain explicit drafts at the owner's request. No credentials,
 DNS settings, client messages, live payments or policy text are changed by this
 source release.
+
+## Release verification
+
+- Source release: `eb5bb091f5a178a41983e31956fc6874dae00b20`, synced and published
+  through Lovable.
+- All four [GitHub launch checks](https://github.com/Darnell-DevOps/easy-bid-ai/actions/runs/36303529696)
+  passed: 362 unit tests, production build, critical Edge Function typecheck,
+  full migration rebuild and 76 browser tests. One credential-dependent
+  signing test remains skipped.
+- The cloud migration was applied through Lovable's supported migration tool.
+  Exactly three schedules remain: active five-minute dispatcher, active
+  database-only daily tick, and disabled daily trash purge.
+- The next natural dispatcher run returned HTTP 200 without a timeout at
+  07:40 UTC. All eight registry jobs remain enabled with no current error;
+  due contract-generation retries succeeded at 07:40:05 UTC. Other jobs were
+  not due on that tick. Nothing was triggered manually.
+- Both invoker functions deny execution to anonymous and authenticated app
+  users. The service role retains execution access. All five trashed clients
+  remain present.
+- Signed-in browser testing opened Starter and Pro checkout against the hosted
+  backend. Paddle showed Test Mode and the correct £9/month and £29/month
+  amounts. Both were closed unpaid; the account remained on Free. No payment
+  or subscription cancellation was completed.
+- Public DNS currently delegates `closesync.io` to `solar.dns-parking.com` and
+  `lunar.dns-parking.com`. DNS-account access is still needed for mail routing
+  and sender verification; no DNS records were changed.
