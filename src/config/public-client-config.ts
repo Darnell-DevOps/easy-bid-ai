@@ -15,9 +15,10 @@ const PUBLIC_DEFAULTS = {
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF2dG9nenR3ZG9lbXh1ZmZud3l2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MjMzOTIsImV4cCI6MjA5MTI5OTM5Mn0.YzBeN1hJwep-3enRTATohXbuBC0OoEMVv0KC6yRmhnw",
 } as const;
 
-const DEFAULT_PAYMENTS_CLIENT_TOKEN = import.meta.env.MODE === "production"
-  ? "live_be22f02bf72bb9acdd082bb66a7"
-  : "test_be90c4414520f4305681834c583";
+// Published builds remain in sandbox during launch testing. A live rollout
+// must explicitly provide a live client token and switch the server mode.
+// Build mode alone must never switch the browser to live payments.
+const DEFAULT_PAYMENTS_CLIENT_TOKEN = "test_be90c4414520f4305681834c583";
 
 function configuredValue(value: string | undefined, fallback: string) {
   return value === undefined ? fallback : value;

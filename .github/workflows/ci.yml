@@ -58,9 +58,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: supabase/setup-cli@v1
+      # v3 installs from npm; a fixed release avoids the unauthenticated
+      # GitHub "latest release" lookup that intermittently hit rate limits.
+      - uses: supabase/setup-cli@v3
         with:
-          version: latest
+          version: 2.84.2
       - name: Start disposable Supabase project
         run: supabase start
       - name: Rebuild database from migrations

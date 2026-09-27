@@ -1,14 +1,27 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { resolvePublicClientConfig } from "@/config/public-client-config";
 
 describe("public client configuration", () => {
-  it("preserves the existing development and production defaults", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
+  it("preserves the supplied payment token fallback", () => {
     const development = resolvePublicClientConfig({}, "test_default");
     const production = resolvePublicClientConfig({}, "live_default");
 
     expect(development.supabaseUrl).toBe("https://avtogztwdoemxuffnwyv.supabase.co");
     expect(development.paymentsClientToken).toBe("test_default");
     expect(production.paymentsClientToken).toBe("live_default");
+  });
+
+  it("keeps published builds in sandbox until explicitly configured", async () => {
+    vi.stubEnv("MODE", "production");
+    vi.stubEnv("VITE_PAYMENTS_CLIENT_TOKEN", undefined);
+    const { publicClientConfig } = await import("@/config/public-client-config");
+
+    expect(publicClientConfig.paymentsClientToken).toMatch(/^test_/);
   });
 
   it("prefers configured Vite values", () => {
