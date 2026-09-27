@@ -1138,6 +1138,7 @@ export type Database = {
       }
       email_send_log: {
         Row: {
+          claim_token: string | null
           created_at: string
           error: string | null
           id: string
@@ -1145,12 +1146,14 @@ export type Database = {
           meta: Json | null
           provider_id: string | null
           recipient: string
+          request_hash: string | null
           status: string
           subject: string | null
           template: string
           user_id: string | null
         }
         Insert: {
+          claim_token?: string | null
           created_at?: string
           error?: string | null
           id?: string
@@ -1158,12 +1161,14 @@ export type Database = {
           meta?: Json | null
           provider_id?: string | null
           recipient: string
+          request_hash?: string | null
           status?: string
           subject?: string | null
           template: string
           user_id?: string | null
         }
         Update: {
+          claim_token?: string | null
           created_at?: string
           error?: string | null
           id?: string
@@ -1171,6 +1176,7 @@ export type Database = {
           meta?: Json | null
           provider_id?: string | null
           recipient?: string
+          request_hash?: string | null
           status?: string
           subject?: string | null
           template?: string
@@ -1859,6 +1865,54 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_webhook_events: {
+        Row: {
+          attempts: number
+          available_at: string
+          claim_token: string | null
+          created_at: string
+          environment: string
+          event_id: string
+          event_type: string
+          last_error: string | null
+          lease_until: string | null
+          occurred_at: string
+          payload: Json
+          processed_at: string | null
+          status: string
+        }
+        Insert: {
+          attempts?: number
+          available_at?: string
+          claim_token?: string | null
+          created_at?: string
+          environment: string
+          event_id: string
+          event_type: string
+          last_error?: string | null
+          lease_until?: string | null
+          occurred_at: string
+          payload: Json
+          processed_at?: string | null
+          status?: string
+        }
+        Update: {
+          attempts?: number
+          available_at?: string
+          claim_token?: string | null
+          created_at?: string
+          environment?: string
+          event_id?: string
+          event_type?: string
+          last_error?: string | null
+          lease_until?: string | null
+          occurred_at?: string
+          payload?: Json
+          processed_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       policies: {
         Row: {
           business_name: string
@@ -2265,6 +2319,36 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      retainer_payment_effects: {
+        Row: {
+          created_at: string
+          effect_key: string
+          environment: string
+          kind: string
+          retainer_id: string
+          retry_count: number
+          transaction_id: string
+        }
+        Insert: {
+          created_at?: string
+          effect_key: string
+          environment: string
+          kind: string
+          retainer_id: string
+          retry_count?: number
+          transaction_id: string
+        }
+        Update: {
+          created_at?: string
+          effect_key?: string
+          environment?: string
+          kind?: string
+          retainer_id?: string
+          retry_count?: number
+          transaction_id?: string
         }
         Relationships: []
       }
@@ -2695,6 +2779,7 @@ export type Database = {
           paddle_customer_id: string | null
           paddle_price_id: string | null
           paddle_subscription_id: string | null
+          paddle_updated_at: string | null
           plan: string
           updated_at: string
           user_id: string
@@ -2706,6 +2791,7 @@ export type Database = {
           paddle_customer_id?: string | null
           paddle_price_id?: string | null
           paddle_subscription_id?: string | null
+          paddle_updated_at?: string | null
           plan?: string
           updated_at?: string
           user_id: string
@@ -2717,6 +2803,7 @@ export type Database = {
           paddle_customer_id?: string | null
           paddle_price_id?: string | null
           paddle_subscription_id?: string | null
+          paddle_updated_at?: string | null
           plan?: string
           updated_at?: string
           user_id?: string
@@ -3174,6 +3261,20 @@ export type Database = {
         }[]
       }
       admin_user_stats: { Args: never; Returns: Json }
+      apply_paddle_plan_state: {
+        Args: {
+          _cancel_at_period_end: boolean
+          _customer_id: string
+          _environment: string
+          _period_end: string
+          _plan: string
+          _price_id: string
+          _subscription_id: string
+          _updated_at: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
       automation_enabled: {
         Args: { _key: string; _user_id: string }
         Returns: boolean
@@ -3216,7 +3317,43 @@ export type Database = {
           job_name: string
         }[]
       }
+      claim_email_send: {
+        Args: {
+          _key: string
+          _legacy_key: string
+          _recipient: string
+          _request_hash: string
+          _subject: string
+          _template: string
+          _user_id: string
+        }
+        Returns: Json
+      }
       claim_onboarding_form: { Args: { _proposal_id: string }; Returns: Json }
+      claim_payment_webhook_event: {
+        Args: never
+        Returns: {
+          attempts: number
+          available_at: string
+          claim_token: string | null
+          created_at: string
+          environment: string
+          event_id: string
+          event_type: string
+          last_error: string | null
+          lease_until: string | null
+          occurred_at: string
+          payload: Json
+          processed_at: string | null
+          status: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "payment_webhook_events"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       client_portal_respond: {
         Args: {
           _action: string
@@ -3263,6 +3400,25 @@ export type Database = {
           _ua: string
         }
         Returns: string
+      }
+      finish_email_send: {
+        Args: {
+          _error?: string
+          _id: string
+          _provider_id?: string
+          _status: string
+          _token: string
+        }
+        Returns: undefined
+      }
+      finish_payment_webhook_event: {
+        Args: {
+          _claim_token: string
+          _environment: string
+          _error?: string
+          _event_id: string
+        }
+        Returns: undefined
       }
       get_contract_owner_email: {
         Args: { _token: string }
@@ -3349,6 +3505,10 @@ export type Database = {
       onboarding_submit: {
         Args: { _complete?: boolean; _responses: Json; _token: string }
         Returns: string
+      }
+      prepare_payment_onboarding: {
+        Args: { _fields: Json; _proposal_id: string; _responses: Json }
+        Returns: Json
       }
       public_get_booking_link_busy: {
         Args: { _slug: string }
@@ -3760,6 +3920,19 @@ export type Database = {
       recompute_kickoff_readiness: {
         Args: { _client_id: string }
         Returns: undefined
+      }
+      record_retainer_payment: {
+        Args: {
+          _amount_cents: number
+          _currency: string
+          _environment: string
+          _event_id: string
+          _kind: string
+          _reason?: string
+          _retainer_id: string
+          _transaction_id: string
+        }
+        Returns: Json
       }
       revoke_my_oauth_consent: { Args: { p_consent_id: string }; Returns: Json }
       testimonial_request_get: { Args: { _token: string }; Returns: Json }
