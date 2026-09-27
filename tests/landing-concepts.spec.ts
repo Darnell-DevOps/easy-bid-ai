@@ -61,7 +61,7 @@ for (const concept of concepts) {
         "concept-pricing",
       ]);
 
-      const pricingColumns = await page.locator("#pricing > *").evaluateAll((columns) => columns.map((column) => {
+      const pricingColumns = await page.locator("#pricing > .concept-plan").evaluateAll((columns) => columns.map((column) => {
         const box = column.getBoundingClientRect();
         return { left: box.left, height: box.height };
       }));

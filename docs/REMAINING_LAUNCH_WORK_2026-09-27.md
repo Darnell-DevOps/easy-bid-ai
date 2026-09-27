@@ -64,12 +64,19 @@ Never solve an uncertain outcome by creating a fresh operation key automatically
 
 Local verification completed: `npm run check:launch` passed all 381 unit tests
 and the production build; Deno checked all five changed public/internal function
-entrypoints. Browser checks passed all 20 public-design/pricing cases, all 28
-workspace cases, and the new mobile onboarding price, tax, failed-generation and
-retry case. Its accessibility scan runs after dismissing the notification; active
+entrypoints. Browser checks passed all 28 workspace cases and the new mobile
+onboarding price, tax, failed-generation and retry case. The first CI browser run
+passed 76 cases with one credential-dependent signing case skipped, and exposed
+an outdated pricing selector; the corrected local public suite passed all 20 cases.
+The onboarding accessibility scan runs after dismissing the notification; active
 Radix toast focus guards are not covered by that scan and remain an accessibility
 follow-up. Earlier failures during dependency restoration and form editing are
-superseded by these clean checks. Hosted-release and CI database results are pending.
+superseded by the clean workspace checks. CI rebuilt the full database and passed
+the eight-session payment/email concurrency tests, rollback and subscription-ordering
+checks. Hosted checks confirm the payment inbox and transaction index exist,
+the queue is empty, the worker job is enabled, ordinary users cannot call the
+financial/email claim RPCs, and the service role can apply payment effects.
+Function-deployment verification and the corrected full CI run are pending.
 Database concurrency coverage uses eight independent PostgreSQL sessions in the
 disposable CI database; the script has a fixed local connection and cannot target
 the hosted database. No real client emails or live charges are used.
