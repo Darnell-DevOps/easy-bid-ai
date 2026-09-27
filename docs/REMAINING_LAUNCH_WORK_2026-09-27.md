@@ -76,7 +76,18 @@ the eight-session payment/email concurrency tests, rollback and subscription-ord
 checks. Hosted checks confirm the payment inbox and transaction index exist,
 the queue is empty, the worker job is enabled, ordinary users cannot call the
 financial/email claim RPCs, and the service role can apply payment effects.
-Function-deployment verification and the corrected full CI run are pending.
+Lovable applied the migration and deployed `payments-webhook`, `payment-event-worker`,
+`send-email`, `generate-proposal` and `cancel-plan-subscription`. The worker rejects
+unsigned scheduler calls with 401; the webhook rejects unsigned payloads with 400.
+Natural dispatcher runs at 20:35 and 20:40 UTC reported an empty queue, no failures
+and no errors. No emails, payments or financial event replays were triggered.
+
+Hosted validation also caught an onboarding insert using three nonexistent
+proposal columns. The save now stores amount, currency and tax settings only;
+derived totals go to generation, where the server recalculates them. The mobile
+retry regression verifies both payloads. `npm run typecheck` now explicitly checks
+`tsconfig.app.json`, so schema errors cannot hide behind the empty root project.
+The corrected final CI run and published UI verification are pending.
 Database concurrency coverage uses eight independent PostgreSQL sessions in the
 disposable CI database; the script has a fixed local connection and cannot target
 the hosted database. No real client emails or live charges are used.

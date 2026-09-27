@@ -212,6 +212,9 @@ export default function Onboarding() {
         currency: commercialDefaults.currency,
         tax_rate: commercialDefaults.taxRate,
         tax_mode: commercialDefaults.taxMode,
+        subtotal_cents: totals.subtotalCents,
+        tax_amount_cents: totals.taxAmountCents,
+        total_cents: totals.totalCents,
         timeline: "",
         notes: "",
       };

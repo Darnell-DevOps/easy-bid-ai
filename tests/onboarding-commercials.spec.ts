@@ -45,8 +45,9 @@ test("first proposal uses the agreed price and preserves input after invalid gen
   await generate.click();
   await expect(page.getByRole("button", { name: "Continue", exact: true })).toBeVisible();
   expect(generations).toHaveLength(2);
-  expect(generations[1]).toMatchObject({ amount_cents: 20000, currency: "GBP", tax_rate: 20, tax_mode: "exclusive" });
-  expect(saved[0]).toMatchObject({ amount_cents: 20000, subtotal_cents: 20000, tax_amount_cents: 4000, total_cents: 24000, currency: "GBP" });
+  expect(generations[1]).toMatchObject({ amount_cents: 20000, subtotal_cents: 20000, tax_amount_cents: 4000, total_cents: 24000, currency: "GBP", tax_rate: 20, tax_mode: "exclusive" });
+  expect(saved[0]).toMatchObject({ amount_cents: 20000, currency: "GBP", tax_rate: 20, tax_mode: "exclusive" });
+  for (const derivedField of ["subtotal_cents", "tax_amount_cents", "total_cents"]) expect(saved[0]).not.toHaveProperty(derivedField);
   const accessibility = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
   expect(accessibility.violations).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
