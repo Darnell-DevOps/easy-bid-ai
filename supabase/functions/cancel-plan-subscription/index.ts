@@ -1,5 +1,5 @@
-// Cancels the caller's own SaaS subscription and downgrades them only after
-// Paddle confirms the cancellation. The target row is always resolved from
+// Stops renewal of the caller's subscription, retaining paid access until
+// Paddle reports its actual cancellation. The target row is resolved from
 // the caller's verified JWT, never from client-supplied identifiers.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getPaddleClient, getServerPaddleEnv, type PaddleEnv } from "../_shared/paddle.ts";
@@ -59,30 +59,26 @@ Deno.serve(async (req) => {
       }
 
       const paddle = getPaddleClient(env);
-      await paddle.subscriptions.cancel(subscription.paddle_subscription_id, {
-        effectiveFrom: "immediately",
-      });
+      const current = await paddle.subscriptions.get(subscription.paddle_subscription_id);
+      const cancelled = current.scheduledChange?.action === "cancel"
+        ? current
+        : await paddle.subscriptions.cancel(subscription.paddle_subscription_id, {
+          effectiveFrom: "next_billing_period",
+        });
+      const accessEndsAt = cancelled.scheduledChange?.effectiveAt || cancelled.currentBillingPeriod?.endsAt;
+      if (!accessEndsAt || !Number.isFinite(Date.parse(accessEndsAt))) {
+        throw new Error("Paddle did not confirm the paid-access end date. Please refresh billing and try again.");
+      }
+      const { error: updateError } = await supabase.from("subscriptions")
+        .update({ cancel_at_period_end: true, current_period_end: accessEndsAt, paddle_updated_at: cancelled.updatedAt })
+        .eq("user_id", callerId).eq("paddle_subscription_id", subscription.paddle_subscription_id);
+      if (updateError) throw updateError;
+      return new Response(JSON.stringify({ ok: true, cancelAtPeriodEnd: true, accessEndsAt }), { headers: cors });
     } else if (subscription?.plan === "starter" || subscription?.plan === "pro") {
       throw new Error("Subscription is still being provisioned; please try cancellation again shortly");
     }
 
-    const { error: updateError } = await supabase
-      .from("subscriptions")
-      .upsert(
-        {
-          user_id: callerId,
-          plan: "free",
-          paddle_subscription_id: null,
-          paddle_customer_id: null,
-          paddle_price_id: null,
-          environment: null,
-          cancel_at_period_end: false,
-          current_period_end: null,
-        },
-        { onConflict: "user_id" },
-      );
-    if (updateError) throw updateError;
-
+    // Already free: no entitlement mutation is necessary.
     return new Response(JSON.stringify({ ok: true }), { headers: cors });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);

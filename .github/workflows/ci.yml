@@ -52,6 +52,8 @@ jobs:
           supabase/functions/generate-policy/index.ts
           supabase/functions/lead-response/index.ts
           supabase/functions/payments-webhook/index.ts
+          supabase/functions/payment-event-worker/index.ts
+          supabase/functions/send-email/index.ts
 
   migrations:
     name: Database migrations
@@ -67,6 +69,8 @@ jobs:
         run: supabase start
       - name: Rebuild database from migrations
         run: supabase db reset --local
+      - name: Check payment and email concurrency in disposable database
+        run: node scripts/test-payment-concurrency.mjs
 
   e2e:
     name: Browser smoke tests

@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { calculateCommercialTotals, type TaxMode } from "@/lib/commercial-calc";
 import {
   loadOnboardingProgress,
   migrateLegacyOnboarding,
@@ -41,6 +42,8 @@ export default function Onboarding() {
   const [generating, setGenerating] = useState(false);
   const [proposalId, setProposalId] = useState<string | null>(null);
   const [proposalPreview, setProposalPreview] = useState<string>("");
+  const [projectPrice, setProjectPrice] = useState("");
+  const [commercialDefaults, setCommercialDefaults] = useState({ currency: "USD", taxRate: 0, taxMode: "none" as TaxMode });
 
   useEffect(() => {
     let active = true;
@@ -53,6 +56,10 @@ export default function Onboarding() {
       setUserId(user.id);
 
       try {
+        const { data: branding, error: brandingError } = await supabase.from("business_branding")
+          .select("default_currency, default_tax_rate, default_tax_mode").eq("user_id", user.id).maybeSingle();
+        if (brandingError) throw brandingError;
+        if (active) setCommercialDefaults({ currency: branding?.default_currency || "USD", taxRate: branding?.default_tax_rate || 0, taxMode: (branding?.default_tax_mode || "none") as TaxMode });
         const stored = await loadOnboardingProgress(user.id);
         const progress = await migrateLegacyOnboarding(user.id, stored);
         if (!active) return;
@@ -192,12 +199,19 @@ export default function Onboarding() {
     if (!userId) return;
     setGenerating(true);
     try {
+      const amountCents = Math.round(Number(projectPrice) * 100);
+      if (!Number.isSafeInteger(amountCents) || amountCents <= 0 || amountCents > 2147483647) throw new Error("Enter a valid project price before generating.");
+      const totals = calculateCommercialTotals(amountCents, commercialDefaults.taxRate, commercialDefaults.taxMode);
       const payload = {
         client_name: clientName,
         company_name: clientName,
         service_type: serviceRequested || "Consulting",
         project_scope: shortDescription || `${serviceRequested} engagement`,
-        budget: "",
+        budget: projectPrice,
+        amount_cents: amountCents,
+        currency: commercialDefaults.currency,
+        tax_rate: commercialDefaults.taxRate,
+        tax_mode: commercialDefaults.taxMode,
         timeline: "",
         notes: "",
       };
@@ -206,7 +220,10 @@ export default function Onboarding() {
         "generate-proposal",
         { body: payload },
       );
-      if (aiError) throw aiError;
+      if (aiError) {
+        const failure = aiError.context instanceof Response ? await aiError.context.json().catch(() => null) : null;
+        throw new Error(failure?.error || "Generation failed. Please try again.");
+      }
 
       const { data: proposal, error: saveError } = await supabase
         .from("proposals")
@@ -217,7 +234,14 @@ export default function Onboarding() {
           company_name: clientName,
           service_type: payload.service_type,
           project_scope: payload.project_scope,
-          budget: "",
+          budget: projectPrice,
+          amount_cents: amountCents,
+          currency: payload.currency,
+          tax_rate: payload.tax_rate,
+          tax_mode: payload.tax_mode,
+          subtotal_cents: totals.subtotalCents,
+          tax_amount_cents: totals.taxAmountCents,
+          total_cents: totals.totalCents,
           timeline: "",
           notes: "",
           proposal_content: aiData?.proposal || "",
@@ -388,11 +412,17 @@ export default function Onboarding() {
                 </div>
 
                 {!proposalId && (
+                  <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="onboarding-project-price">Project price ({commercialDefaults.currency})</Label>
+                    <Input id="onboarding-project-price" type="number" inputMode="decimal" min="0.01" step="0.01" value={projectPrice} onChange={(event) => setProjectPrice(event.target.value)} aria-describedby="onboarding-price-help" className="mt-1.5" />
+                    <p id="onboarding-price-help" className="text-sm text-muted-foreground mt-1">Use your agreed project price. Your saved tax settings apply.</p>
+                  </div>
                   <Button
                     size="lg"
                     className="w-full"
                     onClick={handleGenerateProposal}
-                    disabled={generating}
+                    disabled={generating || !projectPrice || Number(projectPrice) <= 0}
                   >
                     {generating ? (
                       <>
@@ -404,6 +434,7 @@ export default function Onboarding() {
                       </>
                     )}
                   </Button>
+                  </div>
                 )}
 
                 {proposalId && (

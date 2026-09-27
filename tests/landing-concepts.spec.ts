@@ -47,7 +47,7 @@ for (const concept of concepts) {
       await expect(page.getByRole("heading", { name: "The gap between “interested” and “ready to start” creates avoidable work." })).toBeVisible();
       await expect(page.getByRole("heading", { name: "Built for the handoff after “yes”." })).toBeVisible();
       await expect(page.getByText("Designed first for UK freelancers, consultants and small agencies.")).toBeVisible();
-      await expect(page.getByText("Free is £0. Pro is £29 per month.")).toBeVisible();
+      await expect(page.getByText("Free is £0. Starter is £9 and Pro is £29 per month.")).toBeVisible();
       await expect(page.getByRole("heading", { name: "One client record from enquiry to kickoff." })).toBeVisible();
       await expect(workflow.getByRole("heading", { level: 3, name: "Responsible AI, inside the workflow." })).toBeVisible();
 

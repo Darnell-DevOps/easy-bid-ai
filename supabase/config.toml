@@ -29,6 +29,8 @@ project_id = "avtogztwdoemxuffnwyv"
     verify_jwt = true
   [functions.payments-webhook]
     verify_jwt = false
+  [functions.payment-event-worker]
+    verify_jwt = false
   [functions.retainer-portal-session]
     verify_jwt = false
   [functions.inbound-email-webhook]

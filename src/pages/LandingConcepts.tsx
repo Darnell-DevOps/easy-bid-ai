@@ -19,7 +19,7 @@ import "@/styles/landing-concepts.css";
 
 const conceptKeys = ["editorial", "system", "studio"] as const;
 type ConceptKey = (typeof conceptKeys)[number];
-type LandingCtaLocation = "hero" | "pricing_free" | "pricing_pro" | "footer";
+type LandingCtaLocation = "hero" | "pricing_free" | "pricing_starter" | "pricing_pro" | "footer";
 
 const conceptLabels: Record<ConceptKey, string> = {
   editorial: "A - Editorial record",
@@ -245,13 +245,13 @@ function PricingDecision({
   onStartFree,
 }: {
   quiet?: boolean;
-  onStartFree?: (location: Extract<LandingCtaLocation, "pricing_free" | "pricing_pro">) => void;
+  onStartFree?: (location: Extract<LandingCtaLocation, "pricing_free" | "pricing_starter" | "pricing_pro">) => void;
 }) {
   return (
     <section id="pricing" className={`concept-pricing${quiet ? " concept-pricing-quiet" : ""}`}>
       <div className="concept-pricing-copy">
         <h2>Start with proposals. Connect the rest when you're ready.</h2>
-        <p>Use Free to prepare your first proposals, then choose Pro for the close-to-kickoff workflow.</p>
+        <p>Try Free, choose Starter for more proposals, or connect the close-to-kickoff workflow with Pro.</p>
       </div>
       <div className="concept-plan concept-plan-free">
         <div>
@@ -259,9 +259,20 @@ function PricingDecision({
           <strong>GBP 0</strong>
           <small>per month</small>
         </div>
-        <p>Two proposals each month, limited AI insights and no card required.</p>
+        <p>Two proposals each month, shareable links and watermarked proposals. No card required.</p>
         <Button asChild variant="outline" className="concept-button-secondary">
           <Link to="/signup" onClick={() => onStartFree?.("pricing_free")}>Start free</Link>
+        </Button>
+      </div>
+      <div className="concept-plan concept-plan-free">
+        <div><span>Starter</span><strong>GBP 9</strong><small>per month</small></div>
+        <ul>
+          {['10 proposals per month', 'Premium templates', 'Shareable client links', 'No watermark'].map((feature) => (
+            <li key={feature}><Check aria-hidden="true" />{feature}</li>
+          ))}
+        </ul>
+        <Button asChild variant="outline" className="concept-button-secondary">
+          <Link to="/signup" onClick={() => onStartFree?.("pricing_starter")}>Create an account</Link>
         </Button>
       </div>
       <div className="concept-plan concept-plan-pro">
@@ -566,7 +577,7 @@ export function WorkflowSystemLanding({
             </div>
             <div>
               <dt>Clear pricing</dt>
-              <dd>Free is £0. Pro is £29 per month.</dd>
+              <dd>Free is £0. Starter is £9 and Pro is £29 per month.</dd>
             </div>
           </dl>
         </section>

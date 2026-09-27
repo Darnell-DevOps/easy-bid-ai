@@ -144,13 +144,13 @@ export default function DataExportsSettings() {
 
       <Card><CardContent className="p-6">
         <h3 className="flex items-center gap-2 text-base font-semibold text-foreground"><Trash2 className="h-4 w-4" aria-hidden="true" /> Trash retention</h3>
-        <p id="data-retention-help" className="mt-1 text-sm text-muted-foreground">Choose when items in Trash are permanently removed by the scheduled cleanup job.</p>
+        <p id="data-retention-help" className="mt-1 text-sm text-muted-foreground">Automatic permanent deletion is paused. Items stay in Trash until you restore them or permanently delete them yourself. Your saved retention period will apply only if scheduled cleanup is enabled later.</p>
         <div className="mt-4 max-w-xs space-y-2">
           <Label htmlFor="data-retention-period">Keep deleted items for</Label>
           <Select value={retention} onValueChange={(value: Retention) => void updateRetention(value)} disabled={retentionSaving}>
             <SelectTrigger id="data-retention-period" aria-describedby="data-retention-help" aria-busy={retentionSaving}><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="0">Remove at next cleanup</SelectItem>
+              <SelectItem value="0">Next cleanup, when enabled</SelectItem>
               <SelectItem value="30">30 days</SelectItem>
               <SelectItem value="60">60 days</SelectItem>
             </SelectContent>

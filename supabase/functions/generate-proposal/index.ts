@@ -10,6 +10,7 @@ import {
 } from "../_shared/commercial-calc.ts";
 import { getUserPlan } from "../_shared/plan-entitlements.ts";
 import { enforceAiRateLimit } from "../_shared/abuse-rate-limit.ts";
+import { parseProposalJson, validateProposalOutput, validateProposalSection, validateInvestmentOutput } from "../_shared/proposal-output.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -147,7 +148,9 @@ function deriveExactCommercials(p: any):
   | { subtotalCents: number; taxAmountCents: number; totalCents: number; taxRatePercent: number; taxMode: TaxMode; hasTax: boolean }
   | null {
   const amountCents = typeof p?.amount_cents === "number" ? p.amount_cents : NaN;
-  if (!Number.isFinite(amountCents) || amountCents <= 0) return null;
+  if (!Number.isSafeInteger(amountCents) || amountCents <= 0 || amountCents > 2147483647) return null;
+  if (p.tax_mode != null && !["none", "exclusive", "inclusive"].includes(p.tax_mode)) return null;
+  if (p.tax_rate != null && (typeof p.tax_rate !== "number" || !Number.isFinite(p.tax_rate) || p.tax_rate < 0 || p.tax_rate > 100)) return null;
   const taxRatePercent = typeof p?.tax_rate === "number" ? p.tax_rate : parseFloat(p?.tax_rate);
   const taxMode: TaxMode = (p?.tax_mode ?? null) as TaxMode;
   const totals = calculateCommercialTotals(amountCents, Number.isFinite(taxRatePercent) ? taxRatePercent : null, taxMode);
@@ -329,7 +332,7 @@ ${nextStepsInstruction}
 - Invoice number: Draft — to be assigned (this is a proposal preview only, not a live invoice; do NOT invent a specific invoice number like "INV-2026-001")
 - Date: today's date
 - Bill to: client name and company
-- Table of line items with costs using the "${symbol}" symbol (consistent with the pricing breakdown)
+- Markdown pipe table of line items with costs using the "${symbol}" symbol (consistent with the pricing breakdown); include the Subtotal, Tax (when applicable) and Total as rows in this same table
 ${invoiceLineItemsInstruction}
 - Payment terms: ${paymentPhrase ?? "As agreed"}
 
@@ -451,9 +454,8 @@ async function callAI(systemPrompt: string, userPrompt: string) {
   return data.choices?.[0]?.message?.content || "";
 }
 
-function parseJSON(content: string) {
-  const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-  return JSON.parse(cleaned);
+function invalidGeneration(): Response {
+  return Response.json({ error: "The generated document was incomplete or its figures did not match. Please try again; your existing document has not been changed.", code: "invalid_ai_output", retryable: true }, { status: 502, headers: corsHeaders });
 }
 
 serve(async (req) => {
@@ -479,14 +481,17 @@ serve(async (req) => {
       }
       const content = await callAI(buildSystemPrompt(), buildSectionPrompt(payload, section));
       try {
-        const parsed = parseJSON(content);
+        const parsed = validateProposalSection(parseProposalJson(content), section, section === "Next Steps" ? buildNextSteps(payload) : undefined);
+        if (section === "Investment") {
+          const exact = deriveExactCommercials(payload);
+          if (!exact) return invalidGeneration();
+          validateInvestmentOutput(parsed.section, currencyCodeFor(payload.currency), exact);
+        }
         return new Response(JSON.stringify(parsed), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       } catch {
-        return new Response(JSON.stringify({ section: content.trim() }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return invalidGeneration();
       }
     }
 
@@ -498,17 +503,17 @@ serve(async (req) => {
     });
     if (rateLimited) return rateLimited;
 
+    const exact = deriveExactCommercials(payload);
+    if (!exact || !Number.isSafeInteger(payload.amount_cents) || !Number.isSafeInteger(exact.totalCents) || exact.totalCents > 2147483647) {
+      return Response.json({ error: "Enter a valid project budget before generating the proposal." }, { status: 400, headers: corsHeaders });
+    }
     const content = await callAI(buildSystemPrompt(), buildFullPrompt(payload));
 
     let parsed;
     try {
-      parsed = parseJSON(content);
+      parsed = validateProposalOutput(parseProposalJson(content), currencyCodeFor(payload.currency), exact, buildNextSteps(payload));
     } catch {
-      parsed = {
-        proposal: content,
-        pricing: "Pricing breakdown not available. Please edit manually.",
-        invoice: "Invoice not available. Please edit manually.",
-      };
+      return invalidGeneration();
     }
 
     return new Response(JSON.stringify(parsed), {

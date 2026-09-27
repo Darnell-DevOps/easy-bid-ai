@@ -212,16 +212,8 @@ Deno.serve(async (req) => {
 
 
 
-  // Idempotency: if a row with this key already exists and was sent, no-op.
-  if (idempotencyKey) {
-    const { data: existing } = await supabase
-      .from("email_send_log")
-      .select("id, status")
-      .eq("idempotency_key", idempotencyKey)
-      .maybeSingle();
-    if (existing && existing.status === "sent") {
-      return json({ ok: true, deduped: true, id: existing.id });
-    }
+  if (idempotencyKey !== undefined && (typeof idempotencyKey !== "string" || !idempotencyKey.trim() || idempotencyKey.length > 256)) {
+    return json({ error: "invalid_idempotency_key" }, 400);
   }
 
   // Suppression check
@@ -231,7 +223,7 @@ Deno.serve(async (req) => {
     .eq("email", recipientEmail.toLowerCase())
     .maybeSingle();
   if (suppressed) {
-    await logSend({ ...body, status: "suppressed" });
+    await logSend({ ...body, idempotencyKey: undefined, status: "suppressed" });
     return json({ ok: false, suppressed: true });
   }
 
@@ -292,6 +284,25 @@ Deno.serve(async (req) => {
     }
   }
 
+  const providerBody = {
+    from: resolvedFrom, to: [recipientEmail], subject: rendered.subject,
+    html: rendered.html, text: rendered.text,
+    ...(replyTo ? { reply_to: replyTo } : {}),
+    ...(attachments?.length ? { attachments } : {}),
+  };
+  const operationKey = await sha256(`${userId || "system"}:${idempotencyKey || crypto.randomUUID()}`);
+  const { data: claim, error: claimError } = await supabase.rpc("claim_email_send", {
+    _key: `email-${operationKey}`, _legacy_key: idempotencyKey || null, _user_id: userId || null,
+    _template: templateName, _recipient: recipientEmail, _subject: rendered.subject,
+    _request_hash: await sha256(JSON.stringify(providerBody)),
+  });
+  if (claimError || !claim) return json({ error: "send_claim_failed", message: "Email could not be reserved. Please try again." }, 503);
+  if (claim.status === "sent") return json({ ok: true, deduped: true, id: claim.id, provider_id: claim.provider_id });
+  if (claim.status !== "claimed") return json({ ok: false, error: claim.status === "conflict" ? "idempotency_conflict" : "delivery_pending", message: "This email is already being sent or awaiting delivery confirmation. Check Email history before sending again." }, 409);
+  const finish = async (status: string, providerId?: string, error?: string) => {
+    const { error: finishError } = await supabase.rpc("finish_email_send", { _id: claim.id, _token: claim.token, _status: status, _provider_id: providerId || null, _error: error || null });
+    if (finishError) throw finishError;
+  };
   try {
     const res = await fetch(`${GATEWAY_URL}/emails`, {
       method: "POST",
@@ -299,39 +310,35 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${LOVABLE_KEY}`,
         "X-Connection-Api-Key": RESEND_KEY,
+        "Idempotency-Key": `email-${operationKey}`,
       },
-      body: JSON.stringify({
-        from: resolvedFrom,
-        to: [recipientEmail],
-        subject: rendered.subject,
-        html: rendered.html,
-        text: rendered.text,
-        ...(replyTo ? { reply_to: replyTo } : {}),
-        ...(attachments && attachments.length ? { attachments } : {}),
-      }),
+      body: JSON.stringify(providerBody),
+      signal: AbortSignal.timeout(30_000),
     });
     const payload = await res.json().catch(() => ({}));
     if (!res.ok) {
-      await logSend({
-        ...body,
-        status: "failed",
-        subject: rendered.subject,
-        error: `[${res.status}] ${JSON.stringify(payload)}`,
-      });
+      const definitive = res.status >= 400 && res.status < 500 && ![408,409].includes(res.status);
+      await finish(definitive ? "failed" : "uncertain", undefined, `[${res.status}] ${JSON.stringify(payload)}`);
       return json({ ok: false, error: "send_failed", details: payload }, 502);
     }
-    const id = await logSend({
-      ...body,
-      status: "sent",
-      subject: rendered.subject,
-      provider_id: payload?.id,
-    });
-    return json({ ok: true, id, provider_id: payload?.id });
+    if (typeof payload?.id !== "string" || !payload.id) {
+      await finish("uncertain", undefined, "Provider accepted the request without a confirmation ID");
+      return json({ ok: false, error: "delivery_pending" }, 502);
+    }
+    await finish("sent", payload.id);
+    return json({ ok: true, id: claim.id, provider_id: payload.id });
   } catch (e: any) {
-    await logSend({ ...body, status: "failed", subject: rendered.subject, error: e?.message });
-    return json({ error: "exception", message: e?.message }, 500);
+    // A timeout or interrupted response may occur after delivery. Hold the
+    // operation for reconciliation; never allow an automatic second send.
+    await finish("uncertain", undefined, e?.message).catch(error => console.error("Email outcome persistence failed", error));
+    return json({ error: "delivery_pending", message: "Delivery could not be confirmed. Check Email history before sending again." }, 503);
   }
 });
+
+async function sha256(value: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2,"0")).join("");
+}
 
 async function logSend(args: {
   templateName: string;

@@ -17,13 +17,15 @@ function emitPlanChange() {
 
 export function usePlan() {
   const [planId, setPlanId] = useState<PlanId>("free");
+  const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
+  const [accessEndsAt, setAccessEndsAt] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     const { data, error } = await supabase
       .from("subscriptions")
-      .select("plan")
+      .select("plan, cancel_at_period_end, current_period_end")
       .eq("user_id", user.id)
       .maybeSingle();
     const value = data?.plan;
@@ -31,6 +33,8 @@ export function usePlan() {
       ? value
       : "free";
     setPlanId(next);
+    setCancelAtPeriodEnd(!error && data?.cancel_at_period_end === true);
+    setAccessEndsAt(!error ? data?.current_period_end ?? null : null);
   }, []);
 
   useEffect(() => {
@@ -117,10 +121,10 @@ export function usePlan() {
   const cancelToFree = useCallback(async (): Promise<boolean> => {
     const { data, error } = await supabase.functions.invoke("cancel-plan-subscription", { body: {} });
     if (error || !data?.ok) return false;
-    setPlanId("free");
+    await refresh();
     emitPlanChange();
     return true;
-  }, []);
+  }, [refresh]);
 
   const plan: Plan = PLANS[planId];
 
@@ -154,6 +158,8 @@ export function usePlan() {
     plan,
     upgradePlan,
     cancelToFree,
+    cancelAtPeriodEnd,
+    accessEndsAt,
     hasFeature,
     checkSoftGate,
     resetSoftGate,

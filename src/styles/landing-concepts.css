@@ -405,7 +405,7 @@
 .concept-pricing {
   display: grid;
   max-width: 1240px;
-  grid-template-columns: minmax(0, 1.15fr) repeat(2, minmax(260px, 0.85fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--cs-space-6);
   align-items: stretch;
   margin: 0 auto;
@@ -413,6 +413,7 @@
 }
 
 .concept-pricing-copy {
+  grid-column: 1 / -1;
   align-self: center;
   padding-right: var(--cs-space-8);
 }
@@ -450,6 +451,10 @@
 .concept-plan-pro {
   color: var(--cs-text-inverse);
   background: var(--cs-bg-dark);
+}
+
+.concept-plan.concept-plan-free li {
+  color: var(--cs-text-secondary);
 }
 
 .concept-plan > div {
@@ -1614,7 +1619,7 @@
   }
 
   .concept-pricing {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
   }
 
   .concept-pricing-copy {

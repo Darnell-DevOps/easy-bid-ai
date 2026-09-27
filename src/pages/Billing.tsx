@@ -13,7 +13,7 @@ import { PLANS, type PlanId } from "@/lib/plans";
 
 export default function Billing() {
   const { toast } = useToast();
-  const { planId, plan, upgradePlan, cancelToFree } = usePlan();
+  const { planId, plan, upgradePlan, cancelToFree, cancelAtPeriodEnd, accessEndsAt } = usePlan();
   const { countThisMonth, loading } = useProposalUsage();
   const [switching, setSwitching] = useState<PlanId | null>(null);
 
@@ -44,10 +44,10 @@ export default function Billing() {
         return;
       }
       toast({
-        title: next === "free" ? "Subscription cancelled" : `Switching to ${PLANS[next].name}…`,
+        title: next === "free" ? "Renewal cancelled" : `Switching to ${PLANS[next].name}…`,
         description:
           next === "free"
-            ? "Paddle confirmed the cancellation. You're back on the Free plan."
+            ? "Your paid plan stays active until the end of its billing period. The end date is shown below."
             : `Welcome to ${PLANS[next].name}! It can take a few seconds for your new limits to apply.`,
       });
     } catch {
@@ -73,6 +73,11 @@ export default function Billing() {
       </div>
 
       <div className="space-y-8 max-w-6xl">
+        {cancelAtPeriodEnd && accessEndsAt && (
+          <p role="status" className="text-sm text-muted-foreground">
+            Renewal is cancelled. Your {plan.name} access ends on {new Date(accessEndsAt).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })}. You will then move to Free.
+          </p>
+        )}
         {/* Current plan + usage */}
         <Card className="border-border/60">
           <CardContent className="p-5 sm:p-6">
@@ -189,7 +194,7 @@ export default function Billing() {
 
                   <Button
                     onClick={() => handleSelectPlan(tier.id)}
-                    disabled={isCurrent || !!switching}
+                    disabled={isCurrent || !!switching || (tier.id === "free" && cancelAtPeriodEnd)}
                     className={`w-full ${
                       isHighlight && !isCurrent
                         ? "bg-primary text-primary-foreground font-semibold hover:bg-primary/90"
@@ -202,7 +207,7 @@ export default function Billing() {
                     ) : isCurrent ? (
                       "Current plan"
                     ) : tier.id === "free" ? (
-                      "Switch to Free"
+                      cancelAtPeriodEnd ? "Renewal cancelled" : "Cancel renewal"
                     ) : (
                       <>
                         Choose {tier.name} <ArrowRight className="w-4 h-4 ml-1" />
@@ -227,8 +232,8 @@ export default function Billing() {
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-3">
-            Upgrading opens a secure Paddle checkout. Switching to Free cancels your
-            subscription immediately.
+            Upgrading opens a secure Paddle checkout. Cancelling renewal keeps your paid
+            access until the current billing period ends, then moves you to Free.
           </p>
         </div>
       </div>

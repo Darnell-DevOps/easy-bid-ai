@@ -108,7 +108,7 @@ describe("landing page design concepts", () => {
     expect(page).toContain("Designed first for UK freelancers, consultants and small agencies.");
     expect(page).toContain("Paddle handles checkout.");
     expect(page).toContain("You decide what to send.");
-    expect(page).toContain("Free is £0. Pro is £29 per month.");
+    expect(page).toContain("Free is £0. Starter is £9 and Pro is £29 per month.");
     expect(page).toContain("Two proposals each month");
     expect(page).not.toContain("Start 7-day trial");
     expect(page).toContain("The gap between “interested” and “ready to start” creates avoidable work.");
@@ -120,7 +120,7 @@ describe("landing page design concepts", () => {
     expect(styles).not.toContain(".system-record-proof");
     expect(styles).not.toContain(".system-final-cta");
     expect(styles).not.toContain(".system-outcomes");
-    expect(styles).toContain("grid-template-columns: minmax(0, 1.15fr) repeat(2, minmax(260px, 0.85fr));");
+    expect(styles).toContain("grid-template-columns: repeat(3, minmax(0, 1fr));");
     expect(styles).not.toContain(".concept-system .concept-pricing");
     expect(styles).not.toContain(".concept-system .concept-plan");
   });

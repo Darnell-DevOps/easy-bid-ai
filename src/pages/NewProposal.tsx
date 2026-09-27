@@ -410,7 +410,10 @@ export default function NewProposal() {
         },
       });
 
-      if (aiError) throw aiError;
+      if (aiError) {
+        const failure = aiError.context instanceof Response ? await aiError.context.json().catch(() => null) : null;
+        throw new Error(failure?.error || "Proposal generation failed. Please try again.");
+      }
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");

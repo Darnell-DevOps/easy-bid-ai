@@ -35,9 +35,11 @@ export default function SendEmailDialog(props: Props) {
   const [ctaText, setCtaText] = useState(def.cta_text);
   const [signOff, setSignOff] = useState(def.sign_off);
   const [branding, setBranding] = useState<any>(null);
+  const [operationKey, setOperationKey] = useState(() => crypto.randomUUID());
 
   useEffect(() => {
     if (!props.open) return;
+    setOperationKey(crypto.randomUUID());
     setRecipient(props.recipientEmail);
     (async () => {
       setLoading(true);
@@ -86,7 +88,7 @@ export default function SendEmailDialog(props: Props) {
       body: {
         templateName: props.templateKey,
         recipientEmail: recipient,
-        idempotencyKey: props.idempotencyKey,
+        idempotencyKey: props.idempotencyKey || operationKey,
         from: `${fromName} <notify@closesync.io>`,
         replyTo: branding?.reply_to_verified_email || undefined,
         // Pre-rendered passthrough — edge function will use these directly.
@@ -95,8 +97,10 @@ export default function SendEmailDialog(props: Props) {
       },
     });
     setSending(false);
-    if (error || (data as any)?.error) {
-      toast({ title: "Send failed", description: error?.message || (data as any)?.error, variant: "destructive" });
+    if (error || data?.ok !== true) {
+      let failure = data;
+      if (error?.context instanceof Response) failure = await error.context.json().catch(() => null);
+      toast({ title: "Email not confirmed", description: failure?.message || (failure?.suppressed ? "This recipient is on the email suppression list." : error?.message || "The email could not be sent. Please try again."), variant: "destructive" });
       return;
     }
     toast({ title: "Email sent", description: `To ${recipient}` });
