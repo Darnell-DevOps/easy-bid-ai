@@ -3304,6 +3304,7 @@ export type Database = {
       inbound_message_ignore: { Args: { _id: string }; Returns: undefined }
       inbound_message_promote: { Args: { _id: string }; Returns: string }
       invoke_automation_dispatcher: { Args: never; Returns: number }
+      invoke_expired_trash_purge: { Args: never; Returns: number }
       is_super_admin: { Args: never; Returns: boolean }
       lead_convert_to_client: { Args: { _lead_id: string }; Returns: string }
       lead_form_record_view: {
