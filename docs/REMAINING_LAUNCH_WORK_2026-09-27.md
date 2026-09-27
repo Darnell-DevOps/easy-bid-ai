@@ -87,7 +87,16 @@ proposal columns. The save now stores amount, currency and tax settings only;
 derived totals go to generation, where the server recalculates them. The mobile
 retry regression verifies both payloads. `npm run typecheck` now explicitly checks
 `tsconfig.app.json`, so schema errors cannot hide behind the empty root project.
-The corrected final CI run and published UI verification are pending.
+The corrected final source release is `e3773a0`. All four
+[CI jobs](https://github.com/Darnell-DevOps/easy-bid-ai/actions/runs/36349620840)
+passed: the explicit app typecheck, 381 unit tests and production build; critical
+Edge Function checks; the full migration rebuild and concurrency checks; and
+77 browser cases. One credential-dependent sign/countersign case remains skipped.
+Lovable production was published and checked directly: Free, £9 Starter and £29
+Pro are visible, and both legal routes still show their draft notices. The signed-in
+local Data & Exports screen also displays the paused automatic-deletion wording.
+These checks do not replace real email delivery, a completed sandbox payment/signing
+journey or malware-scanner validation. The four dependencies above still block launch.
 Database concurrency coverage uses eight independent PostgreSQL sessions in the
 disposable CI database; the script has a fixed local connection and cannot target
 the hosted database. No real client emails or live charges are used.
