@@ -659,6 +659,42 @@ export type Database = {
         }
         Relationships: []
       }
+      client_payment_accounts: {
+        Row: {
+          card_payments_active: boolean
+          charges_enabled: boolean
+          country: string
+          details_submitted: boolean
+          environment: string
+          payouts_enabled: boolean
+          stripe_account_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          card_payments_active?: boolean
+          charges_enabled?: boolean
+          country: string
+          details_submitted?: boolean
+          environment: string
+          payouts_enabled?: boolean
+          stripe_account_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          card_payments_active?: boolean
+          charges_enabled?: boolean
+          country?: string
+          details_submitted?: boolean
+          environment?: string
+          payouts_enabled?: boolean
+          stripe_account_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           ai_recommendation: string | null
