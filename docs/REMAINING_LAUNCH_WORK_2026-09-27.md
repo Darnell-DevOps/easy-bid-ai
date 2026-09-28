@@ -45,7 +45,10 @@ permanent trash cleanup stays disabled, and CloseSync's legal pages remain draft
    its payout destination. Document fees, refunds, disputes and tax responsibility;
    test disabled/unverified accounts and cross-business access. Keep payments in
    sandbox until the model is resolved. Changing the global environment to live
-   would affect both SaaS billing and client checkout under the current design.
+   would affect SaaS billing; the client checkout endpoints now reject live-mode
+   central-Paddle charges server-side. The owner reports no Stripe account yet.
+   The proposed Stripe Connect direct-charge model and exact owner account step
+   are in `.lovable/plan.md`. No Connect account or payout is configured.
 2. **Email DNS and delivery:** finish the sender and inbound records in the
    DNS account identified in the hosted audit. Verify Resend sender status in
    its dashboard, then actually receive signup/reset, proposal, reminder and

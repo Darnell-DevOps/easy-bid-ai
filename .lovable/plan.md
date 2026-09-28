@@ -1,57 +1,31 @@
-# Stripe Connect alongside Paddle: architecture answer (read-only)
+# Client-payment account setup
 
-Nothing was changed. This plan records the answer and a sandbox-first path. Approving it does not start any work. It only records the answer until you ask for the build.
+Status (28 September 2026): the owner has no Stripe account. No Stripe Connect account, API key, connected agency, or payout destination has been configured or verified. Paddle remains in sandbox for CloseSync subscriptions and existing test checkouts.
 
-## 1. Can a custom Stripe Connect integration run alongside Paddle in this project?
+## Proposed account model
 
-**Confirmed: yes.**
-- Paddle subscription billing uses its own connector keys (`PADDLE_SANDBOX_API_KEY` / `PADDLE_LIVE_API_KEY`), its own gateway route, and its own backend functions (`create-plan-checkout`, `payments-webhook`, and others).
-- A custom Stripe integration would use its own project secrets and its own new backend functions. It would call Stripe's API directly, not through the Lovable connector gateway.
-- You don't need to disconnect or replace Paddle. The two only need to be kept apart in code and data:
-  - separate webhook functions
-  - separate secret names
-  - separate columns, e.g. a new `stripe_account_id` on the agency's settings and `stripe_payment_intent_id` / `stripe_checkout_session_id` on proposals and retainers, next to the existing `paddle_*` fields.
+- Keep CloseSync SaaS subscription billing on its existing Paddle connection.
+- Evaluate Stripe Connect for client service payments. Under Stripe-owned pricing with direct charges, each agency or freelancer is the merchant for its own client sales and receives funds in its connected account. Start with zero CloseSync transaction fee; the existing SaaS subscription remains the commercial model.
+- Use Stripe-hosted onboarding for each business, and only open its client checkout after Stripe reports that the connected account can take charges. Never fall back to CloseSync's central Paddle account for live client payments.
+- This is a proposed model until Stripe accepts the platform and supported business categories/countries. Sandbox checkout alone does not demonstrate approval or payout ownership.
 
-## 2. Does Lovable's built-in Stripe payments or its own-Stripe connector support Connect with many merchants?
+## Lovable boundary
 
-- **Built-in Stripe payments: not supported for this, based on my platform knowledge (not confirmed from documentation).** It's designed for one merchant: the app owner sells to their customers. I have no tool for connected accounts, account links, or `Stripe-Account` direct charges. Treat Connect as unsupported there unless Lovable documentation says otherwise.
-- **Own-Stripe (bring-your-own-key) integration: confirmed to be legacy only.** Lovable keeps it for backward compatibility and doesn't recommend it for new work. It stores one secret key and has no Connect-specific features. It's a single-key setup, the same thing you'd get by adding the key yourself.
-- **Conclusion (my reasoning, not a platform statement):** direct charges with Stripe-hosted onboarding for each agency need a custom integration. That means your own platform Stripe account, its secret key stored as a project secret, and custom backend functions.
+Lovable has Stripe and Paddle connectors available. Its published documentation describes built-in payments and a separate own-Stripe-account integration; the latter is not a documented multi-merchant Connect implementation and is described as an alternative to built-in payments. Do not disconnect the existing Paddle integration or use a standard single-merchant Stripe setup as a substitute for Connect. Custom Edge Functions and server-only secrets appear to be a possible integration path, but coexistence and secret setup for this exact project must be verified before implementation. Lovable hosting and deployment remain in place.
 
-## 3. Owner-only steps (only the owner can do these)
+## Owner account step
 
-1. Create a Stripe account at stripe.com as the platform business. No Lovable tool can create it.
-2. In the Stripe Dashboard, turn on **Test mode**. Then open **Connect** and finish the platform profile:
-   - business model: platform/marketplace
-   - connected account type: Standard or Express with Stripe-hosted onboarding
-   - who pays fees in direct charges: the connected account
-3. In test mode, copy the **secret key** (`sk_test_...`). Use a restricted key only if it can manage Connect accounts, Account Links, Checkout Sessions and PaymentIntents.
-4. After the webhook function exists, create a **Connect webhook endpoint** that points to it. Choose "Listen to events on connected accounts", then copy its signing secret (`whsec_...`).
+The owner must create and verify a Stripe platform account and enable Connect in test mode, review Stripe's terms and fee/liability model, and supply any identity/business/payout details directly to Stripe. Do not put keys or bank details in chat or source control. Once the platform account exists and the custom integration path is verified, put test-only credentials in Lovable's secure project configuration. Create a connected-account webhook endpoint and enter its signing secret after the endpoint exists. Never switch the existing Paddle environment to live to test client payments.
 
-## 4. Where the secrets and config go (confirmed mechanism)
+## Engineering sequence after account setup
 
-- Server secrets go in **Project Settings -> Secrets** (Lovable Cloud backend-function secrets). The owner adds them there, or I request them with the secret-entry form during the build. They are never put in the browser config.
-  - `STRIPE_CONNECT_SECRET_KEY` = `sk_test_...`
-  - `STRIPE_CONNECT_WEBHOOK_SECRET` = `whsec_...`
-  - optional `STRIPE_CONNECT_ENVIRONMENT` = `sandbox`, like the existing `PAYMENTS_ENVIRONMENT`
-- The publishable key (`pk_test_...`) is only needed if we embed Stripe elements. It could go in the browser config file `src/config/public-client-config.ts`. With Stripe-hosted Checkout plus hosted onboarding, it isn't required.
-- Don't reuse the Paddle secret names, and don't put Stripe keys in any `VITE_` variable.
+1. Persist the connected account ID and verification/charge status per CloseSync business, with owner-only read/write paths and no secret keys in database or browser.
+2. Build Stripe-hosted connected-account onboarding and refresh status from Stripe server-side. Test two isolated businesses and disabled/unverified accounts.
+3. Create proposal checkout sessions on the selected connected account, with server-calculated committed amount/currency and provider idempotency. Add retainer billing only after recurring-charge requirements and liability are confirmed.
+4. Verify signed connected-account webhooks against raw bytes, store unique event IDs, resolve tenant and checkout ownership, apply paid/failed/refunded effects atomically, and test duplicate/out-of-order events.
+5. Run a complete hosted sandbox journey and confirm each payment and refund appears under the correct connected business. Keep live client checkout closed until provider approval and payout ownership are demonstrated.
 
-## 5. Build outline (for later, only when you ask)
+## Source-backed boundary
 
-```text
-Agency settings -> "Connect Stripe" -> edge fn creates account + Account Link -> Stripe-hosted onboarding
-Client pays proposal -> edge fn creates Checkout Session with Stripe-Account header (direct charge)
-Stripe Connect webhook -> verify signature -> mark proposal/retainer paid (idempotent, like payment-event-worker)
-```
-- Paddle stays in charge of CloseSync plan subscriptions.
-- Each proposal or retainer uses a per-agency choice: Stripe if the agency has connected Stripe and is ready to charge, otherwise the current central Paddle checkout. Or Paddle could be retired for client payments later.
-
-## Confirmed vs guessed
-
-- **Confirmed:**
-  - custom secrets and custom backend functions are supported
-  - Paddle and a custom Stripe integration can coexist
-  - the own-Stripe integration is legacy, with one key
-  - the owner must create the Stripe account
-- **Not confirmed (my reasoning):** that built-in Stripe payments can't do Connect. This comes from the available tools, not a documented statement.
+Stripe: https://docs.stripe.com/connect/saas and https://docs.stripe.com/connect/direct-charges.md?platform=web&ui=stripe-hosted
+Lovable: https://docs.lovable.dev/features/payments and https://docs.lovable.dev/integrations/stripe

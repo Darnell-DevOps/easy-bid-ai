@@ -41,6 +41,23 @@ describe("public endpoint abuse protection", () => {
     }
   });
 
+  it("keeps centrally billed client checkouts in sandbox until merchants have their own accounts", async () => {
+    const { mayUseCentralClientCheckout } = await import(
+      "../../supabase/functions/_shared/client-payment-policy"
+    );
+    expect(mayUseCentralClientCheckout("sandbox")).toBe(true);
+    expect(mayUseCentralClientCheckout("live")).toBe(false);
+    expect(mayUseCentralClientCheckout("")).toBe(false);
+
+    for (const name of ["create-proposal-checkout", "create-retainer-subscription"]) {
+      const contents = source(`supabase/functions/${name}/index.ts`);
+      expect(contents).toContain("mayUseCentralClientCheckout(env)");
+      expect(contents.indexOf("mayUseCentralClientCheckout(env)")).toBeLessThan(
+        contents.indexOf("paddle.transactions.create("),
+      );
+    }
+  });
+
   it("locks the unused Paddle price lookup behind verified authentication", () => {
     const config = source("supabase/config.toml");
     const backend = source("supabase/functions/get-paddle-price/index.ts");

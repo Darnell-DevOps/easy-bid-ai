@@ -4,6 +4,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { getPaddleClient, gatewayFetch, getServerPaddleEnv, type PaddleEnv } from "../_shared/paddle.ts";
 import { calculateCommercialTotals } from "../_shared/commercial-calc.ts";
 import { enforcePublicRateLimit } from "../_shared/abuse-rate-limit.ts";
+import { mayUseCentralClientCheckout } from "../_shared/client-payment-policy.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -90,6 +91,12 @@ Deno.serve(async (req) => {
     if (limited) return limited;
 
     const env = getServerPaddleEnv();
+    if (!mayUseCentralClientCheckout(env)) {
+      return new Response(
+        JSON.stringify({ error: "Online client payments are unavailable until this business connects an approved payment account." }),
+        { status: 503, headers: cors },
+      );
+    }
 
     const { data: retainer, error: rErr } = await supabase
       .from("retainers")
