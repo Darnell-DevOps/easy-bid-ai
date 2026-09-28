@@ -23,6 +23,8 @@ project_id = "avtogztwdoemxuffnwyv"
     verify_jwt = false
   [functions.create-proposal-checkout]
     verify_jwt = false
+  [functions.stripe-connect-account]
+    verify_jwt = true
   [functions.create-retainer-subscription]
     verify_jwt = false
   [functions.get-paddle-price]

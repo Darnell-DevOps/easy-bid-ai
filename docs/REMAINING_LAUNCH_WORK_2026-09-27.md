@@ -48,7 +48,10 @@ permanent trash cleanup stays disabled, and CloseSync's legal pages remain draft
    would affect SaaS billing; the client checkout endpoints now reject live-mode
    central-Paddle charges server-side. The owner reports no Stripe account yet.
    The proposed Stripe Connect direct-charge model and exact owner account step
-   are in `.lovable/plan.md`. No Connect account or payout is configured.
+   are in `.lovable/plan.md`. A test-only Standard connected-account foundation
+   is documented in `docs/STRIPE_CONNECT_TEST_SETUP.md`; it does not yet route
+   proposal or retainer checkout through Stripe. No Connect account, webhook,
+   completed client payment or payout is configured.
 2. **Email DNS and delivery:** finish the sender and inbound records in the
    DNS account identified in the hosted audit. Verify Resend sender status in
    its dashboard, then actually receive signup/reset, proposal, reminder and
