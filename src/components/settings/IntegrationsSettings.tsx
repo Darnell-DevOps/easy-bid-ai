@@ -210,7 +210,7 @@ export default function IntegrationsSettings() {
           <div>
             <h3 className="text-base font-semibold text-foreground">How connections work</h3>
             <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-              Email delivery and CloseSync plan billing are managed by CloseSync. Stripe Connect is the one connection you set up yourself, for your own client payments. Their cards do not claim provider health or offer simulated connect, sync, or disconnect actions. User-managed providers are marked coming soon until a real connection is available.
+              CloseSync manages email delivery and Paddle handles your CloseSync plan billing. Each business connects its own Stripe account for future client payments; the Stripe Connect status reflects onboarding only. Client checkout stays unavailable until signed webhooks and end-to-end payment testing are complete.
             </p>
             {!hasPaymentClientToken && (
               <p className="text-xs text-amber-400 mt-2 flex items-center gap-1.5">
