@@ -20,6 +20,7 @@ import { Link } from "react-router-dom";
 import WhatsAppSettings from "@/components/settings/WhatsAppSettings";
 import MessagingHistory from "@/components/settings/MessagingHistory";
 import { publicClientConfig } from "@/config/public-client-config";
+import StripeConnectCard from "@/components/settings/StripeConnectCard";
 
 type Status = "managed" | "attention" | "coming_soon";
 
@@ -113,16 +114,16 @@ const CATEGORIES: Category[] = [
   {
     id: "payments",
     label: "Payments",
-    description: "Paddle processes plan billing, client payments and retainers.",
+    description: "Paddle bills your CloseSync plan. Your own client payments will go through your connected Stripe account.",
     items: [
       {
         id: "paddle",
-        name: "Paddle payments",
+        name: "CloseSync plan billing",
         icon: CreditCard,
         iconBg: "bg-purple-500/10",
         iconColor: "text-purple-400",
-        description: "Payments are configured for the CloseSync deployment rather than connected per user.",
-        purposes: ["Client payments", "Subscriptions", "Retainers"],
+        description: "Paddle processes your CloseSync subscription. It is managed by CloseSync rather than connected per user.",
+        purposes: ["CloseSync subscription", "Plan changes", "Invoices"],
         status: "managed",
         managePath: "/dashboard/billing",
         manageLabel: "Manage plan",
@@ -209,11 +210,11 @@ export default function IntegrationsSettings() {
           <div>
             <h3 className="text-base font-semibold text-foreground">How connections work</h3>
             <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-              Email delivery and payments are managed by CloseSync. Their cards do not claim provider health or offer simulated connect, sync, or disconnect actions. User-managed providers are marked coming soon until a real connection is available.
+              Email delivery and CloseSync plan billing are managed by CloseSync. Stripe Connect is the one connection you set up yourself, for your own client payments. Their cards do not claim provider health or offer simulated connect, sync, or disconnect actions. User-managed providers are marked coming soon until a real connection is available.
             </p>
             {!hasPaymentClientToken && (
               <p className="text-xs text-amber-400 mt-2 flex items-center gap-1.5">
-                <AlertTriangle className="w-3.5 h-3.5" /> Payments need deployment configuration before checkout can open.
+                <AlertTriangle className="w-3.5 h-3.5" /> Plan billing needs deployment configuration before checkout can open.
               </p>
             )}
           </div>
@@ -234,6 +235,7 @@ export default function IntegrationsSettings() {
                 status={displayStatus(integration)}
               />
             ))}
+            {category.id === "payments" && <StripeConnectCard />}
           </div>
         </section>
       ))}
