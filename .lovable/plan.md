@@ -15,6 +15,8 @@ Lovable has Stripe and Paddle connectors available. Its published documentation 
 
 ## Owner account step
 
+The 20 October diagnostic check confirmed that Lovable's enabled built-in Stripe connector cannot inspect the request history for the owner's separate Connect sandbox. There is no standard Stripe connection available for that read. Do not substitute another Stripe account. Obtain the safe error fields and request ID from the owner's Stripe Workbench log for the failed `POST /v1/accounts` requests on 18 October around 21:42–21:44 UTC, or from a new owner-triggered attempt after the diagnostic repair is deployed. Do not collect keys or full request payloads in chat.
+
 The owner must create and verify a Stripe platform account and enable Connect in test mode, review Stripe's terms and fee/liability model, and supply any identity/business/payout details directly to Stripe. Do not put keys or bank details in chat or source control. Once the platform account exists and the custom integration path is verified, put test-only credentials in Lovable's secure project configuration. Create a connected-account webhook endpoint and enter its signing secret after the endpoint exists. Never switch the existing Paddle environment to live to test client payments.
 
 ## Engineering sequence after account setup
