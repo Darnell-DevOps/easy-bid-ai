@@ -52,7 +52,7 @@ Deno.test("Stripe requests carry the server key and stable idempotency key", asy
   const originalFetch = globalThis.fetch;
   let seen: { url: string; authorization: string | null; idempotency: string | null; body: string } | null = null;
   try {
-    globalThis.fetch = async (input, init) => {
+    globalThis.fetch = async (input: string | URL | Request, init?: RequestInit) => {
       const headers = new Headers(init?.headers);
       seen = {
         url: String(input),
