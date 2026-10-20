@@ -8,7 +8,9 @@ import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import {
   CONNECT_ERROR_FALLBACK,
+  CONNECT_ONBOARDING_ERROR,
   STRIPE_CONNECT_COUNTRIES,
+  connectInvocationError,
   countryName,
   interpretConnectResponse,
   isSupportedConnectCountry,
@@ -40,7 +42,7 @@ export default function StripeConnectCard({ redirect = (url) => window.location.
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, { body: { action: "status" } });
-      setState(error ? { kind: "error", message: CONNECT_ERROR_FALLBACK } : interpretConnectResponse(data));
+      setState(error ? { kind: "error", message: await connectInvocationError(error, CONNECT_ERROR_FALLBACK) } : interpretConnectResponse(data));
     } catch {
       setState({ kind: "error", message: CONNECT_ERROR_FALLBACK });
     } finally {
@@ -51,6 +53,7 @@ export default function StripeConnectCard({ redirect = (url) => window.location.
   useEffect(() => { void loadStatus(); }, [loadStatus]);
 
   const needsCountry = state?.kind === "unconnected";
+  const countryInvalid = needsCountry && Boolean(actionError) && !isSupportedConnectCountry(country.trim().toUpperCase());
 
   const startOnboarding = async () => {
     setActionError(null);
@@ -63,10 +66,14 @@ export default function StripeConnectCard({ redirect = (url) => window.location.
     try {
       const body = needsCountry ? { action: "onboard", country: code } : { action: "onboard" };
       const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, { body });
-      if (error) throw new Error("request");
+      if (error) {
+        setActionError(await connectInvocationError(error, CONNECT_ONBOARDING_ERROR));
+        return;
+      }
       const result = data as Record<string, unknown> | null;
       if (result && typeof result.error === "string") {
-        setActionError(result.error);
+        const state = interpretConnectResponse(result);
+        setActionError(state.kind === "error" ? state.message : CONNECT_ONBOARDING_ERROR);
         return;
       }
       const url = safeStripeOnboardingUrl(result?.url);
@@ -78,7 +85,7 @@ export default function StripeConnectCard({ redirect = (url) => window.location.
       setState(interpretConnectResponse(result));
       if (!result || result.ready !== true) setActionError("Stripe did not return a valid onboarding link. Please retry.");
     } catch {
-      setActionError("We couldn't start Stripe onboarding. Please retry.");
+      setActionError(CONNECT_ONBOARDING_ERROR);
     } finally {
       setStarting(false);
     }
@@ -121,8 +128,8 @@ export default function StripeConnectCard({ redirect = (url) => window.location.
               id={countryId}
               value={country}
               onChange={(e) => { setCountry(e.target.value); setActionError(null); }}
-              aria-describedby={actionError ? `${helpId} ${errorId}` : helpId}
-              aria-invalid={actionError ? true : undefined}
+              aria-describedby={countryInvalid ? `${helpId} ${errorId}` : helpId}
+              aria-invalid={countryInvalid ? true : undefined}
               aria-required="true"
               className="flex h-10 w-full sm:max-w-xs rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
@@ -136,8 +143,9 @@ export default function StripeConnectCard({ redirect = (url) => window.location.
         )}
 
         {actionError && (
-          <p id={errorId} role="alert" className="mt-3 text-xs text-destructive flex items-center gap-1.5">
-            <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" /> {actionError}
+          <p id={errorId} role="alert" className="mt-3 text-xs text-foreground flex items-start gap-1.5">
+            <AlertTriangle className="w-3.5 h-3.5 text-destructive flex-shrink-0" aria-hidden="true" />
+            <span className="min-w-0 break-words">{actionError}</span>
           </p>
         )}
 
@@ -190,8 +198,8 @@ function StateMessage({ state }: { state: ConnectState }) {
   })();
   const Icon = state.kind === "error" ? AlertTriangle : Info;
   return (
-    <p className={`text-xs leading-relaxed flex items-start gap-1.5 ${state.kind === "error" ? "text-destructive" : "text-muted-foreground"}`}>
-      <Icon className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" aria-hidden="true" /> {text}
+    <p className={`text-xs leading-relaxed flex items-start gap-1.5 ${state.kind === "error" ? "text-foreground" : "text-muted-foreground"}`}>
+      <Icon className={`w-3.5 h-3.5 mt-0.5 flex-shrink-0 ${state.kind === "error" ? "text-destructive" : ""}`} aria-hidden="true" /> {text}
     </p>
   );
 }

@@ -54,6 +54,9 @@ jobs:
           supabase/functions/payments-webhook/index.ts
           supabase/functions/payment-event-worker/index.ts
           supabase/functions/send-email/index.ts
+          supabase/functions/stripe-connect-account/index.ts
+      - name: Test Stripe Connect server safeguards
+        run: deno test --allow-env supabase/functions/_shared/stripe-connect.test.ts
 
   migrations:
     name: Database migrations

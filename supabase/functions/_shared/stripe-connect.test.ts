@@ -5,6 +5,7 @@ import {
   isStripeAccountId,
   stripeRequest,
 } from "./stripe-connect.ts";
+import { StripeRequestError, stripeConnectFailure } from "./stripe-connect-errors.ts";
 
 function assert(value: unknown, message: string): asserts value {
   if (!value) throw new Error(message);
@@ -71,5 +72,24 @@ Deno.test("Stripe requests carry the server key and stable idempotency key", asy
     assert(observation.authorization === "Bearer sk_test_private", "must authenticate server-side");
     assert(observation.idempotency === "one-owner-test", "must send idempotency key");
     assert(observation.body === "type=standard", "must send form encoded parameters");
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+Deno.test("a failed Stripe request preserves safe diagnostics when error.code is absent", async () => {
+  const originalFetch = globalThis.fetch;
+  try {
+    globalThis.fetch = async () => Response.json({ error: {
+      type: "invalid_request_error", param: "capabilities", message: "private@example.test",
+    } }, { status: 400, headers: { "request-id": "req_safe123" } });
+    try {
+      await stripeRequest("sk_test_private", "/accounts");
+      throw new Error("Expected the Stripe failure");
+    } catch (error) {
+      assert(error instanceof StripeRequestError, "must preserve a typed failure");
+      assert(error.type === "invalid_request_error", "must preserve error type when code is absent");
+      assert(error.param === "capabilities" && error.requestId === "req_safe123", "must preserve safe support identifiers");
+      assert(!JSON.stringify(error).includes("private@example.test"), "must not retain provider PII");
+      assert(stripeConnectFailure(error).code === "stripe_request_rejected", "must return a safe application code");
+    }
   } finally { globalThis.fetch = originalFetch; }
 });

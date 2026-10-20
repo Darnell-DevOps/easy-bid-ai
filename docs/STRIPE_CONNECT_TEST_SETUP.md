@@ -18,6 +18,8 @@ establish Stripe platform approval or a completed payment flow.
   return origin, disabled account, or missing payout/card capability cannot be
   treated as a ready merchant.
 - The existing central Paddle client-payment path remains sandbox-only.
+- Settings → Integrations includes the Stripe Connect test-mode card, country
+  selection, onboarding redirect and a server-backed status refresh.
 
 ## Platform-owner setup in Lovable
 
@@ -30,11 +32,28 @@ establish Stripe platform approval or a completed payment flow.
    published HTTPS origin (for example, `https://easy-bid-ai.lovable.app`).
    Do not set a live key. Deploy the migration and Edge Function through
    Lovable. Keep both values server-side.
-3. From an authenticated test workspace, call `stripe-connect-account` with
-   `{ "action": "onboard", "country": "GB" }` (replace `GB` with that
-   business's real legal country), then follow the returned single-use URL.
-   Call `{ "action": "status" }` on return. Repeat with a second test business
-   to prove account isolation. The product UI for this flow is still pending.
+3. From an authenticated test workspace, open Settings → Integrations,
+   select the business's real legal country and choose **Connect with Stripe**.
+   Complete Stripe's test onboarding, then refresh status on return. Repeat
+   with a second test business to prove account isolation.
+
+## Hosted failure investigation — 20 October 2026
+
+Lovable's logs show three account-creation attempts on 18 October around
+21:42–21:44 UTC failing with `Stripe request failed (400, unknown)`.
+`client_payment_accounts` is empty. The function reached Stripe, so its test-key
+format and return-origin checks passed; this does not prove platform registration
+or account-creation permissions are complete. The old logger did not retain
+Stripe's error type, parameter or request ID, and the UI discarded non-2xx
+response bodies. The exact provider rejection remains unconfirmed.
+
+The error-handling repair records only the operation, HTTP status, stable error
+code/type/parameter and Stripe request ID. Raw Stripe messages, email addresses,
+keys and response payloads must never be logged or returned to the browser.
+The screen maps known application error codes to recovery instructions and a
+support reference, preserves the country and allows retry. A new hosted attempt
+or the owner's original Stripe Workbench request log is still needed to prove
+the root cause and successful onboarding; do not mark this flow complete yet.
 
 ## Still required before client checkout is enabled
 
@@ -44,8 +63,7 @@ establish Stripe platform approval or a completed payment flow.
   tenant-checked payment effects. Test duplicate delivery, async success and
   failure, refunds, cancellation and onboarding. Never infer payment from the
   browser return URL alone.
-- Add a merchant connection and status surface to workspace settings, then
-  perform the full hosted sandbox journey in Lovable with two isolated
+- Complete the full hosted sandbox journey in Lovable with two isolated
   businesses. Verify payout ownership in Stripe before any live enablement.
 
 Official references: [Stripe SaaS platforms](https://docs.stripe.com/connect/saas),

@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { enforcePublicRateLimit } from "../_shared/abuse-rate-limit.ts";
+import { StripeRequestError, stripeConnectFailure } from "../_shared/stripe-connect-errors.ts";
 import {
   accountCanTakeClientPayments,
   connectReturnOrigin,
@@ -29,11 +30,11 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
   const token = req.headers.get("Authorization")?.replace(/^Bearer /, "");
-  if (!token) return json({ error: "Unauthorized" }, 401);
+  if (!token) return json({ error: "Unauthorized", code: "session_expired" }, 401);
   const auth = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
   const { data: userData, error: userError } = await auth.auth.getUser(token);
   const user = userData?.user;
-  if (userError || !user) return json({ error: "Unauthorized" }, 401);
+  if (userError || !user) return json({ error: "Unauthorized", code: "session_expired" }, 401);
 
   let body: { action?: string; country?: string };
   try {
@@ -49,8 +50,8 @@ Deno.serve(async (req) => {
         resourceLimit: { maxRequests: 10, windowSeconds: 10 * 60 },
       });
       if (limited) return limited;
-    } catch { return json({ error: "Payment account setup is temporarily unavailable" }, 503); }
-    if (!connectReturnOrigin()) return json({ error: "Connect return origin is not configured" }, 503);
+    } catch { return json({ error: "Payment account setup is temporarily unavailable", code: "connect_setup_failed" }, 503); }
+    if (!connectReturnOrigin()) return json({ error: "Connect return origin is not configured", code: "connect_return_origin_missing" }, 503);
   }
 
   const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -59,8 +60,11 @@ Deno.serve(async (req) => {
     .eq("user_id", user.id).eq("environment", "test").maybeSingle();
   if (readError) return json({ error: "Could not read payment account" }, 500);
   const key = getStripeConnectKey();
-  if (!key) return json({ configured: false, connected: false, environment: "test" });
+  if (!key) return body.action === "status"
+    ? json({ configured: false, connected: false, environment: "test" })
+    : json({ error: "Stripe Connect is not configured", code: "connect_not_configured" }, 503);
 
+  let operation = "read_account";
   try {
     let accountId = saved?.stripe_account_id as string | undefined;
     if (!accountId && body.action === "status") {
@@ -78,6 +82,7 @@ Deno.serve(async (req) => {
         "capabilities[transfers][requested]": "true",
         "metadata[closesync_user_id]": user.id,
       });
+      operation = "create_account";
       const created = await stripeRequest<StripeAccount>(key, "/accounts", {
         method: "POST", body: params,
         idempotencyKey: `closesync-connect-test-${user.id}`,
@@ -85,6 +90,7 @@ Deno.serve(async (req) => {
       if (!isStripeAccountId(created.id) || created.livemode || created.country !== country) {
         throw new Error("Stripe returned an unexpected account");
       }
+      operation = "save_account";
       const { error: saveError } = await db.from("client_payment_accounts").insert({
         user_id: user.id, environment: "test", stripe_account_id: created.id, country,
       });
@@ -92,9 +98,11 @@ Deno.serve(async (req) => {
       accountId = created.id;
     }
     if (!isStripeAccountId(accountId)) throw new Error("Stored account ID is invalid");
+    operation = "retrieve_account";
     const account = await stripeRequest<StripeAccount>(key, `/accounts/${accountId}`);
     if (account.id !== accountId || account.livemode) throw new Error("Stripe account mode mismatch");
     const ready = accountCanTakeClientPayments(account);
+    operation = "update_account";
     const { error: updateError } = await db.from("client_payment_accounts").update({
       charges_enabled: account.charges_enabled,
       payouts_enabled: account.payouts_enabled,
@@ -109,6 +117,7 @@ Deno.serve(async (req) => {
         chargesEnabled: account.charges_enabled, payoutsEnabled: account.payouts_enabled });
     }
     const origin = connectReturnOrigin()!;
+    operation = "create_account_link";
     const link = await stripeRequest<{ url: string }>(key, "/account_links", {
       method: "POST",
       body: new URLSearchParams({
@@ -121,7 +130,8 @@ Deno.serve(async (req) => {
     if (!link.url?.startsWith("https://connect.stripe.com/")) throw new Error("Stripe returned an unexpected onboarding URL");
     return json({ configured: true, connected: true, ready: false, environment: "test", url: link.url });
   } catch (error) {
-    console.error("stripe-connect-account:", error instanceof Error ? error.message : String(error));
-    return json({ error: "Could not prepare the connected account. Please retry." }, 502);
+    console.error("stripe-connect-account:", { operation,
+      ...(error instanceof StripeRequestError ? error.diagnostics() : { reason: "connect_setup_failed" }) });
+    return json(stripeConnectFailure(error), 502);
   }
 });

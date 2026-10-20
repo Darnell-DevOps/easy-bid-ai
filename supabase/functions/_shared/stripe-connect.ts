@@ -1,5 +1,7 @@
 // Stripe Connect's platform key is separate from CloseSync's Paddle SaaS key.
 // Client payments remain test-only until the connected merchant flow is proven.
+import { StripeRequestError } from "./stripe-connect-errors.ts";
+
 export function getStripeConnectKey(): string | null {
   const key = Deno.env.get("STRIPE_CONNECT_SECRET_KEY") || "";
   return key.startsWith("sk_test_") ? key : null;
@@ -33,11 +35,11 @@ export async function stripeRequest<T>(
     },
     body: options.body,
   });
-  const result = await response.json();
+  const result = await response.json().catch(() => null);
   if (!response.ok) {
-    // Stripe error bodies can contain merchant PII; log a stable code only.
-    throw new Error(`Stripe request failed (${response.status}, ${result?.error?.code || "unknown"})`);
+    throw new StripeRequestError(response.status, result, response.headers.get("request-id"));
   }
+  if (!result || typeof result !== "object") throw new Error("Stripe returned an invalid response");
   return result as T;
 }
 

@@ -1,6 +1,6 @@
 # Client-payment account setup
 
-Status (28 September 2026): the owner has no Stripe account. No Stripe Connect account, API key, connected agency, or payout destination has been configured or verified. Paddle remains in sandbox for CloseSync subscriptions and existing test checkouts.
+Status (20 October 2026): the owner has a Stripe sandbox and Lovable has the exact Stripe Connect secret names. Settings includes a test-mode connection card. Hosted account creation currently fails with Stripe HTTP 400 before a connected account is saved; the exact rejection needs the owner's Stripe request log or a new attempt with safe diagnostics. No connected merchant, payout destination, successful onboarding or client checkout is verified. Paddle remains in sandbox for CloseSync subscriptions and existing test checkouts.
 
 ## Proposed account model
 

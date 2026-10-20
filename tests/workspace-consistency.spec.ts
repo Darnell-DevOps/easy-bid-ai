@@ -140,3 +140,45 @@ for (const route of ['lead-inbox','calendar','settings']) {
   await expectNoWcagViolations(page,route+' light narrow layout');
  });
 }
+
+for (const viewport of [{ width: 1440, height: 1000 }, { width: 390, height: 844 }]) {
+  test(`Stripe onboarding failure preserves country and supports retry at ${viewport.width}px`, async ({ page }) => {
+    await mockAuthenticatedSupabase(page);
+    const attempts: Record<string, unknown>[] = [];
+    const reference = `req_${"a".repeat(60)}`;
+    await page.route(`${SUPABASE_ORIGIN}/functions/v1/stripe-connect-account`, async (route) => {
+      const body = route.request().postDataJSON();
+      if (body.action === "status") {
+        await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({
+          configured: true, connected: false, environment: "test",
+        }) });
+        return;
+      }
+      attempts.push(body);
+      await route.fulfill({ status: 502, contentType: "application/json", body: JSON.stringify({
+        code: "stripe_connect_setup_required", requestId: reference,
+        error: "Private provider response must never reach the screen",
+      }) });
+    });
+    await page.setViewportSize(viewport);
+    await page.goto("/dashboard/settings#integrations");
+    const card = page.locator("[data-cs-card]").filter({ has: page.getByRole("heading", { name: "Stripe Connect", exact: true }) });
+    await expect(card.getByText("Not connected", { exact: true })).toBeVisible();
+    await card.getByLabel("Legal business country").selectOption("GB");
+    await card.getByRole("button", { name: "Connect with Stripe" }).click();
+    await expect(card.getByRole("alert")).toContainText("isn't enabled for CloseSync's Stripe account");
+    await expect(card.getByRole("alert")).toContainText(reference);
+    await expect(card.getByRole("alert")).not.toContainText("Private provider");
+    await expect(card.getByLabel("Legal business country")).toHaveValue("GB");
+    await expect(card.getByLabel("Legal business country")).not.toHaveAttribute("aria-invalid");
+    await expect(card.getByRole("button", { name: "Connect with Stripe" })).toBeEnabled();
+    await card.getByRole("button", { name: "Connect with Stripe" }).click();
+    await expect.poll(() => attempts.length).toBe(2);
+    expect(attempts).toEqual([{ action: "onboard", country: "GB" }, { action: "onboard", country: "GB" }]);
+    await expect(page).toHaveURL(/\/dashboard\/settings#integrations$/);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
+    const accessibility = await new AxeBuilder({ page }).include("[data-cs-card][aria-labelledby]").withTags(WCAG_TAGS).analyze();
+    expect(accessibility.violations.map(({ id, nodes }) => ({ id, targets: nodes.map(node => node.target) }))).toEqual([]);
+    await card.screenshot({ path: `.impeccable/review/stripe-onboarding-error-${viewport.width}.png` });
+  });
+}
