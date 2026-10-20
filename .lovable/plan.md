@@ -1,31 +1,23 @@
-# Client-payment account setup
+# Answer: Lovable's built-in Stripe can't read the failed Connect requests
 
-Status (28 September 2026): the owner has no Stripe account. No Stripe Connect account, API key, connected agency, or payout destination has been configured or verified. Paddle remains in sandbox for CloseSync subscriptions and existing test checkouts.
+Short answer: **no.** The Stripe option in Lovable can't show the failed account-creation requests from 18 October, around 21:42–21:44 UTC, for the Stripe account behind STRIPE_CONNECT_SECRET_KEY. I didn't retrieve anything and didn't change anything.
 
-## Proposed account model
+## Evidence (read-only checks done)
 
-- Keep CloseSync SaaS subscription billing on its existing Paddle connection.
-- Evaluate Stripe Connect for client service payments. Under Stripe-owned pricing with direct charges, each agency or freelancer is the merchant for its own client sales and receives funds in its connected account. Start with zero CloseSync transaction fee; the existing SaaS subscription remains the commercial model.
-- Use Stripe-hosted onboarding for each business, and only open its client checkout after Stripe reports that the connected account can take charges. Never fall back to CloseSync's central Paddle account for live client payments.
-- This is a proposed model until Stripe accepts the platform and supported business categories/countries. Sandbox checkout alone does not demonstrate approval or payout ownership.
+- In this workspace, "Stripe" is listed as a **built-in connector**: enabled, but it can't be turned on from this session. It isn't a standard connector, so it can't make one-off reads of Stripe's API from chat.
+- Searching for a `stripe` standard connection returns **no connections**. There's nothing that could be pointed at Stripe's request logs (`/v1/request_logs`, Dashboard → Developers → Logs).
+- The built-in Stripe payments feature runs on a Stripe account managed by Lovable, used only for the app owner's own billing. It has no access to your own Stripe account, so it **can't be confirmed as the same test account** as STRIPE_CONNECT_SECRET_KEY. Using it would mean swapping in a different Stripe account, which you ruled out.
+- I'm not allowed to read the key's value or use it from chat, so I didn't look up the requests directly.
 
-## Lovable boundary
+## Exact access limitation
 
-Lovable has Stripe and Paddle connectors available. Its published documentation describes built-in payments and a separate own-Stripe-account integration; the latter is not a documented multi-merchant Connect implementation and is described as an alternative to built-in payments. Do not disconnect the existing Paddle integration or use a standard single-merchant Stripe setup as a substitute for Connect. Custom Edge Functions and server-only secrets appear to be a possible integration path, but coexistence and secret setup for this exact project must be verified before implementation. Lovable hosting and deployment remain in place.
+No tool I have can authenticate as your own Stripe test account. Even with that key, Stripe's public API doesn't offer the request-log history; only the Dashboard does.
 
-## Owner account step
+## How to get the data (owner only)
 
-The owner must create and verify a Stripe platform account and enable Connect in test mode, review Stripe's terms and fee/liability model, and supply any identity/business/payout details directly to Stripe. Do not put keys or bank details in chat or source control. Once the platform account exists and the custom integration path is verified, put test-only credentials in Lovable's secure project configuration. Create a connected-account webhook endpoint and enter its signing secret after the endpoint exists. Never switch the existing Paddle environment to live to test client payments.
+1. Sign in to the Stripe account where STRIPE_CONNECT_SECRET_KEY was created, with **Test mode** on.
+2. Confirm it's the same test account: Developers → API keys, and check that the last 4 characters of the secret key match the saved key.
+3. Go to Developers → Logs and filter to `POST /v1/accounts`, status 400, 18 Oct 21:40–21:46 UTC.
+4. Copy only `error.type`, `error.code`, `error.param`, the message with any personal details removed, and the `req_...` ID.
 
-## Engineering sequence after account setup
-
-1. Persist the connected account ID and verification/charge status per CloseSync business, with owner-only read/write paths and no secret keys in database or browser.
-2. Build Stripe-hosted connected-account onboarding and refresh status from Stripe server-side. Test two isolated businesses and disabled/unverified accounts.
-3. Create proposal checkout sessions on the selected connected account, with server-calculated committed amount/currency and provider idempotency. Add retainer billing only after recurring-charge requirements and liability are confirmed.
-4. Verify signed connected-account webhooks against raw bytes, store unique event IDs, resolve tenant and checkout ownership, apply paid/failed/refunded effects atomically, and test duplicate/out-of-order events.
-5. Run a complete hosted sandbox journey and confirm each payment and refund appears under the correct connected business. Keep live client checkout closed until provider approval and payout ownership are demonstrated.
-
-## Source-backed boundary
-
-Stripe: https://docs.stripe.com/connect/saas and https://docs.stripe.com/connect/direct-charges.md?platform=web&ui=stripe-hosted
-Lovable: https://docs.lovable.dev/features/payments and https://docs.lovable.dev/integrations/stripe
+Once you have those, I can read them and identify the cause. No code, secrets, database, accounts or payments are touched by this plan.
