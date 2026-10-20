@@ -1,6 +1,6 @@
 # Client-payment account setup
 
-Status (20 October 2026): the owner has a Stripe sandbox and Lovable has the exact Stripe Connect secret names. Settings includes a test-mode connection card. Hosted account creation currently fails with Stripe HTTP 400 before a connected account is saved; the exact rejection needs the owner's Stripe request log or a new attempt with safe diagnostics. No connected merchant, payout destination, successful onboarding or client checkout is verified. Paddle remains in sandbox for CloseSync subscriptions and existing test checkouts.
+Status (20 October 2026): the owner's signed-in Stripe Workbench confirms that request `req_hVzIx7qKmNj1te` was a cached HTTP 400 rejection because the separate sandbox blocks new Accounts v1 creation. The repair uses Accounts v2 merchant creation with full Dashboard access and Stripe-owned fees/losses, preserving stable per-owner idempotency, test-only credentials, existing readiness checks and hosted onboarding. Do not enable the legacy Accounts v1 policy. Hosted creation/onboarding still requires owner verification after deployment. No connected merchant, payout destination, successful onboarding or client checkout is verified. Paddle remains in sandbox for CloseSync subscriptions and existing test checkouts.
 
 ## Proposed account model
 
@@ -15,7 +15,7 @@ Lovable has Stripe and Paddle connectors available. Its published documentation 
 
 ## Owner account step
 
-The 20 October diagnostic check confirmed that Lovable's enabled built-in Stripe connector cannot inspect the request history for the owner's separate Connect sandbox. There is no standard Stripe connection available for that read. Do not substitute another Stripe account. Obtain the safe error fields and request ID from the owner's Stripe Workbench log for the failed `POST /v1/accounts` requests on 18 October around 21:42–21:44 UTC, or from a new owner-triggered attempt after the diagnostic repair is deployed. Do not collect keys or full request payloads in chat.
+The 20 October diagnostic check confirmed that Lovable's enabled built-in Stripe connector cannot inspect the request history for the owner's separate Connect sandbox. The owner subsequently signed into Stripe Workbench in the in-app browser, which proved the Accounts v1 policy rejection. Do not substitute another Stripe account or enable legacy v1 creation as a workaround. Keep test-only secrets in Lovable. Do not collect keys or full request payloads in chat. After deploying the v2 creation repair, the owner should retry from Settings → Integrations and complete Stripe's hosted sandbox onboarding.
 
 The owner must create and verify a Stripe platform account and enable Connect in test mode, review Stripe's terms and fee/liability model, and supply any identity/business/payout details directly to Stripe. Do not put keys or bank details in chat or source control. Once the platform account exists and the custom integration path is verified, put test-only credentials in Lovable's secure project configuration. Create a connected-account webhook endpoint and enter its signing secret after the endpoint exists. Never switch the existing Paddle environment to live to test client payments.
 

@@ -1,6 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { enforcePublicRateLimit } from "../_shared/abuse-rate-limit.ts";
 import { StripeRequestError, stripeConnectFailure } from "../_shared/stripe-connect-errors.ts";
+import { createStripeConnectMerchant } from "../_shared/stripe-connect-account-create.ts";
 import {
   accountCanTakeClientPayments,
   connectReturnOrigin,
@@ -76,29 +77,21 @@ Deno.serve(async (req) => {
       if (!user.email) return json({ error: "An account email is required" }, 400);
       // The owner enters their legal country; Stripe collects identity and bank
       // details in hosted onboarding. No bank details enter CloseSync.
-      const params = new URLSearchParams({
-        type: "standard", country, email: user.email,
-        "capabilities[card_payments][requested]": "true",
-        "capabilities[transfers][requested]": "true",
-        "metadata[closesync_user_id]": user.id,
-      });
       operation = "create_account";
-      const created = await stripeRequest<StripeAccount>(key, "/accounts", {
-        method: "POST", body: params,
-        idempotencyKey: `closesync-connect-test-${user.id}`,
+      const createdId = await createStripeConnectMerchant(key, {
+        userId: user.id, email: user.email, country,
       });
-      if (!isStripeAccountId(created.id) || created.livemode || created.country !== country) {
-        throw new Error("Stripe returned an unexpected account");
-      }
       operation = "save_account";
       const { error: saveError } = await db.from("client_payment_accounts").insert({
-        user_id: user.id, environment: "test", stripe_account_id: created.id, country,
+        user_id: user.id, environment: "test", stripe_account_id: createdId, country,
       });
       if (saveError) throw new Error("Could not store connected account");
-      accountId = created.id;
+      accountId = createdId;
     }
     if (!isStripeAccountId(accountId)) throw new Error("Stored account ID is invalid");
     operation = "retrieve_account";
+    // Stripe supports reading v2 accounts through the v1 representation. Keep
+    // the existing readiness checks and hosted Account Links for both versions.
     const account = await stripeRequest<StripeAccount>(key, `/accounts/${accountId}`);
     if (account.id !== accountId || account.livemode) throw new Error("Stripe account mode mismatch");
     const ready = accountCanTakeClientPayments(account);

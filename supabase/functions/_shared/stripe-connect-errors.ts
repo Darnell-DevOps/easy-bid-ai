@@ -32,7 +32,8 @@ export class StripeRequestError extends Error {
     this.param = safeToken(error.param);
     this.requestId = stripeRequestId(requestId);
     const message = typeof error.message === "string" ? error.message : "";
-    if (/signed up for connect|sign up for connect|register your platform|connect (?:has not been|is not) enabled/i.test(message)) {
+    if (["platform_registration_required", "connect_profile_not_submitted", "account_create_activation_required", "accounts_v2_access_blocked", "non_connect_platform_accounts_v2_access_blocked"].includes(this.code ?? "") ||
+      /signed up for connect|sign up for connect|register your platform|connect (?:has not been|is not) enabled/i.test(message)) {
       this.publicCode = "stripe_connect_setup_required";
     } else if (status === 401 || this.code === "api_key_expired") {
       this.publicCode = "stripe_credentials_invalid";
@@ -40,7 +41,7 @@ export class StripeRequestError extends Error {
       this.publicCode = "stripe_permission_denied";
     } else if (status === 429 || status >= 500) {
       this.publicCode = "stripe_temporarily_unavailable";
-    } else if (this.param === "country" || this.code === "country_unsupported") {
+    } else if (this.param === "country" || this.param === "identity.country" || this.code === "country_unsupported") {
       this.publicCode = "stripe_country_rejected";
     } else {
       this.publicCode = "stripe_request_rejected";

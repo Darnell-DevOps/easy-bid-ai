@@ -6,6 +6,7 @@ import {
   stripeRequest,
 } from "./stripe-connect.ts";
 import { StripeRequestError, stripeConnectFailure } from "./stripe-connect-errors.ts";
+import { createStripeConnectMerchant } from "./stripe-connect-account-create.ts";
 
 function assert(value: unknown, message: string): asserts value {
   if (!value) throw new Error(message);
@@ -91,5 +92,29 @@ Deno.test("a failed Stripe request preserves safe diagnostics when error.code is
       assert(!JSON.stringify(error).includes("private@example.test"), "must not retain provider PII");
       assert(stripeConnectFailure(error).code === "stripe_request_rejected", "must return a safe application code");
     }
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+Deno.test("new merchants use Accounts v2 with stable retries and Stripe-owned responsibilities", async () => {
+  const originalFetch = globalThis.fetch;
+  const attempts: Array<{ url: string; headers: Headers; body: Record<string, unknown> }> = [];
+  try {
+    globalThis.fetch = async (input: string | URL | Request, init?: RequestInit) => {
+      attempts.push({ url: String(input), headers: new Headers(init?.headers), body: JSON.parse(String(init?.body)) });
+      return Response.json({
+        id: "acct_v2merchant", livemode: false, dashboard: "full", identity: { country: "GB" },
+        applied_configurations: ["merchant"],
+        defaults: { responsibilities: { fees_collector: "stripe", losses_collector: "stripe" } },
+      });
+    };
+    const owner = { userId: "same-owner", email: "owner@example.test", country: "GB" };
+    assert(await createStripeConnectMerchant("sk_test_private", owner) === "acct_v2merchant", "must accept the test merchant");
+    await createStripeConnectMerchant("sk_test_private", owner);
+    assert(attempts.every((attempt) => attempt.url === "https://api.stripe.com/v2/core/accounts"), "must not create v1 accounts");
+    assert(attempts[0].headers.get("Content-Type") === "application/json", "v2 requires JSON");
+    assert(attempts[0].headers.get("Stripe-Version") === "2026-09-30.endive", "must pin the stable v2 version");
+    assert(attempts[0].headers.get("Idempotency-Key") === attempts[1].headers.get("Idempotency-Key"), "retry must reuse creation key");
+    assert(attempts[0].body.dashboard === "full", "merchant must have full Dashboard access");
+    assert(JSON.stringify(attempts[0].body.defaults) === JSON.stringify({ responsibilities: { fees_collector: "stripe", losses_collector: "stripe" } }), "must retain Stripe-owned fees/losses");
   } finally { globalThis.fetch = originalFetch; }
 });

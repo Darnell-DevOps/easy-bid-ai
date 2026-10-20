@@ -17,9 +17,13 @@ describe("safe Stripe Connect errors", () => {
 
   it.each([
     [400, { message: "You can only create new accounts if you've signed up for Connect." }, "stripe_connect_setup_required"],
+    [400, { code: "connect_profile_not_submitted" }, "stripe_connect_setup_required"],
+    [400, { code: "accounts_v2_access_blocked" }, "stripe_connect_setup_required"],
+    [400, { code: "platform_registration_required" }, "stripe_connect_setup_required"],
     [401, {}, "stripe_credentials_invalid"],
     [403, {}, "stripe_permission_denied"],
     [400, { param: "country" }, "stripe_country_rejected"],
+    [400, { param: "identity.country" }, "stripe_country_rejected"],
     [429, {}, "stripe_temporarily_unavailable"],
     [503, {}, "stripe_temporarily_unavailable"],
   ])("classifies HTTP %s without exposing provider text", (status, body, code) => {

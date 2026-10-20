@@ -2,8 +2,9 @@
 
 CloseSync subscriptions remain on Paddle. Client service payments need each
 business to be the merchant and receive payouts into its own Stripe account.
-Stripe Connect **direct charges** on Standard connected accounts are the
-planned model. Lovable can host the custom Edge Functions; that does not
+Stripe Connect **direct charges** on Accounts v2 merchants with full Dashboard
+access and Stripe-owned processing fees/losses are the planned model (the
+equivalent of the original Standard-account design). Lovable can host the custom Edge Functions; that does not
 establish Stripe platform approval or a completed payment flow.
 
 ## What is implemented
@@ -11,9 +12,18 @@ establish Stripe platform approval or a completed payment flow.
 - `client_payment_accounts` stores one connected account per owner and mode.
   Its owner can read the row; only the service role can create or change it.
 - `stripe-connect-account` authenticates the workspace owner, creates a
-  **test-mode** Standard account with a stable Stripe idempotency key, and
+  **test-mode** Accounts v2 merchant with a stable Stripe idempotency key, and
   returns a Stripe-hosted onboarding link. It reads Stripe's current account
   state before reporting readiness. CloseSync never receives bank details.
+- Account creation uses JSON at `/v2/core/accounts`, pinned to the stable
+  `2026-09-30.endive` version. Only the Merchant configuration is requested:
+  CloseSync subscription billing stays on Paddle. Both fee/loss collectors are
+  `stripe`, and Dashboard access is `full`; unexpected returned settings are
+  rejected before saving. Identity/business/bank information stays in Stripe's
+  onboarding flow rather than being invented or accepted by CloseSync.
+- Readiness and hosted Account Links use Stripe's supported v1 representation
+  of v2 accounts. This preserves the existing charge, payout and active-card
+  checks and can still read any previously saved v1 accounts.
 - The function accepts only `sk_test_` keys. A live key, absent key, missing
   return origin, disabled account, or missing payout/card capability cannot be
   treated as a ready merchant.
@@ -45,15 +55,27 @@ Lovable's logs show three account-creation attempts on 18 October around
 format and return-origin checks passed; this does not prove platform registration
 or account-creation permissions are complete. The old logger did not retain
 Stripe's error type, parameter or request ID, and the UI discarded non-2xx
-response bodies. The exact provider rejection remains unconfirmed.
+response bodies.
+
+The owner then signed in to Stripe Workbench. Request `req_hVzIx7qKmNj1te`
+confirmed that the **separate sandbox** rejects new `/v1/accounts` creation
+because Accounts v1 support is disabled for this new integration. This request
+was also a replay of a cached HTTP 400 response, not a fresh account creation.
+The original Stripe test mode and the separate sandbox have different logs;
+an empty search in the former did not mean the request was missing.
+
+The repair switches creation to Accounts v2 rather than enabling the legacy
+Accounts v1 policy. Its new, stable `closesync-connect-test-accounts-v2-<owner>`
+idempotency namespace avoids replaying the confirmed failed v1 creation. It is
+not randomised on retry. No saved account is replaced and no live key is enabled.
 
 The error-handling repair records only the operation, HTTP status, stable error
 code/type/parameter and Stripe request ID. Raw Stripe messages, email addresses,
 keys and response payloads must never be logged or returned to the browser.
 The screen maps known application error codes to recovery instructions and a
-support reference, preserves the country and allows retry. A new hosted attempt
-or the owner's original Stripe Workbench request log is still needed to prove
-the root cause and successful onboarding; do not mark this flow complete yet.
+support reference, preserves the country and allows retry. The provider root
+cause is now confirmed; a new owner-triggered hosted attempt is still required
+to demonstrate successful v2 merchant creation and completed onboarding.
 
 ## Still required before client checkout is enabled
 
@@ -66,7 +88,10 @@ the root cause and successful onboarding; do not mark this flow complete yet.
 - Complete the full hosted sandbox journey in Lovable with two isolated
   businesses. Verify payout ownership in Stripe before any live enablement.
 
-Official references: [Stripe SaaS platforms](https://docs.stripe.com/connect/saas),
+Official references: [Accounts v2](https://docs.stripe.com/connect/accounts-v2),
+[v2 merchant configuration](https://docs.stripe.com/connect/accounts-v2/connected-account-configuration),
+[v2 account creation](https://docs.stripe.com/api/v2/core/accounts/create),
+[Stripe SaaS platforms](https://docs.stripe.com/connect/saas),
 [Stripe accounts](https://docs.stripe.com/api/accounts),
 [Account Links](https://docs.stripe.com/api/account_links),
 [direct charges](https://docs.stripe.com/connect/direct-charges), and

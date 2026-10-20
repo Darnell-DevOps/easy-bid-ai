@@ -46,12 +46,15 @@ permanent trash cleanup stays disabled, and CloseSync's legal pages remain draft
    test disabled/unverified accounts and cross-business access. Keep payments in
    sandbox until the model is resolved. Changing the global environment to live
    would affect SaaS billing; the client checkout endpoints now reject live-mode
-   central-Paddle charges server-side. The owner reports no Stripe account yet.
-   The proposed Stripe Connect direct-charge model and exact owner account step
-   are in `.lovable/plan.md`. A test-only Standard connected-account foundation
-   is documented in `docs/STRIPE_CONNECT_TEST_SETUP.md`; it does not yet route
-   proposal or retainer checkout through Stripe. No Connect account, webhook,
-   completed client payment or payout is configured.
+   central-Paddle charges server-side. As of 20 October the owner has a Stripe
+   sandbox and server-side credentials in Lovable. Workbench confirmed that
+   the sandbox blocks new Accounts v1 creation; the repair uses Accounts v2
+   merchants with full Dashboard access and Stripe-owned fees/losses.
+   The model and owner account step are in `.lovable/plan.md`. The test-only
+   foundation and verified failure are documented in
+   `docs/STRIPE_CONNECT_TEST_SETUP.md`; proposal and retainer checkout still do
+   not route through Stripe. No completed merchant onboarding, Connect webhook,
+   client payment or payout has been verified.
 2. **Email DNS and delivery:** finish the sender and inbound records in the
    DNS account identified in the hosted audit. Verify Resend sender status in
    its dashboard, then actually receive signup/reset, proposal, reminder and
