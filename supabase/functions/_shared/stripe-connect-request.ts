@@ -7,7 +7,7 @@ export function isStripeAccountId(value: unknown): value is string {
 export async function stripeRequest<T>(
   key: string,
   path: string,
-  options: { method?: "GET" | "POST"; idempotencyKey?: string } & (
+  options: { method?: "GET" | "POST"; idempotencyKey?: string; account?: string } & (
     | { api?: "v1"; body?: URLSearchParams }
     | { api: "v2"; body?: Record<string, unknown> }
   ) = {},
@@ -20,6 +20,7 @@ export async function stripeRequest<T>(
       ...(v2 ? { "Stripe-Version": "2026-09-30.endive" } : {}),
       ...(options.body ? { "Content-Type": v2 ? "application/json" : "application/x-www-form-urlencoded" } : {}),
       ...(options.idempotencyKey ? { "Idempotency-Key": options.idempotencyKey } : {}),
+      ...(options.account ? { "Stripe-Account": options.account } : {}),
     },
     body: options.api === "v2" ? (options.body ? JSON.stringify(options.body) : undefined) : options.body,
   });

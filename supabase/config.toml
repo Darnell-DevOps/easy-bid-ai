@@ -25,6 +25,10 @@ project_id = "avtogztwdoemxuffnwyv"
     verify_jwt = false
   [functions.stripe-connect-account]
     verify_jwt = true
+  [functions.stripe-sandbox-checkout]
+    verify_jwt = true
+  [functions.stripe-sandbox-webhook]
+    verify_jwt = false
   [functions.create-retainer-subscription]
     verify_jwt = false
   [functions.get-paddle-price]
