@@ -27,5 +27,5 @@ export async function readBoundedText(request: Request, maxBytes: number): Promi
 }
 
 export async function readBoundedJson(request: Request, maxBytes: number): Promise<unknown> {
-  return JSON.parse(await readBoundedText(request, maxBytes));
+  return JSON.parse((await readBoundedText(request, maxBytes)).replace(/^\uFEFF/, ""));
 }
