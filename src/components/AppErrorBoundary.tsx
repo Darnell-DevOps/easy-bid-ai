@@ -1,4 +1,4 @@
-import { Component, type ErrorInfo, type ReactNode } from "react";
+import { Component, type ReactNode } from "react";
 import { reportClientError } from "@/lib/error-reporting";
 
 type Props = { children: ReactNode };
@@ -11,10 +11,8 @@ export default class AppErrorBoundary extends Component<Props, State> {
     return { hasError: true };
   }
 
-  componentDidCatch(error: Error, info: ErrorInfo) {
-    reportClientError(error, "react_boundary", {
-      componentStack: info.componentStack?.slice(0, 8_000) || null,
-    });
+  componentDidCatch(error: Error) {
+    reportClientError(error, "react_boundary");
   }
 
   render() {

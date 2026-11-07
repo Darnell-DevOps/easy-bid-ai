@@ -1,6 +1,8 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { logSecurityEvent } from "../_shared/security-telemetry.ts";
 import { enforcePublicRateLimit } from "../_shared/abuse-rate-limit.ts";
+import { safeErrorReport } from "../_shared/telemetry-privacy.ts";
+import { readBoundedJson } from "../_shared/bounded-json.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -36,9 +38,8 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const admin = createClient(supabaseUrl, serviceKey);
 
-    const body = await req.json();
-    const allowedSources = new Set(["react_boundary", "window_error", "unhandled_rejection"]);
-    if (!allowedSources.has(body?.source) || typeof body?.message !== "string") {
+    const report = safeErrorReport(await readBoundedJson(req, 32_768).catch(() => null));
+    if (!report) {
       await logSecurityEvent(admin, req, {
         eventType: "invalid_request",
         source: "report-client-error",
@@ -46,17 +47,6 @@ Deno.serve(async (req) => {
         metadata: { reason: "invalid_error_report" },
       });
       return json({ error: "Invalid error report" }, 400);
-    }
-
-    const metadataJson = JSON.stringify(body.metadata || {});
-    if (metadataJson.length > 20_000) {
-      await logSecurityEvent(admin, req, {
-        eventType: "invalid_request",
-        source: "report-client-error",
-        statusCode: 400,
-        metadata: { reason: "metadata_too_large" },
-      });
-      return json({ error: "Metadata is too large" }, 400);
     }
 
     let userId: string | null = null;
@@ -76,22 +66,16 @@ Deno.serve(async (req) => {
     const { data: inserted, error } = await admin
       .from("app_error_reports")
       .insert({
-        source: body.source,
-        severity: body.source === "react_boundary" ? "fatal" : "error",
-        message: body.message.slice(0, 1_000),
-        stack: typeof body.stack === "string" ? body.stack.slice(0, 8_000) : null,
-        path: typeof body.path === "string" ? body.path.slice(0, 500) : null,
+        ...report,
         user_id: userId,
-        user_agent: (req.headers.get("user-agent") || "").slice(0, 1_000),
-        metadata: body.metadata || {},
         request_fingerprint: requestFingerprint,
       })
       .select("id")
       .single();
     if (error) throw error;
     return json({ accepted: true, incidentId: inserted.id }, 202);
-  } catch (error) {
-    console.error("report-client-error failed", error);
+  } catch {
+    console.error("report-client-error failed");
     return json({ error: "Could not record error" }, 500);
   }
 });

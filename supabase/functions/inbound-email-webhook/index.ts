@@ -28,6 +28,7 @@ import { hasConfiguredInboundSecret, isInboundSecretValid } from "../_shared/inb
 import { logLeadActivity } from "../_shared/lead-activity.ts";
 import { logSecurityEvent } from "../_shared/security-telemetry.ts";
 import { enforcePublicRateLimit } from "../_shared/abuse-rate-limit.ts";
+import { readBoundedJson } from "../_shared/bounded-json.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -184,8 +185,8 @@ ${opts.message}
   });
 
   if (!r.ok) {
-    const t = await r.text();
-    console.error("AI gateway error", r.status, t);
+    console.error("Inbound lead AI gateway error", r.status);
+    await r.body?.cancel();
     return null;
   }
   const data = await r.json();
@@ -269,7 +270,15 @@ Deno.serve(async (req) => {
   if (preAuthLimited) return preAuthLimited;
 
   let body: any;
-  try { body = await req.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400); }
+  try {
+    body = await readBoundedJson(req, 1_048_576);
+  } catch (error) {
+    if (error instanceof RangeError) return jsonResponse({ error: "Email payload too large" }, 413);
+    return jsonResponse({ error: "Invalid JSON" }, 400);
+  }
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return jsonResponse({ error: "Invalid email payload" }, 400);
+  }
 
   const recipient = pickRecipient(body.to ?? body.recipient ?? body.envelope?.to);
   if (!recipient) return jsonResponse({ error: "Missing recipient (to)" }, 400);
@@ -285,7 +294,7 @@ Deno.serve(async (req) => {
     .eq("slug", slug)
     .maybeSingle();
   if (aliasErr || !alias) {
-    console.warn("No alias for slug", slug);
+    console.warn("Inbound alias not found");
     await logSecurityEvent(svc, req, {
       eventType: "unknown_inbound_alias",
       source: "inbound-email-webhook",
@@ -340,7 +349,7 @@ Deno.serve(async (req) => {
   const subject = String(body.subject ?? "(No subject)").trim().slice(0, 300);
   const textBody = String(body.text ?? "").trim();
   const htmlBody = String(body.html ?? "").trim();
-  const message = textBody || (htmlBody ? stripHtml(htmlBody) : "");
+  const message = (textBody || (htmlBody ? stripHtml(htmlBody) : "")).slice(0, 16_000);
 
   if (!message || message.length < 3) {
     return jsonResponse({ error: "Empty email body" }, 400);
@@ -392,8 +401,8 @@ Deno.serve(async (req) => {
       if (ai?.reply && prefs?.email_signature) {
         ai.reply = appendSignature(ai.reply, prefs.email_signature);
       }
-    } catch (e) {
-      console.error("AI failed, falling back to needs_review:", e);
+    } catch {
+      console.error("Inbound lead AI failed; queued for manual review");
     }
   }
 
@@ -510,7 +519,7 @@ Deno.serve(async (req) => {
         .select("id")
         .single();
       if (insertErr) {
-        console.error("Insert client failed", insertErr);
+        console.error("Inbound lead insert failed", insertErr.code);
         return jsonResponse({ error: "Could not save lead" }, 500);
       }
       clientId = client.id;
@@ -545,7 +554,7 @@ Deno.serve(async (req) => {
     from_email: fromEmail,
     from_name: name,
     subject,
-    body_text: message.slice(0, 16000),
+    body_text: message,
     classification,
     classification_reason: classificationReason,
     client_id: clientId,
@@ -617,8 +626,8 @@ Deno.serve(async (req) => {
         feature_globally_enabled: false,
       },
     });
-  } catch (e) {
-    console.warn("auto-send log insert failed", e);
+  } catch {
+    console.warn("Inbound auto-send audit insert failed");
   }
 
   return jsonResponse({

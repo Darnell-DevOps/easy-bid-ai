@@ -6,9 +6,9 @@
  *   4. The contract becomes "executed" and the executed PDF is downloadable
  *      from both the owner dashboard and the client's signed-confirmation view.
  *
- * Required env vars (skipped otherwise):
- *   TEST_USER_EMAIL   – a real auth user in the project
- *   TEST_USER_PASSWORD
+ * CI runs this against a disposable Supabase project. For manual runs, set
+ * TEST_SUPABASE_URL, TEST_SUPABASE_PUBLISHABLE_KEY, TEST_USER_EMAIL and
+ * TEST_USER_PASSWORD for a dedicated test project and point Vite at that project.
  */
 import { test, expect, type APIRequestContext, type BrowserContext } from "@playwright/test";
 import { execFileSync, spawnSync } from "node:child_process";
@@ -52,10 +52,8 @@ function ocrPdf(pdfPath: string): string {
   return text;
 }
 
-const SUPABASE_URL = "https://avtogztwdoemxuffnwyv.supabase.co";
-const SUPABASE_ANON =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF2dG9nenR3ZG9lbXh1ZmZud3l2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MjMzOTIsImV4cCI6MjA5MTI5OTM5Mn0.YzBeN1hJwep-3enRTATohXbuBC0OoEMVv0KC6yRmhnw";
-const STORAGE_KEY = "sb-avtogztwdoemxuffnwyv-auth-token";
+const SUPABASE_URL = process.env.TEST_SUPABASE_URL ?? "";
+const SUPABASE_ANON = process.env.TEST_SUPABASE_PUBLISHABLE_KEY ?? "";
 
 const EMAIL = process.env.TEST_USER_EMAIL;
 const PASSWORD = process.env.TEST_USER_PASSWORD;
@@ -85,7 +83,7 @@ async function seedContract(api: APIRequestContext, session: AuthSession) {
     contract_type: "web_design_agreement",
     title: "E2E Sign Flow Contract",
     client_name: "E2E Test Client",
-    client_email: "e2e-client@example.com",
+    client_email: "e2e-client@example.invalid",
     body:
       "This Agreement is between the Service Provider and the Client.\n\n" +
       "Scope: end-to-end signing flow smoke test.\n\nSignatures below.",
@@ -117,15 +115,16 @@ async function deleteContract(api: APIRequestContext, session: AuthSession, id: 
 async function attachOwnerSession(ctx: BrowserContext, session: AuthSession, baseURL: string) {
   const page = await ctx.newPage();
   await page.goto(baseURL);
+  const storageKey = `sb-${new URL(SUPABASE_URL).hostname.split(".")[0]}-auth-token`;
   await page.evaluate(
     ([key, value]) => window.localStorage.setItem(key, value),
-    [STORAGE_KEY, JSON.stringify(session)] as const,
+    [storageKey, JSON.stringify(session)] as const,
   );
   await page.close();
 }
 
 test.describe("Contract sign → countersign → executed PDF", () => {
-  test.skip(!EMAIL || !PASSWORD, "Set TEST_USER_EMAIL / TEST_USER_PASSWORD to run this E2E.");
+  test.skip(!SUPABASE_URL || !SUPABASE_ANON || !EMAIL || !PASSWORD, "Requires a dedicated Supabase test project and user.");
   test.setTimeout(120_000);
 
   test("full flow", async ({ browser, playwright, baseURL }) => {
@@ -139,7 +138,7 @@ test.describe("Contract sign → countersign → executed PDF", () => {
       const clientPage = await clientCtx.newPage();
       await clientPage.goto(`${baseURL}/sign/${contract.signing_token}`);
 
-      await expect(clientPage.getByText("E2E Sign Flow Contract", { exact: false })).toBeVisible();
+      await expect(clientPage.getByRole("heading", { name: "E2E Sign Flow Contract", level: 1 })).toBeVisible();
 
       // The public signing form remains programmatically labelled and pre-filled.
       const nameInput = clientPage.getByRole("textbox", { name: /Full legal name/i });
