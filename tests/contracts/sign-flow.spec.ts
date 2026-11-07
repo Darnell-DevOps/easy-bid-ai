@@ -138,7 +138,7 @@ test.describe("Contract sign → countersign → executed PDF", () => {
       const clientPage = await clientCtx.newPage();
       await clientPage.goto(`${baseURL}/sign/${contract.signing_token}`);
 
-      await expect(clientPage.getByText("E2E Sign Flow Contract", { exact: false })).toBeVisible();
+      await expect(clientPage.getByRole("heading", { name: "E2E Sign Flow Contract", level: 1 })).toBeVisible();
 
       // The public signing form remains programmatically labelled and pre-filled.
       const nameInput = clientPage.getByRole("textbox", { name: /Full legal name/i });
