@@ -3456,6 +3456,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      form_attachments_available: { Args: never; Returns: boolean }
       get_contract_owner_email: {
         Args: { _token: string }
         Returns: {
