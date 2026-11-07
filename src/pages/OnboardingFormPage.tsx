@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, CheckCircle2, ClipboardList, Sparkles, ArrowRight, Briefcase } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useFormAttachments } from "@/hooks/use-form-attachments";
 import {
   groupFields,
   onboardingProgress,
@@ -58,6 +59,7 @@ function serialize(r: FieldResponses): Record<string, string> {
 export default function OnboardingFormPage() {
   const { token } = useParams();
   const { toast } = useToast();
+  const attachments = useFormAttachments();
   const [form, setForm] = useState<OnboardingFormRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -101,11 +103,16 @@ export default function OnboardingFormPage() {
     })();
   }, [token]);
 
-  const groups = useMemo(() => (form ? groupFields(form.fields) : []), [form]);
+  const hasFileFields = form?.fields.some((field) => field.type === "file");
+  const fields = useMemo(() => {
+    const configured = form?.fields ?? [];
+    return attachments.data ? configured : configured.filter((field) => field.type !== "file");
+  }, [form, attachments.data]);
+  const groups = useMemo(() => groupFields(fields), [fields]);
   const serialized = useMemo(() => serialize(responses), [responses]);
   const progress = useMemo(
-    () => (form ? onboardingProgress({ fields: form.fields, responses: serialized }) : 0),
-    [form, serialized],
+    () => onboardingProgress({ fields, responses: serialized }),
+    [fields, serialized],
   );
 
   const handleChange = (id: string, value: string | string[] | boolean) => {
@@ -118,7 +125,7 @@ export default function OnboardingFormPage() {
     if (!form || !token) return;
     const payload = serialize(responses);
     if (complete) {
-      const missing = form.fields.filter(
+      const missing = fields.filter(
         (f) => f.required && isFieldVisible(f, responses) && !(payload[f.id] || "").trim(),
       );
       if (missing.length) {
@@ -164,7 +171,7 @@ export default function OnboardingFormPage() {
     });
   };
 
-  if (loading) {
+  if (loading || (hasFileFields && attachments.isPending)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -298,6 +305,10 @@ export default function OnboardingFormPage() {
           <div role="alert" className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
             {formError}
           </div>
+        )}
+
+        {hasFileFields && !attachments.data && (
+          <p className="text-sm text-muted-foreground">File uploads are paused. You can complete onboarding without attachments.</p>
         )}
 
         {groups.map((group, groupIndex) => {

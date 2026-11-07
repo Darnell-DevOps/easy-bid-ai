@@ -377,6 +377,7 @@ test("contract signing provides typed and drawn signature accessibility", async 
 });
 
 test("public lead forms expose labelled dynamic fields and upload controls", async ({ page }) => {
+  await page.route("**/rest/v1/rpc/form_attachments_available", (route) => route.fulfill({ json: true }));
   await page.route("**/rest/v1/rpc/public_get_lead_form_by_slug", async (route) => {
     await route.fulfill({
       status: 200,
@@ -493,6 +494,49 @@ test("public lead forms expose labelled dynamic fields and upload controls", asy
     () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
   );
   expect(hasHorizontalOverflow).toBe(false);
+});
+
+test("lead and onboarding forms accept answers while required attachments are paused", async ({ page }) => {
+  const fields = [
+    { id: "name", label: "Full name", type: "short_text", required: true },
+    { id: "brief", label: "Project brief", type: "file", required: true },
+  ];
+  await page.route("**/rest/v1/rpc/form_attachments_available", (route) => route.fulfill({ json: false }));
+  await page.route("**/rest/v1/rpc/public_get_lead_form_by_slug", (route) => route.fulfill({ json: [{
+    id: "00000000-0000-0000-0000-000000000005", title: "Enquiry", fields,
+    submit_label: "Send enquiry", success_message: "Thank you for your enquiry.",
+  }] }));
+  await page.route("**/rest/v1/rpc/lead_form_record_view", (route) => route.fulfill({ json: null }));
+  await page.route("**/rest/v1/rpc/lead_form_submit", (route) => {
+    expect(route.request().postDataJSON()._responses).toEqual({ name: "Test Client" });
+    return route.fulfill({ json: {} });
+  });
+  await page.goto("/f/attachments-paused");
+  await expect(page.getByText("File uploads are paused.", { exact: false })).toBeVisible();
+  await expect(page.locator('input[type="file"]')).toHaveCount(0);
+  await page.getByRole("textbox", { name: "Full name" }).fill("Test Client");
+  await page.waitForTimeout(1_600); // The real form discards submissions under 1.5 seconds.
+  await page.getByRole("button", { name: "Send enquiry" }).click();
+  await expect(page.getByRole("status")).toContainText("Thank you for your enquiry.");
+
+  const existingBrief = JSON.stringify({ path: "workspace/brief.pdf", name: "brief.pdf" });
+  await page.route("**/rest/v1/rpc/public_get_onboarding_by_token", (route) => route.fulfill({ json: [{
+    client_name: "Test Client", status: "pending", fields,
+    responses: { brief: existingBrief },
+  }] }));
+  await page.route("**/rest/v1/rpc/onboarding_submit", (route) => {
+    expect(route.request().postDataJSON()).toMatchObject({
+      _complete: true, _responses: { name: "Test Client", brief: existingBrief },
+    });
+    return route.fulfill({ json: null });
+  });
+  await page.goto("/onboard/attachments-paused");
+  await expect(page.getByText("File uploads are paused.", { exact: false })).toBeVisible();
+  await expect(page.locator('input[type="file"]')).toHaveCount(0);
+  await page.getByRole("textbox", { name: "Full name" }).fill("Test Client");
+  await page.getByRole("checkbox", { name: /I confirm/ }).check();
+  await page.getByRole("button", { name: "Submit onboarding" }).click();
+  await expect(page.getByRole("heading", { name: "Onboarding complete" })).toBeVisible();
 });
 
 test("public testimonial forms expose labelled, keyboard-operable review controls", async ({ page }) => {
