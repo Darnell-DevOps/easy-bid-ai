@@ -27,6 +27,10 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+    const { data: attachmentsAvailable } = await supabase.rpc("form_attachments_available");
+    if (attachmentsAvailable !== true) {
+      return Response.json({ error: "attachments_paused" }, { status: 503, headers: corsHeaders });
+    }
 
     let user_id: string | null = null;
     let form_kind: "onboarding" | "lead" = "onboarding";

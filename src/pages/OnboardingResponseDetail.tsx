@@ -21,6 +21,7 @@ import {
 } from "@/lib/onboarding";
 import { parseFilePayload, parseFilePayloads, type FilePayload, type SmartField } from "@/lib/form-fields";
 import { useToast } from "@/hooks/use-toast";
+import { useFormAttachments } from "@/hooks/use-form-attachments";
 import { getPrimaryCustomDomain, buildPublicUrl } from "@/lib/customDomain";
 import { AccessibleLoadingState } from "@/components/ui/accessible-loading-state";
 
@@ -36,6 +37,7 @@ function formatBytes(n: number): string {
 export default function OnboardingResponseDetail() {
   const { id } = useParams();
   const { toast } = useToast();
+  const { data: attachmentsAvailable, isPending: attachmentsLoading } = useFormAttachments();
   const [form, setForm] = useState<OnboardingFormRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [downloadingPath, setDownloadingPath] = useState<string | null>(null);
@@ -347,7 +349,7 @@ export default function OnboardingResponseDetail() {
                         <p className="text-sm font-medium text-foreground truncate">{payload.name}</p>
                         <p className="text-[11px] text-muted-foreground">{formatBytes(payload.size)}</p>
                       </div>
-                      <Button
+                      {attachmentsAvailable ? <Button
                         size="sm"
                         variant="outline"
                         className="gap-1.5"
@@ -358,7 +360,9 @@ export default function OnboardingResponseDetail() {
                           ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
                           : <Download className="w-3.5 h-3.5" />}
                         Download
-                      </Button>
+                      </Button> : !attachmentsLoading && (
+                        <p className="text-sm text-muted-foreground">Downloads paused</p>
+                      )}
                     </div>
                   );
                   if (field.multiple) {

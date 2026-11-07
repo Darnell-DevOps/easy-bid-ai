@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useFormAttachments } from "@/hooks/use-form-attachments";
 import { Inbox, Loader2, UserPlus, Archive, FileDown, ListChecks, Copy, Check } from "lucide-react";
 import type { SmartField } from "@/lib/form-fields";
 import LeadScoreBadge from "@/components/ai/LeadScoreBadge";
@@ -83,6 +84,7 @@ const QUALITY_TONE: Record<string, string> = {
 
 export default function LeadInbox() {
   const { toast } = useToast();
+  const { data: attachmentsAvailable, isPending: attachmentsLoading } = useFormAttachments();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [forms, setForms] = useState<Record<string, FormLite>>({});
   const [loading, setLoading] = useState(true);
@@ -353,7 +355,7 @@ export default function LeadInbox() {
                         return (
                           <div key={k} className="rounded-md border border-border bg-card p-3">
                             <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{labelMap[k] || k}</div>
-                            {file ? (
+                            {file && attachmentsAvailable ? (
                               <button
                                 onClick={() => openSignedFile(file.path)}
                                 className="mt-1 inline-flex items-center gap-2 text-sm text-purple hover:underline"
@@ -362,6 +364,10 @@ export default function LeadInbox() {
                                 {file.name}
                                 {file.size ? <span className="text-muted-foreground text-xs">· {(file.size / 1024).toFixed(0)} KB</span> : null}
                               </button>
+                            ) : file ? (
+                              <div className="text-sm text-muted-foreground mt-0.5">
+                                {file.name}{attachmentsLoading ? "" : " · Downloads paused"}
+                              </div>
                             ) : (
                               <div className="text-sm text-foreground mt-0.5 whitespace-pre-wrap">{String(v)}</div>
                             )}

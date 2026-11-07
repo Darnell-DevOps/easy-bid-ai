@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useFormAttachments } from "@/hooks/use-form-attachments";
 import { CheckCircle2, Loader2, Send, ShieldCheck } from "lucide-react";
 import SmartFieldRenderer from "@/components/forms/SmartFieldRenderer";
 import DynamicFavicon from "@/components/branding/DynamicFavicon";
@@ -31,6 +32,7 @@ export default function PublicLeadFormPage() {
   const embed = search.get("embed") === "1";
   
   const { toast } = useToast();
+  const attachments = useFormAttachments();
 
   const [form, setForm] = useState<PublicForm | null>(null);
   const [loading, setLoading] = useState(true);
@@ -61,7 +63,12 @@ export default function PublicLeadFormPage() {
     })();
   }, [slug]);
 
-  const grouped = useMemo(() => (form ? groupSmartFields(form.fields || []) : []), [form]);
+  const hasFileFields = form?.fields?.some((field) => field.type === "file");
+  const fields = useMemo(() => {
+    const configured = form?.fields || [];
+    return attachments.data ? configured : configured.filter((field) => field.type !== "file");
+  }, [form, attachments.data]);
+  const grouped = useMemo(() => groupSmartFields(fields), [fields]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -81,7 +88,7 @@ export default function PublicLeadFormPage() {
       return;
     }
 
-    const missing = missingRequired(form.fields, responses);
+    const missing = missingRequired(fields, responses);
     if (missing.length) {
       const missingLabels = missing.map((f) => f.label).join(", ");
       setFormError(`Please complete the required fields: ${missingLabels}.`);
@@ -144,7 +151,7 @@ export default function PublicLeadFormPage() {
     setDone(true);
   };
 
-  if (loading) {
+  if (loading || (hasFileFields && attachments.isPending)) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-background" aria-busy="true">
         <Loader2 aria-hidden="true" className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -208,6 +215,9 @@ export default function PublicLeadFormPage() {
 
           <form onSubmit={handleSubmit} noValidate aria-busy={submitting}>
           <div className="relative space-y-10">
+            {hasFileFields && !attachments.data && (
+              <p className="text-sm text-muted-foreground">File uploads are paused. You can submit this form without attachments.</p>
+            )}
             {grouped.map((g, gi) => (
               <section key={g.group} className="space-y-5" aria-labelledby={`lead-form-section-${gi}`}>
                 <div className="flex items-center gap-3">

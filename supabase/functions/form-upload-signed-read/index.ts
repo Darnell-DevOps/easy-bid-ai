@@ -29,6 +29,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: "forbidden" }, { status: 403, headers: corsHeaders });
     }
 
+    const { data: attachmentsAvailable } = await supabase.rpc("form_attachments_available");
+    if (attachmentsAvailable !== true) {
+      return Response.json({ error: "attachments_paused" }, { status: 503, headers: corsHeaders });
+    }
+
     const downloadName = formUploadDownloadName(path);
     const { data, error } = await supabase.storage
       .from("form-uploads")

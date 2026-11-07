@@ -32,6 +32,25 @@ INSERT INTO storage.objects (bucket_id, name) VALUES
 SET LOCAL ROLE authenticated;
 SET LOCAL request.jwt.claims = '{"sub":"00000000-0000-4000-8000-00000000a001","role":"authenticated"}';
 DO $$
+BEGIN
+  IF public.form_attachments_available() OR EXISTS (
+    SELECT 1 FROM storage.objects WHERE bucket_id = 'form-uploads'
+  ) THEN
+    RAISE EXCEPTION 'The attachment pause must hide even the owner''s files';
+  END IF;
+  BEGIN
+    INSERT INTO storage.objects (bucket_id, name) VALUES
+      ('form-uploads', '00000000-0000-4000-8000-00000000a001/blocked.pdf');
+    RAISE EXCEPTION 'The owner bypassed the attachment pause via Storage';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+END $$;
+
+RESET ROLE;
+INSERT INTO public.internal_config (key, value) VALUES ('form_attachments_enabled', 'true')
+ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
+SET LOCAL ROLE authenticated;
+DO $$
 DECLARE changed integer;
 BEGIN
   IF (SELECT array_agg(name) FROM public.clients) IS DISTINCT FROM ARRAY['Client A'] THEN
