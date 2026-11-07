@@ -1,4 +1,5 @@
 import { defineTool } from "@lovable.dev/mcp-js";
+import type { Database } from "../../../integrations/supabase/types";
 import { supabaseForUser } from "../supabase";
 import { errorResult, jsonResult, requireUser } from "../helpers";
 
@@ -14,7 +15,7 @@ export default defineTool({
     const supabase = supabaseForUser(ctx);
     const { data, error } = await supabase.rpc("list_my_oauth_consents");
     if (error) return errorResult(error.message);
-    const rows = (data as unknown[]) ?? [];
+    const rows = (data as Database["public"]["Functions"]["list_my_oauth_consents"]["Returns"]) ?? [];
     return jsonResult({ count: rows.length, connections: rows });
   },
 });

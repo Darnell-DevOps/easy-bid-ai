@@ -1,44 +1,30 @@
 import { supabase } from "@/integrations/supabase/client";
+import { telemetryErrorCode, telemetryRoute } from "../../supabase/functions/_shared/telemetry-privacy";
 
 export type ClientErrorSource =
   | "react_boundary"
   | "window_error"
   | "unhandled_rejection";
 
-const sentFingerprints = new Set<string>();
-
-export function toErrorDetails(value: unknown): { message: string; stack: string | null } {
-  if (value instanceof Error) {
-    return { message: value.message || value.name, stack: value.stack || null };
-  }
-  if (typeof value === "string") return { message: value, stack: null };
-  try {
-    return { message: JSON.stringify(value), stack: null };
-  } catch {
-    return { message: "Unknown client error", stack: null };
-  }
-}
+const sentFingerprints = new Map<string, number>();
 
 export function reportClientError(
   value: unknown,
   source: ClientErrorSource,
-  metadata: Record<string, unknown> = {},
 ): void {
-  const details = toErrorDetails(value);
-  const path = typeof window === "undefined" ? null : window.location.pathname;
-  const fingerprint = `${source}:${path}:${details.message}:${details.stack || ""}`.slice(0, 4_000);
-  if (sentFingerprints.has(fingerprint)) return;
-  sentFingerprints.add(fingerprint);
+  const code = telemetryErrorCode(value instanceof Error || value instanceof DOMException ? value.name : null);
+  const path = telemetryRoute(typeof window === "undefined" ? null : window.location.pathname);
+  const fingerprint = `${source}:${path}:${code}`;
+  const now = Date.now();
+  const previous = sentFingerprints.get(fingerprint);
+  if (previous !== undefined && now - previous < 60_000) return;
+  sentFingerprints.delete(fingerprint);
+  if (sentFingerprints.size >= 128) sentFingerprints.delete(sentFingerprints.keys().next().value!);
+  sentFingerprints.set(fingerprint, now);
 
   void supabase.functions
     .invoke("report-client-error", {
-      body: {
-        source,
-        message: details.message,
-        stack: details.stack,
-        path,
-        metadata,
-      },
+      body: { source, path, code },
     })
     .catch(() => {
       // Reporting must never become a second user-facing failure.
@@ -47,11 +33,7 @@ export function reportClientError(
 
 export function installGlobalErrorReporting(): () => void {
   const onError = (event: ErrorEvent) => {
-    reportClientError(event.error || event.message, "window_error", {
-      filename: event.filename || null,
-      line: event.lineno || null,
-      column: event.colno || null,
-    });
+    reportClientError(event.error, "window_error");
   };
   const onUnhandledRejection = (event: PromiseRejectionEvent) => {
     reportClientError(event.reason, "unhandled_rejection");

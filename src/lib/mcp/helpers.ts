@@ -1,16 +1,10 @@
-import type { ToolContext } from "@lovable.dev/mcp-js";
+import type { JsonValueInput, ToolContext, ToolHandlerResult } from "@lovable.dev/mcp-js";
 
-export type ToolResult = {
-  content: { type: "text"; text: string }[];
-  structuredContent?: Record<string, unknown>;
-  isError?: boolean;
-};
-
-export function errorResult(message: string): ToolResult {
+export function errorResult(message: string): ToolHandlerResult {
   return { content: [{ type: "text", text: message }], isError: true };
 }
 
-export function jsonResult(payload: Record<string, unknown>): ToolResult {
+export function jsonResult(payload: Record<string, JsonValueInput>): ToolHandlerResult {
   return {
     content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
     structuredContent: payload,

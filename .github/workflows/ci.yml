@@ -23,6 +23,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm audit --omit=dev --audit-level=high
       - run: npm run check:launch
 
   edge-functions:
@@ -51,6 +52,7 @@ jobs:
           supabase/functions/generate-proposal/index.ts
           supabase/functions/generate-policy/index.ts
           supabase/functions/lead-response/index.ts
+          supabase/functions/mcp/index.ts
           supabase/functions/payments-webhook/index.ts
           supabase/functions/payment-event-worker/index.ts
           supabase/functions/send-email/index.ts
@@ -74,6 +76,8 @@ jobs:
         run: supabase db reset --local
       - name: Check payment and email concurrency in disposable database
         run: node scripts/test-payment-concurrency.mjs
+      - name: Check tenant isolation and telemetry in disposable database
+        run: psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -X -f scripts/test-tenant-isolation.sql
 
   e2e:
     name: Browser smoke tests
