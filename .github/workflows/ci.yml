@@ -85,10 +85,9 @@ jobs:
       - uses: supabase/setup-cli@v3
         with:
           version: 2.84.2
-      - name: Start disposable Supabase project
+      # This runner has a fresh Docker volume. Startup applies every migration.
+      - name: Start disposable Supabase and apply migrations
         run: supabase start
-      - name: Rebuild database from migrations
-        run: supabase db reset --local
       - name: Check payment and email concurrency in disposable database
         run: node scripts/test-payment-concurrency.mjs
       - name: Check tenant isolation and telemetry in disposable database

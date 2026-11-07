@@ -1,7 +1,8 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { logSecurityEvent } from "../_shared/security-telemetry.ts";
 import { enforcePublicRateLimit } from "../_shared/abuse-rate-limit.ts";
-import { readTelemetryJson, safeErrorReport } from "../_shared/telemetry-privacy.ts";
+import { safeErrorReport } from "../_shared/telemetry-privacy.ts";
+import { readBoundedJson } from "../_shared/bounded-json.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -37,7 +38,7 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const admin = createClient(supabaseUrl, serviceKey);
 
-    const report = safeErrorReport(await readTelemetryJson(req).catch(() => null));
+    const report = safeErrorReport(await readBoundedJson(req, 32_768).catch(() => null));
     if (!report) {
       await logSecurityEvent(admin, req, {
         eventType: "invalid_request",

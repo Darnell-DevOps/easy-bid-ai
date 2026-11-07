@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { mayUseCentralClientCheckout } from "../../supabase/functions/_shared/client-payment-policy";
 
 const protectedPublicFunctions = [
   "client-portal-accept",
@@ -41,10 +42,7 @@ describe("public endpoint abuse protection", () => {
     }
   });
 
-  it("keeps centrally billed client checkouts in sandbox until merchants have their own accounts", async () => {
-    const { mayUseCentralClientCheckout } = await import(
-      "../../supabase/functions/_shared/client-payment-policy"
-    );
+  it("keeps centrally billed client checkouts in sandbox until merchants have their own accounts", () => {
     expect(mayUseCentralClientCheckout("sandbox")).toBe(true);
     expect(mayUseCentralClientCheckout("live")).toBe(false);
     expect(mayUseCentralClientCheckout("")).toBe(false);

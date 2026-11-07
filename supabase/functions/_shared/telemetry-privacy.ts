@@ -57,29 +57,3 @@ export function safeErrorReport(input: unknown) {
     metadata: {},
   };
 }
-
-/** Read a bounded request before JSON parsing; do not trust Content-Length alone. */
-export async function readTelemetryJson(request: Request, maxBytes = 32_768): Promise<unknown> {
-  if (!request.body || Number(request.headers.get("content-length")) > maxBytes) {
-    throw new Error("Invalid telemetry body");
-  }
-  const reader = request.body.getReader();
-  const decoder = new TextDecoder("utf-8", { fatal: true });
-  let size = 0;
-  let json = "";
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      size += value.byteLength;
-      if (size > maxBytes) throw new Error("Telemetry body too large");
-      json += decoder.decode(value, { stream: true });
-    }
-    return JSON.parse(json + decoder.decode());
-  } catch (error) {
-    await reader.cancel().catch(() => {});
-    throw error;
-  } finally {
-    reader.releaseLock();
-  }
-}

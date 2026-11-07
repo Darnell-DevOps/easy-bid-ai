@@ -3,7 +3,8 @@ import { resolve } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { reportClientError } from "@/lib/error-reporting";
 import { landingEventPayload } from "@/lib/landing-analytics";
-import { readTelemetryJson, safeErrorReport, telemetryRoute } from "../../supabase/functions/_shared/telemetry-privacy";
+import { safeErrorReport, telemetryRoute } from "../../supabase/functions/_shared/telemetry-privacy";
+import { readBoundedJson } from "../../supabase/functions/_shared/bounded-json";
 
 const { invoke } = vi.hoisted(() => ({ invoke: vi.fn(async () => ({})) }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { functions: { invoke } } }));
@@ -37,7 +38,7 @@ describe("client error normalization", () => {
 
   it("enforces a body limit when a sender omits Content-Length", async () => {
     const request = new Request("https://example.invalid/telemetry", { method: "POST", body: JSON.stringify({ value: "a".repeat(50) }) });
-    await expect(readTelemetryJson(request, 20)).rejects.toThrow("too large");
+    await expect(readBoundedJson(request, 20)).rejects.toThrow("too large");
   });
 
   it("keeps only approved CTA locations and never keeps caller-supplied metadata", () => {

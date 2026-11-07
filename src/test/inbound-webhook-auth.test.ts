@@ -31,7 +31,7 @@ describe("inbound webhook shared-secret verification", () => {
 
   it("throttles anonymous attempts before parsing attacker-controlled JSON", () => {
     const throttleIndex = webhookSource.indexOf('source: "inbound-email-webhook-auth"');
-    const parseIndex = webhookSource.indexOf("req.json()");
+    const parseIndex = webhookSource.indexOf("readBoundedJson(req, 1_048_576)");
 
     expect(throttleIndex).toBeGreaterThan(-1);
     expect(throttleIndex).toBeLessThan(parseIndex);
