@@ -56,6 +56,8 @@ jobs:
           supabase/functions/payment-event-worker/index.ts
           supabase/functions/send-email/index.ts
           supabase/functions/stripe-connect-account/index.ts
+          supabase/functions/stripe-sandbox-checkout/index.ts
+          supabase/functions/stripe-sandbox-webhook/index.ts
       - name: Test Stripe Connect server safeguards
         run: deno test --allow-env supabase/functions/_shared/stripe-connect.test.ts
       - name: Smoke-test the generated MCP Edge Function
@@ -92,6 +94,8 @@ jobs:
         run: node scripts/test-payment-concurrency.mjs
       - name: Check tenant isolation and telemetry in disposable database
         run: psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -X -f scripts/test-tenant-isolation.sql
+      - name: Check Stripe sandbox checkout isolation and retries
+        run: psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -X -f scripts/test-stripe-sandbox-checkout.sql
       - run: npm ci
       - name: Install browser and PDF inspection tools
         run: |
