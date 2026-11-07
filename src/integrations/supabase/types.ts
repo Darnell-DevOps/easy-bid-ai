@@ -3241,7 +3241,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      form_attachments_available: { Args: never; Returns: boolean }
       admin_get_actions_log: {
         Args: { _limit?: number }
         Returns: {
@@ -3457,6 +3456,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      form_attachments_available: { Args: never; Returns: boolean }
       get_contract_owner_email: {
         Args: { _token: string }
         Returns: {
