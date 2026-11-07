@@ -52,19 +52,34 @@ jobs:
           supabase/functions/generate-proposal/index.ts
           supabase/functions/generate-policy/index.ts
           supabase/functions/lead-response/index.ts
-          supabase/functions/mcp/index.ts
           supabase/functions/payments-webhook/index.ts
           supabase/functions/payment-event-worker/index.ts
           supabase/functions/send-email/index.ts
           supabase/functions/stripe-connect-account/index.ts
       - name: Test Stripe Connect server safeguards
         run: deno test --allow-env supabase/functions/_shared/stripe-connect.test.ts
+      - name: Smoke-test the generated MCP Edge Function
+        run: |
+          deno run --no-lock --allow-env --allow-net=0.0.0.0:8000 supabase/functions/mcp/index.ts &
+          mcp_pid=$!
+          trap 'kill "$mcp_pid" 2>/dev/null || true' EXIT
+          mcp_url=http://127.0.0.1:8000/functions/v1/mcp
+          curl --fail --silent --show-error --max-time 5 --retry 30 --retry-connrefused --retry-delay 1 \
+            "$mcp_url/.well-known/oauth-protected-resource" | jq -e '.authorization_servers | length == 1'
+          status=$(curl --silent --show-error --max-time 5 --output /dev/null --write-out '%{http_code}' \
+            -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+            --data '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' "$mcp_url")
+          test "$status" = 401
 
   migrations:
     name: Database migrations
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
       # v3 installs from npm; a fixed release avoids the unauthenticated
       # GitHub "latest release" lookup that intermittently hit rate limits.
       - uses: supabase/setup-cli@v3
@@ -78,15 +93,35 @@ jobs:
         run: node scripts/test-payment-concurrency.mjs
       - name: Check tenant isolation and telemetry in disposable database
         run: psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -X -f scripts/test-tenant-isolation.sql
+      - run: npm ci
+      - name: Install browser and PDF inspection tools
+        run: |
+          npx playwright install --with-deps chromium
+          sudo apt-get install -y poppler-utils tesseract-ocr tesseract-ocr-eng
+      - name: Sign, countersign and verify both executed PDFs
+        run: |
+          local_stack=$(supabase status -o json)
+          api_url=$(jq -er '.API_URL' <<< "$local_stack")
+          test "$api_url" = http://127.0.0.1:54321
+          anon_key=$(jq -er '.ANON_KEY' <<< "$local_stack")
+          service_key=$(jq -er '.SERVICE_ROLE_KEY' <<< "$local_stack")
+          email=contract-owner@example.invalid
+          password=$(openssl rand -hex 24)
+          curl --fail --silent --show-error --output /dev/null \
+            -H "apikey: $service_key" -H "Authorization: Bearer $service_key" -H 'Content-Type: application/json' \
+            --data "$(jq -nc --arg email "$email" --arg password "$password" '{email:$email,password:$password,email_confirm:true}')" \
+            "$api_url/auth/v1/admin/users"
+          VITE_SUPABASE_URL="$api_url" VITE_SUPABASE_PUBLISHABLE_KEY="$anon_key" \
+            TEST_SUPABASE_URL="$api_url" TEST_SUPABASE_PUBLISHABLE_KEY="$anon_key" \
+            TEST_USER_EMAIL="$email" TEST_USER_PASSWORD="$password" \
+            npm run test:e2e -- tests/contracts/sign-flow.spec.ts --workers=1
 
   e2e:
     name: Browser smoke tests
     runs-on: ubuntu-latest
     needs: app
     env:
-      E2E_BASE_URL: ${{ vars.E2E_BASE_URL }}
-      TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
-      TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+      E2E_BASE_URL: ${{ github.event_name == 'push' && vars.E2E_BASE_URL || '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -98,6 +133,3 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Run browser smoke and accessibility tests
         run: npm run test:e2e
-      - name: Report credentialed sign-flow coverage
-        if: env.TEST_USER_EMAIL == '' || env.TEST_USER_PASSWORD == ''
-        run: echo "::warning::Public browser smoke tests ran, but TEST_USER_EMAIL and TEST_USER_PASSWORD are required for the full sign/countersign flow."
