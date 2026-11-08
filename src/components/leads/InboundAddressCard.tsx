@@ -68,7 +68,7 @@ export default function InboundAddressCard() {
             </div>
             <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
               <Mail className="w-3 h-3 text-accent" />
-              Forward any enquiry here — we'll create the lead and draft an AI reply.
+              Once inbound email is connected, forward enquiries here to review and follow up in Lead Assistant.
             </p>
           </div>
         </div>

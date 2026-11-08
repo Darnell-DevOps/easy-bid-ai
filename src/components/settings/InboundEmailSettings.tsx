@@ -79,7 +79,7 @@ export default function InboundEmailSettings() {
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground">
-              Forward enquiries to this address — we'll create the lead and draft an AI reply.
+              Once inbound email is connected, forward enquiries to this address for follow-up.
             </p>
           </div>
         </div>
@@ -115,7 +115,7 @@ export default function InboundEmailSettings() {
               </div>
               <p id="inbound-email-address-help" className="text-[11px] text-muted-foreground mt-2 flex items-start gap-1.5">
                 <Inbox className="w-3 h-3 text-accent mt-0.5 shrink-0" />
-                Anything sent here becomes a new lead with an AI-drafted reply ready in your{" "}
+                Review forwarded emails and create leads in{" "}
                 <a href="/dashboard/leads" className="text-accent hover:underline">Lead Assistant</a>.
               </p>
             </div>

@@ -37,5 +37,7 @@ project_id = "avtogztwdoemxuffnwyv"
     verify_jwt = false
   [functions.inbound-email-webhook]
     verify_jwt = false
+  [functions.resend-inbound-webhook]
+    verify_jwt = false
   [functions.lead-digest-cron]
     verify_jwt = false

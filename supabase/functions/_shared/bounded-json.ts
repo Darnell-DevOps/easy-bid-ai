@@ -1,27 +1,33 @@
-/** Cap streamed bytes before parsing, regardless of the Content-Length header. */
-export async function readBoundedJson(request: Request, maxBytes: number): Promise<unknown> {
+type BodySource = Pick<Request, "headers" | "body">;
+
+/** Cap streamed UTF-8 bytes before parsing, regardless of the Content-Length header. */
+export async function readBoundedText(request: BodySource, maxBytes: number): Promise<string> {
   if (Number(request.headers.get("content-length")) > maxBytes) {
     throw new RangeError("Request body too large");
   }
-  if (!request.body) throw new SyntaxError("Missing JSON body");
+  if (!request.body) throw new SyntaxError("Missing request body");
 
   const reader = request.body.getReader();
-  const decoder = new TextDecoder("utf-8", { fatal: true });
+  const decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
   let size = 0;
-  let json = "";
+  let text = "";
   try {
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
       size += value.byteLength;
       if (size > maxBytes) throw new RangeError("Request body too large");
-      json += decoder.decode(value, { stream: true });
+      text += decoder.decode(value, { stream: true });
     }
-    return JSON.parse(json + decoder.decode());
+    return text + decoder.decode();
   } catch (error) {
     await reader.cancel().catch(() => {});
     throw error;
   } finally {
     reader.releaseLock();
   }
+}
+
+export async function readBoundedJson(request: BodySource, maxBytes: number): Promise<unknown> {
+  return JSON.parse((await readBoundedText(request, maxBytes)).replace(/^\uFEFF/, ""));
 }
