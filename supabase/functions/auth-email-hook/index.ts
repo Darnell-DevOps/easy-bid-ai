@@ -121,13 +121,13 @@ async function handleWebhook(req: Request): Promise<Response> {
     payload = verified.payload
   } catch (error) {
     if (error instanceof WebhookError) {
-      console.error('Webhook verification error', { code: error.code, message: error.message })
+      console.error('Auth email webhook verification failed', { code: error.code })
       const status = ['invalid_signature', 'missing_timestamp', 'invalid_timestamp', 'stale_timestamp'].includes(error.code) ? 401 : 400
-      return new Response(JSON.stringify({ error: error.message }), {
+      return new Response(JSON.stringify({ error: 'Invalid webhook payload' }), {
         status, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
-    console.error('Webhook verification failed', { error })
+    console.error('Auth email webhook verification failed')
     return new Response(JSON.stringify({ error: 'Invalid webhook payload' }), {
       status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
@@ -141,8 +141,6 @@ async function handleWebhook(req: Request): Promise<Response> {
 
   const emailType = payload.data.action_type
   const recipient = payload.data.email
-  console.log('Auth email event', { emailType, recipient, run_id: payload.run_id })
-
   const EmailTemplate = EMAIL_TEMPLATES[emailType]
   if (!EmailTemplate) {
     console.error('Unknown email type', { emailType })
@@ -182,16 +180,16 @@ async function handleWebhook(req: Request): Promise<Response> {
     }),
   })
 
-  const resendBody = await resendRes.json().catch(() => ({}))
-
   if (!resendRes.ok) {
-    console.error('Resend send failed', { status: resendRes.status, body: resendBody, emailType, recipient })
-    return new Response(JSON.stringify({ error: 'Send failed', details: resendBody }), {
+    console.error('Auth email send failed', { status: resendRes.status, emailType })
+    await resendRes.body?.cancel()
+    return new Response(JSON.stringify({ error: 'Send failed' }), {
       status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 
-  console.log('Auth email sent via Resend', { emailType, recipient, provider_id: resendBody?.id })
+  const resendBody = await resendRes.json().catch(() => ({}))
+  console.log('Auth email sent via Resend', { emailType })
 
   return new Response(JSON.stringify({ success: true, provider_id: resendBody?.id }), {
     status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -206,10 +204,9 @@ Deno.serve(async (req) => {
 
   try {
     return await handleWebhook(req)
-  } catch (error) {
-    console.error('Hook handler error:', error)
-    const message = error instanceof Error ? error.message : 'Unknown error'
-    return new Response(JSON.stringify({ error: message }), {
+  } catch {
+    console.error('Auth email hook failed')
+    return new Response(JSON.stringify({ error: 'Auth email hook failed' }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }

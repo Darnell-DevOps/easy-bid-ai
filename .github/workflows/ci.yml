@@ -42,7 +42,9 @@ jobs:
           supabase/functions/client-portal-accept/index.ts
           supabase/functions/automation-dispatcher/index.ts
           supabase/functions/contract-generation-retry-cron/index.ts
+          supabase/functions/auth-email-hook/index.ts
           supabase/functions/inbound-email-webhook/index.ts
+          supabase/functions/resend-inbound-webhook/index.ts
           supabase/functions/form-upload-sign/index.ts
           supabase/functions/form-upload-signed-read/index.ts
           supabase/functions/report-client-error/index.ts
@@ -55,9 +57,12 @@ jobs:
           supabase/functions/payments-webhook/index.ts
           supabase/functions/payment-event-worker/index.ts
           supabase/functions/send-email/index.ts
+          supabase/functions/sending-domain-manage/index.ts
           supabase/functions/stripe-connect-account/index.ts
       - name: Test Stripe Connect server safeguards
         run: deno test --allow-env supabase/functions/_shared/stripe-connect.test.ts
+      - name: Test signed Resend inbound delivery
+        run: deno test --node-modules-dir=auto --no-lock supabase/functions/_shared/resend-inbound.test.ts
       - name: Smoke-test the generated MCP Edge Function
         run: |
           deno run --no-lock --allow-env --allow-net=0.0.0.0:8000 supabase/functions/mcp/index.ts &
@@ -92,6 +97,8 @@ jobs:
         run: node scripts/test-payment-concurrency.mjs
       - name: Check tenant isolation and telemetry in disposable database
         run: psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -X -f scripts/test-tenant-isolation.sql
+      - name: Check inbound email isolation and replay protection
+        run: psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -X -f scripts/test-resend-inbound.sql
       - run: npm ci
       - name: Install browser and PDF inspection tools
         run: |
