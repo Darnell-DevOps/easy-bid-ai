@@ -15,18 +15,23 @@ function record(value: unknown): Record<string, unknown> | null {
     ? value as Record<string, unknown> : null;
 }
 
-function leadAlias(recipients: unknown): string | null {
-  if (!Array.isArray(recipients)) return null;
-  const aliases = new Set<string>();
-  for (const recipient of recipients) {
-    if (typeof recipient !== "string") continue;
-    const parts = recipient.trim().toLowerCase().split("@");
-    const [local, domain] = parts;
-    if (parts.length === 2 && domain === LEAD_DOMAIN && /^leads-[\da-f]{12}$/.test(local)) {
-      aliases.add(local.slice("leads-".length));
-    }
+function recipientAlias(recipient: unknown): string | null {
+  if (typeof recipient !== "string") return null;
+  const parts = recipient.trim().toLowerCase().split("@");
+  const [local, domain] = parts;
+  return parts.length === 2 && domain === LEAD_DOMAIN && /^leads-[\da-f]{12}$/.test(local)
+    ? local.slice("leads-".length) : null;
+}
+
+function leadAlias(email: Record<string, unknown> | null): string | null {
+  if (!Array.isArray(email?.to)) return null;
+  const aliases = new Set(email.to.map(recipientAlias).filter((alias) => alias !== null));
+  if (aliases.size !== 1) return null;
+  const [ownerAlias] = aliases;
+  for (const recipients of [email.cc, email.bcc]) {
+    if (Array.isArray(recipients) && recipients.map(recipientAlias).some((alias) => alias && alias !== ownerAlias)) return null;
   }
-  return aliases.size === 1 ? aliases.values().next().value! : null;
+  return ownerAlias;
 }
 
 function emailAddress(value: unknown): string | null {
@@ -37,11 +42,12 @@ function emailAddress(value: unknown): string | null {
 }
 
 export function verifyResendDelivery(raw: string, headers: Headers, secret: string): unknown {
-  return new Webhook(secret).verify(raw, {
+  new Webhook(secret).verify(raw, {
     "svix-id": headers.get("svix-id") ?? "",
     "svix-timestamp": headers.get("svix-timestamp") ?? "",
     "svix-signature": headers.get("svix-signature") ?? "",
   });
+  return JSON.parse(raw);
 }
 
 export function resendDelivery(event: unknown): ResendDelivery | null {
@@ -49,7 +55,7 @@ export function resendDelivery(event: unknown): ResendDelivery | null {
   if (envelope?.type !== "email.received") return null;
   const delivery = record(envelope.data);
   const emailId = delivery?.email_id;
-  const alias = leadAlias(delivery?.to);
+  const alias = leadAlias(delivery);
   const fromEmail = emailAddress(delivery?.from);
   if (typeof emailId !== "string" || !EMAIL_ID.test(emailId) || !alias || !fromEmail) return null;
   return { emailId: emailId.toLowerCase(), alias, fromEmail };
@@ -61,7 +67,7 @@ function cleanText(value: unknown, limit: number) {
 
 export function resendMessage(value: unknown, delivery: ResendDelivery) {
   const email = record(value);
-  if (email?.object !== "email" || email.id !== delivery.emailId || leadAlias(email.to) !== delivery.alias
+  if (email?.object !== "email" || email.id !== delivery.emailId || leadAlias(email) !== delivery.alias
     || emailAddress(email.from) !== delivery.fromEmail) return null;
 
   const plain = cleanText(email.text, 16_000);

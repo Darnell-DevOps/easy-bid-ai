@@ -30,6 +30,12 @@ BEGIN
     OR has_table_privilege('authenticated', 'public.resend_inbound_receipts', 'SELECT') THEN
     RAISE EXCEPTION 'The inbound receipt ledger must remain private';
   END IF;
+  IF has_table_privilege('authenticated', 'public.sending_domains', 'INSERT')
+    OR has_table_privilege('authenticated', 'public.sending_domains', 'UPDATE')
+    OR has_table_privilege('authenticated', 'public.sending_domains', 'DELETE')
+    OR NOT has_table_privilege('service_role', 'public.sending_domains', 'INSERT') THEN
+    RAISE EXCEPTION 'Only the domain management service may change provider verification';
+  END IF;
 END;
 $$;
 

@@ -78,10 +78,12 @@ Deno.serve(async (req) => {
     const r = await resend("/domains", { method: "POST", body: JSON.stringify({ name: domain }) });
     if (!r.ok) return json({ error: "resend_failed", details: r.body }, 502);
 
+    if (!isUuid(r.body.id) || r.body.name !== domain) return json({ error: "provider_domain_mismatch" }, 502);
     const { data: ins, error } = await admin.from("sending_domains").insert({
       user_id: userId,
       domain,
       resend_domain_id: r.body.id,
+      provider_managed: true,
       status: r.body.status || "pending",
       dns_records: r.body.records || [],
       last_checked_at: new Date().toISOString(),
@@ -96,13 +98,14 @@ Deno.serve(async (req) => {
     const { data: row } = await admin.from("sending_domains")
       .select("*").eq("id", id).eq("user_id", userId).maybeSingle();
     if (!row) return json({ error: "not_found" }, 404);
-    if (!row.resend_domain_id) return json({ error: "no_resend_id" }, 400);
+    if (!row.provider_managed || !isUuid(row.resend_domain_id)) return json({ error: "domain_reconnect_required" }, 409);
 
     // Trigger verification then fetch latest
     await resend(`/domains/${row.resend_domain_id}/verify`, { method: "POST" });
     const r = await resend(`/domains/${row.resend_domain_id}`, { method: "GET" });
     if (!r.ok) return json({ error: "resend_failed", details: r.body }, 502);
 
+    if (r.body.id !== row.resend_domain_id || r.body.name !== row.domain) return json({ error: "provider_domain_mismatch" }, 502);
     const newStatus = r.body.status || row.status;
     const update: any = {
       status: newStatus,
@@ -121,10 +124,12 @@ Deno.serve(async (req) => {
     const { data: row } = await admin.from("sending_domains")
       .select("*").eq("id", id).eq("user_id", userId).maybeSingle();
     if (!row) return json({ error: "not_found" }, 404);
-    if (row.resend_domain_id) {
-      await resend(`/domains/${row.resend_domain_id}`, { method: "DELETE" });
+    if (row.provider_managed && isUuid(row.resend_domain_id)) {
+      const r = await resend(`/domains/${row.resend_domain_id}`, { method: "DELETE" });
+      if (!r.ok && r.status !== 404) return json({ error: "resend_failed" }, 502);
     }
-    await admin.from("sending_domains").delete().eq("id", id).eq("user_id", userId);
+    const { error } = await admin.from("sending_domains").delete().eq("id", id).eq("user_id", userId);
+    if (error) return json({ error: "db_failed" }, 500);
     return json({ ok: true });
   }
 

@@ -151,6 +151,7 @@ Deno.serve(async (req) => {
           .from("sending_domains")
           .select("domain, default_from_local")
           .eq("user_id", userId)
+          .eq("provider_managed", true)
           .eq("status", "verified")
           .eq("domain", domain)
           .maybeSingle();
@@ -267,6 +268,7 @@ Deno.serve(async (req) => {
       .from("sending_domains")
       .select("domain, default_from_local, is_default, verified_at")
       .eq("user_id", userId)
+      .eq("provider_managed", true)
       .eq("status", "verified")
       .order("is_default", { ascending: false })
       .order("verified_at", { ascending: false })

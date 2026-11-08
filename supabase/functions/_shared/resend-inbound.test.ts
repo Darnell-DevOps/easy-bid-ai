@@ -36,6 +36,7 @@ Deno.test("Resend routes only a single issued alias on the receiving subdomain",
     assert.equal(resendDelivery({ ...envelope, data: { ...envelope.data, to: recipients } }), null);
   }
   assert.equal(resendDelivery({ ...envelope, data: { ...envelope.data, email_id: "../../other" } }), null);
+  assert.equal(resendDelivery({ ...envelope, data: { ...envelope.data, cc: ["leads-abc012abc013@leads.closesync.io"] } }), null);
 });
 
 Deno.test("a fetched Resend message must match the signed delivery and renders as text", () => {
