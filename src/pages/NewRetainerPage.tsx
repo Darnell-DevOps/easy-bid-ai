@@ -44,14 +44,14 @@ export default function NewRetainerPage() {
   const [submitting, setSubmitting] = useState(false);
 
   // Step 1: template
-  const [templateKey, setTemplateKey] = useState<string | null>(null);
+  const [templateKey, setTemplateKey] = useState<string | null>("custom");
 
   // Step 2: details
   const [clientId, setClientId] = useState<string>("");
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [companyName, setCompanyName] = useState("");
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState("Monthly retainer");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState<string>("");
   const [currency, setCurrency] = useState("GBP");
@@ -204,7 +204,7 @@ export default function NewRetainerPage() {
     }
     toast({
       title: status === "active" ? "Retainer activated" : "Draft saved",
-      description: status === "active" ? "Recurring billing is now active." : "You can send it when ready.",
+      description: status === "active" ? "You can now review this agreement and its billing." : "Activate it when the agreement is ready.",
     });
     navigate(`/dashboard/retainers/${data!.id}`);
   };
@@ -305,24 +305,22 @@ export default function NewRetainerPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6 max-w-3xl">
-        <button
-          onClick={() => setTemplateKey(null)}
-          className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
-        >
-          <ArrowLeft className="w-3 h-3" /> Choose a different template
+        <button onClick={() => navigate("/dashboard/retainers?view=agreements")} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="size-4" aria-hidden="true" /> Back to agreements
         </button>
-        <div>
-          <h1 className="cs-workspace-page-title text-foreground">
-            New retainer
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h1 className="cs-workspace-page-title">Add retainer</h1>
+            <p className="text-sm text-muted-foreground mt-1">
             {previewMonthly && (
               <>
                 {previewMonthly} ·{" "}
                 {intervalLabel(billingInterval, parseInt(customDays || "30"))}
               </>
             )}
-          </p>
+            </p>
+          </div>
+          <Button variant="outline" onClick={() => setTemplateKey(null)}>Use a template</Button>
         </div>
 
         <Card>
@@ -466,7 +464,7 @@ export default function NewRetainerPage() {
             {previewFinal && (
               <div className="rounded-md border border-border/60 bg-secondary/40 p-3 text-xs text-muted-foreground">
                 <div className="flex items-center justify-between">
-                  <span>Client is charged per billing cycle</span>
+                  <span>Agreed fee per billing cycle</span>
                   <span className="text-sm font-semibold text-foreground">{previewFinal}</span>
                 </div>
                 {hasTax && (
@@ -541,7 +539,7 @@ export default function NewRetainerPage() {
               <div>
                 <Label id="retainer-auto-renew-label" htmlFor="retainer-auto-renew" className="text-sm font-medium text-foreground">Auto-renew</Label>
                 <p id="retainer-auto-renew-help" className="text-xs text-muted-foreground">
-                  Automatically continue billing after the end date.
+                  The agreement is set to renew when its term ends.
                 </p>
               </div>
               <Switch
@@ -581,7 +579,7 @@ export default function NewRetainerPage() {
             onClick={() => handleSubmit("active")}
             className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
           >
-            Activate retainer
+            Save active agreement
           </Button>
         </div>
       </div>

@@ -26,6 +26,7 @@ type NavGroup = { label: string; icon: NavItem["icon"]; items: NavItem[] };
 const dailyItems: NavItem[] = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
   { label: "Clients", icon: Users, href: "/dashboard/clients" },
+  { label: "Retainers", icon: Repeat, href: "/dashboard/retainers" },
   { label: "Lead Inbox", icon: Mail, href: "/dashboard/lead-inbox" },
   { label: "Calendar", icon: Calendar, href: "/dashboard/calendar" },
   { label: "Emails", icon: Mail, href: "/dashboard/emails", badgeKey: "emails" },
@@ -47,7 +48,6 @@ const navGroups: NavGroup[] = [
     label: "Finance", icon: CreditCard,
     items: [
       { label: "Revenue", icon: TrendingUp, href: "/dashboard/revenue" },
-      { label: "Retainers", icon: Repeat, href: "/dashboard/retainers" },
       { label: "Recovery", icon: LifeBuoy, href: "/dashboard/recovery", badgeKey: "recovery" },
     ],
   },

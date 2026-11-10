@@ -25,6 +25,7 @@ const ROUTE_TITLES: RouteTitle[] = [
   { path: "/sign/:token", title: "Sign contract | CloseSync AI" },
   { path: "/onboard/:token", title: "Client onboarding | CloseSync AI" },
   { path: "/retainer/:token", title: "Retainer subscription | CloseSync AI" },
+  { path: "/approve-extra", title: "Review extra work | CloseSync AI" },
   { path: "/r/recover/:token", title: "Recover payment | CloseSync AI" },
   { path: "/testimonial/:token", title: "Submit testimonial | CloseSync AI" },
   { path: "/wall/:slug", title: "Testimonials | CloseSync AI" },

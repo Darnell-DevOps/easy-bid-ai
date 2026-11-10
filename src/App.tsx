@@ -52,6 +52,7 @@ const NewRetainerPage = lazy(() => import("./pages/NewRetainerPage"));
 const RetainerDetail = lazy(() => import("./pages/RetainerDetail"));
 const RetainerSubscribePage = lazy(() => import("./pages/RetainerSubscribePage"));
 const RetainerRecoverPage = lazy(() => import("./pages/RetainerRecoverPage"));
+const RetainerExtraApproval = lazy(() => import("./pages/RetainerExtraApproval"));
 const RecoveryDashboard = lazy(() => import("./pages/RecoveryDashboard"));
 const EmailsDashboard = lazy(() => import("./pages/EmailsDashboard"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
@@ -112,6 +113,7 @@ const App = () => (
             <Route path="/sign/:token" element={<ContractSignPage />} />
             <Route path="/onboard/:token" element={<OnboardingFormPage />} />
             <Route path="/retainer/:token" element={<RetainerSubscribePage />} />
+            <Route path="/approve-extra" element={<RetainerExtraApproval />} />
             <Route path="/r/recover/:token" element={<RetainerRecoverPage />} />
             <Route path="/testimonial/:token" element={<TestimonialSubmitPage />} />
             <Route path="/wall/:slug" element={<TestimonialWallPage />} />

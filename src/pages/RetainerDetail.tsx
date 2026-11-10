@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -6,11 +6,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import ChurnRiskCard from "@/components/ai/ChurnRiskCard";
+import RetainerExtras from "@/components/retainers/RetainerExtras";
+import { billingMoney } from "@/lib/retainer-billing";
 import {
   formatMoney,
   intervalLabel,
-  monthlyEquivalentCents,
   statusBadgeClasses,
   computeNextBillingDate,
   daysUntil,
@@ -40,6 +40,7 @@ interface Retainer {
   company_name: string | null;
   title: string;
   description: string | null;
+  agreement_url: string | null;
   amount_cents: number;
   currency: string;
   tax_rate: number | null;
@@ -84,11 +85,13 @@ export default function RetainerDetail() {
   const [retainer, setRetainer] = useState<Retainer | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [recording, setRecording] = useState(false);
+  const receiptRequest = useRef<string | null>(null);
 
   const fetchAll = async () => {
     if (!id) return;
     const [r, inv] = await Promise.all([
-      supabase.from("retainers").select("*").eq("id", id).maybeSingle(),
+      supabase.from("retainers").select("*").eq("id", id).is("deleted_at", null).maybeSingle(),
       supabase
         .from("retainer_invoices")
         .select("*")
@@ -173,44 +176,25 @@ export default function RetainerDetail() {
     );
 
   const markPaymentReceived = async () => {
-    if (!retainer) return;
-    const next = computeNextBillingDate(
-      retainer.next_billing_date || retainer.start_date,
-      retainer.billing_interval,
-      retainer.custom_interval_days,
-      new Date(),
-    );
-    const { data: userRes } = await supabase.auth.getUser();
-    const userId = userRes.user?.id;
-    if (!userId) return;
-
-    const { totalCents: chargedCents } = calculateCommercialTotals(
-      retainer.amount_cents,
-      retainer.tax_rate,
-      retainer.tax_mode as any,
-    );
-
-    await supabase.from("retainer_invoices").insert({
-      user_id: userId,
-      retainer_id: retainer.id,
-      amount_cents: chargedCents,
-      currency: retainer.currency,
-      due_date: retainer.next_billing_date || new Date().toISOString().slice(0, 10),
-      paid_at: new Date().toISOString(),
-      status: "paid",
+    if (!retainer || recording) return;
+    const start = retainer.next_billing_date || retainer.start_date;
+    const from = new Date(Math.max(Date.now(), new Date(start).getTime()));
+    const next = computeNextBillingDate(start, retainer.billing_interval, retainer.custom_interval_days, from);
+    receiptRequest.current ??= crypto.randomUUID();
+    setRecording(true);
+    const { error } = await supabase.rpc("record_manual_retainer_payment", {
+      _retainer: retainer.id, _request: receiptRequest.current,
+      _expected_due: retainer.next_billing_date, _next_due: next.toISOString().slice(0, 10),
     });
-
-    update(
-      {
-        last_billed_date: new Date().toISOString().slice(0, 10),
-        next_billing_date: next.toISOString().slice(0, 10),
-        total_billed_cents: retainer.total_billed_cents + chargedCents,
-        total_payments_count: retainer.total_payments_count + 1,
-        has_failed_payment: false,
-        failed_payment_reason: null,
-      },
-      "Payment recorded",
-    );
+    if (error) {
+      setRecording(false);
+      toast({ title: "Could not record payment", description: "Check the billing state and try again.", variant: "destructive" });
+      return;
+    }
+    receiptRequest.current = null;
+    await fetchAll();
+    setRecording(false);
+    toast({ title: "Payment recorded" });
   };
 
   const deleteRetainer = async () => {
@@ -272,11 +256,7 @@ export default function RetainerDetail() {
     retainer.tax_rate,
     retainer.tax_mode as any,
   );
-  const mrr = monthlyEquivalentCents(
-    finalChargedCents,
-    retainer.billing_interval,
-    retainer.custom_interval_days,
-  );
+  const usesBillingReview = retainer.billing_interval === "monthly" && !retainer.paddle_subscription_id;
   const taxRateNum =
     typeof retainer.tax_rate === "number" && Number.isFinite(retainer.tax_rate)
       ? retainer.tax_rate
@@ -296,7 +276,7 @@ export default function RetainerDetail() {
     <DashboardLayout>
       <div className="space-y-6 max-w-5xl">
         <button
-          onClick={() => navigate("/dashboard/retainers")}
+          onClick={() => navigate("/dashboard/retainers?view=agreements")}
           className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
         >
           <ArrowLeft className="w-3 h-3" /> All retainers
@@ -322,14 +302,34 @@ export default function RetainerDetail() {
               {retainer.title}
               {retainer.company_name ? ` · ${retainer.company_name}` : ""}
             </p>
+            <p className="text-sm tabular-nums">
+              {billingMoney(finalChargedCents, retainer.currency)} · {intervalLabel(retainer.billing_interval, retainer.custom_interval_days).toLowerCase()}
+              {retainer.end_date ? ` · Ends ${new Date(`${retainer.end_date}T12:00:00`).toLocaleDateString()}` : " · Open-ended"}
+            </p>
           </div>
+          {retainer.status === "draft" && <Button onClick={activate}>Activate agreement</Button>}
+        </div>
+
+        <RetainerExtras
+          key={retainer.id}
+          retainerId={retainer.id}
+          currency={retainer.currency}
+          scope={retainer.description}
+          agreementUrl={retainer.agreement_url}
+          canCreate={usesBillingReview && isActive}
+        />
+
+        <details className="space-y-4 border-t pt-4">
+          <summary className="cursor-pointer rounded-sm text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            Agreement settings and billing history
+          </summary>
           <div className="flex flex-wrap gap-2">
             {isActive && (
               <Button variant="outline" size="sm" onClick={pause} className="gap-1.5">
                 <Pause className="w-3.5 h-3.5" /> Pause
               </Button>
             )}
-            {(isPaused || isCancelled || retainer.status === "draft") && (
+            {(isPaused || isCancelled) && (
               <Button
                 size="sm"
                 onClick={activate}
@@ -350,11 +350,6 @@ export default function RetainerDetail() {
               <Trash2 className="w-3.5 h-3.5" />
             </Button>
           </div>
-        </div>
-
-        {/* AI churn risk — only for active/paused retainers with history */}
-        <ChurnRiskCard retainerId={retainer.id} enabled={isActive || isPaused} />
-
         {/* Failed payment alert */}
         {retainer.has_failed_payment && (
           <Card className="border-rose-500/30 bg-rose-500/5">
@@ -438,7 +433,7 @@ export default function RetainerDetail() {
                 <p className="text-sm text-foreground mt-1">
                   {retainer.paddle_subscription_id
                     ? "Recurring charges run automatically via Paddle."
-                    : "Send the client a subscribe link to start auto-billing."}
+                    : "Use this checkout link for sandbox testing."}
                 </p>
               </div>
               {retainer.paddle_subscription_id ? (
@@ -491,7 +486,7 @@ export default function RetainerDetail() {
         </Card>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <StatCard
             label="Amount"
             value={formatMoney(finalChargedCents, retainer.currency)}
@@ -501,7 +496,6 @@ export default function RetainerDetail() {
                 : `/ ${intervalLabel(retainer.billing_interval, retainer.custom_interval_days).toLowerCase()}`
             }
           />
-          <StatCard label="Monthly equivalent" value={formatMoney(mrr, retainer.currency)} />
           <StatCard
             label="Next billing"
             value={
@@ -524,9 +518,6 @@ export default function RetainerDetail() {
               <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
                 Details
               </p>
-              {retainer.description && (
-                <p className="text-sm text-foreground/90 leading-relaxed">{retainer.description}</p>
-              )}
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <Field label="Service" value={retainer.service_type || "—"} />
                 <Field label="Frequency" value={intervalLabel(retainer.billing_interval, retainer.custom_interval_days)} />
@@ -565,14 +556,12 @@ export default function RetainerDetail() {
                   </a>
                 )}
               </div>
-              <Button
-                size="sm"
-                variant="outline"
-                className="w-full gap-1.5"
-                onClick={markPaymentReceived}
-              >
-                <Repeat className="w-3.5 h-3.5" /> Record manual payment
-              </Button>
+              {!usesBillingReview && isActive && (
+                <Button size="sm" variant="outline" className="w-full gap-1.5"
+                  disabled={recording} onClick={markPaymentReceived}>
+                  <Repeat className="w-3.5 h-3.5" /> Record manual payment
+                </Button>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -581,11 +570,11 @@ export default function RetainerDetail() {
         <Card>
           <CardContent className="p-5 space-y-3">
             <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
-              Billing history
+              Earlier payment records
             </p>
             {invoices.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                No payments recorded yet. Use "Record manual payment" once a charge clears.
+                No legacy payments recorded.
               </p>
             ) : (
               <div className="divide-y divide-border/40">
@@ -617,6 +606,7 @@ export default function RetainerDetail() {
             )}
           </CardContent>
         </Card>
+        </details>
       </div>
     </DashboardLayout>
   );
