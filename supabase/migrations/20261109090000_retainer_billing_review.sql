@@ -1,4 +1,9 @@
-ALTER TABLE public.retainers ADD COLUMN agreement_url text;
+-- The retainer form already reads and writes these tax fields. Older source
+-- migrations did not declare them on a fresh database.
+ALTER TABLE public.retainers
+  ADD COLUMN IF NOT EXISTS tax_rate numeric,
+  ADD COLUMN IF NOT EXISTS tax_mode text,
+  ADD COLUMN agreement_url text;
 ALTER TABLE public.retainers ADD CONSTRAINT retainers_agreement_url_check
   CHECK (agreement_url IS NULL OR (length(agreement_url) <= 2048 AND agreement_url ~ '^https://[^[:space:]]+$'));
 

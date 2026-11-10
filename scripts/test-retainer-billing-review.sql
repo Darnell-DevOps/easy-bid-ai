@@ -12,6 +12,7 @@ VALUES
     'Billing QA studio', 'Failure fixture', 'Weekly support',15000,'GBP','weekly','active',current_date,current_date);
 UPDATE public.retainers SET agreement_url = 'https://example.test/private',
   access_token = 'retainer-approval-test-legacy-token' WHERE id = '09000000-0000-4000-8000-000000000001';
+UPDATE public.retainers SET tax_rate = 20, tax_mode = 'exclusive' WHERE id = '09000000-0000-4000-8000-000000000002';
 UPDATE public.retainers SET total_billed_cents = 2147483647 WHERE id = '09000000-0000-4000-8000-000000000008';
 
 SET LOCAL ROLE authenticated;
@@ -97,7 +98,7 @@ BEGIN
   THEN RAISE EXCEPTION 'Billing lines, decision or second period are incorrect'; END IF;
   IF (SELECT count(*) FROM public.retainer_invoices WHERE retainer_id = '09000000-0000-4000-8000-000000000002') <> 1
     OR NOT EXISTS (SELECT 1 FROM public.retainers WHERE id = '09000000-0000-4000-8000-000000000002'
-      AND total_payments_count = 1 AND total_billed_cents = 15000)
+      AND total_payments_count = 1 AND total_billed_cents = 18000)
   THEN RAISE EXCEPTION 'Legacy payment retry duplicated the receipt or totals'; END IF;
   BEGIN
     PERFORM public.record_manual_retainer_payment('09000000-0000-4000-8000-000000000008',
