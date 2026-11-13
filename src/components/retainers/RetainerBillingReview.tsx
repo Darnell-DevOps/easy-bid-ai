@@ -11,12 +11,15 @@ export type ReviewRetainer = Pick<Tables<"retainers">,
   "id" | "client_name" | "title" | "status" | "billing_interval" | "paddle_subscription_id" | "start_date" | "end_date">;
 
 const groups = [
+  { status: "pending", title: "Needs approval", empty: "No extras waiting for approval." },
   { status: "approved", title: "Ready to invoice", empty: "No base fees or approved extras to invoice." },
   { status: "invoiced", title: "Awaiting payment", empty: "No issued invoices awaiting payment." },
   { status: "paid", title: "Paid", empty: "No payments recorded for this month." },
 ] as const;
 
-export default function RetainerBillingReview({ retainers }: { retainers: ReviewRetainer[] }) {
+export type BillingReviewFocus = (typeof groups)[number]["status"];
+
+export default function RetainerBillingReview({ retainers, focus }: { retainers: ReviewRetainer[]; focus?: BillingReviewFocus }) {
   const [month, setMonth] = useState(currentBillingMonth);
   const [items, setItems] = useState<BillingItem[]>([]);
   const [loadedMonth, setLoadedMonth] = useState("");
@@ -36,7 +39,7 @@ export default function RetainerBillingReview({ retainers }: { retainers: Review
     // Carry forward outstanding lines for visibility, while exports remain scoped to the selected month.
     void supabase.from("retainer_billing_items")
       .select("id, retainer_id, billing_month, billing_due_date, kind, title, description, amount_cents, currency, status, decided_at, decided_by, invoiced_at, invoice_reference, paid_at, created_at")
-      .or(`and(billing_month.eq.${date},status.in.(approved,invoiced,paid)),and(billing_month.lt.${date},status.in.(approved,invoiced))`)
+      .or(`and(billing_month.eq.${date},status.in.(pending,approved,invoiced,paid)),and(billing_month.lt.${date},status.in.(pending,approved,invoiced))`)
       .order("billing_month", { ascending: true }).order("created_at", { ascending: true })
       .then(({ data, error }) => {
         if (!active) return;
@@ -131,18 +134,19 @@ export default function RetainerBillingReview({ retainers }: { retainers: Review
         </div>
       </div>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+      {focus && <Button asChild variant="link" className="px-0"><Link to="/dashboard/retainers">Show all billing lines</Link></Button>}
       <p role="status" className={notice ? "text-sm text-muted-foreground" : "sr-only"}>{notice}</p>
       {loadError ? (
         <p role="alert" className="text-sm text-destructive">Could not load this review. Use Refresh to try again.</p>
       ) : !loaded ? (
         <p role="status" className="text-sm text-muted-foreground">Loading billing review…</p>
-      ) : items.length === 0 && candidates.length === 0 ? (
+      ) : !focus && items.length === 0 && candidates.length === 0 ? (
         <p className="border-t pt-4 text-sm text-muted-foreground">
           {retainers.length ? "There’s nothing to review for this month." : "Add a monthly retainer to prepare your first billing review."}
         </p>
       ) : (
         <>
-          {candidates.length > 0 && (
+          {(!focus || focus === "approved") && candidates.length > 0 && (
             <form onSubmit={addBase} className="flex flex-wrap items-end gap-3 border-y py-4">
               <div className="min-w-0 space-y-2">
                 <Label htmlFor="billing-base-retainer">Retainer fee for this month</Label>
@@ -155,7 +159,7 @@ export default function RetainerBillingReview({ retainers }: { retainers: Review
               <Button type="submit" variant="outline" disabled={busy || !baseRetainer}>Add monthly fee</Button>
             </form>
           )}
-          {groups.map((group) => {
+          {groups.filter((group) => !focus || focus === group.status).map((group) => {
             const rows = items.filter((item) => item.status === group.status
               && (group.status !== "paid" || item.billing_month === `${month}-01`));
             return (
@@ -189,6 +193,7 @@ export default function RetainerBillingReview({ retainers }: { retainers: Review
                             {item.status === "invoiced" && (
                               <Button variant="outline" size="sm" disabled={busy} onClick={() => record(item, "paid")}>Mark line paid</Button>
                             )}
+                            {item.status === "pending" && <Button variant="outline" size="sm" asChild><Link to={`/dashboard/retainers/${item.retainer_id}`}>View approval</Link></Button>}
                           </div>
                         </div>
                         {invoiceId === item.id && item.status === "approved" && (

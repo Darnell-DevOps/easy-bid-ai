@@ -21,6 +21,8 @@ type Retainer = ReviewRetainer & {
 export default function RetainersPage() {
   const [params, setParams] = useSearchParams();
   const agreements = params.get("view") === "agreements";
+  const focus = params.get("focus");
+  const billingFocus = focus === "pending" || focus === "approved" || focus === "invoiced" ? focus : undefined;
   const [rows, setRows] = useState<Retainer[] | null>(null);
   const [error, setError] = useState(false);
   const [refresh, setRefresh] = useState(0);
@@ -62,7 +64,7 @@ export default function RetainersPage() {
         ) : !rows ? (
           <p role="status" className="text-sm text-muted-foreground">Loading retainers…</p>
         ) : !agreements ? (
-          <RetainerBillingReview retainers={rows} />
+          <RetainerBillingReview retainers={rows} focus={billingFocus} />
         ) : (
           <section aria-labelledby="retainer-agreements-title" className="space-y-4">
             <h2 id="retainer-agreements-title" className="cs-text-h4">Agreements</h2>

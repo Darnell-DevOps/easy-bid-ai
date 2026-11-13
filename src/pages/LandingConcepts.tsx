@@ -1,5 +1,6 @@
 import consultantProposalImage from "@/assets/landing/consultant-proposal-editorial.png";
 import PageMeta from "@/components/PageMeta";
+import BillingReviewSample from "@/components/retainers/BillingReviewSample";
 import { Button } from "@/components/ui/button";
 import {
   ArrowRight,
@@ -123,11 +124,13 @@ function ConceptToolbar({ active }: { active: ConceptKey }) {
   );
 }
 
-function ConceptHeader({
+export function ConceptHeader({
   inverse = false,
+  showNavigation = true,
   showPrimaryAction = true,
 }: {
   inverse?: boolean;
+  showNavigation?: boolean;
   showPrimaryAction?: boolean;
 }) {
   return (
@@ -135,11 +138,13 @@ function ConceptHeader({
       <Link to="/" aria-label="CloseSync AI home">
         <Brand inverse={inverse} />
       </Link>
-      <nav className="concept-primary-nav" aria-label="Primary navigation">
-        <a href="#product">Product</a>
-        <a href="#workflow">Workflow</a>
-        <a href="#pricing">Pricing</a>
-      </nav>
+      {showNavigation && (
+        <nav className="concept-primary-nav" aria-label="Primary navigation">
+          <a href="#product">Product</a>
+          <a href="#workflow">Workflow</a>
+          <a href="#pricing">Pricing</a>
+        </nav>
+      )}
       <div className="concept-header-actions">
         <Link className="concept-sign-in" to="/login">Sign in</Link>
         {showPrimaryAction ? (
@@ -242,16 +247,18 @@ function JourneyRail() {
 
 function PricingDecision({
   quiet = false,
+  retainerFocus = false,
   onStartFree,
 }: {
   quiet?: boolean;
+  retainerFocus?: boolean;
   onStartFree?: (location: Extract<LandingCtaLocation, "pricing_free" | "pricing_starter" | "pricing_pro">) => void;
 }) {
   return (
     <section id="pricing" className={`concept-pricing${quiet ? " concept-pricing-quiet" : ""}`}>
       <div className="concept-pricing-copy">
-        <h2>Start with proposals. Connect the rest when you're ready.</h2>
-        <p>Try Free, choose Starter for more proposals, or connect the close-to-kickoff workflow with Pro.</p>
+        <h2>{retainerFocus ? "Choose a plan for your workspace." : "Start with proposals. Connect the rest when you're ready."}</h2>
+        <p>{retainerFocus ? "Start with retainer billing review on Free. Paid plans add proposal capacity and client-work tools." : "Try Free, choose Starter for more proposals, or connect the close-to-kickoff workflow with Pro."}</p>
       </div>
       <div className="concept-plan concept-plan-free">
         <div>
@@ -259,7 +266,7 @@ function PricingDecision({
           <strong>GBP 0</strong>
           <small>per month</small>
         </div>
-        <p>Two proposals each month, shareable links and watermarked proposals. No card required.</p>
+        <p>{retainerFocus ? "Record retainer agreements, approve extras and review billing lines. Also includes two watermarked proposals each month. No card required." : "Two proposals each month, shareable links and watermarked proposals. No card required."}</p>
         <Button asChild variant="outline" className="concept-button-secondary">
           <Link to="/signup" onClick={() => onStartFree?.("pricing_free")}>Start free</Link>
         </Button>
@@ -282,7 +289,7 @@ function PricingDecision({
           <small>per month</small>
         </div>
         <ul>
-          {proFeatures.map((feature) => (
+          {(retainerFocus ? ["Unlimited proposals and contracts", "E-signatures", "Onboarding, bookings and client portal", "AI drafting and account insights"] : proFeatures).map((feature) => (
             <li key={feature}>
               <Check aria-hidden="true" />
               {feature}
@@ -300,10 +307,12 @@ function PricingDecision({
 function ConceptFooter({
   inverse = false,
   includeLegal = false,
+  retainerFocus = false,
   onStartFree,
 }: {
   inverse?: boolean;
   includeLegal?: boolean;
+  retainerFocus?: boolean;
   onStartFree?: () => void;
 }) {
   return (
@@ -311,7 +320,7 @@ function ConceptFooter({
       <Brand inverse={inverse} />
       <p>CloseSync AI</p>
       <nav aria-label="Footer navigation">
-        <Link to="/sample">Sample proposal</Link>
+        {retainerFocus ? <Link to="/sample-billing-review">Sample billing review</Link> : <Link to="/sample">Sample proposal</Link>}
         <Link to="/login">Sign in</Link>
         <Link to="/signup" onClick={onStartFree}>Start free</Link>
       </nav>
@@ -531,11 +540,50 @@ function SystemMap() {
   );
 }
 
+function RetainerLanding({ onStartFree }: { onStartFree?: (location: LandingCtaLocation) => void }) {
+  return (
+    <div className="landing-shell landing-concept concept-system">
+      <ConceptHeader showPrimaryAction={false} />
+      <main id="landing-main" tabIndex={-1}>
+        <section className="system-hero">
+          <div className="system-hero-intro">
+            <div className="system-hero-heading"><h1>Make sure approved extra work gets billed.</h1></div>
+            <div className="system-hero-copy">
+              <p>For small agencies on monthly retainers. Keep the agreed scope, client approvals and the next invoice together.</p>
+              <div className="billing-landing-actions">
+                <Button asChild size="lg" className="concept-button-primary"><Link to="/sample-billing-review">See a sample billing review <ArrowRight aria-hidden="true" /></Link></Button>
+                <Button asChild variant="ghost" className="concept-button-secondary"><Link to="/signup" onClick={() => onStartFree?.("hero")}>Start free</Link></Button>
+              </div>
+            </div>
+          </div>
+          <div id="workflow"><BillingReviewSample /></div>
+        </section>
+        <section id="product" className="system-capabilities" aria-labelledby="retainer-workflow-heading">
+          <div className="system-section-intro">
+            <h2 id="retainer-workflow-heading">From the agreement to the next invoice.</h2>
+            <p>Keep using your existing invoicing tools. CloseSync shows which lines are ready and which still need a decision.</p>
+          </div>
+          <div className="system-capability-list">
+            <article><FileSignature aria-hidden="true" /><h3>Record what’s included</h3><p>Add the monthly fee and link to the agreement so you can check what the client signed up for.</p></article>
+            <article><FileCheck2 aria-hidden="true" /><h3>Get extras approved</h3><p>Share a link with the scope and price. The client can approve the extra without creating an account.</p></article>
+            <article><CreditCard aria-hidden="true" /><h3>Review what goes on the invoice</h3><p>Copy ready lines into your invoicing tool and record which invoices have been issued and paid.</p></article>
+          </div>
+        </section>
+        <PricingDecision retainerFocus onStartFree={onStartFree} />
+      </main>
+      <ConceptFooter includeLegal retainerFocus onStartFree={() => onStartFree?.("footer")} />
+    </div>
+  );
+}
+
 export function WorkflowSystemLanding({
   onStartFree,
+  retainerFocus = false,
 }: {
   onStartFree?: (location: LandingCtaLocation) => void;
+  retainerFocus?: boolean;
 }) {
+  if (retainerFocus) return <RetainerLanding onStartFree={onStartFree} />;
   return (
     <div className="landing-shell landing-concept concept-system" data-design-provenance="refero-default-mobbin-intercom-stripe-2026-08-25">
       <ConceptHeader showPrimaryAction={false} />

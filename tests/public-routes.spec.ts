@@ -72,7 +72,7 @@ test.beforeEach(async ({ page }) => {
 
 test("landing page links to a usable login form", async ({ page }) => {
   await page.goto("/");
-  await expect(page).toHaveTitle("CloseSync - Client operations, in one place");
+  await expect(page).toHaveTitle("CloseSync AI | Retainer billing review for agencies");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.locator("#landing-main")).toHaveCount(1);
   await expect(page.getByRole("region", { name: "Notifications (F8)" })).toHaveCount(1);
@@ -80,16 +80,15 @@ test("landing page links to a usable login form", async ({ page }) => {
 
   await expect(page.getByRole("heading", {
     level: 1,
-    name: "From first enquiry to signed, paid and ready to start.",
+    name: "Make sure approved extra work gets billed.",
   })).toBeVisible();
 
-  const workflow = page.getByRole("region", { name: "BrightStone website redesign" });
+  const workflow = page.getByRole("region", { name: "Northline Studio" });
   await expect(workflow).toBeVisible();
-  const stages = workflow.getByRole("list", { name: "Client workflow stages" });
-  await expect(stages.getByRole("listitem")).toHaveCount(7);
-  await expect(stages.locator('[aria-current="step"]')).toContainText("Proposal");
-  await expect(stages.locator('[aria-current="step"]')).toContainText("Active stage");
-  await expect(workflow.getByRole("region", { name: "Proposal sent" })).toContainText("Awaiting decision");
+  await expect(workflow.getByRole("listitem")).toHaveCount(3);
+  await expect(workflow.getByRole("listitem").filter({ hasText: "Campaign landing page" })).toContainText("Approved extra");
+  await expect(workflow.getByRole("listitem").filter({ hasText: "Additional ad creative" })).toContainText("Needs approval");
+  await expect(workflow.getByText("£1,600.00", { exact: true })).toBeVisible();
   await expect(page.locator('.concept-toolbar')).toHaveCount(0);
   await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
 
@@ -122,6 +121,27 @@ test("landing page links to a usable login form", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1, name: "Sign in to CloseSync AI" })).toBeFocused();
   await expect(page.getByLabel("Email")).toBeVisible();
   await expect(page.getByLabel("Password")).toBeVisible();
+});
+
+test("sample billing review adds approved work to this month only", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("main").getByRole("link", { name: "See a sample billing review" }).click();
+  await expect(page).toHaveURL(/\/sample-billing-review$/);
+  await expect(page.getByRole("heading", { name: "Sample billing review" })).toBeFocused();
+  const review = page.getByRole("region", { name: "Northline Studio" });
+  await expect(review.getByText("£1,600.00", { exact: true })).toBeVisible();
+  await review.getByRole("button", { name: "Preview client approval" }).click();
+  await expect(review.getByRole("button", { name: "Approve sample extra" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(review.getByText("The extra is ready to invoice this month.", { exact: false })).toBeFocused();
+  await expect(review.getByRole("listitem").filter({ hasText: "Additional ad creative" })).toContainText("Approved extra");
+  await expect(review.getByText("£1,780.00", { exact: true })).toBeVisible();
+  await review.getByRole("button", { name: "Next month" }).click();
+  await expect(review.getByRole("listitem")).toHaveCount(1);
+  await expect(review.getByRole("listitem")).toContainText("Monthly SEO retainer");
+  await expect(review.locator("[aria-live='polite']")).toContainText("£1,250.00");
+  await review.getByRole("button", { name: "This month" }).click();
+  await expect(review.getByText("£1,780.00", { exact: true })).toBeVisible();
 });
 
 test("forced colours preserve keyboard focus and brand text", async ({ page }) => {

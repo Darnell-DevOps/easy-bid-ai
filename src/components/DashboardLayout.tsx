@@ -41,6 +41,7 @@ const navGroups: NavGroup[] = [
       { label: "Lead Forms", icon: ClipboardList, href: "/dashboard/lead-forms" },
 
       { label: "Proposals", icon: FileText, href: "/dashboard/proposals" },
+      { label: "New proposal", icon: Plus, href: "/dashboard/new" },
       { label: "Contracts", icon: FileSignature, href: "/dashboard/contracts" },
     ],
   },
@@ -218,17 +219,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <img src="/closesync-mark.png" alt="" width="32" height="32" />
             {!showCompact && <span>CloseSync <small>AI</small></span>}
           </Link>
-          <Tooltip delayDuration={100}>
-            <TooltipTrigger asChild>
-              <Link to="/dashboard/new" aria-label="New Proposal"
-                onClick={isMobile ? () => closeMobileNavigationForRoute("/dashboard/new") : undefined}
-                className="cs-workspace-create">
-                <Plus aria-hidden="true" />
-                {!showCompact && <span>New Proposal</span>}
-              </Link>
-            </TooltipTrigger>
-            {showCompact && <TooltipContent side="right">New Proposal</TooltipContent>}
-          </Tooltip>
         </div>
 
         {/* Nav groups */}

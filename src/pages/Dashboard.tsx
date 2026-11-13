@@ -1,19 +1,15 @@
 import { useEffect, useState, useMemo } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
+import RetainerActions from "@/components/dashboard/RetainerActions";
 import AttentionCenter from "@/components/dashboard/AttentionCenter";
 import ConversionPipeline from "@/components/dashboard/ConversionPipeline";
 import RevenueActivity from "@/components/dashboard/RevenueActivity";
 import BusinessPulse from "@/components/dashboard/BusinessPulse";
 import UpcomingAndRecent from "@/components/dashboard/UpcomingAndRecent";
 import ActivationChecklist from "@/components/dashboard/ActivationChecklist";
-import { Button } from "@/components/ui/button";
-import { UserPlus, ArrowUpRight, MessagesSquare, Calendar, FileText, LayoutDashboard } from "lucide-react";
+import { ArrowUpRight, MessagesSquare, Calendar, FileText, LayoutDashboard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  loadOnboardingProgress,
-  migrateLegacyOnboarding,
-} from "@/lib/onboarding-progress";
 
 interface FullProposal {
   id: string;
@@ -64,7 +60,6 @@ function greeting(): string {
 }
 
 export default function Dashboard() {
-  const navigate = useNavigate();
   const [proposals, setProposals] = useState<FullProposal[]>([]);
   const [clients, setClients] = useState<ClientLite[]>([]);
   const [firstName, setFirstName] = useState<string>("");
@@ -110,66 +105,12 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
-  // Redirect first-time users to onboarding
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user || !active) return;
-      try {
-        const stored = await loadOnboardingProgress(user.id);
-        const progress = await migrateLegacyOnboarding(user.id, stored);
-        if (!progress?.onboarding_completed_at && active) {
-          navigate("/onboarding", { replace: true });
-        }
-      } catch (error) {
-        console.error("Could not load onboarding progress", error);
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, [navigate]);
-
-  const proposalClientNames = useMemo(
-    () => new Set(proposals.map((p) => p.client_name.toLowerCase().trim())),
-    [proposals],
-  );
-
   // client_id-based set — used by AttentionCenter's next-action logic so we
   // don't match proposals to leads by (potentially duplicated) name string.
   const proposalClientIds = useMemo(
     () => new Set(proposals.map((p) => p.client_id).filter((v): v is string => !!v)),
     [proposals],
   );
-
-  // Contextual primary CTA
-  const primaryCta = useMemo(() => {
-    const acceptedUnpaid = proposals.some(
-      (p) => (p.status || "").toLowerCase() === "accepted" && !p.client_paid,
-    );
-    if (acceptedUnpaid) {
-      const first = proposals.find(
-        (p) => (p.status || "").toLowerCase() === "accepted" && !p.client_paid,
-      )!;
-      return { label: "Request payment", href: `/dashboard/proposal/${first.id}`, icon: null };
-    }
-    if (proposals.length === 0 && clients.length === 0) {
-      return { label: "Add first lead", href: "/dashboard/clients/new", icon: UserPlus };
-    }
-    // Warm/hot lead without proposal → nudge to proposal
-    const hotLead = clients.find(
-      (c) =>
-        (c.status || "").toLowerCase() === "new" &&
-        !proposalClientNames.has(c.name.toLowerCase().trim()),
-    );
-    if (hotLead) {
-      return { label: "New lead", href: "/dashboard/clients/new", icon: UserPlus };
-    }
-    return { label: "New lead", href: "/dashboard/clients/new", icon: UserPlus };
-  }, [proposals, clients, proposalClientNames]);
-
-  const CtaIcon = primaryCta.icon;
 
   return (
     <DashboardLayout>
@@ -182,40 +123,34 @@ export default function Dashboard() {
               {greeting()}{firstName ? `, ${firstName}` : ""}
             </h1>
             <p className="text-sm text-muted-foreground mt-1.5 max-w-xl">
-              Your clients, priorities and revenue, in one place.
+              Review your monthly retainers and follow up on client decisions.
             </p>
           </div>
-          <Button
-            asChild
-            size="lg"
-            className="h-11 px-5 gap-2 self-start sm:self-auto shrink-0"
-          >
-            <Link to={primaryCta.href}>
-              {CtaIcon && <CtaIcon className="w-4 h-4" />}
-              {primaryCta.label}
-            </Link>
-          </Button>
         </header>
 
-        <BusinessPulse proposals={proposals} />
+        <RetainerActions />
 
-        <div className="cs-dashboard-grid">
-          <div className="cs-dashboard-primary-column">
-            <RevenueActivity proposals={proposals} />
-            <ConversionPipeline proposals={proposals} clients={clients} proposalClientIds={proposalClientIds} />
-            <UpcomingAndRecent proposals={proposals} />
+        <details className="space-y-4">
+          <summary className="cursor-pointer rounded-sm py-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">Sales and recent activity</summary>
+          <BusinessPulse proposals={proposals} />
+          <div className="cs-dashboard-grid">
+            <div className="cs-dashboard-primary-column">
+              <RevenueActivity proposals={proposals} />
+              <ConversionPipeline proposals={proposals} clients={clients} proposalClientIds={proposalClientIds} />
+              <UpcomingAndRecent proposals={proposals} />
+            </div>
+            <div className="cs-dashboard-priorities">
+              <AttentionCenter proposals={proposals} clients={clients} proposalClientIds={proposalClientIds} />
+              <ActivationChecklist />
+              <section className="cs-dashboard-panel cs-dashboard-shortcuts" aria-labelledby="shortcuts-heading">
+                <div className="cs-dashboard-panel-heading"><div><h2 id="shortcuts-heading">Keep work moving</h2><p>Pick up the next step.</p></div></div>
+                <Link to="/dashboard/leads"><MessagesSquare aria-hidden="true" /><span><strong>Lead Assistant</strong><small>Review and qualify enquiries</small></span><ArrowUpRight aria-hidden="true" /></Link>
+                <Link to="/dashboard/new"><FileText aria-hidden="true" /><span><strong>Create a proposal</strong><small>Turn a brief into your next offer</small></span><ArrowUpRight aria-hidden="true" /></Link>
+                <Link to="/dashboard/calendar"><Calendar aria-hidden="true" /><span><strong>Open your calendar</strong><small>Stay on top of client meetings</small></span><ArrowUpRight aria-hidden="true" /></Link>
+              </section>
+            </div>
           </div>
-          <div className="cs-dashboard-priorities">
-            <AttentionCenter proposals={proposals} clients={clients} proposalClientIds={proposalClientIds} />
-            <ActivationChecklist />
-            <section className="cs-dashboard-panel cs-dashboard-shortcuts" aria-labelledby="shortcuts-heading">
-              <div className="cs-dashboard-panel-heading"><div><h2 id="shortcuts-heading">Keep work moving</h2><p>Pick up the next step.</p></div></div>
-              <Link to="/dashboard/leads"><MessagesSquare aria-hidden="true" /><span><strong>Lead Assistant</strong><small>Review and qualify enquiries</small></span><ArrowUpRight aria-hidden="true" /></Link>
-              <Link to="/dashboard/new"><FileText aria-hidden="true" /><span><strong>Create a proposal</strong><small>Turn a brief into your next offer</small></span><ArrowUpRight aria-hidden="true" /></Link>
-              <Link to="/dashboard/calendar"><Calendar aria-hidden="true" /><span><strong>Open your calendar</strong><small>Stay on top of client meetings</small></span><ArrowUpRight aria-hidden="true" /></Link>
-            </section>
-          </div>
-        </div>
+        </details>
       </div>
     </DashboardLayout>
   );

@@ -11,7 +11,7 @@ function source(path: string) {
 
 describe("route accessibility", () => {
   it("provides meaningful titles for public, dashboard, dynamic, and unknown routes", () => {
-    expect(getRouteTitle("/")).toBe("CloseSync - Client operations, in one place");
+    expect(getRouteTitle("/")).toBe("CloseSync AI | Retainer billing review for agencies");
     expect(getRouteTitle("/login")).toBe("Sign in | CloseSync AI");
     expect(getRouteTitle("/dashboard/clients/123")).toBe("Client details | CloseSync AI");
     expect(getRouteTitle("/dashboard/policies/new")).toBe("New policy | CloseSync AI");
