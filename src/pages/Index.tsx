@@ -19,11 +19,12 @@ export default function Index() {
   return (
     <>
       <PageMeta
-        title="CloseSync - Client operations, in one place"
-        description="Manage proposals, contracts, payments, onboarding and ongoing client work in one clear workspace."
+        title="CloseSync AI | Retainer billing review for agencies"
+        description="Track retainer scope, get extra work approved, and see what belongs on your next invoice."
         path="/"
       />
       <WorkflowSystemLanding
+        retainerFocus
         onStartFree={(location) => track("cta_click", { location })}
       />
     </>

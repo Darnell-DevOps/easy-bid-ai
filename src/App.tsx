@@ -24,6 +24,7 @@ const ProposalView = lazy(() => import("./pages/ProposalView"));
 const Billing = lazy(() => import("./pages/Billing"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const SampleProposal = lazy(() => import("./pages/SampleProposal"));
+const SampleBillingReview = lazy(() => import("./pages/SampleBillingReview"));
 const Templates = lazy(() => import("./pages/Templates"));
 const RevenueDashboard = lazy(() => import("./pages/RevenueDashboard"));
 const ClientPortalLauncher = lazy(() => import("./pages/ClientPortalLauncher"));
@@ -52,6 +53,7 @@ const NewRetainerPage = lazy(() => import("./pages/NewRetainerPage"));
 const RetainerDetail = lazy(() => import("./pages/RetainerDetail"));
 const RetainerSubscribePage = lazy(() => import("./pages/RetainerSubscribePage"));
 const RetainerRecoverPage = lazy(() => import("./pages/RetainerRecoverPage"));
+const RetainerExtraApproval = lazy(() => import("./pages/RetainerExtraApproval"));
 const RecoveryDashboard = lazy(() => import("./pages/RecoveryDashboard"));
 const EmailsDashboard = lazy(() => import("./pages/EmailsDashboard"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
@@ -68,7 +70,7 @@ const queryClient = new QueryClient();
 
 function RouteSkipLink() {
   const { pathname } = useLocation();
-  const targetId = pathname === "/" || pathname.startsWith("/landing-concepts")
+  const targetId = pathname === "/" || pathname === "/sample-billing-review" || pathname.startsWith("/landing-concepts")
     ? "landing-main"
     : pathname === "/admin" || pathname.startsWith("/dashboard")
       ? "dashboard-main"
@@ -106,12 +108,14 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/sample" element={<SampleProposal />} />
+            <Route path="/sample-billing-review" element={<SampleBillingReview />} />
             <Route path="/proposal/view/:id" element={<ClientPortal />} />
             <Route path="/book/:slug" element={<PublicBookingPage />} />
             <Route path="/reschedule/:token" element={<ReschedulePage />} />
             <Route path="/sign/:token" element={<ContractSignPage />} />
             <Route path="/onboard/:token" element={<OnboardingFormPage />} />
             <Route path="/retainer/:token" element={<RetainerSubscribePage />} />
+            <Route path="/approve-extra" element={<RetainerExtraApproval />} />
             <Route path="/r/recover/:token" element={<RetainerRecoverPage />} />
             <Route path="/testimonial/:token" element={<TestimonialSubmitPage />} />
             <Route path="/wall/:slug" element={<TestimonialWallPage />} />

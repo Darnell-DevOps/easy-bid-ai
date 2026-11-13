@@ -2307,6 +2307,31 @@ export type Database = {
         }
         Relationships: []
       }
+      retainer_billing_items: {
+        Row: {
+          id: string
+          retainer_id: string
+          billing_month: string
+          billing_due_date: string | null
+          kind: "base" | "extra"
+          title: string
+          description: string | null
+          amount_cents: number
+          currency: string
+          status: "pending" | "declined" | "withdrawn" | "approved" | "invoiced" | "paid"
+          approval_token: string | null
+          expires_at: string | null
+          decided_by: string | null
+          decided_at: string | null
+          invoice_reference: string | null
+          invoiced_at: string | null
+          paid_at: string | null
+          created_at: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       retainer_invoices: {
         Row: {
           amount_cents: number
@@ -2502,6 +2527,7 @@ export type Database = {
       retainers: {
         Row: {
           access_token: string
+          agreement_url: string | null
           amount_cents: number
           auto_renew: boolean
           billing_interval: string
@@ -2553,6 +2579,7 @@ export type Database = {
         }
         Insert: {
           access_token?: string
+          agreement_url?: string | null
           amount_cents?: number
           auto_renew?: boolean
           billing_interval?: string
@@ -2604,6 +2631,7 @@ export type Database = {
         }
         Update: {
           access_token?: string
+          agreement_url?: string | null
           amount_cents?: number
           auto_renew?: boolean
           billing_interval?: string
@@ -3241,6 +3269,35 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      prepare_retainer_billing_item: {
+        Args: { _id: string; _retainer: string; _month: string; _kind: string; _title?: string; _description?: string; _amount?: number }
+        Returns: Database["public"]["Tables"]["retainer_billing_items"]["Row"]
+      }
+      update_retainer_billing_item: {
+        Args: { _id: string; _action: string; _reference?: string }
+        Returns: Database["public"]["Tables"]["retainer_billing_items"]["Row"]
+      }
+      read_retainer_extra: {
+        Args: { _token: string }
+        Returns: {
+          retainer_title: string
+          title: string
+          description: string
+          amount_cents: number
+          currency: string
+          billing_month: string
+          status: string
+          decided_at: string | null
+        }[]
+      }
+      decide_retainer_extra: {
+        Args: { _token: string; _decision: string; _name: string }
+        Returns: string
+      }
+      record_manual_retainer_payment: {
+        Args: { _retainer: string; _request: string; _expected_due: string | null; _next_due: string }
+        Returns: undefined
+      }
       form_attachments_available: { Args: never; Returns: boolean }
       admin_get_actions_log: {
         Args: { _limit?: number }

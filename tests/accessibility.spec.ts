@@ -124,6 +124,8 @@ test("automated WCAG scan passes for the authenticated dashboard", async ({ page
   await page.goto("/dashboard");
 
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Accessibility");
+  await expect(page.getByRole("link", { name: "Add an existing retainer" })).toHaveAttribute("href", "/dashboard/retainers/new");
+  await expect(page.getByRole("link", { name: "See a sample billing review" })).toHaveAttribute("href", "/sample-billing-review");
   await expect(page.getByRole("status", { name: "Checking your session" })).toHaveCount(0);
   await expectNoWcagViolations(page, "authenticated dashboard");
 });
@@ -166,8 +168,8 @@ test("authenticated dashboard reflows with WCAG text spacing", async ({ page }) 
   });
 
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-  await expect(page.getByRole("link", { name: /lead/i }).first()).toBeVisible();
-  await expect(page.getByRole("region", { name: "Business pulse" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Add an existing retainer" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Retainer billing" })).toBeVisible();
 
   const horizontalOverflow = await page.evaluate(
     () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
@@ -226,6 +228,7 @@ test("dashboard populated overview preserves totals, stages and revenue navigati
     created_at: new Date().toISOString(), paid_at: new Date().toISOString(),
   }]);
   await page.goto("/dashboard");
+  await page.getByText("Sales and recent activity", { exact: true }).click();
   const pulse = page.getByRole("region", { name: "Business pulse" });
   await expect(pulse.getByRole("button", { name: "Revenue £2.5k" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Conversion pipeline" }).getByRole("button", { name: "1 Paid" })).toBeVisible();
@@ -242,6 +245,7 @@ test("dashboard reference layout reflows without clipping its panels", async ({ 
   await mockAuthenticatedSupabase(page);
   await page.goto("/dashboard");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Accessibility");
+  await page.getByText("Sales and recent activity", { exact: true }).click();
   await expect(page.getByText("No paid proposals in this period")).toBeVisible();
   for (const width of [1440, 1036, 390, 320]) {
     await page.setViewportSize({ width, height: 1000 });
@@ -260,6 +264,37 @@ test("dashboard reference layout reflows without clipping its panels", async ({ 
     await main.evaluate((element) => { element.scrollTop = 0; });
   }
   await expectNoWcagViolations(page, "reference dashboard at 320px");
+});
+
+test("dashboard billing actions show counts and open the matching review", async ({ page }) => {
+  await mockAuthenticatedSupabase(page);
+  await page.route(`${SUPABASE_ORIGIN}/rest/v1/retainer_billing_items?**`, async (route) => {
+    const status = new URL(route.request().url()).searchParams.get("status");
+    const headers = {
+      "content-type": "application/json",
+      "access-control-allow-origin": "*",
+      "access-control-expose-headers": "content-range",
+      "content-range": status === "eq.pending" ? "*/2" : "*/0",
+    };
+    await route.fulfill({ status: 200, headers, body: route.request().method() === "HEAD" ? undefined : "[]" });
+  });
+  await page.goto("/dashboard");
+  const billing = page.getByRole("region", { name: "Retainer billing" });
+  const pending = billing.getByRole("link", { name: /Needs approval/ });
+  await expect(pending).toContainText("2");
+  await expect(billing.getByRole("link", { name: /Ready to invoice/ })).toHaveAttribute("href", "/dashboard/retainers?focus=approved");
+  await expect(billing.getByRole("link", { name: /Awaiting payment/ })).toHaveAttribute("href", "/dashboard/retainers?focus=invoiced");
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)).toBe(false);
+    await page.screenshot({ path: `.impeccable/review/dashboard-billing-actions-${width}.png`, animations: "disabled" });
+  }
+  await pending.click();
+  await expect(page).toHaveURL(/\/dashboard\/retainers\?focus=pending$/);
+  const review = page.getByRole("region", { name: "Billing review" });
+  await expect(review.getByRole("heading", { name: "Needs approval" })).toBeVisible();
+  await expect(review.getByRole("heading", { name: "Ready to invoice" })).toHaveCount(0);
+  await expect(review.getByRole("link", { name: "Show all billing lines" })).toBeVisible();
 });
 
 

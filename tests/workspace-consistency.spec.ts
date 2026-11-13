@@ -112,6 +112,116 @@ async function mockAuthenticatedSupabase(page: Page, proposals: Record<string, u
 
 
 const workspaceRoutes = ["clients","lead-inbox","calendar","emails","leads","lead-forms","proposals","contracts","client-portal","onboarding","kickoff","revenue","retainers","recovery","templates","policies","testimonials","settings","trash","billing","time-saved","clients/new","new","policies/new","retainers/new"];
+
+for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
+  test(`retainer approval through two billing months at ${viewport.width}px`, async ({ page, browser }) => {
+    await page.setViewportSize(viewport);
+    await mockAuthenticatedSupabase(page);
+    const retainer = {
+      id: "09000000-0000-4000-8000-000000000001", client_name: "Maple Studio", title: "Search retainer",
+      description: "Monthly SEO and reporting.", agreement_url: null, amount_cents: 125000, currency: "GBP",
+      billing_interval: "monthly", start_date: "2026-01-01", end_date: null, status: "active",
+      paddle_subscription_id: null, access_token: "synthetic-retainer", next_billing_date: "2026-11-01",
+      total_billed_cents: 0, total_payments_count: 0,
+    };
+    const token = "a".repeat(64);
+    const billingItems: Record<string, unknown>[] = [];
+
+    await page.route(`${SUPABASE_ORIGIN}/rest/v1/retainers?*`, (route) => {
+      const url = new URL(route.request().url());
+      return route.fulfill({ json: url.searchParams.has("id") ? retainer : [retainer] });
+    });
+    await page.route(`${SUPABASE_ORIGIN}/rest/v1/retainer_billing_items?*`, (route) => {
+      const url = new URL(route.request().url());
+      const month = url.searchParams.get("or")?.match(/billing_month\.eq\.(\d{4}-\d{2}-01)/)?.[1];
+      const rows = month
+        ? billingItems.filter((item) => item.billing_month === month && item.status !== "pending")
+        : billingItems.filter((item) => item.kind === "extra");
+      return route.fulfill({ json: rows });
+    });
+    await page.route(`${SUPABASE_ORIGIN}/rest/v1/rpc/prepare_retainer_billing_item`, (route) => {
+      const args = route.request().postDataJSON();
+      const base = args._kind === "base";
+      const row = {
+        id: args._id, retainer_id: args._retainer, billing_month: args._month, kind: args._kind,
+        title: base ? "Monthly retainer" : args._title, description: args._description || null,
+        amount_cents: base ? retainer.amount_cents : args._amount, currency: "GBP",
+        status: base ? "approved" : "pending", approval_token: base ? null : token,
+        expires_at: new Date(Date.now() + 86400000).toISOString(), decided_at: null,
+        invoice_reference: null, paid_at: null,
+      };
+      billingItems.push(row);
+      return route.fulfill({ json: row });
+    });
+    await page.route(`${SUPABASE_ORIGIN}/rest/v1/rpc/update_retainer_billing_item`, (route) => {
+      const args = route.request().postDataJSON();
+      const row = billingItems.find((item) => item.id === args._id)!;
+      if (args._action === "invoice") Object.assign(row, { status: "invoiced", invoice_reference: args._reference });
+      else Object.assign(row, { status: "paid", paid_at: new Date().toISOString() });
+      return route.fulfill({ json: row });
+    });
+
+    await page.goto("/dashboard/retainers");
+    await page.getByRole("button", { name: "Agreements", exact: true }).click();
+    await page.getByRole("link", { name: /Maple Studio.*Search retainer/ }).click();
+    await expect(page.getByRole("heading", { name: "Agreed scope" })).toBeVisible();
+    await expect(page.getByText("Monthly SEO and reporting.")).toBeVisible();
+    await page.getByRole("button", { name: "Price an extra" }).click();
+    await page.getByRole("textbox", { name: "Extra title" }).fill("Landing page");
+    await page.getByLabel("What the client gets").fill("One additional landing page.");
+    await page.getByLabel("Final price (GBP)").fill("350.50");
+    await page.getByLabel("Billing month").fill("2026-11");
+    await page.getByRole("button", { name: "Create approval link" }).click();
+    await expect(page.getByText("Awaiting approval")).toBeVisible();
+    const href = await page.getByRole("link", { name: "Open approval" }).getAttribute("href");
+    expect(href).toContain(`/approve-extra#${token}`);
+
+    const clientContext = await browser.newContext({ viewport });
+    const client = await clientContext.newPage();
+    try {
+      await client.route(`${SUPABASE_ORIGIN}/rest/v1/rpc/read_retainer_extra`, (route) => {
+        expect(route.request().postDataJSON()).toEqual({ _token: token });
+        return route.fulfill({ json: [{ ...billingItems[0], retainer_title: retainer.title }] });
+      });
+      await client.route(`${SUPABASE_ORIGIN}/rest/v1/rpc/decide_retainer_extra`, (route) => {
+        expect(route.request().postDataJSON()).toEqual({ _token: token, _decision: "approved", _name: "Client QA" });
+        Object.assign(billingItems[0], { status: "approved", decided_by: "Client QA", decided_at: new Date().toISOString() });
+        return route.fulfill({ json: "approved" });
+      });
+      await client.goto(href!);
+      await expect(client.getByRole("heading", { name: "Landing page" })).toBeVisible();
+      await expect(client.getByText("£350.50")).toBeVisible();
+      await expectNoWcagViolations(client, "Public extra approval");
+      await client.getByLabel("Your name").fill("Client QA");
+      await client.getByRole("button", { name: "Approve extra" }).click();
+      await expect(client.getByRole("status")).toContainText("Extra approved");
+    } finally {
+      await clientContext.close();
+    }
+
+    await page.getByRole("link", { name: "Open billing review" }).click();
+    await page.getByLabel("Billing month").fill("2026-11");
+    await page.getByLabel("Retainer fee for this month").selectOption(retainer.id);
+    await page.getByRole("button", { name: "Add monthly fee" }).click();
+    const ready = page.getByRole("region", { name: "Ready to invoice" });
+    await expect(ready.getByText("£1,250.00")).toBeVisible();
+    const extra = ready.getByRole("listitem").filter({ hasText: "Landing page" });
+    await extra.getByRole("button", { name: "Record invoice" }).click();
+    await page.getByLabel("External invoice reference").fill("INV-350");
+    await page.getByRole("button", { name: "Save invoice" }).click();
+    const issued = page.getByRole("region", { name: "Awaiting payment" });
+    await expect(issued.getByText(/INV-350/)).toBeVisible();
+    await issued.getByRole("button", { name: "Mark line paid" }).click();
+    await expect(page.getByRole("region", { name: "Paid", exact: true }).getByText("£350.50")).toBeVisible();
+    await page.getByLabel("Billing month").fill("2026-12");
+    await page.getByLabel("Retainer fee for this month").selectOption(retainer.id);
+    await page.getByRole("button", { name: "Add monthly fee" }).click();
+    await expect(ready.getByText("£1,250.00")).toBeVisible();
+    await expect(ready.getByText(/Landing page/)).toHaveCount(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+  });
+}
+
 for (const route of workspaceRoutes) {
  test('workspace consistency: '+route, async ({page}) => {
   await mockAuthenticatedSupabase(page);

@@ -156,6 +156,7 @@
 }
 
 .concept-header-actions {
+  grid-column: -2;
   justify-content: flex-end;
 }
 
@@ -1942,4 +1943,66 @@
     grid-template-columns: 1fr;
     gap: var(--cs-space-4);
   }
+}
+.billing-landing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--cs-space-3);
+  margin-top: var(--cs-space-5);
+}
+
+.billing-sample {
+  color: var(--cs-text-primary);
+  background: var(--cs-bg-page);
+  border: 1px solid var(--cs-border-default);
+  border-radius: var(--cs-radius-lg);
+  overflow-wrap: anywhere;
+}
+
+.billing-sample-header,
+.billing-sample-total,
+.billing-sample-lines > li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--cs-space-3);
+  padding: var(--cs-space-4) var(--cs-space-6);
+}
+
+.billing-sample-header { background: var(--cs-bg-subtle); border-radius: var(--cs-radius-lg) var(--cs-radius-lg) 0 0; }
+.billing-sample-header h2 { font-size: var(--cs-text-h4); font-weight: var(--cs-font-semibold); }
+.billing-sample-header p, .billing-sample-lines small, .billing-sample-approval p {
+  color: var(--cs-text-secondary);
+  font-size: var(--cs-text-sm);
+}
+.billing-sample-months { display: flex; flex-wrap: wrap; gap: var(--cs-space-2); }
+.billing-sample-lines > li, .billing-sample-total { border-top: 1px solid var(--cs-border-subtle); }
+.billing-sample-lines strong { display: block; font-size: var(--cs-text-md); font-weight: var(--cs-font-medium); }
+.billing-sample-lines span, .billing-sample-total strong { font-variant-numeric: tabular-nums; }
+.billing-sample-total { font-size: var(--cs-text-sm); }
+.billing-sample-total strong { font-size: var(--cs-text-h4); font-weight: var(--cs-font-semibold); }
+.billing-sample-approval, .billing-sample-confirmation {
+  border-top: 1px solid var(--cs-border-subtle);
+  padding: var(--cs-space-4) var(--cs-space-6);
+}
+.billing-sample-approval h3 { font-weight: var(--cs-font-semibold); }
+.billing-sample-approval p { margin: var(--cs-space-1) 0 var(--cs-space-3); }
+.billing-sample-confirmation { font-size: var(--cs-text-sm); }
+.billing-sample-page {
+  width: min(100%, 48rem);
+  margin: auto;
+  padding: var(--cs-space-10) var(--cs-space-6);
+  display: grid;
+  justify-items: start;
+  gap: var(--cs-space-4);
+}
+.billing-sample-page > p { color: var(--cs-text-secondary); }
+.billing-sample-page > .billing-sample { width: 100%; }
+
+@media (max-width: 480px) {
+  .billing-sample-header, .billing-sample-total, .billing-sample-lines > li,
+  .billing-sample-approval, .billing-sample-confirmation { padding-inline: var(--cs-space-4); }
+  .billing-sample-page { padding-inline: var(--cs-space-4); }
 }

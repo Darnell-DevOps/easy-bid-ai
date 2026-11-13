@@ -4,7 +4,8 @@ import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 
 const pages = [
-  { path: "/", name: "landing", heading: "From first enquiry to signed, paid and ready to start." },
+  { path: "/", name: "landing", heading: "Make sure approved extra work gets billed." },
+  { path: "/sample-billing-review", name: "sample-billing-review", heading: "Sample billing review" },
   { path: "/login", name: "login", heading: "Sign in to CloseSync AI" },
   { path: "/signup", name: "signup", heading: "Create account" },
   { path: "/forgot-password", name: "forgot-password", heading: "Reset your CloseSync AI password" },
