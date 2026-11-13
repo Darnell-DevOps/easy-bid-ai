@@ -60,7 +60,7 @@ jobs:
         run: deno test --allow-env supabase/functions/_shared/stripe-connect.test.ts
       - name: Smoke-test the generated MCP Edge Function
         run: |
-          deno run --no-lock --allow-env --allow-net=0.0.0.0:8000 supabase/functions/mcp/index.ts &
+          deno run --node-modules-dir=auto --no-lock --allow-env --allow-net=0.0.0.0:8000 supabase/functions/mcp/index.ts &
           mcp_pid=$!
           trap 'kill "$mcp_pid" 2>/dev/null || true' EXIT
           mcp_url=http://127.0.0.1:8000/functions/v1/mcp
