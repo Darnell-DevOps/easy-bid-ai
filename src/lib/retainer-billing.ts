@@ -1,6 +1,7 @@
 import type { Database } from "@/integrations/supabase/types";
 
 export type BillingItem = Database["public"]["Tables"]["retainer_billing_items"]["Row"];
+export type MonthlyFee = Database["public"]["Functions"]["preview_retainer_billing_month"]["Returns"][number];
 
 export const billingStatus: Record<BillingItem["status"], string> = {
   pending: "Awaiting approval",

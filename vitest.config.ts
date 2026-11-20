@@ -5,6 +5,8 @@ import path from "path";
 export default defineConfig({
   plugins: [react()],
   test: {
+    // Avoid starving local UI and compiler tests when many workers start at once.
+    maxWorkers: process.env.CI ? undefined : 2,
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/test/setup.ts"],

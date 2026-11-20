@@ -1,10 +1,10 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { billingCopy, billingMoney, billingMonthLabel, currentBillingMonth, type BillingItem } from "@/lib/retainer-billing";
+import { billingCopy, billingMoney, billingMonthLabel, currentBillingMonth, type BillingItem, type MonthlyFee } from "@/lib/retainer-billing";
 import type { Tables } from "@/integrations/supabase/types";
 
 export type ReviewRetainer = Pick<Tables<"retainers">,
@@ -22,10 +22,10 @@ export type BillingReviewFocus = (typeof groups)[number]["status"];
 export default function RetainerBillingReview({ retainers, focus }: { retainers: ReviewRetainer[]; focus?: BillingReviewFocus }) {
   const [month, setMonth] = useState(currentBillingMonth);
   const [items, setItems] = useState<BillingItem[]>([]);
+  const [monthlyFees, setMonthlyFees] = useState<MonthlyFee[]>([]);
   const [loadedMonth, setLoadedMonth] = useState("");
   const [loadError, setLoadError] = useState(false);
   const [refresh, setRefresh] = useState(0);
-  const [baseRetainer, setBaseRetainer] = useState("");
   const [invoiceId, setInvoiceId] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -35,29 +35,32 @@ export default function RetainerBillingReview({ retainers, focus }: { retainers:
   useEffect(() => {
     let active = true;
     setLoadError(false);
+    setLoadedMonth("");
     const date = `${month}-01`;
     // Carry forward outstanding lines for visibility, while exports remain scoped to the selected month.
-    void supabase.from("retainer_billing_items")
+    void Promise.all([supabase.from("retainer_billing_items")
       .select("id, retainer_id, billing_month, billing_due_date, kind, title, description, amount_cents, currency, status, decided_at, decided_by, invoiced_at, invoice_reference, paid_at, created_at")
       .or(`and(billing_month.eq.${date},status.in.(pending,approved,invoiced,paid)),and(billing_month.lt.${date},status.in.(pending,approved,invoiced))`)
-      .order("billing_month", { ascending: true }).order("created_at", { ascending: true })
-      .then(({ data, error }) => {
+      .order("billing_month", { ascending: true }).order("created_at", { ascending: true }),
+      supabase.rpc("preview_retainer_billing_month", { _month: date }),
+    ]).then(([lines, fees]) => {
         if (!active) return;
-        if (error) setLoadError(true);
+        if (lines.error || fees.error) setLoadError(true);
         else {
-          setItems((data || []).map((item) => ({ ...item, approval_token: null, expires_at: null })));
+          setItems((lines.data || []).map((item) => ({ ...item, approval_token: null, expires_at: null })));
+          setMonthlyFees(fees.data || []);
           setLoadedMonth(month);
         }
+      }).catch(() => {
+        if (active) setLoadError(true);
       });
     return () => { active = false; };
   }, [month, refresh]);
 
   const loaded = loadedMonth === month && !loadError;
   const monthItems = items.filter((item) => item.billing_month === `${month}-01`);
-  const addedBase = new Set(monthItems.filter((item) => item.kind === "base").map((item) => item.retainer_id));
-  const candidates = retainers.filter((r) => r.status === "active" && r.billing_interval === "monthly"
-    && !r.paddle_subscription_id && r.start_date.slice(0, 7) <= month
-    && (!r.end_date || r.end_date.slice(0, 7) >= month) && !addedBase.has(r.id));
+  const candidates = monthlyFees.filter((fee) => fee.preparation_state === "needs_preparation");
+  const excludedFees = monthlyFees.filter((fee) => fee.preparation_state === "already_paid" || fee.preparation_state === "ends_before_due_date");
   const copyable = monthItems.some((item) => item.status === "approved");
 
   function upsert(item: BillingItem) {
@@ -65,23 +68,26 @@ export default function RetainerBillingReview({ retainers, focus }: { retainers:
       ? old.map((row) => row.id === item.id ? item : row) : [...old, item]);
   }
 
-  async function addBase(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!baseRetainer) return;
+  async function prepareMonth() {
+    if (busy || !loaded || candidates.length === 0) return;
     setBusy(true);
     setNotice("");
     setError("");
-    const { data, error } = await supabase.rpc("prepare_retainer_billing_item", {
-      _id: crypto.randomUUID(), _retainer: baseRetainer, _month: `${month}-01`, _kind: "base",
-    });
-    setBusy(false);
-    if (error || !data) {
-      const known = ["A base payment is already recorded for this month", "This retainer ends before its billing day"];
-      return setError(error && known.includes(error.message) ? error.message : "Could not add the fee. Check the agreement and try again.");
+    try {
+      const { data, error } = await supabase.rpc("prepare_retainer_billing_month", { _month: `${month}-01` });
+      if (error || !data) {
+        setError("Could not confirm monthly fee preparation. Refresh the review and retry; existing fees will not be duplicated.");
+      } else {
+        setNotice(data.prepared > 0
+          ? `${data.prepared} monthly ${data.prepared === 1 ? "fee" : "fees"} prepared. Review the lines before invoicing.`
+          : "Monthly fees are already prepared or no longer due. The review has been refreshed.");
+      }
+    } catch {
+      setError("Could not confirm monthly fee preparation. Refresh the review and retry; existing fees will not be duplicated.");
+    } finally {
+      setBusy(false);
+      setRefresh((n) => n + 1);
     }
-    upsert(data);
-    setBaseRetainer("");
-    setNotice("Monthly fee added to this billing review.");
   }
 
   async function record(item: BillingItem, action: "invoice" | "paid", reference?: string) {
@@ -124,7 +130,6 @@ export default function RetainerBillingReview({ retainers, focus }: { retainers:
             <Input id="billing-review-month" type="month" value={month} disabled={busy} onChange={(e) => {
               if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(e.target.value)) return;
               setMonth(e.target.value);
-              setBaseRetainer("");
               setInvoiceId("");
               setError("");
               setNotice("");
@@ -140,24 +145,46 @@ export default function RetainerBillingReview({ retainers, focus }: { retainers:
         <p role="alert" className="text-sm text-destructive">Could not load this review. Use Refresh to try again.</p>
       ) : !loaded ? (
         <p role="status" className="text-sm text-muted-foreground">Loading billing review…</p>
-      ) : !focus && items.length === 0 && candidates.length === 0 ? (
+      ) : !focus && items.length === 0 && monthlyFees.length === 0 ? (
         <p className="border-t pt-4 text-sm text-muted-foreground">
           {retainers.length ? "There’s nothing to review for this month." : "Add a monthly retainer to prepare your first billing review."}
         </p>
       ) : (
         <>
-          {(!focus || focus === "approved") && candidates.length > 0 && (
-            <form onSubmit={addBase} className="flex flex-wrap items-end gap-3 border-y py-4">
-              <div className="min-w-0 space-y-2">
-                <Label htmlFor="billing-base-retainer">Retainer fee for this month</Label>
-                <select id="billing-base-retainer" value={baseRetainer} onChange={(e) => setBaseRetainer(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                  <option value="">Choose a retainer</option>
-                  {candidates.map((r) => <option key={r.id} value={r.id}>{r.client_name} · {r.title}</option>)}
-                </select>
+          {(!focus || focus === "approved") && monthlyFees.length > 0 && (
+            <section aria-labelledby="monthly-fees-heading" className="space-y-4 border-y py-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0 space-y-1">
+                  <h3 id="monthly-fees-heading" className="text-sm font-semibold">Prepare monthly fees</h3>
+                  <p className="max-w-prose text-sm text-muted-foreground">
+                    {candidates.length > 0
+                      ? `${candidates.length} monthly ${candidates.length === 1 ? "fee is" : "fees are"} due for preparation.`
+                      : "No monthly fees need preparation for this month."}
+                  </p>
+                </div>
+                {candidates.length > 0 && <Button disabled={busy} onClick={prepareMonth}>
+                  {busy ? "Preparing fees…" : "Prepare monthly fees"}
+                </Button>}
               </div>
-              <Button type="submit" variant="outline" disabled={busy || !baseRetainer}>Add monthly fee</Button>
-            </form>
+              {candidates.length > 0 && <ul className="divide-y">
+                {candidates.map((fee) => <li key={fee.retainer_id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                  <div className="min-w-0">
+                    <Link to={`/dashboard/retainers/${fee.retainer_id}`} className="break-words text-sm font-medium hover:underline">{fee.client_name} · {fee.title}</Link>
+                    <p className="text-xs text-muted-foreground">Scheduled {new Date(`${fee.billing_due_date}T12:00:00`).toLocaleDateString()}</p>
+                  </div>
+                  <span className="text-sm font-medium tabular-nums">{billingMoney(fee.amount_cents, fee.currency)}</span>
+                </li>)}
+              </ul>}
+              {excludedFees.length > 0 && <details className="space-y-3">
+                <summary className="cursor-pointer rounded-sm text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{excludedFees.length} {excludedFees.length === 1 ? "fee" : "fees"} excluded</summary>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  {excludedFees.map((fee) => <li key={fee.retainer_id} className="break-words">
+                    {fee.client_name} · {fee.title} — {fee.preparation_state === "already_paid" ? "A payment is already recorded for this month." : "The agreement ends before its billing day."}
+                  </li>)}
+                </ul>
+              </details>}
+              <p className="max-w-prose text-sm text-muted-foreground">Preparing fees adds review lines only. It does not send invoices or collect payments. Existing lines keep their recorded amounts.</p>
+            </section>
           )}
           {groups.filter((group) => !focus || focus === group.status).map((group) => {
             const rows = items.filter((item) => item.status === group.status

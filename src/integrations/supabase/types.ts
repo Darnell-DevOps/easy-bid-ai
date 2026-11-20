@@ -3269,6 +3269,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      preview_retainer_billing_month: {
+        Args: { _month: string }
+        Returns: {
+          retainer_id: string
+          client_name: string
+          title: string
+          billing_due_date: string
+          amount_cents: number
+          currency: string
+          preparation_state: "needs_preparation" | "prepared" | "already_paid" | "ends_before_due_date"
+        }[]
+      }
+      prepare_retainer_billing_month: {
+        Args: { _month: string }
+        Returns: { prepared: number; unchanged: number; excluded: number }
+      }
       prepare_retainer_billing_item: {
         Args: { _id: string; _retainer: string; _month: string; _kind: string; _title?: string; _description?: string; _amount?: number }
         Returns: Database["public"]["Tables"]["retainer_billing_items"]["Row"]
