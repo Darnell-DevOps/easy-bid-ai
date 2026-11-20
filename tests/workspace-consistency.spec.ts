@@ -153,6 +153,21 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
       billingItems.push(row);
       return route.fulfill({ json: row });
     });
+    await page.route(`${SUPABASE_ORIGIN}/rest/v1/rpc/preview_retainer_billing_month`, (route) => {
+      const args = route.request().postDataJSON();
+      return route.fulfill({ json: [{ retainer_id: retainer.id, client_name: retainer.client_name,
+        title: retainer.title, billing_due_date: args._month, amount_cents: retainer.amount_cents,
+        currency: retainer.currency, preparation_state: billingItems.some((row) => row.kind === "base" && row.billing_month === args._month)
+          ? "prepared" : "needs_preparation" }] });
+    });
+    await page.route(`${SUPABASE_ORIGIN}/rest/v1/rpc/prepare_retainer_billing_month`, (route) => {
+      const args = route.request().postDataJSON();
+      const existing = billingItems.some((row) => row.kind === "base" && row.billing_month === args._month);
+      if (!existing) billingItems.push({ id: `base-${args._month}`, retainer_id: retainer.id,
+        billing_month: args._month, kind: "base", title: "Monthly retainer", amount_cents: retainer.amount_cents,
+        currency: retainer.currency, status: "approved", created_at: new Date().toISOString() });
+      return route.fulfill({ json: { prepared: existing ? 0 : 1, unchanged: existing ? 1 : 0, excluded: 0 } });
+    });
     await page.route(`${SUPABASE_ORIGIN}/rest/v1/rpc/update_retainer_billing_item`, (route) => {
       const args = route.request().postDataJSON();
       const row = billingItems.find((item) => item.id === args._id)!;
@@ -201,8 +216,7 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
 
     await page.getByRole("link", { name: "Open billing review" }).click();
     await page.getByLabel("Billing month").fill("2026-11");
-    await page.getByLabel("Retainer fee for this month").selectOption(retainer.id);
-    await page.getByRole("button", { name: "Add monthly fee" }).click();
+    await page.getByRole("button", { name: "Prepare monthly fees" }).click();
     const ready = page.getByRole("region", { name: "Ready to invoice" });
     await expect(ready.getByText("£1,250.00")).toBeVisible();
     const extra = ready.getByRole("listitem").filter({ hasText: "Landing page" });
@@ -214,11 +228,12 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
     await issued.getByRole("button", { name: "Mark line paid" }).click();
     await expect(page.getByRole("region", { name: "Paid", exact: true }).getByText("£350.50")).toBeVisible();
     await page.getByLabel("Billing month").fill("2026-12");
-    await page.getByLabel("Retainer fee for this month").selectOption(retainer.id);
-    await page.getByRole("button", { name: "Add monthly fee" }).click();
+    await page.getByRole("button", { name: "Prepare monthly fees" }).click();
     await expect(ready.getByText("£1,250.00")).toBeVisible();
     await expect(ready.getByText(/Landing page/)).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+    await expectNoWcagViolations(page, "Monthly fee preparation and review");
+    await page.screenshot({ path: `.impeccable/review/monthly-preparation-${viewport.width}.png`, fullPage: true });
   });
 }
 

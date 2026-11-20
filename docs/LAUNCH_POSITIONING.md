@@ -1,40 +1,56 @@
-# CloseSync AI launch positioning
+# CloseSync AI product direction and implementation order
 
-Research checked 25 September 2026. This is a working product brief, not a claim of market-share percentages. Public competitor material does not establish a reliable denominator for the entire service-business software market.
+Updated 20 November 2026. CloseSync should earn a subscription by completing a useful, recurring commercial job. The goal is independent of any fixed customer-count target.
 
-## Competitive reality
+## Customer and job
 
-HoneyBook, Dubsado and Bonsai already offer combinations of lead capture, proposals, contracts, payments, portals and automation. HoneyBook and Dubsado also market AI capabilities. Calling CloseSync an “all-in-one AI client platform” alone does not explain why a buyer should change tools.
+Serve owners and billing administrators at small marketing and creative agencies with monthly retainers and variable extra work. SEO, paid advertising, social media, content, design and ongoing website services share this billing process.
 
-- [HoneyBook pricing and feature list](https://www.honeybook.com/pricing)
-- [HoneyBook AI account capabilities](https://www.honeybook.com/blog/introducing-the-honeybook-mcp-ask-claude-about-your-pipeline-invoices-and-contracts)
-- [Dubsado feature overview](https://www.dubsado.com/feature-overview)
-- [Dubsado client-progress automations](https://help.dubsado.com/en/articles/15668761-flow-triggers-client-progress)
-- [Bonsai CRM](https://www.hellobonsai.com/crm)
+The customer needs to know what each client should be billed, which extras are approved, whether the invoice has been issued and what remains unpaid. New-client proposals and agreements feed that continuing job.
 
-## Position
+## Product promise
 
-**For freelancers, consultants and small agencies selling client services, CloseSync AI is the close-to-kickoff workspace that carries one client record from enquiry through proposal, agreement, payment and onboarding.**
+**CloseSync connects retainer agreements, extra-work approvals, monthly invoices and payment status so an agency can complete client billing with less manual administration.**
 
-The category is a client-closing workflow, not a generic CRM or an isolated proposal generator. The product should make the next action easy to see, especially after a prospect says yes. AI is a drafting and summarising aid inside that workflow; the user decides what to send.
+This is the intended finished product. Current public claims must describe current capabilities: scope records, approval links and billing review, with external invoicing and manually recorded payment status. Do not advertise accounting sync, automatic collection or measured time savings until verified.
 
-The positioning is a focus and usability choice, not a claim that competitors lack these features. Do not claim faster conversion, time saved, superior AI, lower cost, security certification, or market leadership without measured evidence.
+## Commercial evidence
 
-## Landing-page message hierarchy
+- [Ignition's Token Creative customer account](https://www.ignitionapp.com/customers/token-creative) describes a five-person agency with 15–20 clients using recurring fees, variable charges and automated invoicing/payment collection.
+- [Ignition's DEFACTO customer account](https://www.ignitionapp.com/customers/defacto-co) describes a five-person social media agency adopting agreements and recurring payments.
+- [ManyRequests' retainer workflow](https://manyrequests.com/solutions/retainers) and [Wayfront's paid plans](https://wayfront.com/pricing) show established commercial products serving related agency workflows.
 
-1. Outcome: from first enquiry to signed, paid and ready to start.
-2. Audience: freelancers, consultants and small agencies.
-3. Mechanism: one connected client record with visible handoffs.
-4. Proof: an explicitly illustrative product workflow and a real sample proposal. No invented customer numbers or testimonials.
-5. Action: start a Free account without a card; show the precise Pro price and entitlements only after production billing is verified.
+These sources support category adoption and buying behaviour. Supplier-published results do not prove CloseSync's performance or optimal price. A £49 monthly plan is a proposal to evaluate after the paid workflow is complete, not an active price change. Maintain the existing £0/£9/£29 plans until checkout and backend entitlements are changed together.
 
-## Launch evidence still needed
+## Review of the existing app
 
-- Publishable legal operator details and approved Terms and Privacy copy.
-- A tested account access/deletion process and monitored support mailbox.
-- API/database enforcement for opt-in MFA, not only a browser challenge, plus an account-recovery process.
-- A real end-to-end paid journey in Paddle live mode, including cancellation and failed payment.
-- Production email delivery, scheduled job health, backup/restore evidence, and a credentialed client signing test.
-- First-party user interviews or beta feedback to check whether “close-to-kickoff” matches buyer language.
+| Area | Product decision | Current gap |
+| --- | --- | --- |
+| Retainer agreements and client records | Primary setup and durable commercial record | Improve input validation, agreement changes and price history before automatic invoicing |
+| Extra-work approvals | Core part of billing | Links work; delivery, reminders and approval evidence need a complete hosted check |
+| Monthly billing review | Primary recurring task | Single-fee preparation and manual invoice/status handoff create repeated work |
+| Accounting | Complete the billing handoff | No Xero or QuickBooks implementation in current source |
+| Client payments | Connect each agency to its own merchant account | Stripe sandbox onboarding exists; collection, webhooks, reconciliation and payouts remain unverified |
+| Proposals, contracts and templates | Support establishing the agreement | Preserve existing records and functionality; avoid separate product positioning |
+| Leads, calendar, onboarding and other existing pages | Supporting capabilities | Keep reachable; defer expansion while billing is incomplete |
+| Subscription packaging | Charge for the recurring outcome | Free currently includes retainer review; paid upgrades are mostly proposal-based |
+| Landing page and sample | Demonstrate the available billing workflow | Published homepage still showed older broad positioning during the 20 November browser check; Lovable preview showed retainer review |
 
-Until these are verified, marketing should describe implemented capabilities without making compliance, performance, or market-share claims.
+## Implementation order and acceptance criteria
+
+1. **Monthly fee preparation.** Preview all due fees, prepare them together, preserve recorded amounts and handle replay, account isolation, month-end dates, existing payments and ended agreements. Preparing a review must never issue invoices or initiate charges. Test in a disposable database, then apply through Lovable and verify the hosted release.
+2. **Accounting handoff.** Implement per-business Xero authorisation, contact mapping, correctly taxed draft invoices, durable retry protection and invoice/payment status synchronisation. Explicitly handle existing repeating invoices so the same monthly charge is not created twice.
+3. **Approval delivery and evidence.** Verify controlled-inbox delivery, reminders, clear scope and final price, approval attribution, expiry, withdrawal and concurrent decisions. Never infer that a typed name proves budget authority.
+4. **Complete payment path.** Use each agency's own payment arrangement. Verify successful, failed, retried and refunded payments and correct ownership. Preserve the separate CloseSync subscription integration.
+5. **Commercial packaging and first use.** Set one clear paid offer, corresponding backend entitlements and matching checkout. Prove self-service setup and one complete billing cycle including the next period, without a sales call.
+6. **Publishable operations.** Finish hosted email, legal approval, attachment protection, recovery and release checks. The owner keeps legal pages as drafts, payments in sandbox and permanent purging disabled until their respective gates are resolved.
+
+## Lovable and release boundaries
+
+Local code and tests establish implementation behaviour. GitHub checks establish source readiness. Lovable owns managed database changes, function deployment and publication. Verify the actual published app after each release; a matching synced commit does not prove the public bundle has updated.
+
+Lovable offers a Xero connector, but its [documented limitations](https://docs.lovable.dev/integrations/xero#limitations) explicitly exclude per-end-user Xero login. Each connection is a shared account. CloseSync requires a separate agency-owned connection, so do not attach every customer's billing to the operator's books. Implement the appropriate per-user integration while keeping hosting and secrets on Lovable.
+
+## Release evidence
+
+On 20 November, GitHub main and Lovable's latest source matched `1a7b6e9e820fba52cf2b740a4f6665e3c5bf5eee`. Hosted billing tables and the preceding migration were present. Browser inspection found the published homepage and Lovable preview differed. No customer emails, live charges or permanent deletions were triggered in that review.

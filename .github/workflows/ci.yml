@@ -94,6 +94,10 @@ jobs:
         run: psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -X -f scripts/test-tenant-isolation.sql
       - name: Check retainer approvals and billing in disposable database
         run: psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -X -f scripts/test-retainer-billing-review.sql
+      - name: Check monthly fee preparation in disposable database
+        run: psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -X -f scripts/test-monthly-billing-preparation.sql
+      - name: Check concurrent monthly preparation in disposable database
+        run: node scripts/test-monthly-billing-concurrency.mjs
       - run: npm ci
       - name: Install browser and PDF inspection tools
         run: |
