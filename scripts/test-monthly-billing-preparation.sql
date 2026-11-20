@@ -7,7 +7,7 @@ SELECT ('20000000-0000-4000-8000-' || lpad(n::text, 12, '0'))::uuid,
   '20000000-0000-4000-8000-000000000100', 'Monthly QA', 'Agreement ' || n,
   125000, 'GBP', 'monthly', 'active', '2026-01-31'::date
 FROM generate_series(1, 10) n;
-UPDATE public.retainers SET tax_mode = 'exclusive', tax_rate = 20 WHERE title = 'Agreement 1' AND client_name = 'Monthly QA';
+UPDATE public.retainers SET tax_mode = 'exclusive', tax_rate = 20 WHERE id = '20000000-0000-4000-8000-000000000001';
 UPDATE public.retainers SET currency = 'USD', amount_cents = 10050 WHERE id = '20000000-0000-4000-8000-000000000002';
 UPDATE public.retainers SET end_date = '2026-02-10' WHERE id = '20000000-0000-4000-8000-000000000003';
 UPDATE public.retainers SET status = 'paused' WHERE id = '20000000-0000-4000-8000-000000000005';
